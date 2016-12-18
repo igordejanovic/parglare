@@ -178,6 +178,15 @@ class LRItem(object):
 
         return "%s -> %s" % (self.production.symbol, s)
 
+    @property
+    def is_kernel(self):
+        """
+        Kernel items are items whose position is not at the beginning.
+        The only exception to this rule is start symbol of the augmented
+        grammar.
+        """
+        return self.position > 0 or self.production.symbol is AUGSYMBOL
+
     def get_pos_inc(self):
         """Returns new LRItem with incremented position or None if position
         cannot be incremented (e.g. it is already at the end of the production)
@@ -198,7 +207,7 @@ class LRState(object):
     def __eq__(self, other):
         """Two states are equal if their kernel items are equal."""
         for item in self.items:
-            if item.position > 0 or item.production.symbol is AUGSYMBOL:
+            if item.is_kernel:
                 if item not in other.items:
                     return False
         return True
