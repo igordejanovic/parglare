@@ -114,8 +114,10 @@ class ProductionRHS(list):
 
 
 class Grammar(object):
-    """Grammar is a collection of production rules.
-    First production is the augmented production (S' -> S)."""
+    """
+    Grammar is a collection of production rules.
+    First production is the augmented production (S' -> S).
+    """
 
     def __init__(self):
         self.productions = [None]
@@ -127,8 +129,10 @@ class Grammar(object):
                                          ProductionRHS([root_symbol]))
 
     def init_grammar(self):
-        """Extracts all grammar symbol (nonterminal and terminal) from the
-        grammar and check references in productions."""
+        """
+        Extracts all grammar symbol (nonterminal and terminal) from the
+        grammar and check references in productions.
+        """
 
         self.set_root_symbol(self.productions[1].symbol)
 
@@ -188,7 +192,8 @@ class LRItem(object):
         return self.position > 0 or self.production.symbol is AUGSYMBOL
 
     def get_pos_inc(self):
-        """Returns new LRItem with incremented position or None if position
+        """
+        Returns new LRItem with incremented position or None if position
         cannot be incremented (e.g. it is already at the end of the production)
         """
 
