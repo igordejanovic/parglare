@@ -11,7 +11,7 @@ class Parser(object):
         grammar.init_grammar()
         self.states = []
         self.actions = {}
-        self.goto = {}
+        self.goto = []
 
         self._init_parser()
 
@@ -27,17 +27,26 @@ class Parser(object):
 
         state_stack = [s]
         state_id = 1
-        all_items = list(s.items)
 
         while state_stack:
             s = state_stack.pop()
             s.closure()
+            goto = {}
             self.states.append(s)
+            self.goto.append(goto)
+
+            per_next_symbol = {}
             for i in s.items:
-                inc_item = i.get_pos_inc()
-                if inc_item and inc_item not in all_items:
-                    state_stack.append(LRState(self, state_id, [inc_item]))
-                    all_items.append(inc_item)
+                symbol = i.production.rhs[i.position]
+                if symbol:
+                    per_next_symbol.setdefault(symbol, []).append(i)
+
+            for symbol, items in per_next_symbol.items():
+                inc_items = [i.get_pos_inc() for i in items]
+                maybe_new_state = LRState(self, state_id, inc_items)
+                if maybe_new_state not in self.states and \
+                   maybe_new_state not in state_stack:
+                    state_stack.append(maybe_new_state)
                     state_id += 1
 
         for s in self.states:
@@ -185,6 +194,14 @@ class LRState(object):
         self.parser = parser
         self.state_id = state_id
         self.items = items if items else []
+
+    def __eq__(self, other):
+        """Two states are equal if their kernel items are equal."""
+        for item in self.items:
+            if item.position > 0 or item.production.symbol is AUGSYMBOL:
+                if item not in other.items:
+                    return False
+        return True
 
     def closure(self):
         """Forms a closure of the state. Adds all missing items."""
