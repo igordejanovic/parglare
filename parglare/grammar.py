@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from collections import OrderedDict
 
 
 class Parser(object):
@@ -22,35 +23,65 @@ class Parser(object):
 
     def _create_state_item_collections(self):
 
-        # Create I0 for the first production
+        # Create a state for the first production (augmented)
         s = LRState(self, 0, [LRItem(self.grammar.productions[0], 0)])
 
-        state_stack = [s]
+        state_queue = [s]
         state_id = 1
 
-        while state_stack:
-            s = state_stack.pop()
+        while state_queue:
+            # For each state calculate its closure first, i.e. starting from
+            # a so called "kernel items" expand collection with non-kernel
+            # items. We will also calculate GOTO dict for each state.
+            # This dict will be keyed by a grammar symbol.
+            s = state_queue[0]
+            del state_queue[0]
             s.closure()
-            goto = {}
             self.states.append(s)
+            goto = OrderedDict()
             self.goto.append(goto)
 
-            per_next_symbol = {}
+            # To find out other state we examine following grammar symbols
+            # in the current state (symbols following current position/"dot")
+            # and group all items by a grammar symbol.
+            per_next_symbol = OrderedDict()
             for i in s.items:
                 symbol = i.production.rhs[i.position]
                 if symbol:
                     per_next_symbol.setdefault(symbol, []).append(i)
 
+            # For each group symbol we create new state and form its kernel
+            # items from the group items with position moved one step ahead.
             for symbol, items in per_next_symbol.items():
                 inc_items = [i.get_pos_inc() for i in items]
                 maybe_new_state = LRState(self, state_id, inc_items)
-                if maybe_new_state not in self.states and \
-                   maybe_new_state not in state_stack:
-                    state_stack.append(maybe_new_state)
+                target_state = maybe_new_state
+                try:
+                    idx = self.states.index(maybe_new_state)
+                    target_state = self.states[idx]
+                except ValueError:
+                    try:
+                        idx = state_queue.index(maybe_new_state)
+                        target_state = state_queue[idx]
+                    except ValueError:
+                        pass
+
+                # We register a state only if it doesn't exists from before.
+                if target_state is maybe_new_state:
+                    state_queue.append(target_state)
                     state_id += 1
 
+                # For each group symbol we create an entry in GOTO table.
+                goto[symbol] = target_state
+
+        print("\n\n*** STATES ***")
         for s in self.states:
             s.print_debug()
+
+        print("\n\nGOTO table:")
+        for idx, g in enumerate(self.goto):
+            print(idx, ", ".join(["%s->%d" % (k, v.state_id)
+                                 for k, v in g.items()]))
 
     def _create_tables(self):
         pass
@@ -68,6 +99,9 @@ class GrammarSymbol(object):
 
     def __str__(self):
         return self.name
+
+    def __repr__(self):
+        return str(self)
 
 
 class NonTerminal(GrammarSymbol):
@@ -170,6 +204,9 @@ class LRItem(object):
     def __eq__(self, other):
         return other and self.production == other.production and \
             self.position == other.position
+
+    def __repr__(self):
+        return str(self)
 
     def __str__(self):
         s = ""
