@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 
@@ -26,6 +27,11 @@ class Terminal(GrammarSymbol):
 
     def __hash__(self):
         return hash(self.value)
+
+
+AUGSYMBOL = NonTerminal("S'")
+NULL = Terminal("Empty", "ɛ")
+EOF = Terminal("EOF", "$")
 
 
 class Production(object):
@@ -67,7 +73,6 @@ class Grammar(object):
         self.terminals = set()
 
     def augment(self, root_symbol):
-        from .parser import AUGSYMBOL
         self.productions.insert(
             0, Production(AUGSYMBOL, ProductionRHS([root_symbol])))
 

@@ -1,9 +1,7 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from collections import OrderedDict
-from .grammar import NonTerminal
-
-
-AUGSYMBOL = NonTerminal("S'")
+from .grammar import NonTerminal, NULL, AUGSYMBOL
 
 
 class Parser(object):
@@ -13,6 +11,7 @@ class Parser(object):
     """
     def __init__(self, grammar, root_symbol=None):
         self.grammar = grammar
+        self.grammar.init_grammar()
         if root_symbol is None:
             root_symbol = self.grammar.productions[0].symbol
         self.root_symbol = root_symbol
@@ -20,14 +19,14 @@ class Parser(object):
         self.actions = {}
         self.goto = []
 
-        self.grammar.init_grammar()
+        self.first_set = firsts(grammar)
+
         self._init_parser()
 
     def _init_parser(self):
         """Create parser states and tables."""
         self.grammar.augment(self.root_symbol)
         self._create_states_and_goto_table()
-        self._create_action_table()
 
     def _create_states_and_goto_table(self):
 
@@ -91,9 +90,6 @@ class Parser(object):
         for idx, g in enumerate(self.goto):
             print(idx, ", ".join(["%s->%d" % (k, v.state_id)
                                  for k, v in g.items()]))
-
-    def _create_action_table(self):
-        pass
 
     def parse(self, input_str):
         pass
@@ -184,3 +180,34 @@ class LRState(object):
         print("\nState %d" % self.state_id)
         for i in self.items:
             print("\t", i)
+
+
+def firsts(grammar):
+    """Calculates the sets of terminals that can start the sentence derived from
+    all grammar symbols.
+    """
+    first_set = {}
+    for t in grammar.terminals:
+        first_set[t] = set([t])
+
+    def _first(nt):
+        if nt in first_set:
+            return first_set[nt]
+        fs = set()
+        first_set[nt] = fs
+        for p in grammar.productions:
+            if p.symbol is nt:
+                pfs = set()
+                for r in p.rhs:
+                    f = _first(r)
+                    pfs.update(f)
+                    if NULL not in f:
+                        pfs.discard(NULL)
+                        break
+                fs.update(pfs)
+        return fs
+
+    for p in grammar.nonterminals:
+        first_set[p] = _first(p)
+
+    return first_set
