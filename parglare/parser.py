@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from collections import OrderedDict
-from .grammar import NonTerminal, NULL, AUGSYMBOL
+from .grammar import NonTerminal, NULL, AUGSYMBOL, EOF
+
+SHIFT = 0
+REDUCE = 1
 
 
 class Parser(object):
@@ -19,13 +22,12 @@ class Parser(object):
         self.actions = {}
         self.goto = []
 
-        self.first_set = firsts(grammar)
-
         self._init_parser()
 
     def _init_parser(self):
         """Create parser states and tables."""
         self.grammar.augment(self.root_symbol)
+        self.first_set = firsts(grammar)
         self._create_states_and_goto_table()
 
     def _create_states_and_goto_table(self):
@@ -41,13 +43,15 @@ class Parser(object):
             # a so called "kernel items" expand collection with non-kernel
             # items. We will also calculate GOTO dict for each state.
             # This dict will be keyed by a grammar symbol.
-            s = state_queue[0]
-            del state_queue[0]
+            s = state_queue.pop(0)
             s.closure()
             self.states.append(s)
 
+            # Each state has its corresponding GOTO table
             goto = OrderedDict()
             self.goto.append(goto)
+            actions = OrderedDict()
+            self.actions.append(actions)
 
             # To find out other state we examine following grammar symbols
             # in the current state (symbols following current position/"dot")
@@ -57,6 +61,13 @@ class Parser(object):
                 symbol = i.production.rhs[i.position]
                 if symbol:
                     per_next_symbol.setdefault(symbol, []).append(i)
+                else:
+                    # If the position is at the end then this item
+                    # would call for reduction but only for terminals
+                    # from the FOLLOW set of the production LHS non-terminal.
+                    for t in follow(self.grammar, i.production.symbol,
+                                    self.first_set):
+                        actions[t] = (REDUCE, i.production)
 
             # For each group symbol we create new state and form its kernel
             # items from the group items with position moved one step ahead.
@@ -79,8 +90,15 @@ class Parser(object):
                     state_queue.append(target_state)
                     state_id += 1
 
-                # For each group symbol we create an entry in GOTO table.
-                goto[symbol] = target_state
+                if isinstance(symbol, NonTerminal):
+                    # For each non-terminal symbol we create an entry in GOTO
+                    # table.
+                    goto[symbol] = target_state
+                else:
+                    if symbol in actions:
+                        raise Exception('SHIFT/REDUCE conflict!')
+
+                    actions[symbol] = (SHIFT, target_state)
 
         print("\n\n*** STATES ***")
         for s in self.states:
