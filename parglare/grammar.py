@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import re
 
 
 class GrammarSymbol(object):
@@ -21,6 +22,10 @@ class NonTerminal(GrammarSymbol):
 
 
 class Terminal(GrammarSymbol):
+    pass
+
+
+class TerminalStr(Terminal):
     def __init__(self, name, value):
         super(Terminal, self).__init__(name)
         self.value = value
@@ -29,9 +34,18 @@ class Terminal(GrammarSymbol):
         return hash(self.value)
 
 
+class TerminalRegEx(Terminal):
+    def __init__(self, name, regex):
+        super(Terminal, self).__init__(name)
+        self.regex = re.compile(regex)
+
+    def __hash__(self):
+        return hash(self.value)
+
+
 AUGSYMBOL = NonTerminal("S'")
-NULL = Terminal("Empty", "ɛ")
-EOF = Terminal("EOF", "$")
+NULL = TerminalStr("Empty", "ɛ")
+EOF = TerminalStr("EOF", "$")
 
 
 class Production(object):
@@ -69,18 +83,19 @@ class Grammar(object):
 
     def __init__(self):
         self.productions = []
-        self.nonterminals = set()
-        self.terminals = set()
 
-    def augment(self, root_symbol):
-        self.productions.insert(
-            0, Production(AUGSYMBOL, ProductionRHS([root_symbol])))
-
-    def init_grammar(self):
+    def init_grammar(self, root_symbol):
         """
         Extracts all grammar symbol (nonterminal and terminal) from the
         grammar and check references in productions.
         """
+        self.nonterminals = set()
+        self.terminals = set()
+        self.root_symbol = root_symbol
+
+        # Augmenting grammar. Used for LR item sets calculation.
+        self.productions.insert(
+            0, Production(AUGSYMBOL, ProductionRHS([root_symbol])))
 
         for s in self.productions:
             if isinstance(s.symbol, NonTerminal):

@@ -1,36 +1,36 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from collections import OrderedDict
-from .grammar import NonTerminal, NULL, AUGSYMBOL, EOF
+from .grammar import Grammar, NonTerminal, NULL, AUGSYMBOL, EOF
+from .exceptions import NotInitialized
 
 SHIFT = 0
 REDUCE = 1
 
 
 class Parser(object):
-    """
-    Parser works like a state machine driven by a LR table.
-    LR table will be created and cached or loaded from cache if cache is found.
+    """Parser works like a DFA driven by a LR tables. For a given grammar LR table
+    will be created and cached or loaded from cache if cache is found.
     """
     def __init__(self, grammar, root_symbol=None):
         self.grammar = grammar
-        self.grammar.init_grammar()
         if root_symbol is None:
             root_symbol = self.grammar.productions[0].symbol
+        self.grammar.init_grammar(root_symbol)
         self.root_symbol = root_symbol
         self.states = []
-        self.actions = {}
+        self.actions = []
         self.goto = []
 
         self._init_parser()
 
     def _init_parser(self):
         """Create parser states and tables."""
-        self.grammar.augment(self.root_symbol)
-        self.first_set = firsts(grammar)
-        self._create_states_and_goto_table()
+        self.first_sets = first(self.grammar)
+        self.follow_sets = follow(self.grammar, self.first_sets)
+        self._create_tables()
 
-    def _create_states_and_goto_table(self):
+    def _create_tables(self):
 
         # Create a state for the first production (augmented)
         s = LRState(self, 0, [LRItem(self.grammar.productions[0], 0)])
@@ -101,15 +101,19 @@ class Parser(object):
                     actions[symbol] = (SHIFT, target_state)
 
         print("\n\n*** STATES ***")
-        for s in self.states:
+        for s, g, a in zip(self.states, self.goto, self.actions):
             s.print_debug()
 
-        print("\n\nGOTO table:")
-        for idx, g in enumerate(self.goto):
-            print(idx, ", ".join(["%s->%d" % (k, v.state_id)
-                                 for k, v in g.items()]))
+            print("\n\nGOTO:")
+            print(", ".join(["%s->%d" % (k, v.state_id)
+                             for k, v in g.items()]))
+            print("\n\nACTION:")
+            print(", ".join(["%s->%d" % (k, v)
+                             for k, v in a.items()]))
 
     def parse(self, input_str):
+        # Parser is in initial state.
+        # If action
         pass
 
 
@@ -200,19 +204,24 @@ class LRState(object):
             print("\t", i)
 
 
-def firsts(grammar):
+def first(grammar):
     """Calculates the sets of terminals that can start the sentence derived from
     all grammar symbols.
     """
-    first_set = {}
-    for t in grammar.terminals:
-        first_set[t] = set([t])
+    assert isinstance(grammar, Grammar), \
+        "grammar parameter should be Grammar instance."
+    first_sets = {}
+    try:
+        for t in grammar.terminals:
+            first_sets[t] = set([t])
+    except AttributeError:
+        raise NotInitialized()
 
     def _first(nt):
-        if nt in first_set:
-            return first_set[nt]
+        if nt in first_sets:
+            return first_sets[nt]
         fs = set()
-        first_set[nt] = fs
+        first_sets[nt] = fs
         for p in grammar.productions:
             if p.symbol is nt:
                 pfs = set()
@@ -226,6 +235,48 @@ def firsts(grammar):
         return fs
 
     for p in grammar.nonterminals:
-        first_set[p] = _first(p)
+        first_sets[p] = _first(p)
 
-    return first_set
+    return first_sets
+
+
+def follow(grammar, first_sets=None):
+    """Calculates the sets of terminals that can follow some non-terminal for the
+    given grammar.
+
+    Args:
+    grammar (Grammar): An initialized grammar.
+    first_sets (dict): A sets of FIRST terminals keyed by a grammar symbol.
+    """
+
+    if not hasattr(grammar, 'nonterminals'):
+        raise NotInitialized()
+
+    if first_sets is None:
+        first_sets = first(grammar)
+
+    follow_sets = {}
+    for symbol in grammar.nonterminals:
+        follow_sets[symbol] = set()
+    follow_sets[grammar.root_symbol].add(EOF)
+
+    has_additions = True
+    while has_additions:
+        has_additions = False
+        for symbol in grammar.nonterminals:
+            for p in grammar.productions:
+                for idx, s in enumerate(p.rhs):
+                    if s is symbol:
+                        prod_follow = set()
+                        for rsymbol in p.rhs[idx+1:]:
+                            sfollow = first_sets[rsymbol]
+                            prod_follow.update(sfollow)
+                            if NULL not in sfollow:
+                                break
+                        else:
+                            prod_follow.update(follow_sets[p.symbol])
+                        prod_follow.discard(NULL)
+                        if prod_follow.difference(follow_sets[symbol]):
+                            has_additions = True
+                            follow_sets[symbol].update(prod_follow)
+    return follow_sets
