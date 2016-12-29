@@ -33,6 +33,12 @@ class TerminalStr(Terminal):
     def __hash__(self):
         return hash(self.value)
 
+    def parse(self, in_str):
+        if in_str.startswith(self.value):
+            return self.value
+        else:
+            return ''
+
 
 class TerminalRegEx(Terminal):
     def __init__(self, name, regex):
@@ -61,7 +67,7 @@ class Production(object):
         self.rhs = rhs if rhs else ProductionRHS()
 
     def __str__(self):
-        return "%s -> %s" % (self.symbol, self.rhs)
+        return "%d: %s -> %s" % (self.prod_id, self.symbol, self.rhs)
 
 
 class ProductionRHS(list):
@@ -94,8 +100,9 @@ class Grammar(object):
         self.root_symbol = root_symbol
 
         # Augmenting grammar. Used for LR item sets calculation.
-        self.productions.insert(
-            0, Production(AUGSYMBOL, ProductionRHS([root_symbol])))
+        if self.productions[0].symbol is not AUGSYMBOL:
+            self.productions.insert(
+                0, Production(AUGSYMBOL, ProductionRHS([root_symbol])))
 
         for s in self.productions:
             if isinstance(s.symbol, NonTerminal):
@@ -108,7 +115,8 @@ class Grammar(object):
                 if isinstance(t, Terminal):
                     self.terminals.add(t)
 
-        for s in self.productions:
+        for idx, s in enumerate(self.productions):
+            s.prod_id = idx
             for ref in s.rhs:
                 if ref not in self.nonterminals and ref not in self.terminals:
                     raise Exception("Undefined grammar symbol '%s' referenced "
@@ -119,3 +127,8 @@ class Grammar(object):
         print(" ".join([str(t) for t in self.terminals]))
         print("NonTerminals:")
         print(" ".join([str(n) for n in self.nonterminals]))
+
+        print("Productions:")
+        for p in self.productions:
+            print(p)
+

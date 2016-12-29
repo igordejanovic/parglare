@@ -3,36 +3,10 @@ from parglare.parser import first, follow
 from parglare.exceptions import NotInitialized
 from parglare.grammar import Grammar, NonTerminal, TerminalStr, Production, \
     ProductionRHS, NULL, EOF
+from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 
 
-# Expression grammar
-E, T, F = [NonTerminal(name) for name in ['E', 'T', 'F']]
-PLUS, MULT, ID, OPEN, CLOSE = [
-    TerminalStr(value, value) for value in ['+', '*', 'id', '(', ')']]
-productions = [
-    (E, (E, PLUS, T)),
-    (E, (T, )),
-    (T, (T, MULT, F)),
-    (T, (F, )),
-    (F, (OPEN, E, CLOSE)),
-    (F, (ID,))
-]
-
-
-@pytest.fixture
-def expression_grammar():
-    # Initialize grammar
-    g = Grammar()
-
-    for p in productions:
-        g.productions.append(Production(p[0], ProductionRHS(p[1])))
-
-    g.init_grammar(E)
-
-    return g
-
-
-def test_first(expression_grammar):
+def test_first():
     """
     Tests FIRST function.
 
@@ -40,6 +14,7 @@ def test_first(expression_grammar):
     derived from the given non-terminal.
     """
 
+    expression_grammar = get_grammar()
     first_set = first(expression_grammar)
 
     assert OPEN in first_set[T]
@@ -91,13 +66,14 @@ def test_first_uninitialized():
         first(g)
 
 
-def test_follow(expression_grammar):
+def test_follow():
     """Tests FOLLOW function.
 
     FOLLOW function calculates a set of terminals that can follow each grammar
     non-terminal in any of derived sentential forms.
     """
 
+    expression_grammar = get_grammar()
     follow_set = follow(expression_grammar)
 
     assert follow_set[E] == set([CLOSE, PLUS, EOF])
