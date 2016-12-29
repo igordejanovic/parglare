@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 from .grammar import Grammar, NonTerminal, NULL, AUGSYMBOL, EOF
-from .exceptions import NotInitialized
+from .exceptions import NotInitialized, ParseError
 
 SHIFT = 0
 REDUCE = 1
@@ -138,6 +138,8 @@ class Parser(object):
                     tok = symbol.parse(input_str[position:])
                     if tok:
                         tokens.append((symbol, tok))
+                if not tokens:
+                    raise ParseError(position, actions)
                 ntok_sym, ntok = max(tokens, key=lambda t: len(t[1]))
 
             if ntok_sym is EOF and EOF in actions and \
@@ -159,9 +161,6 @@ class Parser(object):
                     goto = self.goto[cur_state.state_id]
                     state_stack.append(goto[production.symbol])
                     print("Reducing by prod '%s'." % str(production))
-                else:
-                    print('ERROR')
-                    break
 
 
 class Action(object):
