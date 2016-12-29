@@ -13,12 +13,13 @@ class Parser(object):
     """Parser works like a DFA driven by a LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, root_symbol=None):
+    def __init__(self, grammar, root_symbol=None, debug=False):
         self.grammar = grammar
         if root_symbol is None:
             root_symbol = self.grammar.productions[0].symbol
         self.grammar.init_grammar(root_symbol)
         self.root_symbol = root_symbol
+        self.debug = debug
 
         self.states = []
         self.actions = []
@@ -104,7 +105,8 @@ class Parser(object):
 
                     actions[symbol] = Action(SHIFT, state=target_state)
 
-        self.print_debug()
+        if self.debug:
+            self.print_debug()
 
     def print_debug(self):
         self.grammar.print_debug()
@@ -144,7 +146,8 @@ class Parser(object):
 
             if ntok_sym is EOF and EOF in actions and \
                     actions[EOF].action is ACCEPT:
-                print("SUCCESS!!!")
+                if self.debug:
+                    print("SUCCESS!!!")
                 break
             else:
                 act = actions[ntok_sym]
@@ -153,14 +156,16 @@ class Parser(object):
                     state = act.state
                     position += len(ntok)
                     state_stack.append(state)
-                    print("Shift: ", ntok)
+                    if self.debug:
+                        print("Shift: ", ntok)
                 elif act.action is REDUCE:
                     production = act.prod
                     del state_stack[-len(production.rhs):]
                     cur_state = state_stack[-1]
                     goto = self.goto[cur_state.state_id]
                     state_stack.append(goto[production.symbol])
-                    print("Reducing by prod '%s'." % str(production))
+                    if self.debug:
+                        print("Reducing by prod '%s'." % str(production))
 
 
 class Action(object):
