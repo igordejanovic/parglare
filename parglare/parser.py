@@ -72,7 +72,11 @@ class Parser(object):
                     # would call for reduction but only for terminals
                     # from the FOLLOW set of the production LHS non-terminal.
                     for t in self.follow_sets[i.production.symbol]:
-                        actions[t] = Action(REDUCE, prod=i.production)
+                        if t in actions:
+                            # TODO: REDUCE/REDUCE conflict
+                            assert False
+                        else:
+                            actions[t] = Action(REDUCE, prod=i.production)
 
             # For each group symbol we create new state and form its kernel
             # items from the group items with position moved one step ahead.
@@ -101,8 +105,8 @@ class Parser(object):
                     goto[symbol] = target_state
                 else:
                     if symbol in actions:
-                        raise Exception('SHIFT/REDUCE conflict!')
-
+                        # TODO: SHIFT/REDUCE conflict
+                        assert False
                     actions[symbol] = Action(SHIFT, state=target_state)
 
         if self.debug:
