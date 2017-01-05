@@ -152,7 +152,7 @@ class Parser(object):
             else:
                 tokens = []
                 for symbol in actions:
-                    tok = symbol.parse(input_str[position:])
+                    tok = symbol.parse(input_str, position)
                     if tok:
                         tokens.append((symbol, tok))
                 if not tokens:

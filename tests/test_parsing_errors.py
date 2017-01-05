@@ -32,4 +32,3 @@ def test_premature_end():
         assert "(" in symbol_names
         assert "id" in symbol_names
         assert len(symbol_names) == 2
-

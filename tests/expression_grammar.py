@@ -1,5 +1,4 @@
-from parglare.grammar import Grammar, NonTerminal, TerminalStr, Production, \
-    ProductionRHS
+from parglare import NonTerminal, TerminalStr, create_grammar
 
 
 # Expression grammar
@@ -17,13 +16,4 @@ productions = [
 
 
 def get_grammar():
-
-    # Initialize grammar
-    g = Grammar()
-
-    for p in productions:
-        g.productions.append(Production(p[0], ProductionRHS(p[1])))
-
-    g.init_grammar(E)
-
-    return g
+    return create_grammar(productions, E)
