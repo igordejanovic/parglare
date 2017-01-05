@@ -41,4 +41,4 @@ def test_whitespace_noskip():
     try:
         p.parse("""id+  id * (id +id  ) """)
     except ParseError as e:
-        assert e.position == 13
+        assert e.position == 3
