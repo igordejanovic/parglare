@@ -13,7 +13,8 @@ class Parser(object):
     """Parser works like a DFA driven by a LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, root_symbol=None, debug=False):
+    def __init__(self, grammar, root_symbol=None, debug=False, ws='\t\n ',
+                 skip_ws=True):
         self.grammar = grammar
         if root_symbol is None:
             root_symbol = self.grammar.productions[0].symbol
@@ -24,6 +25,9 @@ class Parser(object):
         self.states = []
         self.actions = []
         self.goto = []
+
+        self.ws = ws
+        self.skip_ws = skip_ws
 
         self._init_parser()
 
@@ -43,19 +47,20 @@ class Parser(object):
         state_id = 1
 
         while state_queue:
-            # For each state calculate its closure first, i.e. starting from
-            # a so called "kernel items" expand collection with non-kernel
-            # items. We will also calculate GOTO dict for each state.
-            # This dict will be keyed by a grammar symbol.
-            s = state_queue.pop(0)
-            s.closure()
-            self.states.append(s)
+            # For each state calculate its closure first, i.e. starting from a
+            # so called "kernel items" expand collection with non-kernel items.
+            # We will also calculate GOTO and ACTIONS dict for each state. This
+            # dict will be keyed by a grammar symbol.
+            state = state_queue.pop(0)
+            state.closure()
+            self.states.append(state)
 
-            # Each state has its corresponding GOTO table
+            # Each state has its corresponding GOTO and ACTION table
             goto = OrderedDict()
             self.goto.append(goto)
             actions = OrderedDict()
-            if s.state_id == 1:
+            # State with id of 1 is ending state
+            if state.state_id == 1:
                 actions[EOF] = Action(ACCEPT)
             self.actions.append(actions)
 
@@ -63,7 +68,7 @@ class Parser(object):
             # in the current state (symbols following current position/"dot")
             # and group all items by a grammar symbol.
             per_next_symbol = OrderedDict()
-            for i in s.items:
+            for i in state.items:
                 symbol = i.production.rhs[i.position]
                 if symbol:
                     per_next_symbol.setdefault(symbol, []).append(i)
@@ -79,7 +84,7 @@ class Parser(object):
                             actions[t] = Action(REDUCE, prod=i.production)
 
             # For each group symbol we create new state and form its kernel
-            # items from the group items with position moved one step ahead.
+            # items from the group items with positions moved one step ahead.
             for symbol, items in per_next_symbol.items():
                 inc_items = [i.get_pos_inc() for i in items]
                 maybe_new_state = LRState(self, state_id, symbol, inc_items)
@@ -94,7 +99,7 @@ class Parser(object):
                     except ValueError:
                         pass
 
-                # We register a state only if it doesn't exists from before.
+                # We've found a new state. Register it for later processing.
                 if target_state is maybe_new_state:
                     state_queue.append(target_state)
                     state_id += 1
@@ -129,14 +134,20 @@ class Parser(object):
     def parse(self, input_str):
         state_stack = [self.states[0]]
         position = 0
+        in_len = len(input_str)
 
         while True:
             cur_state = state_stack[-1]
             goto = self.goto[cur_state.state_id]
             actions = self.actions[cur_state.state_id]
 
+            # Skip whitespaces
+            if self.ws and self.skip_ws:
+                while position < in_len and input_str[position] in self.ws:
+                    position += 1
+
             # Find next token on the input
-            if position == len(input_str):
+            if position == in_len:
                 ntok_sym = EOF
             else:
                 tokens = []
@@ -145,31 +156,32 @@ class Parser(object):
                     if tok:
                         tokens.append((symbol, tok))
                 if not tokens:
-                    raise ParseError(position, actions)
+                    raise ParseError(position, actions.keys())
                 ntok_sym, ntok = max(tokens, key=lambda t: len(t[1]))
 
-            if ntok_sym is EOF and EOF in actions and \
-                    actions[EOF].action is ACCEPT:
+            act = actions.get(ntok_sym)
+
+            if not act:
+                raise ParseError(position, actions.keys())
+
+            if act.action is SHIFT:
+                state = act.state
+                position += len(ntok)
+                state_stack.append(state)
+                if self.debug:
+                    print("Shift: ", ntok)
+            elif act.action is REDUCE:
+                production = act.prod
+                del state_stack[-len(production.rhs):]
+                cur_state = state_stack[-1]
+                goto = self.goto[cur_state.state_id]
+                state_stack.append(goto[production.symbol])
+                if self.debug:
+                    print("Reducing by prod '%s'." % str(production))
+            elif act.action is ACCEPT:
                 if self.debug:
                     print("SUCCESS!!!")
                 break
-            else:
-                act = actions[ntok_sym]
-
-                if act.action is SHIFT:
-                    state = act.state
-                    position += len(ntok)
-                    state_stack.append(state)
-                    if self.debug:
-                        print("Shift: ", ntok)
-                elif act.action is REDUCE:
-                    production = act.prod
-                    del state_stack[-len(production.rhs):]
-                    cur_state = state_stack[-1]
-                    goto = self.goto[cur_state.state_id]
-                    state_stack.append(goto[production.symbol])
-                    if self.debug:
-                        print("Reducing by prod '%s'." % str(production))
 
 
 class Action(object):
