@@ -33,8 +33,8 @@ class TerminalStr(Terminal):
     def __hash__(self):
         return hash(self.value)
 
-    def parse(self, in_str):
-        if in_str.startswith(self.value):
+    def parse(self, in_str, pos):
+        if in_str[pos:].startswith(self.value):
             return self.value
         else:
             return ''
@@ -43,10 +43,21 @@ class TerminalStr(Terminal):
 class TerminalRegEx(Terminal):
     def __init__(self, name, regex):
         super(Terminal, self).__init__(name)
+        self._regex = regex
         self.regex = re.compile(regex)
 
     def __hash__(self):
-        return hash(self.value)
+        return hash(self._regex)
+
+    def parse(self, in_str, pos):
+        print("Parsing", self._regex)
+        m = self.regex.match(in_str, pos)
+        if m:
+            matched = m.group()
+            print("Parsed,", matched)
+            return matched
+        else:
+            return ''
 
 
 AUGSYMBOL = NonTerminal("S'")
@@ -132,3 +143,14 @@ class Grammar(object):
         for p in self.productions:
             print(p)
 
+
+def create_grammar(productions, start_symbol):
+    """Creates grammar from a list of productions given in the form: (LHS, RHS).
+    Where LHS is grammar symbol and RHS is a list or tuple of grammar symbols
+    from the right-hand side of the production.
+    """
+    g = Grammar()
+    for p in productions:
+        g.productions.append(Production(p[0], ProductionRHS(p[1])))
+    g.init_grammar(start_symbol)
+    return g
