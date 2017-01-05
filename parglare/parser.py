@@ -22,9 +22,9 @@ class Parser(object):
         self.root_symbol = root_symbol
         self.debug = debug
 
-        self.states = []
-        self.actions = []
-        self.goto = []
+        self._states = []
+        self._actions = []
+        self._goto = []
 
         self.ws = ws
         self.skip_ws = skip_ws
@@ -33,8 +33,8 @@ class Parser(object):
 
     def _init_parser(self):
         """Create parser states and tables."""
-        self.first_sets = first(self.grammar)
-        self.follow_sets = follow(self.grammar, self.first_sets)
+        self._first_sets = first(self.grammar)
+        self._follow_sets = follow(self.grammar, self._first_sets)
         self._create_tables()
 
     def _create_tables(self):
@@ -53,16 +53,16 @@ class Parser(object):
             # dict will be keyed by a grammar symbol.
             state = state_queue.pop(0)
             state.closure()
-            self.states.append(state)
+            self._states.append(state)
 
             # Each state has its corresponding GOTO and ACTION table
             goto = OrderedDict()
-            self.goto.append(goto)
+            self._goto.append(goto)
             actions = OrderedDict()
             # State with id of 1 is ending state
             if state.state_id == 1:
                 actions[EOF] = Action(ACCEPT)
-            self.actions.append(actions)
+            self._actions.append(actions)
 
             # To find out other state we examine following grammar symbols
             # in the current state (symbols following current position/"dot")
@@ -76,7 +76,7 @@ class Parser(object):
                     # If the position is at the end then this item
                     # would call for reduction but only for terminals
                     # from the FOLLOW set of the production LHS non-terminal.
-                    for t in self.follow_sets[i.production.symbol]:
+                    for t in self._follow_sets[i.production.symbol]:
                         if t in actions:
                             # TODO: REDUCE/REDUCE conflict
                             assert False
@@ -90,8 +90,8 @@ class Parser(object):
                 maybe_new_state = LRState(self, state_id, symbol, inc_items)
                 target_state = maybe_new_state
                 try:
-                    idx = self.states.index(maybe_new_state)
-                    target_state = self.states[idx]
+                    idx = self._states.index(maybe_new_state)
+                    target_state = self._states[idx]
                 except ValueError:
                     try:
                         idx = state_queue.index(maybe_new_state)
@@ -120,7 +120,7 @@ class Parser(object):
     def print_debug(self):
         self.grammar.print_debug()
         print("\n\n*** STATES ***")
-        for s, g, a in zip(self.states, self.goto, self.actions):
+        for s, g, a in zip(self._states, self._goto, self._actions):
             s.print_debug()
 
             if g:
@@ -132,14 +132,14 @@ class Parser(object):
                                    for k, v in a.items()]))
 
     def parse(self, input_str):
-        state_stack = [self.states[0]]
+        state_stack = [self._states[0]]
         position = 0
         in_len = len(input_str)
 
         while True:
             cur_state = state_stack[-1]
-            goto = self.goto[cur_state.state_id]
-            actions = self.actions[cur_state.state_id]
+            goto = self._goto[cur_state.state_id]
+            actions = self._actions[cur_state.state_id]
 
             # Skip whitespaces
             if self.ws and self.skip_ws:
@@ -174,7 +174,7 @@ class Parser(object):
                 production = act.prod
                 del state_stack[-len(production.rhs):]
                 cur_state = state_stack[-1]
-                goto = self.goto[cur_state.state_id]
+                goto = self._goto[cur_state.state_id]
                 state_stack.append(goto[production.symbol])
                 if self.debug:
                     print("Reducing by prod '%s'." % str(production))
