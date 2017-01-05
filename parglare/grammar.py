@@ -50,11 +50,9 @@ class TerminalRegEx(Terminal):
         return hash(self._regex)
 
     def parse(self, in_str, pos):
-        print("Parsing", self._regex)
         m = self.regex.match(in_str, pos)
         if m:
             matched = m.group()
-            print("Parsed,", matched)
             return matched
         else:
             return ''
