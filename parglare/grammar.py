@@ -64,7 +64,16 @@ EOF = TerminalStr("EOF", "$")
 
 
 class Production(object):
-    """Represent production from the grammar."""
+    """Represent production from the grammar.
+
+    Attributes:
+    symbol (GrammarSymbol):
+    rhs (ProductionRHS):
+    prod_id (int): Ordinal number of the production.
+    prod_symbol_id (str): Ident of production in the form "<Symbol>:ord" where
+        ordinal is ordinal of the alternative choice starting from 0. Used to
+        map actions.
+    """
 
     def __init__(self, symbol, rhs):
         """
@@ -124,8 +133,13 @@ class Grammar(object):
                 if isinstance(t, Terminal):
                     self.terminals.add(t)
 
+        # Enumerate productions
+        idx_per_symbol = {}
         for idx, s in enumerate(self.productions):
             s.prod_id = idx
+            s.prod_symbol_id = "{}:{}".format(s.symbol,
+                                              idx_per_symbol.get(s.symbol, 0))
+            idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 0) + 1
             for ref in s.rhs:
                 if ref not in self.nonterminals and ref not in self.terminals:
                     raise Exception("Undefined grammar symbol '%s' referenced "

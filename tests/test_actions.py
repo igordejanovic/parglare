@@ -5,29 +5,31 @@ from .expression_grammar_numbers import get_grammar, E
 
 def test_actions():
 
-    def nodes_sum(position, symbol, nodes):
-        if len(nodes) == 3:
-            return nodes[0] + nodes[2]
-        else:
-            return nodes[0]
+    def sum_act(position, symbol, nodes):
+        return nodes[0] + nodes[2]
 
-    def nodes_mul(positon, symbol, nodes):
+    def t_act(positon, symbol, nodes):
         if len(nodes) == 3:
             return nodes[0] * nodes[2]
         else:
             return nodes[0]
 
-    def nodes_factor(position, symbol, nodes):
-        if len(nodes) == 3:
-            return nodes[1]
-        else:
-            return nodes[0]
+    def parenthesses_act(position, symbol, nodes):
+        return nodes[1]
+
+    def pass_act(position, symbol, nodes):
+        return nodes[0]
 
     grammar = get_grammar()
     actions = {"number": lambda position, symbol, value: float(value),
-               "E": nodes_sum,
-               "T": nodes_mul,
-               "F": nodes_factor
+               # Check action for each alternative
+               "E:0": sum_act,
+               "E:1": pass_act,
+               # Check symbol-level action
+               "T": t_act,
+               # Again action for each alternative
+               "F:0": parenthesses_act,
+               "F:1": pass_act
     }
 
     p = Parser(grammar, E, actions=actions)

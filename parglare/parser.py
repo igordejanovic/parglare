@@ -202,7 +202,12 @@ class Parser(object):
                 goto = self._goto[cur_state.state_id]
 
                 res = None
-                if act.prod.symbol.name in self.actions:
+                if act.prod.prod_symbol_id in self.actions:
+                    res = self.actions[
+                        act.prod.prod_symbol_id](position_stack[-1],
+                                                 act.prod.symbol,
+                                                 nodes=subresults)
+                elif act.prod.symbol.name in self.actions:
                     res = self.actions[
                         act.prod.symbol.name](position_stack[-1],
                                               act.prod.symbol,
