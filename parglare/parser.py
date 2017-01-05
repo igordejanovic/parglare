@@ -175,9 +175,10 @@ class Parser(object):
                 state = act.state
 
                 res = None
-                if state.symbol in self.actions:
-                    res = self.actions[state.symbol](position, state.symbol,
-                                                     value=ntok)
+                if state.symbol.name in self.actions:
+                    res = self.actions[state.symbol.name](position,
+                                                          state.symbol,
+                                                          value=ntok)
                 elif self.default_actions:
                     res = default_shift_action(position, state.symbol,
                                                value=ntok)
@@ -201,10 +202,11 @@ class Parser(object):
                 goto = self._goto[cur_state.state_id]
 
                 res = None
-                if act.prod.symbol in self.actions:
-                    res = self.actions[act.symbol](position_stack[-1],
-                                                   act.prod.symbol,
-                                                   nodes=subresults)
+                if act.prod.symbol.name in self.actions:
+                    res = self.actions[
+                        act.prod.symbol.name](position_stack[-1],
+                                              act.prod.symbol,
+                                              nodes=subresults)
                 elif self.default_actions:
                     res = default_reduce_action(position_stack[-1],
                                                 act.prod.symbol,
@@ -350,7 +352,7 @@ class NodeNonTerm(Node):
 
     def tree_str(self, depth=0):
         indent = '  ' * depth
-        s = '{}{}[{}]'.format(indent, self.symbol, self.position)
+        s = '{}[{}]'.format(self.symbol, self.position)
         if self.nodes:
             for n in self.nodes:
                 if hasattr(n, 'tree_str'):
@@ -360,7 +362,7 @@ class NodeNonTerm(Node):
         return s
 
     def __str__(self):
-        return 'Node[%d, "%s"]' % (self.position, self.symbol)
+        return '<Node({}, {})>'.format(self.position, self.symbol)
 
 
 class NodeTerm(Node):
@@ -371,13 +373,12 @@ class NodeTerm(Node):
         self.value = value
 
     def tree_str(self, depth=0):
-        indent = '  ' * depth
-        return '{}{}[{}, {}]'.format(indent, self.symbol, self.position,
-                                     self.value)
+        return '{}[{}, {}]'.format(self.symbol, self.position,
+                                   self.value)
 
     def __str__(self):
-        return 'Node[{}, "{}", "{}"]'.format(self.position,
-                                             self.symbol, self.value)
+        return '<Node({}, {}, {})>'.format(self.position,
+                                           self.symbol, self.value)
 
 
 def default_shift_action(position, symbol, value):
