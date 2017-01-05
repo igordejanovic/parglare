@@ -95,7 +95,7 @@ class ProductionRHS(list):
 class Grammar(object):
     """
     Grammar is a collection of production rules.
-    First production is the augmented production (S' -> S).
+    First production is reserved for the augmented production (S' -> S).
     """
 
     def __init__(self):
