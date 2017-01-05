@@ -13,13 +13,16 @@ class Parser(object):
     """Parser works like a DFA driven by a LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, root_symbol=None, debug=False, ws='\t\n ',
-                 skip_ws=True):
+    def __init__(self, grammar, root_symbol=None, actions=None, debug=False,
+                 ws='\t\n ', skip_ws=True, default_actions=True):
         self.grammar = grammar
         if root_symbol is None:
             root_symbol = self.grammar.productions[0].symbol
         self.grammar.init_grammar(root_symbol)
+
         self.root_symbol = root_symbol
+        self.actions = actions if actions else {}
+
         self.debug = debug
 
         self._states = []
@@ -28,6 +31,7 @@ class Parser(object):
 
         self.ws = ws
         self.skip_ws = skip_ws
+        self.default_actions = default_actions
 
         self._init_parser()
 
@@ -133,6 +137,8 @@ class Parser(object):
 
     def parse(self, input_str):
         state_stack = [self._states[0]]
+        results_stack = []
+        position_stack = [0]
         position = 0
         in_len = len(input_str)
 
@@ -146,7 +152,7 @@ class Parser(object):
                 while position < in_len and input_str[position] in self.ws:
                     position += 1
 
-            # Find next token on the input
+            # Find the next token in the input
             if position == in_len:
                 ntok_sym = EOF
             else:
@@ -157,6 +163,7 @@ class Parser(object):
                         tokens.append((symbol, tok))
                 if not tokens:
                     raise ParseError(position, actions.keys())
+                # Longest-match disambiguation resolution.
                 ntok_sym, ntok = max(tokens, key=lambda t: len(t[1]))
 
             act = actions.get(ntok_sym)
@@ -166,22 +173,54 @@ class Parser(object):
 
             if act.action is SHIFT:
                 state = act.state
-                position += len(ntok)
+
+                res = None
+                if state.symbol in self.actions:
+                    res = self.actions[state.symbol](position, state.symbol,
+                                                     value=ntok)
+                elif self.default_actions:
+                    res = default_shift_action(position, state.symbol,
+                                               value=ntok)
+
                 state_stack.append(state)
+                results_stack.append(res)
+                position_stack.append(position)
+                position += len(ntok)
+
                 if self.debug:
-                    print("Shift: ", ntok)
+                    print("Shift:", ntok, "at position", position)
+
             elif act.action is REDUCE:
                 production = act.prod
+                subresults = results_stack[-len(production.rhs):]
                 del state_stack[-len(production.rhs):]
+                del results_stack[-len(production.rhs):]
+                if len(production.rhs) > 1:
+                    del position_stack[-(len(production.rhs)-1):]
                 cur_state = state_stack[-1]
                 goto = self._goto[cur_state.state_id]
+
+                res = None
+                if act.prod.symbol in self.actions:
+                    res = self.actions[act.symbol](position_stack[-1],
+                                                   act.prod.symbol,
+                                                   nodes=subresults)
+                elif self.default_actions:
+                    res = default_reduce_action(position_stack[-1],
+                                                act.prod.symbol,
+                                                nodes=subresults)
+
                 state_stack.append(goto[production.symbol])
+                results_stack.append(res)
+
                 if self.debug:
                     print("Reducing by prod '%s'." % str(production))
+
             elif act.action is ACCEPT:
                 if self.debug:
                     print("SUCCESS!!!")
-                break
+                assert len(results_stack) == 1
+                return results_stack[0]
 
 
 class Action(object):
@@ -249,6 +288,7 @@ class LRItem(object):
 
 class LRState(object):
     """LR State is a set of LR items."""
+    __slots__ = ['parser', 'state_id', 'symbol', 'items']
 
     def __init__(self, parser, state_id, symbol, items):
         self.parser = parser
@@ -289,6 +329,63 @@ class LRState(object):
         print("\nState %d" % self.state_id)
         for i in self.items:
             print("\t", i)
+
+
+class Node(object):
+    """A node of the parse tree.
+    """
+    __slots__ = ['position', 'symbol']
+
+    def __init__(self, position, symbol):
+        self.position = position
+        self.symbol = symbol
+
+
+class NodeNonTerm(Node):
+    __slots__ = ['nodes']
+
+    def __init__(self, position, symbol, nodes):
+        super(NodeNonTerm, self).__init__(position, symbol)
+        self.nodes = nodes
+
+    def tree_str(self, depth=0):
+        indent = '  ' * depth
+        s = '{}{}[{}]'.format(indent, self.symbol, self.position)
+        if self.nodes:
+            for n in self.nodes:
+                if hasattr(n, 'tree_str'):
+                    s += '\n' + indent + n.tree_str(depth+1)
+                else:
+                    s += '\n' + indent + str(n)
+        return s
+
+    def __str__(self):
+        return 'Node[%d, "%s"]' % (self.position, self.symbol)
+
+
+class NodeTerm(Node):
+    __slots__ = ['value']
+
+    def __init__(self, position, symbol, value):
+        super(NodeTerm, self).__init__(position, symbol)
+        self.value = value
+
+    def tree_str(self, depth=0):
+        indent = '  ' * depth
+        return '{}{}[{}, {}]'.format(indent, self.symbol, self.position,
+                                     self.value)
+
+    def __str__(self):
+        return 'Node[{}, "{}", "{}"]'.format(self.position,
+                                             self.symbol, self.value)
+
+
+def default_shift_action(position, symbol, value):
+    return NodeTerm(position, symbol, value)
+
+
+def default_reduce_action(position, symbol, nodes):
+    return NodeNonTerm(position, symbol, nodes)
 
 
 def first(grammar):
