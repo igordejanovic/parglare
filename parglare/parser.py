@@ -17,8 +17,18 @@ class Parser(object):
     def __init__(self, grammar, root_symbol=None, actions=None, debug=False,
                  ws='\t\n ', skip_ws=True, default_actions=True):
         self.grammar = grammar
+
         self.root_symbol = \
             root_symbol if root_symbol else self.grammar.root_symbol
+        if isinstance(self.root_symbol, str):
+            rs = [x for x in self.grammar.nonterminals
+                  if x.name == self.root_symbol]
+            if rs:
+                self.root_symbol = rs[0]
+            else:
+                raise ParserInitError("Unexisting root grammar symbol '{}'"
+                                      .format(root_symbol))
+
         self.actions = actions if actions else {}
 
         self.debug = debug
