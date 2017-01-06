@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 from .grammar import Grammar, NonTerminal, NULL, AUGSYMBOL, EOF
-from .exceptions import NotInitialized, ParseError
+from .exceptions import ParseError
 
 SHIFT = 0
 REDUCE = 1
@@ -16,11 +16,8 @@ class Parser(object):
     def __init__(self, grammar, root_symbol=None, actions=None, debug=False,
                  ws='\t\n ', skip_ws=True, default_actions=True):
         self.grammar = grammar
-        if root_symbol is None:
-            root_symbol = self.grammar.productions[0].symbol
-        self.grammar.init_grammar(root_symbol)
-
-        self.root_symbol = root_symbol
+        self.root_symbol = \
+            root_symbol if root_symbol else self.grammar.root_symbol
         self.actions = actions if actions else {}
 
         self.debug = debug
@@ -400,12 +397,10 @@ def first(grammar):
     """
     assert isinstance(grammar, Grammar), \
         "grammar parameter should be Grammar instance."
+
     first_sets = {}
-    try:
-        for t in grammar.terminals:
-            first_sets[t] = set([t])
-    except AttributeError:
-        raise NotInitialized()
+    for t in grammar.terminals:
+        first_sets[t] = set([t])
 
     def _first(nt):
         if nt in first_sets:
@@ -438,9 +433,6 @@ def follow(grammar, first_sets=None):
     grammar (Grammar): An initialized grammar.
     first_sets (dict): A sets of FIRST terminals keyed by a grammar symbol.
     """
-
-    if not hasattr(grammar, 'nonterminals'):
-        raise NotInitialized()
 
     if first_sets is None:
         first_sets = first(grammar)

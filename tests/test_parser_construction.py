@@ -1,6 +1,5 @@
 import pytest
 from parglare.parser import first, follow
-from parglare.exceptions import NotInitialized
 from parglare import Grammar, NonTerminal, TerminalStr, NULL, EOF, \
     create_grammar
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
@@ -53,14 +52,6 @@ def test_first_empty_in_rhs():
     assert c in first_set[S]
 
 
-def test_first_uninitialized():
-
-    g = Grammar()
-
-    with pytest.raises(NotInitialized):
-        first(g)
-
-
 def test_follow():
     """Tests FOLLOW function.
 
@@ -75,11 +66,3 @@ def test_follow():
 
     # Follow of T must contain all of follow of E
     assert follow_set[T] == set([MULT, CLOSE, PLUS, EOF])
-
-
-def test_follow_uninitialized():
-
-    g = Grammar()
-
-    with pytest.raises(NotInitialized):
-        follow(g)

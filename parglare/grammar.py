@@ -105,22 +105,23 @@ class Grammar(object):
     First production is reserved for the augmented production (S' -> S).
     """
 
-    def __init__(self):
-        self.productions = []
+    def __init__(self, productions, root_symbol=None):
+        self.productions = productions
+        self.root_symbol = \
+            root_symbol if root_symbol else productions[0].symbol
+        self.init_grammar()
 
-    def init_grammar(self, root_symbol):
+    def init_grammar(self):
         """
         Extracts all grammar symbol (nonterminal and terminal) from the
         grammar and check references in productions.
         """
         self.nonterminals = set()
         self.terminals = set()
-        self.root_symbol = root_symbol
 
         # Augmenting grammar. Used for LR item sets calculation.
-        if self.productions[0].symbol is not AUGSYMBOL:
-            self.productions.insert(
-                0, Production(AUGSYMBOL, ProductionRHS([root_symbol])))
+        self.productions.insert(
+            0, Production(AUGSYMBOL, ProductionRHS([self.root_symbol])))
 
         for s in self.productions:
             if isinstance(s.symbol, NonTerminal):
@@ -156,13 +157,44 @@ class Grammar(object):
             print(p)
 
 
-def create_grammar(productions, start_symbol):
+def create_grammar(productions, start_symbol=None):
     """Creates grammar from a list of productions given in the form: (LHS, RHS).
     Where LHS is grammar symbol and RHS is a list or tuple of grammar symbols
     from the right-hand side of the production.
     """
-    g = Grammar()
+    gp = []
     for p in productions:
-        g.productions.append(Production(p[0], ProductionRHS(p[1])))
-    g.init_grammar(start_symbol)
+        gp.append(Production(p[0], ProductionRHS(p[1])))
+    g = Grammar(gp, start_symbol)
     return g
+
+
+# Grammar for grammars
+
+(GRAMMAR,
+ PRODUCTION,
+ PRODUCTION_RHS,
+ GSYMBOL,
+ NONTERM_REF,
+ TERM) = [NonTerminal(name) for name in ['Grammar',
+                                         'Production',
+                                         'ProductionRHS',
+                                         'GSymbol',
+                                         'NonTermRef',
+                                         'Term']]
+NAME = TerminalRegEx('Name', r'[a-zA-Z0-9]+')
+STR_TERM = TerminalRegEx("StrTerm", r'"[^"]+"')
+REGEX_TERM = TerminalRegEx("RegExTerm", r'')
+productions = [
+    [GRAMMAR, [PRODUCTION]],
+    [GRAMMAR, [GRAMMAR, PRODUCTION]],
+    [PRODUCTION, [NAME, '=', PRODUCTION_RHS]],
+    [PRODUCTION_RHS, [PRODUCTION_RHS, '|', PRODUCTION_RHS]],
+    [PRODUCTION_RHS, [PRODUCTION_RHS, GSYMBOL]],
+    [PRODUCTION_RHS, [GSYMBOL]],
+    [GSYMBOL, [NONTERM_REF]],
+    [GSYMBOL, [TERM]],
+    [NONTERM_REF, [NAME]],
+    [TERM, [STR_TERM]],
+    [TERM, [REGEX_TERM]],
+]
