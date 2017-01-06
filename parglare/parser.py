@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from collections import OrderedDict
-from .grammar import Grammar, NonTerminal, NULL, AUGSYMBOL, EOF
-from .exceptions import ParseError
+from .grammar import Grammar, NonTerminal, NULL, AUGSYMBOL, EOF, \
+    ASSOC_RIGHT, ASSOC_NONE
+from .exceptions import ParseError, ParserInitError, ShiftReduceConflict
 
 SHIFT = 0
 REDUCE = 1
@@ -69,10 +70,18 @@ class Parser(object):
             # in the current state (symbols following current position/"dot")
             # and group all items by a grammar symbol.
             per_next_symbol = OrderedDict()
+            max_prior_per_symbol = {}
             for i in state.items:
                 symbol = i.production.rhs[i.position]
                 if symbol:
                     per_next_symbol.setdefault(symbol, []).append(i)
+                    prod_prior = i.production.prior
+                    if symbol in max_prior_per_symbol:
+                        old_prior = max_prior_per_symbol[symbol]
+                        max_prior_per_symbol[symbol] = max(prod_prior,
+                                                           old_prior)
+                    else:
+                        max_prior_per_symbol[symbol] = prod_prior
                 else:
                     # If the position is at the end then this item
                     # would call for reduction but only for terminals
@@ -111,9 +120,26 @@ class Parser(object):
                     goto[symbol] = target_state
                 else:
                     if symbol in actions:
-                        # TODO: SHIFT/REDUCE conflict
-                        assert False
-                    actions[symbol] = Action(SHIFT, state=target_state)
+                        # SHIFT/REDUCE conflict
+                        # Try to resolve using priority and associativity
+                        prod = actions[symbol].prod
+                        prior = max_prior_per_symbol[symbol]
+                        if prod.prior == prior:
+                            if prod.assoc == ASSOC_NONE:
+                                self.print_debug()
+                                raise ShiftReduceConflict(state, symbol, prod)
+                            elif prod.assoc == ASSOC_RIGHT:
+                                actions[symbol] = \
+                                    Action(SHIFT, state=target_state)
+                            # If associativity is left leave reduce operation
+                        elif prod.prior < prior:
+                            # Next operation priority is higher => shift
+                            actions[symbol] = \
+                                Action(SHIFT, state=target_state)
+                        # If priority of next operation is lower then reduce
+                        # before shift
+                    else:
+                        actions[symbol] = Action(SHIFT, state=target_state)
 
         if self.debug:
             self.print_debug()

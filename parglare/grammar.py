@@ -62,6 +62,13 @@ AUGSYMBOL = NonTerminal("S'")
 NULL = TerminalStr("Empty", "ɛ")
 EOF = TerminalStr("EOF", "$")
 
+# Associativity
+ASSOC_NONE = 0
+ASSOC_LEFT = 1
+ASSOC_RIGHT = 2
+
+# Priority
+DEFAULT_PRIORITY = 10
 
 class Production(object):
     """Represent production from the grammar.
@@ -69,13 +76,15 @@ class Production(object):
     Attributes:
     symbol (GrammarSymbol):
     rhs (ProductionRHS):
+    assoc (int): Associativity. Used for ambiguity (shift/reduce) resolution.
+    prior (int): Priority. Used for ambiguity (shift/reduce) resolution.
     prod_id (int): Ordinal number of the production.
     prod_symbol_id (str): Ident of production in the form "<Symbol>:ord" where
         ordinal is ordinal of the alternative choice starting from 0. Used to
         map actions.
     """
 
-    def __init__(self, symbol, rhs):
+    def __init__(self, symbol, rhs, assoc=ASSOC_NONE, prior=DEFAULT_PRIORITY):
         """
         Args:
         symbol (GrammarSymbol): A grammar symbol on the LHS of the production.
@@ -83,6 +92,8 @@ class Production(object):
         """
         self.symbol = symbol
         self.rhs = rhs if rhs else ProductionRHS()
+        self.assoc = assoc
+        self.prior = prior
 
     def __str__(self):
         return "%d: %s -> %s" % (self.prod_id, self.symbol, self.rhs)
@@ -164,7 +175,14 @@ def create_grammar(productions, start_symbol=None):
     """
     gp = []
     for p in productions:
-        gp.append(Production(p[0], ProductionRHS(p[1])))
+        assoc = ASSOC_NONE
+        prior = DEFAULT_PRIORITY
+        if len(p) > 2:
+            assoc = p[2]
+        if len(p) > 3:
+            prior = p[3]
+
+        gp.append(Production(p[0], ProductionRHS(p[1]), assoc, prior))
     g = Grammar(gp, start_symbol)
     return g
 
