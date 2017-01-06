@@ -313,9 +313,9 @@ class LRState(object):
 
         while True:
             has_additions = False
+            to_add = []
             for item in self.items:
                 gs = item.production.rhs[item.position]
-                to_add = []
                 if isinstance(gs, NonTerminal):
                     for p in self.parser.grammar.productions:
                         if p.symbol is gs:
