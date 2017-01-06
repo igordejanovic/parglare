@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import codecs
 import re
 
 
@@ -161,6 +162,19 @@ class Grammar(object):
                     raise Exception("Undefined grammar symbol '%s' referenced "
                                     "in production '%s'." % (ref, s))
 
+    def from_file(file_name):
+        with codecs.open(file_name, encoding='utf-8') as f:
+            grammar_str = f.read()
+
+        # Parse grammar
+        from parglare import Parser
+        global productions, GRAMMAR
+        p = Parser(create_grammar(productions, GRAMMAR))
+        productions = p.parse(grammar_str)
+        print(productions.tree_str())
+
+        return create_grammar(productions, productions[0].symbol)
+
     def print_debug(self):
         print("Terminals:")
         print(" ".join([str(t) for t in self.terminals]))
@@ -194,26 +208,39 @@ def create_grammar(productions, start_symbol=None):
 # Grammar for grammars
 
 (GRAMMAR,
+ PRODUCTION_SET,
  PRODUCTION,
  PRODUCTION_RHS,
  GSYMBOL,
  NONTERM_REF,
- TERM) = [NonTerminal(name) for name in ['Grammar',
-                                         'Production',
-                                         'ProductionRHS',
-                                         'GSymbol',
-                                         'NonTermRef',
-                                         'Term']]
+ TERM,
+ ASSOC,
+ SEQUENCE) = [NonTerminal(name) for name in [
+    'Grammar',
+    'ProductionSet',
+    'Production',
+    'ProductionRHS',
+    'GSymbol',
+    'NonTermRef',
+    'Term',
+    'Assoc',
+    'Sequence']]
 NAME = TerminalRegEx('Name', r'[a-zA-Z0-9]+')
-STR_TERM = TerminalRegEx("StrTerm", r'"[^"]+"')
-REGEX_TERM = TerminalRegEx("RegExTerm", r'')
+STR_TERM = TerminalRegEx("StrTerm", r'"[^"]*"')
+REGEX_TERM = TerminalRegEx("RegExTerm", r'\/((\\/)|[^/])*\/')
+PRIOR = TerminalRegEx("Prior", r'\d+')
 productions = [
-    [GRAMMAR, [PRODUCTION]],
-    [GRAMMAR, [GRAMMAR, PRODUCTION]],
-    [PRODUCTION, [NAME, '=', PRODUCTION_RHS]],
-    [PRODUCTION_RHS, [PRODUCTION_RHS, '|', PRODUCTION_RHS]],
-    [PRODUCTION_RHS, [PRODUCTION_RHS, GSYMBOL]],
-    [PRODUCTION_RHS, [GSYMBOL]],
+    [GRAMMAR, [PRODUCTION_SET]],
+    [PRODUCTION_SET, [PRODUCTION]],
+    [PRODUCTION_SET, [PRODUCTION_SET, PRODUCTION]],
+    [PRODUCTION, [NAME, '=', PRODUCTION_RHS, ';']],
+    [PRODUCTION_RHS, [SEQUENCE]],
+    [PRODUCTION_RHS, [SEQUENCE, '{', ASSOC, ',', PRIOR, '}']],
+    [PRODUCTION_RHS, [PRODUCTION_RHS, '|', PRODUCTION_RHS], ASSOC_LEFT, 5],
+    [ASSOC, ['left']],
+    [ASSOC, ['right']],
+    [SEQUENCE, [GSYMBOL]],
+    [SEQUENCE, [SEQUENCE, GSYMBOL]],
     [GSYMBOL, [NONTERM_REF]],
     [GSYMBOL, [TERM]],
     [NONTERM_REF, [NAME]],
