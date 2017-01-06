@@ -97,9 +97,15 @@ class Parser(object):
                     # would call for reduction but only for terminals
                     # from the FOLLOW set of the production LHS non-terminal.
                     for t in self._follow_sets[i.production.symbol]:
-                        if t in actions:
-                            # TODO: REDUCE/REDUCE conflict
-                            assert False
+                        if t is EOF and i.production.prod_id == 0:
+                            actions[t] = Action(ACCEPT)
+                        elif t in actions:
+                            if actions[t].prod is not i.production:
+                                # TODO: REDUCE/REDUCE conflict
+                                print(state.state_id, t)
+                                print(actions[t].prod)
+                                print(i.production)
+                                assert False
                         else:
                             actions[t] = Action(REDUCE, prod=i.production)
 
