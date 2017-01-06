@@ -26,9 +26,9 @@ class Terminal(GrammarSymbol):
 
 
 class TerminalStr(Terminal):
-    def __init__(self, name, value):
+    def __init__(self, name, value=None):
         super(Terminal, self).__init__(name)
-        self.value = value
+        self.value = value if value else name
 
     def __hash__(self):
         return hash(self.value)
@@ -41,10 +41,10 @@ class TerminalStr(Terminal):
 
 
 class TerminalRegEx(Terminal):
-    def __init__(self, name, regex):
+    def __init__(self, name, regex=None):
         super(Terminal, self).__init__(name)
-        self._regex = regex
-        self.regex = re.compile(regex)
+        self._regex = regex if regex else name
+        self.regex = re.compile(self._regex)
 
     def __hash__(self):
         return hash(self._regex)
