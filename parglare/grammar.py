@@ -141,9 +141,13 @@ class Grammar(object):
                 raise Exception("Invalid production symbol type '%s' "
                                 "for production '%s'" % (type(s.symbol),
                                                          str(s)))
-            for t in s.rhs:
+            for idx, t in enumerate(s.rhs):
                 if isinstance(t, Terminal):
                     self.terminals.add(t)
+                elif isinstance(t, str):
+                    term = TerminalStr(t)
+                    self.terminals.add(term)
+                    s.rhs[idx] = term
 
         # Enumerate productions
         idx_per_symbol = {}
