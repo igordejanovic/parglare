@@ -440,7 +440,7 @@ def follow(grammar, first_sets=None):
     follow_sets = {}
     for symbol in grammar.nonterminals:
         follow_sets[symbol] = set()
-    follow_sets[grammar.root_symbol].add(EOF)
+    follow_sets[AUGSYMBOL].add(EOF)
 
     has_additions = True
     while has_additions:
