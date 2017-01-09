@@ -221,7 +221,7 @@ class Parser(object):
                 context.symbol = state.symbol
 
                 if self.debug:
-                    print("Shift:{} =".format(state.state_id),
+                    print("\tShift:{} =".format(state.state_id),
                           ntok, "at position", position)
 
                 res = None
@@ -229,6 +229,9 @@ class Parser(object):
                     res = self.actions[state.symbol.name](context, ntok)
                 elif self.default_actions:
                     res = default_shift_action(context, ntok)
+
+                if self.debug:
+                    print("\tAction result =", str(res))
 
                 state_stack.append(state)
                 results_stack.append(res)
@@ -240,7 +243,7 @@ class Parser(object):
                 context.symbol = act.prod.symbol
 
                 if self.debug:
-                    print("Reducing by prod '%s'." % str(production))
+                    print("\tReducing by prod '%s'." % str(production))
 
                 subresults = results_stack[-len(production.rhs):]
                 del state_stack[-len(production.rhs):]
@@ -260,6 +263,9 @@ class Parser(object):
                         act.prod.symbol.name](context, subresults)
                 elif self.default_actions:
                     res = default_reduce_action(context, nodes=subresults)
+
+                if self.debug:
+                    print("\tAction result =", str(res))
 
                 state_stack.append(goto[production.symbol])
                 results_stack.append(res)
