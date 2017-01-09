@@ -1,3 +1,7 @@
+class GrammarError(Exception):
+    pass
+
+
 class ParseError(Exception):
     def __init__(self, position, symbols):
         self.position = position

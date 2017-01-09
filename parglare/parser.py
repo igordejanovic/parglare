@@ -183,6 +183,8 @@ class Parser(object):
 
         while True:
             cur_state = state_stack[-1]
+            if self.debug:
+                print("Current state =", cur_state.state_id)
             goto = self._goto[cur_state.state_id]
             actions = self._actions[cur_state.state_id]
 
@@ -213,25 +215,31 @@ class Parser(object):
             if act.action is SHIFT:
                 state = act.state
 
+                if self.debug:
+                    print("Shift:{} =".format(state.state_id),
+                          ntok, "at position", position)
+
                 res = None
                 if state.symbol.name in self.actions:
                     res = self.actions[state.symbol.name](position,
                                                           state.symbol,
-                                                          value=ntok)
+                                                          ntok)
                 elif self.default_actions:
-                    res = default_shift_action(position, state.symbol,
-                                               value=ntok)
+                    res = default_shift_action(position,
+                                               state.symbol,
+                                               ntok)
 
                 state_stack.append(state)
                 results_stack.append(res)
                 position_stack.append(position)
                 position += len(ntok)
 
-                if self.debug:
-                    print("Shift:", ntok, "at position", position)
-
             elif act.action is REDUCE:
                 production = act.prod
+
+                if self.debug:
+                    print("Reducing by prod '%s'." % str(production))
+
                 subresults = results_stack[-len(production.rhs):]
                 del state_stack[-len(production.rhs):]
                 del results_stack[-len(production.rhs):]
@@ -245,12 +253,12 @@ class Parser(object):
                     res = self.actions[
                         act.prod.prod_symbol_id](position_stack[-1],
                                                  act.prod.symbol,
-                                                 nodes=subresults)
+                                                 subresults)
                 elif act.prod.symbol.name in self.actions:
                     res = self.actions[
                         act.prod.symbol.name](position_stack[-1],
                                               act.prod.symbol,
-                                              nodes=subresults)
+                                              subresults)
                 elif self.default_actions:
                     res = default_reduce_action(position_stack[-1],
                                                 act.prod.symbol,
@@ -258,9 +266,6 @@ class Parser(object):
 
                 state_stack.append(goto[production.symbol])
                 results_stack.append(res)
-
-                if self.debug:
-                    print("Reducing by prod '%s'." % str(production))
 
             elif act.action is ACCEPT:
                 if self.debug:
@@ -311,8 +316,8 @@ class LRItem(object):
         if len(self.production.rhs) == self.position:
             s += " ."
 
-        return "%d: %s -> %s" % (self.production.prod_id,
-                                 self.production.symbol, s)
+        return "%d: %s = %s" % (self.production.prod_id,
+                                self.production.symbol, s)
 
     @property
     def is_kernel(self):
@@ -361,7 +366,7 @@ class LRState(object):
                 gs = item.production.rhs[item.position]
                 if isinstance(gs, NonTerminal):
                     for p in self.parser.grammar.productions:
-                        if p.symbol is gs:
+                        if p.symbol == gs:
                             new_item = LRItem(p, 0)
                             if new_item not in self.items:
                                 to_add.append(new_item)
@@ -403,7 +408,8 @@ class NodeNonTerm(Node):
                 if hasattr(n, 'tree_str'):
                     s += '\n' + indent + n.tree_str(depth+1)
                 else:
-                    s += '\n' + indent + str(n)
+                    s += '\n' + indent + n.__class__.__name__ \
+                         + '(' + str(n) + ')'
         return s
 
     def __str__(self):
@@ -451,9 +457,12 @@ def first(grammar):
         fs = set()
         first_sets[nt] = fs
         for p in grammar.productions:
-            if p.symbol is nt:
+            if p.symbol == nt:
                 pfs = set()
                 for r in p.rhs:
+                    if r == nt:
+                        pfs.discard(NULL)
+                        break
                     f = _first(r)
                     pfs.update(f)
                     if NULL not in f:
@@ -462,8 +471,8 @@ def first(grammar):
                 fs.update(pfs)
         return fs
 
-    for p in grammar.nonterminals:
-        first_sets[p] = _first(p)
+    for nt in grammar.nonterminals:
+        first_sets[nt] = _first(nt)
 
     return first_sets
 
@@ -491,7 +500,7 @@ def follow(grammar, first_sets=None):
         for symbol in grammar.nonterminals:
             for p in grammar.productions:
                 for idx, s in enumerate(p.rhs):
-                    if s is symbol:
+                    if s == symbol:
                         prod_follow = set()
                         for rsymbol in p.rhs[idx+1:]:
                             sfollow = first_sets[rsymbol]
