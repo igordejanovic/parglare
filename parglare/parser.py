@@ -175,6 +175,9 @@ class Parser(object):
                                    for k, v in a.items()]))
 
     def parse(self, input_str):
+        if self.debug:
+            print("\n\n*** Parsing started")
+
         state_stack = [self._states[0]]
         results_stack = []
         position_stack = [0]
@@ -221,8 +224,8 @@ class Parser(object):
                 context.symbol = state.symbol
 
                 if self.debug:
-                    print("\tShift:{} =".format(state.state_id),
-                          ntok, "at position",
+                    print("\tShift:{} \"{}\"".format(state.state_id, ntok),
+                          "at position",
                           pos_to_line_col(input_str, position),
                           "=>", position_context(input_str, position))
 
