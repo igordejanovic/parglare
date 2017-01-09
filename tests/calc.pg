@@ -1,0 +1,15 @@
+Calc = Assignments E;
+Assignments = Assignment | Assignments Assignment | NULL;
+Assignment = VariableName "=" Number;
+
+E = E "+" E {left, 1};
+E = E "-" E {left, 1};
+E = E "*" E {left, 2};
+E = E "/" E {left, 2};
+E = "(" E ")";
+E = VariableRef;
+E = Number;
+VariableRef = VariableName;
+
+VariableName = /[a-zA-Z_][_a-zA-Z0-9]*/;
+Number = /\d+(\.\d+)?/;
