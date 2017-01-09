@@ -222,7 +222,9 @@ class Parser(object):
 
                 if self.debug:
                     print("\tShift:{} =".format(state.state_id),
-                          ntok, "at position", position)
+                          ntok, "at position",
+                          pos_to_line_col(input_str, position),
+                          "=>", position_context(input_str, position))
 
                 res = None
                 if state.symbol.name in self.actions:
@@ -517,3 +519,31 @@ def follow(grammar, first_sets=None):
                             has_additions = True
                             follow_sets[symbol].update(prod_follow)
     return follow_sets
+
+
+def pos_to_line_col(input_str, position):
+    """
+    Returns position in the (line,column) form.
+    """
+    line = 1
+    old_pos = 0
+    try:
+        cur_pos = input_str.index("\n")
+        while cur_pos < position:
+            old_pos = cur_pos
+            cur_pos = input_str.index("\n", cur_pos + 1)
+            line += 1
+    except ValueError:
+        pass
+
+    return line, position - old_pos
+
+
+def position_context(input_str, position):
+    """
+    Returns position context string.
+    """
+    c = input_str[position-10:position] + "*" \
+        + input_str[position:position+10]
+    c = c.replace("\n", "\\n")
+    return c
