@@ -1,6 +1,6 @@
 import pytest
 from parglare.parser import first, follow
-from parglare import Grammar, NonTerminal, TerminalStr, NULL, EOF, \
+from parglare import Grammar, NonTerminal, TerminalStr, EMPTY, EOF, \
     create_grammar
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 
@@ -27,7 +27,7 @@ def test_first_empty_in_rhs():
     """
 
     # S -> A C
-    # A -> B | NULL
+    # A -> B | EMPTY
     # B -> b
     # C -> c
     S, A, B, C = [NonTerminal(name) for name in ['S', 'A', 'B', 'C']]
@@ -36,7 +36,7 @@ def test_first_empty_in_rhs():
     productions = [
         (S, (A, C)),
         (A, (B,)),
-        (A, (NULL,)),
+        (A, (EMPTY,)),
         (B, (b,)),
         (C, (c,)),
     ]
@@ -45,7 +45,7 @@ def test_first_empty_in_rhs():
 
     first_set = first(g)
 
-    assert NULL in first_set[A]
+    assert EMPTY in first_set[A]
     assert b in first_set[A]
 
     assert b in first_set[S]

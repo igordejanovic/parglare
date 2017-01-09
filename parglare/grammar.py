@@ -67,7 +67,7 @@ class TerminalRegEx(Terminal):
 
 
 AUGSYMBOL = NonTerminal("S'")
-NULL = TerminalStr("Empty", "ɛ")
+EMPTY = TerminalStr("EMPTY", "ɛ")
 EOF = TerminalStr("EOF", "$")
 
 # Associativity
@@ -330,8 +330,8 @@ def act_grammar(_, nodes):
         for idx, ref in enumerate(p.rhs):
             if ref.name in terms:
                 p.rhs[idx] = terms[ref.name]
-            elif ref.name == 'NULL':
-                p.rhs[idx] = NULL
+            elif ref.name == 'EMPTY':
+                p.rhs[idx] = EMPTY
 
     return res
 

@@ -1,5 +1,5 @@
 Calc = Assignments E;
-Assignments = Assignment | Assignments Assignment | NULL;
+Assignments = Assignment | Assignments Assignment | EMPTY;
 Assignment = VariableName "=" Number;
 
 E = E "+" E {left, 1};

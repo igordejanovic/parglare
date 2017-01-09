@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from collections import OrderedDict
-from .grammar import Grammar, NonTerminal, NULL, AUGSYMBOL, EOF, \
+from .grammar import Grammar, NonTerminal, EMPTY, AUGSYMBOL, EOF, \
     ASSOC_RIGHT, ASSOC_NONE
 from .exceptions import ParseError, ParserInitError, ShiftReduceConflict
 
@@ -466,12 +466,12 @@ def first(grammar):
                 pfs = set()
                 for r in p.rhs:
                     if r == nt:
-                        pfs.discard(NULL)
+                        pfs.discard(EMPTY)
                         break
                     f = _first(r)
                     pfs.update(f)
-                    if NULL not in f:
-                        pfs.discard(NULL)
+                    if EMPTY not in f:
+                        pfs.discard(EMPTY)
                         break
                 fs.update(pfs)
         return fs
@@ -510,11 +510,11 @@ def follow(grammar, first_sets=None):
                         for rsymbol in p.rhs[idx+1:]:
                             sfollow = first_sets[rsymbol]
                             prod_follow.update(sfollow)
-                            if NULL not in sfollow:
+                            if EMPTY not in sfollow:
                                 break
                         else:
                             prod_follow.update(follow_sets[p.symbol])
-                        prod_follow.discard(NULL)
+                        prod_follow.discard(EMPTY)
                         if prod_follow.difference(follow_sets[symbol]):
                             has_additions = True
                             follow_sets[symbol].update(prod_follow)
