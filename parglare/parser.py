@@ -205,14 +205,14 @@ class Parser(object):
                     if tok:
                         tokens.append((symbol, tok))
                 if not tokens:
-                    raise ParseError(position, actions.keys())
+                    raise ParseError(input_str, position, actions.keys())
                 # Longest-match disambiguation resolution.
                 ntok_sym, ntok = max(tokens, key=lambda t: len(t[1]))
 
             act = actions.get(ntok_sym)
 
             if not act:
-                raise ParseError(position, actions.keys())
+                raise ParseError(input_str, position, actions.keys())
 
             context.position = position
 
