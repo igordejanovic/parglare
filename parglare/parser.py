@@ -181,6 +181,8 @@ class Parser(object):
         position = 0
         in_len = len(input_str)
 
+        context = type("Context", (), {})
+
         while True:
             cur_state = state_stack[-1]
             if self.debug:
@@ -212,8 +214,11 @@ class Parser(object):
             if not act:
                 raise ParseError(position, actions.keys())
 
+            context.position = position
+
             if act.action is SHIFT:
                 state = act.state
+                context.symbol = state.symbol
 
                 if self.debug:
                     print("Shift:{} =".format(state.state_id),
@@ -221,13 +226,9 @@ class Parser(object):
 
                 res = None
                 if state.symbol.name in self.actions:
-                    res = self.actions[state.symbol.name](position,
-                                                          state.symbol,
-                                                          ntok)
+                    res = self.actions[state.symbol.name](context, ntok)
                 elif self.default_actions:
-                    res = default_shift_action(position,
-                                               state.symbol,
-                                               ntok)
+                    res = default_shift_action(context, ntok)
 
                 state_stack.append(state)
                 results_stack.append(res)
@@ -236,6 +237,7 @@ class Parser(object):
 
             elif act.action is REDUCE:
                 production = act.prod
+                context.symbol = act.prod.symbol
 
                 if self.debug:
                     print("Reducing by prod '%s'." % str(production))
@@ -247,22 +249,17 @@ class Parser(object):
                     del position_stack[-(len(production.rhs)-1):]
                 cur_state = state_stack[-1]
                 goto = self._goto[cur_state.state_id]
+                context.position = position_stack[-1]
 
                 res = None
                 if act.prod.prod_symbol_id in self.actions:
                     res = self.actions[
-                        act.prod.prod_symbol_id](position_stack[-1],
-                                                 act.prod.symbol,
-                                                 subresults)
+                        act.prod.prod_symbol_id](context, subresults)
                 elif act.prod.symbol.name in self.actions:
                     res = self.actions[
-                        act.prod.symbol.name](position_stack[-1],
-                                              act.prod.symbol,
-                                              subresults)
+                        act.prod.symbol.name](context, subresults)
                 elif self.default_actions:
-                    res = default_reduce_action(position_stack[-1],
-                                                act.prod.symbol,
-                                                nodes=subresults)
+                    res = default_reduce_action(context, nodes=subresults)
 
                 state_stack.append(goto[production.symbol])
                 results_stack.append(res)
@@ -432,12 +429,12 @@ class NodeTerm(Node):
                                            self.symbol, self.value)
 
 
-def default_shift_action(position, symbol, value):
-    return NodeTerm(position, symbol, value)
+def default_shift_action(context, value):
+    return NodeTerm(context.position, context.symbol, value)
 
 
-def default_reduce_action(position, symbol, nodes):
-    return NodeNonTerm(position, symbol, nodes)
+def default_reduce_action(context, nodes):
+    return NodeNonTerm(context.position, context.symbol, nodes)
 
 
 def first(grammar):

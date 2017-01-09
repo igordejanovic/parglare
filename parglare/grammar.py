@@ -183,11 +183,10 @@ class Grammar(object):
 
         # Parse grammar
         from parglare import Parser
-        global productions, GRAMMAR, actions
-        p = Parser(create_grammar(productions, GRAMMAR), actions=actions)
-        productions = p.parse(grammar_str)
-
-        return Grammar(productions)
+        global pg_productions, GRAMMAR, pg_actions
+        p = Parser(create_grammar(pg_productions, GRAMMAR), actions=pg_actions)
+        prods = p.parse(grammar_str)
+        return Grammar(prods)
 
     def print_debug(self):
         print("Terminals:")
@@ -245,7 +244,7 @@ NAME = TerminalRegEx('Name', r'[a-zA-Z0-9]+')
 STR_TERM = TerminalRegEx("StrTerm", r'"[^"]*"')
 REGEX_TERM = TerminalRegEx("RegExTerm", r'\/((\\/)|[^/])*\/')
 PRIOR = TerminalRegEx("Prior", r'\d+')
-productions = [
+pg_productions = [
     [GRAMMAR, [PRODUCTION_SET]],
     [PRODUCTION_SET, [PRODUCTION]],
     [PRODUCTION_SET, [PRODUCTION_SET, PRODUCTION]],
@@ -266,29 +265,29 @@ productions = [
 ]
 
 
-def act_term_str(_, __, nodes):
+def act_term_str(_, nodes):
     value = nodes[0].value[1:-1]
     return TerminalStr(value, value)
 
 
-def act_term_regex(_, __, nodes):
+def act_term_regex(_, nodes):
     value = nodes[0].value[1:-1]
     return TerminalRegEx(value, value)
 
 
-def act_sequence(_, __, nodes):
+def act_sequence(_, nodes):
     res = nodes[0]
     res.append(nodes[1])
     return res
 
 
-def act_prod_rhss(_, __, nodes):
+def act_prod_rhss(_, nodes):
     res = nodes[0]
     res.append(nodes[2])
     return res
 
 
-def act_production(_, __, nodes):
+def act_production(_, nodes):
     symbol = NonTerminal(nodes[0])
     prods = []
     for p_rhs in nodes[2]:
@@ -303,52 +302,58 @@ def act_production(_, __, nodes):
     return prods
 
 
-def act_prodset(_, __, nodes):
+def act_prodset(_, nodes):
     res = nodes[0]
     res.extend(nodes[1])
     return res
 
 
-def act_grammar(_, __, nodes):
+def act_grammar(_, nodes):
     res = nodes[0]
 
-    # Find terminal production rules
-
+    # Remove terminal production rules but first replace its
+    # references.
     terms = {}
-    for idx, p in enumerate(list(res)):
+    to_del = []
+    for idx, p in enumerate(res):
         if len(p.rhs) == 1 and isinstance(p.rhs[0], Terminal):
             t = p.rhs[0]
             terms[p.symbol.name] = t
             t.name = p.symbol.name
-            del res[idx]
+            to_del.append(idx)
+
+    for idx in sorted(to_del, reverse=True):
+        del res[idx]
 
     # Change terminal references
     for p in res:
         for idx, ref in enumerate(p.rhs):
             if ref.name in terms:
                 p.rhs[idx] = terms[ref.name]
+            elif ref.name == 'NULL':
+                p.rhs[idx] = NULL
 
     return res
 
 
-actions = {
-    "Assoc:0": lambda _, __, ___: ASSOC_LEFT,
-    "Assoc:1": lambda _, __, ___: ASSOC_RIGHT,
-    "Prior": lambda _, __, value: int(value),
+pg_actions = {
+    "Assoc:0": lambda _, ___: ASSOC_LEFT,
+    "Assoc:1": lambda _, ___: ASSOC_RIGHT,
+    "Prior": lambda _, value: int(value),
     "Term:0": act_term_str,
     "Term:1": act_term_regex,
-    "Name": lambda _, __, value: value,
-    "NonTermRef": lambda _, __, nodes: NonTerminal(nodes[0]),
-    "GSymbol": lambda _, __, nodes: nodes[0],
-    "Sequence:0": lambda _, __, nodes: [nodes[0]],
+    "Name": lambda _, value: value,
+    "NonTermRef": lambda _, nodes: NonTerminal(nodes[0]),
+    "GSymbol": lambda _, nodes: nodes[0],
+    "Sequence:0": lambda _, nodes: [nodes[0]],
     "Sequence:1": act_sequence,
-    "ProductionRHS:0": lambda _, __, nodes: [ProductionRHS(nodes[0])],
-    "ProductionRHS:1": lambda _, __, nodes: [ProductionRHS(nodes[0]),
-                                             nodes[2], nodes[4]],
-    "ProductionRHSs:0": lambda _, __, nodes: [nodes[0]],
+    "ProductionRHS:0": lambda _, nodes: [ProductionRHS(nodes[0])],
+    "ProductionRHS:1": lambda _, nodes: [ProductionRHS(nodes[0]),
+                                         nodes[2], nodes[4]],
+    "ProductionRHSs:0": lambda _, nodes: [nodes[0]],
     "ProductionRHSs:1": act_prod_rhss,
     "Production": act_production,
-    "ProductionSet:0": lambda _, __, nodes: nodes[0],
+    "ProductionSet:0": lambda _, nodes: nodes[0],
     "ProductionSet:1": act_prodset,
     "Grammar": act_grammar
 }
