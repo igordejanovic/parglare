@@ -38,9 +38,6 @@ class TerminalStr(Terminal):
         super(Terminal, self).__init__(name)
         self.value = value if value else name
 
-    def __hash__(self):
-        return hash(self.value)
-
     def parse(self, in_str, pos):
         if in_str[pos:].startswith(self.value):
             return self.value
@@ -53,9 +50,6 @@ class TerminalRegEx(Terminal):
         super(Terminal, self).__init__(name)
         self._regex = regex if regex else name
         self.regex = re.compile(self._regex)
-
-    def __hash__(self):
-        return hash(self._regex)
 
     def parse(self, in_str, pos):
         m = self.regex.match(in_str, pos)
