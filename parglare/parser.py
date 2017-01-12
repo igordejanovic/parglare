@@ -533,9 +533,9 @@ def pos_to_line_col(input_str, position):
     try:
         cur_pos = input_str.index("\n")
         while cur_pos < position:
-            old_pos = cur_pos
-            cur_pos = input_str.index("\n", cur_pos + 1)
             line += 1
+            old_pos = cur_pos + 1
+            cur_pos = input_str.index("\n", cur_pos + 1)
     except ValueError:
         pass
 
