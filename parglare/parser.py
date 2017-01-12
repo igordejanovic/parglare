@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 from collections import OrderedDict
 from .grammar import Grammar, NonTerminal, EMPTY, AUGSYMBOL, EOF, \
     ASSOC_RIGHT, ASSOC_NONE
@@ -184,7 +184,7 @@ class Parser(object):
         position = 0
         in_len = len(input_str)
 
-        context = type("Context", (), {})
+        context = type(str("Context"), (), {})
 
         while True:
             cur_state = state_stack[-1]

@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
+import sys
 import codecs
 import re
 from parglare.exceptions import GrammarError
+
+if sys.version < '3':
+    text = unicode
+else:
+    text = str
 
 
 class GrammarSymbol(object):
@@ -149,11 +155,11 @@ class Grammar(object):
             else:
                 raise GrammarError("Invalid production symbol '%s' "
                                    "for production '%s'" % (s.symbol,
-                                                            str(s)))
+                                                            text(s)))
             for idx, t in enumerate(s.rhs):
                 if isinstance(t, Terminal):
                     self.terminals.add(t)
-                elif isinstance(t, str):
+                elif isinstance(t, text):
                     term = TerminalStr(t)
                     self.terminals.add(term)
                     s.rhs[idx] = term
@@ -167,10 +173,11 @@ class Grammar(object):
             idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 0) + 1
             for ref in s.rhs:
                 if ref not in self.nonterminals and ref not in self.terminals:
-                    raise GrammarError("Undefined non-terminal '%s' "
+                    raise GrammarError("Undefined grammar symbol '%s' "
                                        "referenced from production '%s'."
                                        % (ref, s))
 
+    @staticmethod
     def from_string(grammar_str):
         from parglare import Parser
         global pg_productions, GRAMMAR, pg_actions
@@ -178,6 +185,7 @@ class Grammar(object):
         prods = p.parse(grammar_str)
         return Grammar(prods)
 
+    @staticmethod
     def from_file(file_name):
         with codecs.open(file_name, encoding='utf-8') as f:
             grammar_str = f.read()
@@ -186,9 +194,9 @@ class Grammar(object):
 
     def print_debug(self):
         print("Terminals:")
-        print(" ".join([str(t) for t in self.terminals]))
+        print(" ".join([text(t) for t in self.terminals]))
         print("NonTerminals:")
-        print(" ".join([str(n) for n in self.nonterminals]))
+        print(" ".join([text(n) for n in self.nonterminals]))
 
         print("Productions:")
         for p in self.productions:
