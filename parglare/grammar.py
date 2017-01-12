@@ -171,16 +171,18 @@ class Grammar(object):
                                        "referenced from production '%s'."
                                        % (ref, s))
 
-    def from_file(file_name):
-        with codecs.open(file_name, encoding='utf-8') as f:
-            grammar_str = f.read()
-
-        # Parse grammar
+    def from_string(grammar_str):
         from parglare import Parser
         global pg_productions, GRAMMAR, pg_actions
         p = Parser(create_grammar(pg_productions, GRAMMAR), actions=pg_actions)
         prods = p.parse(grammar_str)
         return Grammar(prods)
+
+    def from_file(file_name):
+        with codecs.open(file_name, encoding='utf-8') as f:
+            grammar_str = f.read()
+
+        return Grammar.from_string(grammar_str)
 
     def print_debug(self):
         print("Terminals:")
