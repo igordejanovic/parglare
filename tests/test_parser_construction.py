@@ -1,7 +1,6 @@
 import pytest
 from parglare.parser import first, follow
-from parglare import Grammar, NonTerminal, TerminalStr, EMPTY, EOF, \
-    create_grammar
+from parglare import Grammar, NonTerminal, TerminalStr, EMPTY, EOF
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 
 
@@ -26,30 +25,24 @@ def test_first_empty_in_rhs():
     production.
     """
 
-    # S -> A C
-    # A -> B | EMPTY
-    # B -> b
-    # C -> c
-    S, A, B, C = [NonTerminal(name) for name in ['S', 'A', 'B', 'C']]
-    b, c = [
-        TerminalStr(value, value) for value in ['b', 'c']]
-    productions = [
-        (S, (A, C)),
-        (A, (B,)),
-        (A, (EMPTY,)),
-        (B, (b,)),
-        (C, (c,)),
-    ]
+    grammar = """
+    S = A C;
+    A = B | EMPTY;
+    B = "b";
+    C = "c";
+    """
 
-    g = create_grammar(productions, S)
+    g = Grammar.from_string(grammar)
 
     first_set = first(g)
 
-    assert EMPTY in first_set[A]
-    assert b in first_set[A]
+    assert EMPTY in first_set[NonTerminal('A')]
+    assert TerminalStr('B') in first_set[NonTerminal('A')]
 
-    assert b in first_set[S]
-    assert c in first_set[S]
+    assert TerminalStr('B') in first_set[NonTerminal('S')]
+
+    # 'A' can derive empty, thus 'C' must be in firsts of 'S'.
+    assert TerminalStr('C') in first_set[NonTerminal('S')]
 
 
 def test_follow():
