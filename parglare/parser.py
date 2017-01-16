@@ -546,7 +546,8 @@ def position_context(input_str, position):
     """
     Returns position context string.
     """
-    c = input_str[position-10:position] + "*" \
+    start = max(position-10, 0)
+    c = input_str[start:position] + "*" \
         + input_str[position:position+10]
     c = c.replace("\n", "\\n")
     return c
