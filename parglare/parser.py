@@ -361,10 +361,13 @@ class LRState(object):
 
     def __eq__(self, other):
         """Two states are equal if their kernel items are equal."""
-        for item in self.items:
-            if item.is_kernel:
-                if item not in other.items:
-                    return False
+        this_kernel = [x for x in self.items if x.is_kernel]
+        other_kernel = [x for x in other.items if x.is_kernel]
+        if len(this_kernel) != len(other_kernel):
+            return False
+        for item in this_kernel:
+            if item not in other_kernel:
+                return False
         return True
 
     def closure(self):
