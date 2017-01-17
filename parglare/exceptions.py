@@ -19,12 +19,27 @@ class ParserInitError(Exception):
     pass
 
 
-class ShiftReduceConflict(Exception):
-    def __init__(self, state, symbol, production):
+class LRConflict(Exception):
+    def __init__(self, message, state, symbol):
         self.state = state
         self.symbol = symbol
+        super(LRConflict, self).__init__(message)
+
+
+class ShiftReduceConflict(LRConflict):
+    def __init__(self, state, symbol, production):
         self.production = production
-        super(ShiftReduceConflict, self).__init__(
-            "In state {} and symbol '{}' on the input can't decide whether "
-            "to shift or reduce by production '{}'."
-            .format(state.state_id, symbol, production))
+        message = "In state {} and input symbol '{}' can't " \
+                  "decide whether to shift or reduce by production '{}'." \
+            .format(state.state_id, symbol, production)
+        super(ShiftReduceConflict, self).__init__(message, state, symbol)
+
+
+class ReduceReduceConflict(LRConflict):
+    def __init__(self, state, symbol, production1, production2):
+        self.production1 = production1
+        self.production2 = production2
+        message = "In state {} and input symbol '{}' can't " \
+                  "decide whether to reduce by production '{}' or by '{}'." \
+            .format(state.state_id, symbol, production1, production2)
+        super(ReduceReduceConflict, self).__init__(message, state, symbol)

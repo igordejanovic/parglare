@@ -3,7 +3,8 @@ from __future__ import unicode_literals, print_function
 from collections import OrderedDict
 from .grammar import Grammar, NonTerminal, EMPTY, AUGSYMBOL, EOF, \
     ASSOC_RIGHT, ASSOC_NONE
-from .exceptions import ParseError, ParserInitError, ShiftReduceConflict
+from .exceptions import ParseError, ParserInitError, ShiftReduceConflict, \
+    ReduceReduceConflict
 
 SHIFT = 0
 REDUCE = 1
@@ -101,11 +102,10 @@ class Parser(object):
                             actions[t] = Action(ACCEPT)
                         elif t in actions:
                             if actions[t].prod is not i.production:
-                                # TODO: REDUCE/REDUCE conflict
-                                print(state.state_id, t)
-                                print(actions[t].prod)
-                                print(i.production)
-                                assert False
+                                raise ReduceReduceConflict(state,
+                                                           t,
+                                                           actions[t].prod,
+                                                           i.production)
                         else:
                             actions[t] = Action(REDUCE, prod=i.production)
 
