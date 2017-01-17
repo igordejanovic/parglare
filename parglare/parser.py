@@ -77,22 +77,25 @@ class Parser(object):
                 actions[EOF] = Action(ACCEPT)
             self._actions.append(actions)
 
-            # To find out other state we examine following grammar symbols
+            # To find out other states we examine following grammar symbols
             # in the current state (symbols following current position/"dot")
             # and group all items by a grammar symbol.
             per_next_symbol = OrderedDict()
+
+            # Each production has a priority. We are interested to find a
+            # priority of each grammar symbol. To do that we take the maximal
+            # priority given for all productions of the given grammar symbol.
             max_prior_per_symbol = {}
+
             for i in state.items:
                 symbol = i.production.rhs[i.position]
                 if symbol:
                     per_next_symbol.setdefault(symbol, []).append(i)
                     prod_prior = i.production.prior
-                    if symbol in max_prior_per_symbol:
-                        old_prior = max_prior_per_symbol[symbol]
-                        max_prior_per_symbol[symbol] = max(prod_prior,
-                                                           old_prior)
-                    else:
-                        max_prior_per_symbol[symbol] = prod_prior
+                    old_prior = max_prior_per_symbol.setdefault(symbol,
+                                                                prod_prior)
+                    max_prior_per_symbol[symbol] = max(prod_prior,
+                                                       old_prior)
                 else:
                     # If the position is at the end then this item
                     # would call for reduction but only for terminals
