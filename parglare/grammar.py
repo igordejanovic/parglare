@@ -341,6 +341,10 @@ def act_grammar(_, nodes):
     to_del = []
     for idx, p in enumerate(res):
         if len(p.rhs) == 1 and isinstance(p.rhs[0], Terminal):
+            # Check if terminal has multiple definitions
+            if len([x for x in res if x.symbol == p.symbol]) > 1:
+                raise GrammarError('Multiple definition for terminal "{}"'
+                                   .format(p.symbol))
             t = p.rhs[0]
             terms[p.symbol.name] = t
             t.name = p.symbol.name
