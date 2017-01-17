@@ -379,7 +379,8 @@ class LRState(object):
                     for p in self.parser.grammar.productions:
                         if p.symbol == gs:
                             new_item = LRItem(p, 0)
-                            if new_item not in self.items:
+                            if new_item not in self.items \
+                                    and new_item not in to_add:
                                 to_add.append(new_item)
                                 has_additions = True
 
