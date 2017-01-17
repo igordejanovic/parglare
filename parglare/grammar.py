@@ -11,9 +11,13 @@ else:
     text = str
 
 
+def escape(instr):
+    return instr.replace('\n', r'\n').replace('\t', r'\t')
+
+
 class GrammarSymbol(object):
     def __init__(self, name):
-        self.name = name
+        self.name = escape(name)
 
     def __unicode__(self):
         return str(self)
@@ -255,8 +259,11 @@ def create_grammar(productions, start_symbol=None):
     'Assoc',
     'Sequence']]
 NAME = TerminalRegEx('Name', r'[a-zA-Z0-9]+')
-STR_TERM = TerminalRegEx("StrTerm", r'"[^"]*"')
-REGEX_TERM = TerminalRegEx("RegExTerm", r'\/((\\/)|[^/])*\/')
+STR_TERM = TerminalRegEx("StrTerm",
+                         r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
+                         r'''("[^"\\]*(?:\\.[^"\\]*)*")''')
+REGEX_TERM = TerminalRegEx("RegExTerm",
+                           r'''\/((\\/)|[^/])*\/''')
 PRIOR = TerminalRegEx("Prior", r'\d+')
 pg_productions = [
     [GRAMMAR, [PRODUCTION_SET]],
@@ -281,6 +288,9 @@ pg_productions = [
 
 def act_term_str(_, nodes):
     value = nodes[0].value[1:-1]
+    value = value.replace(r'\"', '"')\
+                 .replace(r"\'", "'")\
+                 .replace(r"\\", "\\")
     return TerminalStr(value, value)
 
 
