@@ -104,7 +104,7 @@ class Parser(object):
                         if t is EOF and i.production.prod_id == 0:
                             actions[t] = Action(ACCEPT)
                         elif t in actions:
-                            if actions[t].prod is not i.production:
+                            if actions[t].prod != i.production:
                                 raise ReduceReduceConflict(state,
                                                            t,
                                                            actions[t].prod,
