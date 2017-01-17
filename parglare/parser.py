@@ -72,9 +72,6 @@ class Parser(object):
             goto = OrderedDict()
             self._goto.append(goto)
             actions = OrderedDict()
-            # State with id of 1 is ending state
-            if state.state_id == 1:
-                actions[EOF] = Action(ACCEPT)
             self._actions.append(actions)
 
             # To find out other states we examine following grammar symbols
