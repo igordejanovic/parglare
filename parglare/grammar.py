@@ -66,9 +66,19 @@ class TerminalRegEx(Terminal):
             return ''
 
 
+class TerminalEmpty(Terminal):
+    def parse(self, in_str, pos):
+        return ''
+
+
+class TerminalEOF(Terminal):
+    def parse(self, in_str, pos):
+        return ''
+
+
 AUGSYMBOL = NonTerminal("S'")
-EMPTY = TerminalStr("EMPTY", "ɛ")
-EOF = TerminalStr("EOF", "$")
+EMPTY = TerminalEmpty("EMPTY")
+EOF = TerminalEOF("EOF")
 
 # Associativity
 ASSOC_NONE = 0
