@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
-from collections import OrderedDict
-from .grammar import Grammar, NonTerminal, EMPTY, AUGSYMBOL, EOF, \
-    ASSOC_RIGHT, ASSOC_NONE
-from .exceptions import ParseError, ParserInitError, ShiftReduceConflict, \
-    ReduceReduceConflict
+from .grammar import Grammar, EMPTY, AUGSYMBOL, EOF
+from .exceptions import ParseError, ParserInitError
 
 SHIFT = 0
 REDUCE = 1
 ACCEPT = 2
 
+# Tables construction algorithms
+SLR = 0
+LALR = 1
+
 
 class Parser(object):
-    """Parser works like a DFA driven by a LR tables. For a given grammar LR table
+    """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
     def __init__(self, grammar, root_symbol=None, actions=None, debug=False,
-                 ws='\t\n ', skip_ws=True, default_actions=True):
+                 ws='\t\n ', skip_ws=True, default_actions=True, tables=SLR):
         self.grammar = grammar
 
         self.root_symbol = \
@@ -42,123 +43,12 @@ class Parser(object):
         self.skip_ws = skip_ws
         self.default_actions = default_actions
 
-        self._init_parser()
-
-    def _init_parser(self):
-        """Create parser states and tables."""
-        self._first_sets = first(self.grammar)
-        self._follow_sets = follow(self.grammar, self._first_sets)
-        self._create_tables()
-
-    def _create_tables(self):
-
-        # Create a state for the first production (augmented)
-        s = LRState(self, 0, AUGSYMBOL,
-                    [LRItem(self.grammar.productions[0], 0)])
-
-        state_queue = [s]
-        state_id = 1
-
-        while state_queue:
-            # For each state calculate its closure first, i.e. starting from a
-            # so called "kernel items" expand collection with non-kernel items.
-            # We will also calculate GOTO and ACTIONS dict for each state. This
-            # dict will be keyed by a grammar symbol.
-            state = state_queue.pop(0)
-            state.closure()
-            self._states.append(state)
-
-            # Each state has its corresponding GOTO and ACTION table
-            goto = OrderedDict()
-            self._goto.append(goto)
-            actions = OrderedDict()
-            self._actions.append(actions)
-
-            # To find out other states we examine following grammar symbols
-            # in the current state (symbols following current position/"dot")
-            # and group all items by a grammar symbol.
-            per_next_symbol = OrderedDict()
-
-            # Each production has a priority. We are interested to find a
-            # priority of each grammar symbol. To do that we take the maximal
-            # priority given for all productions of the given grammar symbol.
-            max_prior_per_symbol = {}
-
-            for i in state.items:
-                symbol = i.production.rhs[i.position]
-                if symbol:
-                    per_next_symbol.setdefault(symbol, []).append(i)
-                    prod_prior = i.production.prior
-                    old_prior = max_prior_per_symbol.setdefault(symbol,
-                                                                prod_prior)
-                    max_prior_per_symbol[symbol] = max(prod_prior,
-                                                       old_prior)
-                else:
-                    # If the position is at the end then this item
-                    # would call for reduction but only for terminals
-                    # from the FOLLOW set of the production LHS non-terminal.
-                    for t in self._follow_sets[i.production.symbol]:
-                        if t is EOF and i.production.prod_id == 0:
-                            actions[t] = Action(ACCEPT)
-                        elif t in actions:
-                            if actions[t].prod != i.production:
-                                raise ReduceReduceConflict(state,
-                                                           t,
-                                                           actions[t].prod,
-                                                           i.production)
-                        else:
-                            actions[t] = Action(REDUCE, prod=i.production)
-
-            # For each group symbol we create new state and form its kernel
-            # items from the group items with positions moved one step ahead.
-            for symbol, items in per_next_symbol.items():
-                inc_items = [i.get_pos_inc() for i in items]
-                maybe_new_state = LRState(self, state_id, symbol, inc_items)
-                target_state = maybe_new_state
-                try:
-                    idx = self._states.index(maybe_new_state)
-                    target_state = self._states[idx]
-                except ValueError:
-                    try:
-                        idx = state_queue.index(maybe_new_state)
-                        target_state = state_queue[idx]
-                    except ValueError:
-                        pass
-
-                # We've found a new state. Register it for later processing.
-                if target_state is maybe_new_state:
-                    state_queue.append(target_state)
-                    state_id += 1
-
-                if isinstance(symbol, NonTerminal):
-                    # For each non-terminal symbol we create an entry in GOTO
-                    # table.
-                    goto[symbol] = target_state
-                else:
-                    if symbol in actions:
-                        # SHIFT/REDUCE conflict
-                        # Try to resolve using priority and associativity
-                        prod = actions[symbol].prod
-                        prior = max_prior_per_symbol[symbol]
-                        if prod.prior == prior:
-                            if prod.assoc == ASSOC_NONE:
-                                self.print_debug()
-                                raise ShiftReduceConflict(state, symbol, prod)
-                            elif prod.assoc == ASSOC_RIGHT:
-                                actions[symbol] = \
-                                    Action(SHIFT, state=target_state)
-                            # If associativity is left leave reduce operation
-                        elif prod.prior < prior:
-                            # Next operation priority is higher => shift
-                            actions[symbol] = \
-                                Action(SHIFT, state=target_state)
-                        # If priority of next operation is lower then reduce
-                        # before shift
-                    else:
-                        actions[symbol] = Action(SHIFT, state=target_state)
-
-        if self.debug:
-            self.print_debug()
+        if tables == SLR:
+            from .slr import create_tables
+            create_tables(self)
+        else:
+            raise NotImplementedError('LALR tables construction is not '
+                                      'implemented yet.')
 
     def print_debug(self):
         self.grammar.print_debug()
@@ -175,6 +65,8 @@ class Parser(object):
                                    for k, v in a.items()]))
 
     def parse(self, input_str):
+        """ LR parsing. """
+
         if self.debug:
             print("\n\n*** Parsing started")
 
@@ -302,11 +194,12 @@ class Action(object):
 
 
 class LRItem(object):
-    __slots__ = ('production', 'position')
+    __slots__ = ('production', 'position', 'follow')
 
     def __init__(self, production, position):
         self.production = production
         self.position = position
+        self.follow = set()
 
     def __eq__(self, other):
         return other and self.production == other.production and \
@@ -366,28 +259,6 @@ class LRState(object):
             if item not in other_kernel:
                 return False
         return True
-
-    def closure(self):
-        """Forms a closure of the state. Adds all missing items."""
-
-        while True:
-            has_additions = False
-            to_add = []
-            for item in self.items:
-                gs = item.production.rhs[item.position]
-                if isinstance(gs, NonTerminal):
-                    for p in self.parser.grammar.productions:
-                        if p.symbol == gs:
-                            new_item = LRItem(p, 0)
-                            if new_item not in self.items \
-                                    and new_item not in to_add:
-                                to_add.append(new_item)
-                                has_additions = True
-
-            if has_additions:
-                self.items.extend(to_add)
-            else:
-                break
 
     def print_debug(self):
         print("\nState %d" % self.state_id)
