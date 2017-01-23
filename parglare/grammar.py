@@ -143,6 +143,13 @@ class Grammar(object):
     """
     Grammar is a collection of production rules.
     First production is reserved for the augmented production (S' -> S).
+
+    Attributes:
+    productions (list of Production):
+    root_symbol (GrammarSymbol): start/root symbol of the grammar.
+    nonterminals (set of NonTerminal):
+    terminals(set of Terminal):
+
     """
 
     def __init__(self, productions, root_symbol=None):
