@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from parglare.parser import Parser
+from parglare.parser import Parser, LALR, SLR
 from parglare.grammar import Grammar, NonTerminal, TerminalStr, \
     TerminalRegEx, create_grammar, EMPTY, EOF
 

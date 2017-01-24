@@ -1,5 +1,5 @@
 import pytest
-from parglare import Grammar, Parser
+from parglare import Grammar, Parser, LALR
 from parglare.exceptions import ShiftReduceConflict
 
 
@@ -19,3 +19,5 @@ def test_slr_conflict():
     grammar = Grammar.from_string(grammar)
     with pytest.raises(ShiftReduceConflict):
         Parser(grammar)
+
+    Parser(grammar, tables=LALR)

@@ -4,10 +4,10 @@ from parglare import NonTerminal
 from .grammar import AUGSYMBOL, ASSOC_RIGHT, ASSOC_NONE, EOF
 from .exceptions import ShiftReduceConflict, ReduceReduceConflict
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
-from .closure import closure, LR_0
+from .closure import closure, LR_1
 
 
-def create_tables(parser):
+def create_tables(parser, itemset_type):
 
     first_sets = first(parser.grammar)
     follow_sets = follow(parser.grammar, first_sets)
@@ -25,7 +25,7 @@ def create_tables(parser):
         # We will also calculate GOTO and ACTIONS dicts for each state. These
         # dicts will be keyed by a grammar symbol.
         state = state_queue.pop(0)
-        closure(state, LR_0)
+        closure(state, itemset_type, first_sets)
         parser._states.append(state)
 
         # Each state has its corresponding GOTO and ACTION table
@@ -55,8 +55,13 @@ def create_tables(parser):
             else:
                 # If the position is at the end then this item
                 # would call for reduction but only for terminals
-                # from the FOLLOW set of the production LHS non-terminal.
-                for t in follow_sets[i.production.symbol]:
+                # from the FOLLOW set of item (LR(1))or the production LHS
+                # non-terminal (LR(0)).
+                if itemset_type is LR_1:
+                    f_set = i.follow
+                else:
+                    f_set = follow_sets[i.production.symbol]
+                for t in f_set:
                     if t is EOF and i.production.prod_id == 0:
                         actions[t] = Action(ACCEPT)
                     elif t in actions:
@@ -88,6 +93,14 @@ def create_tables(parser):
             if target_state is maybe_new_state:
                 state_queue.append(target_state)
                 state_id += 1
+            else:
+                # State with this kernel items already exists.
+                if itemset_type is LR_1:
+                    # LALR: Merge follows of the kernel items.
+                    for i in [ti for ti in target_state.items if ti.is_kernel]:
+                        new_item = maybe_new_state.items[
+                            maybe_new_state.items.index(i)]
+                        i.follow.update(new_item.follow)
 
             if isinstance(symbol, NonTerminal):
                 # For each non-terminal symbol we create an entry in GOTO

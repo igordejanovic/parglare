@@ -43,12 +43,13 @@ class Parser(object):
         self.skip_ws = skip_ws
         self.default_actions = default_actions
 
+        from .closure import LR_0, LR_1
+        from .tables import create_tables
         if tables == SLR:
-            from .slr import create_tables
-            create_tables(self)
+            itemset_type = LR_0
         else:
-            raise NotImplementedError('LALR tables construction is not '
-                                      'implemented yet.')
+            itemset_type = LR_1
+        create_tables(self, itemset_type)
 
     def print_debug(self):
         self.grammar.print_debug()

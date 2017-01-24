@@ -41,7 +41,7 @@ def closure(state, itemset_type, first_sets=None):
                             if itemset_type is LR_1:
                                 try:
                                     existing_item = state.items[
-                                        state.items.index[new_item]]
+                                        state.items.index(new_item)]
                                 except ValueError:
                                     existing_item = to_add[
                                         to_add.index[new_item]]
