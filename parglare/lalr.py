@@ -4,7 +4,7 @@ from parglare import NonTerminal
 from .grammar import AUGSYMBOL, ASSOC_RIGHT, ASSOC_NONE, EOF
 from .exceptions import ShiftReduceConflict, ReduceReduceConflict
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
-from .closure import closure, LR_0
+from .closure import closure, LR_1
 
 
 def create_tables(parser):
@@ -25,7 +25,7 @@ def create_tables(parser):
         # We will also calculate GOTO and ACTIONS dicts for each state. These
         # dicts will be keyed by a grammar symbol.
         state = state_queue.pop(0)
-        closure(state, LR_0)
+        closure(state, LR_1, first_sets)
         parser._states.append(state)
 
         # Each state has its corresponding GOTO and ACTION table

@@ -196,10 +196,10 @@ class Action(object):
 class LRItem(object):
     __slots__ = ('production', 'position', 'follow')
 
-    def __init__(self, production, position):
+    def __init__(self, production, position, follow=None):
         self.production = production
         self.position = position
-        self.follow = set()
+        self.follow = set() if not follow else follow
 
     def __eq__(self, other):
         return other and self.production == other.production and \
