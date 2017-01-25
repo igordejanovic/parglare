@@ -92,7 +92,8 @@ class Parser(object):
                     position += 1
 
             # Find the next token in the input
-            if position == in_len:
+            ntok = ''
+            if EMPTY not in actions and position == in_len:
                 ntok_sym = EOF
             else:
                 tokens = []
@@ -101,9 +102,10 @@ class Parser(object):
                     if tok:
                         tokens.append((symbol, tok))
                 if not tokens:
-                    raise ParseError(input_str, position, actions.keys())
-                # Longest-match disambiguation resolution.
-                ntok_sym, ntok = max(tokens, key=lambda t: len(t[1]))
+                    ntok_sym = EMPTY
+                else:
+                    # Longest-match disambiguation resolution.
+                    ntok_sym, ntok = max(tokens, key=lambda t: len(t[1]))
 
             act = actions.get(ntok_sym)
 
@@ -152,6 +154,7 @@ class Parser(object):
                 goto = self._goto[cur_state.state_id]
                 context.position = position_stack[-1]
 
+                # Calling semantic actions
                 res = None
                 if act.prod.prod_symbol_id in self.actions:
                     res = self.actions[

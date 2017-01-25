@@ -295,10 +295,13 @@ pg_productions = [
 
 def act_term_str(_, nodes):
     value = nodes[0].value[1:-1]
+    name = value
     value = value.replace(r'\"', '"')\
                  .replace(r"\'", "'")\
-                 .replace(r"\\", "\\")
-    return TerminalStr(value, value)
+                 .replace(r"\\", "\\")\
+                 .replace(r"\n", "\n")\
+                 .replace(r"\t", "\t")
+    return TerminalStr(name, value)
 
 
 def act_term_regex(_, nodes):
