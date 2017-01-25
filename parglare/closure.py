@@ -44,7 +44,7 @@ def closure(state, itemset_type, first_sets=None):
                                         state.items.index(new_item)]
                                 except ValueError:
                                     existing_item = to_add[
-                                        to_add.index[new_item]]
+                                        to_add.index(new_item)]
 
                                 if not follow.issubset(
                                         existing_item.follow):

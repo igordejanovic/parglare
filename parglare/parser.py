@@ -184,10 +184,12 @@ class Action(object):
         self.prod = prod
 
     def __str__(self):
-        ac = {0: 'SHIFT', 1: 'REDUCE', 2: 'ACCEPT'}.get(self.action)
-        if self.action == 0:
+        ac = {SHIFT: 'SHIFT',
+              REDUCE: 'REDUCE',
+              ACCEPT: 'ACCEPT'}.get(self.action)
+        if self.action == SHIFT:
             p = self.state.state_id
-        elif self.action == 1:
+        elif self.action == REDUCE:
             p = self.prod.prod_id
         else:
             p = ''
@@ -240,10 +242,18 @@ class LRItem(object):
         if self.position < len(self.production.rhs):
             return LRItem(self.production, self.position+1, self.follow)
 
+    @property
+    def is_at_end(self):
+        """
+        Is this items at the end position, e.g. a candidate for reduction.
+        """
+        return self.position == len(self.production.rhs)
+
 
 class LRState(object):
     """LR State is a set of LR items."""
-    __slots__ = ['parser', 'state_id', 'symbol', 'items']
+    __slots__ = ['parser', 'state_id', 'symbol', 'items',
+                 '_per_next_symbol', '_max_prior_per_symbol']
 
     def __init__(self, parser, state_id, symbol, items):
         self.parser = parser
@@ -261,6 +271,13 @@ class LRState(object):
             if item not in other_kernel:
                 return False
         return True
+
+    @property
+    def kernel_items(self):
+        """
+        Returns kernel items of this state.
+        """
+        return [i for i in self.items if i.is_kernel]
 
     def print_debug(self):
         print("\nState %d" % self.state_id)

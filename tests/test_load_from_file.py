@@ -17,5 +17,6 @@ def test_load_from_file():
     56.4 + a / 3 * 5 - b + 8 * 3
     """)
 
-    epsilon = 0.00001
-    assert -epsilon < res - (56.4 + 5. / 3 * 5 - 10 + 8 * 3) < 0.00001
+    res2 = 56.4 + 5. / 3 * 5 - 10 + 8 * 3
+    print(res2, res)
+    assert res == 56.4 + 5. / 3 * 5 - 10 + 8 * 3

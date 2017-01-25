@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from parglare.parser import Parser, LALR, SLR
-from parglare.grammar import Grammar, NonTerminal, TerminalStr, \
+from parglare.grammar import Grammar, NonTerminal, Terminal, TerminalStr, \
     TerminalRegEx, create_grammar, EMPTY, EOF
 
 __author__ = """Igor R. Dejanovic"""
