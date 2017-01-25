@@ -154,17 +154,22 @@ def create_tables(parser, itemset_type):
                                 # This item operation priority is higher =>
                                 # override with reduce
                                 actions[t] = Action(REDUCE, prod=prod)
-                                # If priority of SHIFT operation is higher then
-                                # leave SHIFT action
+                                # If priority of existing SHIFT action is
+                                # higher then leave it instead
 
                         else:
-                            print(f_set, actions)
                             # REDUCE/REDUCE conflict
+                            # Try to resolve using priorities
                             assert act.prod != i.production
-                            raise ReduceReduceConflict(state,
-                                                       t,
-                                                       act.prod,
-                                                       i.production)
+                            prod = i.production
+                            if act.prod.prior == prod.prior:
+                                raise ReduceReduceConflict(state,
+                                                           t,
+                                                           act.prod,
+                                                           i.production)
+                            elif prod.prior > act.prod.prior:
+                                actions[t] = Action(REDUCE, prod=prod)
+
                     else:
                         actions[t] = Action(REDUCE, prod=i.production)
 
