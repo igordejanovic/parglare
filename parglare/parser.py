@@ -212,13 +212,14 @@ class LRItem(object):
         return str(self)
 
     def __str__(self):
-        s = ""
+        s = []
         for idx, r in enumerate(self.production.rhs):
             if idx == self.position:
-                s += " ."
-            s += " " + str(r)
+                s.append(".")
+            s.append(str(r))
         if len(self.production.rhs) == self.position:
-            s += " ."
+            s.append(".")
+        s = " ".join(s)
 
         return "%d: %s = %s   follow=%s" % (self.production.prod_id,
                                             self.production.symbol, s,
