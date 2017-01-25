@@ -80,11 +80,11 @@ def create_tables(parser, itemset_type):
             else:
                 # State with this kernel items already exists.
                 if itemset_type is LR_1:
-                    # LALR: Merge follows of the kernel items.
-                    for i in target_state.kernel_items:
-                        new_item = maybe_new_state.items[
-                            maybe_new_state.items.index(i)]
-                        i.follow.update(new_item.follow)
+                    # LALR: Try to merge states.
+                    if not merge_states(target_state, maybe_new_state):
+                        target_state = maybe_new_state
+                        state_queue.append(target_state)
+                        state_id += 1
 
             # Create entries in GOTO and ACTION tables
             if isinstance(symbol, NonTerminal):
@@ -142,7 +142,8 @@ def create_tables(parser, itemset_type):
                             prod = i.production
                             if prod.prior == act_prior:
                                 if prod.assoc == ASSOC_NONE:
-                                    parser.print_debug()
+                                    if parser.debug:
+                                        parser.print_debug()
                                     raise ShiftReduceConflict(state, symbol,
                                                               prod)
                                 elif prod.assoc == ASSOC_LEFT:
@@ -163,6 +164,8 @@ def create_tables(parser, itemset_type):
                             assert act.prod != i.production
                             prod = i.production
                             if act.prod.prior == prod.prior:
+                                if parser.debug:
+                                    parser.print_debug()
                                 raise ReduceReduceConflict(state,
                                                            t,
                                                            act.prod,
@@ -175,3 +178,27 @@ def create_tables(parser, itemset_type):
 
     if parser.debug:
         parser.print_debug()
+
+
+def merge_states(old_state, new_state):
+    """Try to merge new_state on old_state if possible. If not possible return
+    False.
+    """
+
+    item_pairs = []
+    for i in old_state.kernel_items:
+        new_item = new_state.get_item(i)
+        item_pairs.append((i, new_item))
+
+    # Check if merging would result in R/R conflict
+    check_set = set()
+    for old, new in [x for x in item_pairs if x[0].is_at_end]:
+        if old.follow.intersection(check_set) \
+               or new.follow.intersection(check_set):
+            return False
+        check_set.update(old.follow)
+        check_set.update(new.follow)
+
+    for old, new in item_pairs:
+        old.follow.update(new.follow)
+    return True

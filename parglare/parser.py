@@ -279,6 +279,12 @@ class LRState(object):
         """
         return [i for i in self.items if i.is_kernel]
 
+    def get_item(self, other_item):
+        """
+        Get this state item that is equal to the given other_item.
+        """
+        return self.items[self.items.index(other_item)]
+
     def print_debug(self):
         print("\nState %d" % self.state_id)
         for i in self.items:

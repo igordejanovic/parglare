@@ -47,3 +47,19 @@ def test_slr_conflict():
         Parser(grammar, tables=SLR)
 
     Parser(grammar, tables=LALR)
+
+
+def test_lalr_reduce_reduce_conflict():
+    """
+    Naive merging of states can lead to R/R conflict as shown in this grammar
+    from the Dragon Book.
+    """
+
+    grammar = """
+    S = 'a' A 'd' | 'b' B 'd' | 'a' B 'e' | 'b' A 'e';
+    A = C;
+    B = C;
+    C = 'c';
+    """
+    grammar = Grammar.from_string(grammar)
+    Parser(grammar)
