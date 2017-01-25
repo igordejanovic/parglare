@@ -14,7 +14,7 @@ def create_tables(parser, itemset_type):
 
     # Create a state for the first production (augmented)
     s = LRState(parser, 0, AUGSYMBOL,
-                [LRItem(parser.grammar.productions[0], 0)])
+                [LRItem(parser.grammar.productions[0], 0, set([EOF]))])
 
     state_queue = [s]
     state_id = 1

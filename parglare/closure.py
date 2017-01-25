@@ -73,11 +73,9 @@ def new_item_follow(item, first_sets):
             break
         else:
             new_follow.remove(EMPTY)
-
-    # If the rest of production can be EMPTY we shall inherit
-    # elements of the parent item follow set.
-    if EMPTY in new_follow:
-        new_follow.remove(EMPTY)
+    else:
+        # If the rest of production can be EMPTY we shall inherit
+        # elements of the parent item follow set.
         new_follow.update(item.follow)
 
     return new_follow

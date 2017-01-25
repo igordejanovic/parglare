@@ -237,7 +237,7 @@ class LRItem(object):
         """
 
         if self.position < len(self.production.rhs):
-            return LRItem(self.production, self.position+1)
+            return LRItem(self.production, self.position+1, self.follow)
 
 
 class LRState(object):
