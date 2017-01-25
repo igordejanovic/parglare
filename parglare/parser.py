@@ -17,7 +17,7 @@ class Parser(object):
     will be created and cached or loaded from cache if cache is found.
     """
     def __init__(self, grammar, root_symbol=None, actions=None, debug=False,
-                 ws='\t\n ', skip_ws=True, default_actions=True, tables=SLR):
+                 ws='\t\n ', skip_ws=True, default_actions=True, tables=LALR):
         self.grammar = grammar
 
         self.root_symbol = \
