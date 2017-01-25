@@ -218,8 +218,9 @@ class LRItem(object):
         if len(self.production.rhs) == self.position:
             s += " ."
 
-        return "%d: %s = %s" % (self.production.prod_id,
-                                self.production.symbol, s)
+        return "%d: %s = %s   follow=%s" % (self.production.prod_id,
+                                            self.production.symbol, s,
+                                            self.follow)
 
     @property
     def is_kernel(self):
