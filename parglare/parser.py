@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
-from .grammar import Grammar, EMPTY, AUGSYMBOL, EOF
+from .grammar import Grammar, TerminalStr, EMPTY, AUGSYMBOL, EOF
 from .exceptions import ParseError, ParserInitError
 
 SHIFT = 0
@@ -65,6 +65,35 @@ class Parser(object):
             print("\t", ", ".join(["%s->%s" % (k, str(v))
                                    for k, v in a.items()]))
 
+    def lexical_disambiguation(self, tokens):
+        """For the given list of matched tokens apply disambiguation strategy.
+        Args:
+        tokens (list of tuples (Terminal, matched str))
+        """
+
+        # By priority
+        tokens.sort(key=lambda x: x[0].prior, reverse=True)
+        prior = tokens[0][0].prior
+        tokens = [x for x in tokens if x[0].prior == prior]
+        if len(tokens) == 1:
+            return tokens[0]
+
+        # Multiple with the same priority. Use longest-match rule.
+        tokens.sort(key=lambda x: len(x[1]), reverse=True)
+        max_len = len(tokens[0][1])
+        tokens = [x for x in tokens if len(x[1]) == max_len]
+        if len(tokens) == 1:
+            return tokens[0]
+
+        # Multiple with the same length. Use most-specific rule.
+        tokens_str = [x for x in tokens if isinstance(x[0], TerminalStr)]
+        if len(tokens_str) > 0:
+            # In any case return the first one
+            return tokens_str[0]
+
+        # If all fails return the first with the longest match.
+        return tokens[0]
+
     def parse(self, input_str):
         """ LR parsing. """
 
@@ -103,9 +132,10 @@ class Parser(object):
                         tokens.append((symbol, tok))
                 if not tokens:
                     ntok_sym = EMPTY
+                elif len(tokens) == 1:
+                    ntok_sym, ntok = tokens[0]
                 else:
-                    # Longest-match disambiguation resolution.
-                    ntok_sym, ntok = max(tokens, key=lambda t: len(t[1]))
+                    ntok_sym, ntok = self.lexical_disambiguation(tokens)
 
             act = actions.get(ntok_sym)
 
