@@ -29,16 +29,16 @@ What is done
 
 * SLR and LALR tables calculation (LALR is the default)
 * Scannerless LR(1) parsing
-  - Scanner is integrated into parsing. This give more power as the token
-    recognition is postponed and done in the parsing context at the current
-    parsing location.
+    - Scanner is integrated into parsing. This give more power as the token
+      recognition is postponed and done in the parsing context at the current
+      parsing location.
 * Declarative associativity and priority based conflict resolution for productions
 * Lexical disambiguation strategy
 * Priority resolution for terminals
 * Semantic actions and default actions which builds the parse tree (controlled
   by ``actions`` and ``default_actions`` parameters for the ``Parser`` class).
-  - If no actions are provided and default actions are explicitely disabled
-    parser works as recognizer.
+    - If no actions are provided and default actions are explicitely disabled
+      parser works as recognizer.
 * Debug print/tracing (set ``debug=True`` to the ``Parser`` instantiation).
 * Tests
 * Few examples (see ``examples`` folder)
