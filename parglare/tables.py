@@ -144,7 +144,8 @@ def create_tables(parser, itemset_type):
                                 if prod.assoc == ASSOC_NONE:
                                     if parser.debug:
                                         parser.print_debug()
-                                    raise ShiftReduceConflict(state, symbol,
+                                    raise ShiftReduceConflict(state,
+                                                              act.state.symbol,
                                                               prod)
                                 elif prod.assoc == ASSOC_LEFT:
                                     # Override with REDUCE
