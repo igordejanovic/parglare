@@ -10,6 +10,14 @@ if sys.version < '3':
 else:
     text = str
 
+# Associativity
+ASSOC_NONE = 0
+ASSOC_LEFT = 1
+ASSOC_RIGHT = 2
+
+# Priority
+DEFAULT_PRIORITY = 10
+
 
 def escape(instr):
     return instr.replace('\n', r'\n').replace('\t', r'\t')
@@ -40,12 +48,14 @@ class NonTerminal(GrammarSymbol):
 
 
 class Terminal(GrammarSymbol):
-    pass
+    def __init__(self, name):
+        self.prior = DEFAULT_PRIORITY
+        super(Terminal, self).__init__(name)
 
 
 class TerminalStr(Terminal):
     def __init__(self, name, value=None):
-        super(Terminal, self).__init__(name)
+        super(TerminalStr, self).__init__(name)
         self.value = value if value else name
 
     def parse(self, in_str, pos):
@@ -57,7 +67,7 @@ class TerminalStr(Terminal):
 
 class TerminalRegEx(Terminal):
     def __init__(self, name, regex=None):
-        super(Terminal, self).__init__(name)
+        super(TerminalRegEx, self).__init__(name)
         self._regex = regex if regex else name
         self.regex = re.compile(self._regex)
 
@@ -83,14 +93,6 @@ class TerminalEOF(Terminal):
 AUGSYMBOL = NonTerminal("S'")
 EMPTY = TerminalEmpty("EMPTY")
 EOF = TerminalEOF("EOF")
-
-# Associativity
-ASSOC_NONE = 0
-ASSOC_LEFT = 1
-ASSOC_RIGHT = 2
-
-# Priority
-DEFAULT_PRIORITY = 10
 
 
 class Production(object):
@@ -254,6 +256,7 @@ def create_grammar(productions, start_symbol=None):
  NONTERM_REF,
  TERM,
  ASSOC,
+ ASSOC_PRIOR,
  SEQUENCE) = [NonTerminal(name) for name in [
     'Grammar',
     'ProductionSet',
@@ -264,6 +267,7 @@ def create_grammar(productions, start_symbol=None):
     'NonTermRef',
     'Term',
     'Assoc',
+    'AssocPrior',
     'Sequence']]
 NAME = TerminalRegEx('Name', r'[a-zA-Z0-9]+')
 STR_TERM = TerminalRegEx("StrTerm",
@@ -278,9 +282,12 @@ pg_productions = [
     [PRODUCTION_SET, [PRODUCTION_SET, PRODUCTION]],
     [PRODUCTION, [NAME, '=', PRODUCTION_RHSS, ';']],
     [PRODUCTION_RHS, [SEQUENCE]],
-    [PRODUCTION_RHS, [SEQUENCE, '{', ASSOC, ',', PRIOR, '}']],
+    [PRODUCTION_RHS, [SEQUENCE, '{', ASSOC_PRIOR, '}']],
     [PRODUCTION_RHSS, [PRODUCTION_RHS], ASSOC_LEFT, 5],
     [PRODUCTION_RHSS, [PRODUCTION_RHSS, '|', PRODUCTION_RHS], ASSOC_LEFT, 5],
+    [ASSOC_PRIOR, [ASSOC]],
+    [ASSOC_PRIOR, [PRIOR]],
+    [ASSOC_PRIOR, [ASSOC_PRIOR, ',', ASSOC_PRIOR], ASSOC_LEFT],
     [ASSOC, ['left']],
     [ASSOC, ['right']],
     [SEQUENCE, [GSYMBOL]],
@@ -342,6 +349,27 @@ def act_prodset(_, nodes):
     return res
 
 
+def act_assoc_prior(_, nodes):
+    res = []
+    res.extend(nodes[0])
+    res.extend(nodes[2])
+    return res
+
+
+def act_production_rhs(_, nodes):
+    assoc = ASSOC_NONE
+    prior = DEFAULT_PRIORITY
+    for ap in nodes[2]:
+        if type(ap) is int:
+            prior = ap
+        else:
+            if ap == 'left':
+                assoc = ASSOC_LEFT
+            elif ap == 'right':
+                assoc = ASSOC_RIGHT
+    return [ProductionRHS(nodes[0]), assoc, prior]
+
+
 def act_grammar(_, nodes):
     res = nodes[0]
 
@@ -358,6 +386,12 @@ def act_grammar(_, nodes):
                 t = p.rhs[0]
                 terms[p.symbol.name] = t
                 t.name = p.symbol.name
+                t.prior = p.prior
+                if p.assoc != ASSOC_NONE:
+                    raise GrammarError(
+                        'Terminals should not define associativity '
+                        '(terminal "{}").'.format(t.name))
+                assert p.assoc == ASSOC_NONE
                 to_del.append(idx)
 
     for idx in sorted(to_del, reverse=True):
@@ -375,8 +409,11 @@ def act_grammar(_, nodes):
 
 
 pg_actions = {
-    "Assoc:0": lambda _, ___: ASSOC_LEFT,
-    "Assoc:1": lambda _, ___: ASSOC_RIGHT,
+    "Assoc:0": lambda _, nodes: nodes[0].value,
+    "Assoc:1": lambda _, nodes: nodes[0].value,
+    "AssocPrior:0": lambda _, nodes: [nodes[0]],
+    "AssocPrior:1": lambda _, nodes: [nodes[0]],
+    "AssocPrior:2": act_assoc_prior,
     "Prior": lambda _, value: int(value),
     "Term:0": act_term_str,
     "Term:1": act_term_regex,
@@ -386,8 +423,7 @@ pg_actions = {
     "Sequence:0": lambda _, nodes: [nodes[0]],
     "Sequence:1": act_sequence,
     "ProductionRHS:0": lambda _, nodes: [ProductionRHS(nodes[0])],
-    "ProductionRHS:1": lambda _, nodes: [ProductionRHS(nodes[0]),
-                                         nodes[2], nodes[4]],
+    "ProductionRHS:1": act_production_rhs,
     "ProductionRHSs:0": lambda _, nodes: [nodes[0]],
     "ProductionRHSs:1": act_prod_rhss,
     "Production": act_production,
