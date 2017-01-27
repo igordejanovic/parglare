@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
-
-with open('README.rst') as readme_file:
-    readme = readme_file.read()
-
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
+try:
+    import pypandoc
+    readme = pypandoc.convert('README.md', 'rst')
+    history = pypandoc.convert('HISTORY.md', 'rst')
+except(IOError, ImportError):
+    readme = open('README.md').read()
+    history = open('HISTORY.md').read()
 
 requirements = [
     # TODO: put package requirements here
@@ -20,7 +21,7 @@ test_requirements = [
 setup(
     name='parglare',
     version='0.1.0',
-    description="An attempt to create a pure Python Scannerless GLR parser",
+    description="A pure Python Scannerless LR (soon GLR) parser ",
     long_description=readme + '\n\n' + history,
     author="Igor R. Dejanovic",
     author_email='igor DOT dejanovic AT gmail DOT com',
@@ -36,7 +37,7 @@ setup(
     zip_safe=False,
     keywords='parglare',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
         'Intended Audience :: Science/Research',
@@ -51,6 +52,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Operating System :: OS Independent',
     ],
     test_suite='tests',
