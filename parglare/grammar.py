@@ -59,7 +59,7 @@ class TerminalStr(Terminal):
         self.value = value if value else name
 
     def parse(self, in_str, pos):
-        if in_str[pos:].startswith(self.value):
+        if in_str[pos:pos+len(self.value)] == self.value:
             return self.value
         else:
             return ''
