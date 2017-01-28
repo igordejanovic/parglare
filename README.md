@@ -2,9 +2,6 @@
 
 A pure Python Scannerless LR parser (will be GLR soon) with LALR or SLR tables.
 
-- Free software: MIT license
-- Documentation: TODO
-
 This lib is in the early phase of development. It is not tested extensively yet.
 Do not use it for anything important.
 
@@ -20,13 +17,13 @@ Do not use it for anything important.
 - Declarative associativity and priority based conflict resolution for productions
   - See the `calc` example, or the quick intro bellow.
 - Lexical disambiguation strategy.
-  - The default strategy is longest-match first and than str over regex match
+  - The default strategy is longest-match first and then `str` over `regex` match
     (i.e. the most specific match). Terminal priority can be provided for
     override if necessary.
 - Semantic actions and default actions which builds the parse tree (controlled
   by `actions` and `default_actions` parameters for the `Parser` class).
-  - If no actions are provided and default actions are explicitely disabled
-    parser works as recognizer, i.e. no reduction actions are called and the
+  - If no actions are provided and the default actions are explicitely disabled
+    parser works as a recognizer, i.e. no reduction actions are called and the
     only output of the parser is whether the input was recognized or not.
 - Debug print/tracing (set `debug=True` to the `Parser` instantiation).
 - Tests
@@ -44,8 +41,12 @@ Do not use it for anything important.
 
 # Quick intro
 
-This is just a small example to get the general idea. Until docs is done see
-the `example` folder and `tests` for more.
+This is just a small example to get the general idea. This example shows how to
+parse and evaluate expressions with 5 operations with different priority and
+associativity. Evaluation is done using semantic/reduction actions.
+
+Until docs is done see the `example` folder and `tests` for more.
+
 
 ```python
 from parglare import Parser, Grammar
@@ -86,8 +87,11 @@ print("Result = ", result)
 # Result = 700.8
 ```
 
-Credits
----------
+# License
+
+MIT
+
+# Credits
 
 Initial layout/content of this package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and the [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage) project template.
 
