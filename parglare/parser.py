@@ -122,7 +122,7 @@ class Parser(object):
 
             # Find the next token in the input
             ntok = ''
-            if EMPTY not in actions and position == in_len:
+            if position == in_len and EMPTY not in actions:
                 ntok_sym = EOF
             else:
                 tokens = []
