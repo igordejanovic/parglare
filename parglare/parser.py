@@ -108,6 +108,9 @@ class Parser(object):
 
         context = type(str("Context"), (), {})
 
+        new_token = True
+        ntok_sym = None
+
         while True:
             cur_state = state_stack[-1]
             if self.debug:
@@ -115,27 +118,36 @@ class Parser(object):
             goto = self._goto[cur_state.state_id]
             actions = self._actions[cur_state.state_id]
 
-            # Skip whitespaces
-            if self.ws and self.skip_ws:
-                while position < in_len and input_str[position] in self.ws:
-                    position += 1
+            if new_token or ntok_sym not in actions:
+                # Try to recognize a new token in the input only after
+                # successful SHIFT operation, i.e. when the input position has
+                # moved. REDUCE operation doesn't move position. If the current
+                # ntok_sym is not in the current actions then try to find new
+                # token. This could happen if old token is not available in the
+                # actions of the current state but EMPTY is and will match
+                # always leading to reduction.
 
-            # Find the next token in the input
-            ntok = ''
-            if position == in_len and EMPTY not in actions:
-                ntok_sym = EOF
-            else:
-                tokens = []
-                for symbol in actions:
-                    tok = symbol.parse(input_str, position)
-                    if tok:
-                        tokens.append((symbol, tok))
-                if not tokens:
-                    ntok_sym = EMPTY
-                elif len(tokens) == 1:
-                    ntok_sym, ntok = tokens[0]
+                # Before token recognition skip whitespaces
+                if self.ws and self.skip_ws:
+                    while position < in_len and input_str[position] in self.ws:
+                        position += 1
+
+                # Find the next token in the input
+                ntok = ''
+                if position == in_len and EMPTY not in actions:
+                    ntok_sym = EOF
                 else:
-                    ntok_sym, ntok = self.lexical_disambiguation(tokens)
+                    tokens = []
+                    for symbol in actions:
+                        tok = symbol.parse(input_str, position)
+                        if tok:
+                            tokens.append((symbol, tok))
+                    if not tokens:
+                        ntok_sym = EMPTY
+                    elif len(tokens) == 1:
+                        ntok_sym, ntok = tokens[0]
+                    else:
+                        ntok_sym, ntok = self.lexical_disambiguation(tokens)
 
             act = actions.get(ntok_sym)
 
@@ -167,6 +179,7 @@ class Parser(object):
                 results_stack.append(res)
                 position_stack.append(position)
                 position += len(ntok)
+                new_token = True
 
             elif act.action is REDUCE:
                 production = act.prod
@@ -200,6 +213,7 @@ class Parser(object):
 
                 state_stack.append(goto[production.symbol])
                 results_stack.append(res)
+                new_token = False
 
             elif act.action is ACCEPT:
                 if self.debug:
