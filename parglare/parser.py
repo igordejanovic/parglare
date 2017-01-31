@@ -132,16 +132,22 @@ class Parser(object):
                 # always leading to reduction.
 
                 # Parse layout
+                layout_content = ''
                 if self.layout_parser:
                     layout_content, pos = self.layout_parser.parse(
                         input_str, position)
                     layout_content = input_str[position:pos]
-                    if self.debug:
-                        print("\tLayout content: '{}'".format(layout_content))
+                    context.layout = layout_content
                     position = pos
                 elif self.ws:
+                    old_pos = position
                     while position < in_len and input_str[position] in self.ws:
                         position += 1
+                    layout_content = input_str[old_pos:position]
+                    context.layout = layout_content
+
+                if self.debug:
+                    print("\tLayout content: '{}'".format(layout_content))
 
                 # Find the next token in the input
                 ntok = ''
