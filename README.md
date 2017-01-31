@@ -25,7 +25,9 @@ Do not use it for anything important.
   - If no actions are provided and the default actions are explicitely disabled
     parser works as a recognizer, i.e. no reduction actions are called and the
     only output of the parser is whether the input was recognized or not.
-- Debug print/tracing (set `debug=True` to the `Parser` instantiation).
+- Support for language comments/whitespaces using special rule `LAYOUT`.
+- Debug print/tracing (set `debug=True` and/or `layout_debug=True`to the
+  `Parser` instantiation).
 - Tests
 - Few examples (see `examples` folder)
 
@@ -34,8 +36,6 @@ Do not use it for anything important.
 - Docs
 - Tables caching/loading (currently tables are calculated whenever `Parser` is
   instantiated)
-- Support for language comments. Whitespace handling which is currently provided
-  will be integrated with comment support.
 - GLR parsing (Tomita's algorithm)
 - Error recovery
 
