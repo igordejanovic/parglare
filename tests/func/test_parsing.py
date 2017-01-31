@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 import pytest
 from parglare import Parser, Grammar, SLR, LALR
-from .expression_grammar import get_grammar, E
+from .expression_grammar import get_grammar
 from parglare.exceptions import ShiftReduceConflict, ParseError
 
 
 def test_parsing():
     grammar = get_grammar()
-    p = Parser(grammar, E)
+    p = Parser(grammar)
     p.parse("id+id+id")
 
 

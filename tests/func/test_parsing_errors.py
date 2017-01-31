@@ -7,7 +7,7 @@ from .expression_grammar import get_grammar, E
 def test_invalid_input():
 
     grammar = get_grammar()
-    p = Parser(grammar, E)
+    p = Parser(grammar)
 
     try:
         p.parse("id+id*+id")
@@ -22,7 +22,7 @@ def test_invalid_input():
 def test_premature_end():
 
     grammar = get_grammar()
-    p = Parser(grammar, E)
+    p = Parser(grammar)
 
     try:
         p.parse("id+id*")
@@ -36,7 +36,7 @@ def test_premature_end():
 
 def test_line_column():
     grammar = get_grammar()
-    p = Parser(grammar, E)
+    p = Parser(grammar)
 
     try:
         p.parse("""id + id * id + id + error * id""")

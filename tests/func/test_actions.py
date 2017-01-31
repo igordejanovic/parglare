@@ -32,7 +32,7 @@ def test_actions():
                "F:1": pass_act
     }
 
-    p = Parser(grammar, E, actions=actions)
+    p = Parser(grammar, actions=actions)
 
     result = p.parse("""34.7+78*34 +89+
     12.223*4""")
