@@ -245,9 +245,7 @@ class Grammar(object):
         global pg_productions, GRAMMAR, pg_actions
         p = Parser(create_grammar(pg_productions, GRAMMAR), actions=pg_actions)
         prods = p.parse(grammar_str)
-        g = Grammar(prods)
-        g.print_debug()
-        return g
+        return Grammar(prods)
 
     @staticmethod
     def from_file(file_name):
