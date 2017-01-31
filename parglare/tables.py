@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from parglare.parser import LRItem, LRState
 from parglare import NonTerminal
-from .grammar import AUGSYMBOL, ASSOC_LEFT, ASSOC_NONE, EOF
+from .grammar import AUGSYMBOL, ASSOC_LEFT, ASSOC_NONE, STOP
 from .exceptions import ShiftReduceConflict, ReduceReduceConflict
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
@@ -14,7 +14,7 @@ def create_tables(parser, itemset_type):
 
     # Create a state for the first production (augmented)
     s = LRState(parser, 0, AUGSYMBOL,
-                [LRItem(parser.grammar.productions[0], 0, set([EOF]))])
+                [LRItem(parser.grammar.productions[0], 0, set([STOP]))])
 
     state_queue = [s]
     state_id = 1
@@ -93,9 +93,12 @@ def create_tables(parser, itemset_type):
                 goto[symbol] = target_state
 
             else:
-                # For each terminal symbol we create SHIFT action in the
-                # ACTION table.
-                actions[symbol] = Action(SHIFT, state=target_state)
+                if symbol is STOP:
+                    actions[symbol] = Action(ACCEPT)
+                else:
+                    # For each terminal symbol we create SHIFT action in the
+                    # ACTION table.
+                    actions[symbol] = Action(SHIFT, state=target_state)
 
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
     # merging might change item's follow in previous states
@@ -129,9 +132,7 @@ def create_tables(parser, itemset_type):
                 else:
                     f_set = follow_sets[i.production.symbol]
                 for t in f_set:
-                    if t is EOF and i.production.prod_id == 0:
-                        actions[t] = Action(ACCEPT)
-                    elif t in actions:
+                    if t in actions:
                         # Conflict! Try to resolve
                         act = actions[t]
                         if act.action is SHIFT:

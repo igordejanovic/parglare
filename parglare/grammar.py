@@ -90,7 +90,18 @@ class TerminalEOF(Terminal):
         return ''
 
 
+class TerminalStop(Terminal):
+    def parse(self, in_str, pos):
+        return ''
+
+
+# These two terminals are special parglare terminals used internaly.
 AUGSYMBOL = NonTerminal("S'")
+STOP = TerminalStop("STOP")
+
+# These two terminals are special terminals used in the grammars.
+# EMPTY will match nothing and always succeds.
+# EOF will match only at the end of the input string.
 EMPTY = TerminalEmpty("EMPTY")
 EOF = TerminalEOF("EOF")
 
@@ -170,7 +181,7 @@ class Grammar(object):
 
         # Augmenting grammar. Used for LR item sets calculation.
         self.productions.insert(
-            0, Production(AUGSYMBOL, ProductionRHS([self.root_symbol])))
+            0, Production(AUGSYMBOL, ProductionRHS([self.root_symbol, STOP])))
 
         for s in self.productions:
             if isinstance(s.symbol, NonTerminal):
@@ -404,6 +415,8 @@ def act_grammar(_, nodes):
                 p.rhs[idx] = terms[ref.name]
             elif ref.name == 'EMPTY':
                 p.rhs[idx] = EMPTY
+            elif ref.name == 'EOF':
+                p.rhs[idx] = EOF
 
     return res
 

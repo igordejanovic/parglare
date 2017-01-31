@@ -1,6 +1,7 @@
 import pytest
 from parglare.parser import first, follow
-from parglare import Grammar, NonTerminal, TerminalStr, EMPTY, EOF
+from parglare import Grammar, NonTerminal, TerminalStr, EMPTY
+from parglare.grammar import STOP
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 
 
@@ -55,7 +56,7 @@ def test_follow():
     expression_grammar = get_grammar()
     follow_set = follow(expression_grammar)
 
-    assert follow_set[E] == set([CLOSE, PLUS, EOF])
+    assert follow_set[E] == set([CLOSE, PLUS, STOP])
 
     # Follow of T must contain all of follow of E
-    assert follow_set[T] == set([MULT, CLOSE, PLUS, EOF])
+    assert follow_set[T] == set([MULT, CLOSE, PLUS, STOP])

@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import pytest
 from parglare import Parser, Grammar, SLR, LALR
 from .expression_grammar import get_grammar, E
-from parglare.exceptions import ShiftReduceConflict
+from parglare.exceptions import ShiftReduceConflict, ParseError
 
 
 def test_parsing():
@@ -63,3 +63,32 @@ def test_lalr_reduce_reduce_conflict():
     """
     grammar = Grammar.from_string(grammar)
     Parser(grammar)
+
+
+def test_partial_parse():
+    """
+    Not giving EOF at the end of the sequence enables parsing of the beggining
+    of the input string.
+    """
+    grammar = """
+    S = 'a' B;
+    B = 'b';
+    """
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+
+    # Parser should succesfuly parse 'ab' at the beggining.
+    parser.parse('abc')
+
+    # But if EOF is given it will match only at the end of the string,
+    # thus, the whole string must be parsed in order for parsing to
+    # succeed.
+    grammar = """
+    S = 'a' B EOF;
+    B = 'b';
+    """
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+    parser.parse('a b')
+    with pytest.raises(ParseError):
+        parser.parse('a b c')

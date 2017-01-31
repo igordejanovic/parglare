@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
-from .grammar import Grammar, TerminalStr, EMPTY, AUGSYMBOL, EOF
+from .grammar import Grammar, TerminalStr, EMPTY, AUGSYMBOL, EOF, STOP
 from .exceptions import ParseError, ParserInitError
 
 SHIFT = 0
@@ -134,7 +134,8 @@ class Parser(object):
 
                 # Find the next token in the input
                 ntok = ''
-                if position == in_len and EMPTY not in actions:
+                if position == in_len and EMPTY not in actions \
+                   and STOP not in actions:
                     ntok_sym = EOF
                 else:
                     tokens = []
@@ -143,11 +144,17 @@ class Parser(object):
                         if tok:
                             tokens.append((symbol, tok))
                     if not tokens:
-                        ntok_sym = EMPTY
+                        if STOP in actions:
+                            ntok_sym = STOP
+                        else:
+                            ntok_sym = EMPTY
                     elif len(tokens) == 1:
                         ntok_sym, ntok = tokens[0]
                     else:
                         ntok_sym, ntok = self.lexical_disambiguation(tokens)
+
+            if self.debug:
+                print("\tToken ahead:", ntok_sym)
 
             act = actions.get(ntok_sym)
 
@@ -448,7 +455,6 @@ def follow(grammar, first_sets=None):
     follow_sets = {}
     for symbol in grammar.nonterminals:
         follow_sets[symbol] = set()
-    follow_sets[AUGSYMBOL].add(EOF)
 
     has_additions = True
     while has_additions:
