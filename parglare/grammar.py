@@ -95,12 +95,12 @@ class TerminalStop(Terminal):
         return ''
 
 
-# These two terminals are special parglare terminals used internaly.
+# These two terminals are special terminals used internally.
 AUGSYMBOL = NonTerminal("S'")
 STOP = TerminalStop("STOP")
 
 # These two terminals are special terminals used in the grammars.
-# EMPTY will match nothing and always succeds.
+# EMPTY will match nothing and always succeeds.
 # EOF will match only at the end of the input string.
 EMPTY = TerminalEmpty("EMPTY")
 EOF = TerminalEOF("EOF")
