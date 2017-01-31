@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from parglare.parser import LRItem, LRState
 from parglare import NonTerminal
-from .grammar import AUGSYMBOL, ASSOC_LEFT, ASSOC_NONE, STOP
+from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_NONE, STOP
 from .exceptions import ShiftReduceConflict, ReduceReduceConflict
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
@@ -12,9 +12,13 @@ def create_tables(parser, itemset_type):
     first_sets = first(parser.grammar)
     follow_sets = follow(parser.grammar, first_sets)
 
+    g = parser.grammar
+    start_prod_symbol = g.productions[parser.start_production].symbol
+    g.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
+
     # Create a state for the first production (augmented)
     s = LRState(parser, 0, AUGSYMBOL,
-                [LRItem(parser.grammar.productions[0], 0, set([STOP]))])
+                [LRItem(g.productions[0], 0, set())])
 
     state_queue = [s]
     state_id = 1

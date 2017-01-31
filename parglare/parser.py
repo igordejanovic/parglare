@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 from .grammar import Grammar, TerminalStr, EMPTY, AUGSYMBOL, EOF, STOP
-from .exceptions import ParseError, ParserInitError
+from .exceptions import ParseError
 
 SHIFT = 0
 REDUCE = 1
@@ -16,31 +16,33 @@ class Parser(object):
     """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, root_symbol=None, actions=None, debug=False,
-                 ws='\t\n ', skip_ws=True, default_actions=True, tables=LALR):
+    def __init__(self, grammar, start_production=1, actions=None, debug=False,
+                 layout_debug=False, ws='\n\t ', default_actions=True,
+                 tables=LALR, layout=False, position=False):
         self.grammar = grammar
-
-        self.root_symbol = \
-            root_symbol if root_symbol else self.grammar.root_symbol
-        if isinstance(self.root_symbol, str):
-            rs = [x for x in self.grammar.nonterminals
-                  if x.name == self.root_symbol]
-            if rs:
-                self.root_symbol = rs[0]
-            else:
-                raise ParserInitError("Unexisting root grammar symbol '{}'"
-                                      .format(root_symbol))
-
+        self.start_production = start_production
         self.actions = actions if actions else {}
 
+        self.layout_parser = None
+        if not layout:
+            layout_prod = grammar.get_production('LAYOUT')
+            if layout_prod:
+                self.layout_parser = Parser(grammar,
+                                            start_production=layout_prod,
+                                            ws=None, layout=True,
+                                            position=True,
+                                            debug=layout_debug)
+
+        self.layout = layout
+        self.ws = ws
+        self.position = position
         self.debug = debug
+        self.layout_debug = layout_debug
 
         self._states = []
         self._actions = []
         self._goto = []
 
-        self.ws = ws
-        self.skip_ws = skip_ws
         self.default_actions = default_actions
 
         from .closure import LR_0, LR_1
@@ -52,6 +54,8 @@ class Parser(object):
         create_tables(self, itemset_type)
 
     def print_debug(self):
+        if self.layout and self.layout_debug:
+            print('\n\n*** LAYOUT parser ***\n')
         self.grammar.print_debug()
         print("\n\n*** STATES ***")
         for s, g, a in zip(self._states, self._goto, self._actions):
@@ -94,16 +98,16 @@ class Parser(object):
         # If all fails return the first with the longest match.
         return tokens[0]
 
-    def parse(self, input_str):
+    def parse(self, input_str, position=0):
         """ LR parsing. """
 
         if self.debug:
-            print("\n\n*** Parsing started")
+            print("*** Parsing started")
 
         state_stack = [self._states[0]]
         results_stack = []
         position_stack = [0]
-        position = 0
+        position = position
         in_len = len(input_str)
 
         context = type(str("Context"), (), {})
@@ -127,8 +131,15 @@ class Parser(object):
                 # actions of the current state but EMPTY is and will match
                 # always leading to reduction.
 
-                # Before token recognition skip whitespaces
-                if self.ws and self.skip_ws:
+                # Parse layout
+                if self.layout_parser:
+                    layout_content, pos = self.layout_parser.parse(
+                        input_str, position)
+                    layout_content = input_str[position:pos]
+                    if self.debug:
+                        print("\tLayout content: '{}'".format(layout_content))
+                    position = pos
+                elif self.ws:
                     while position < in_len and input_str[position] in self.ws:
                         position += 1
 
@@ -226,7 +237,10 @@ class Parser(object):
                 if self.debug:
                     print("SUCCESS!!!")
                 assert len(results_stack) == 1
-                return results_stack[0]
+                if self.position:
+                    return results_stack[0], position
+                else:
+                    return results_stack[0]
 
 
 class Action(object):

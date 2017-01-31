@@ -179,9 +179,12 @@ class Grammar(object):
         self.nonterminals = set()
         self.terminals = set()
 
-        # Augmenting grammar. Used for LR item sets calculation.
+        # Reserve 0 production. It is used for augmented prod. in LR
+        # automata calculation.
         self.productions.insert(
-            0, Production(AUGSYMBOL, ProductionRHS([self.root_symbol, STOP])))
+            0,
+            Production(AUGSYMBOL, ProductionRHS([self.productions[0].symbol,
+                                                 STOP])))
 
         for s in self.productions:
             if isinstance(s.symbol, NonTerminal):
@@ -211,13 +214,40 @@ class Grammar(object):
                                        "referenced from production '%s'."
                                        % (ref, s))
 
+    def get_terminal(self, name):
+        "Returns terminal with the given name."
+        for t in self.terminals:
+            if t.name == name:
+                return t
+
+    def get_nonterminal(self, name):
+        "Returns non-terminal with the given name."
+        for n in self.nonterminals:
+            if n.name == name:
+                return n
+
+    def get_symbol(self, name):
+        "Returns grammar symbol with the given name."
+        s = self.get_terminal(name)
+        if not s:
+            s = self.get_nonterminal(name)
+        return s
+
+    def get_production(self, name):
+        "Returns first production number for the given symbol name"
+        for idx, p in enumerate(self.productions):
+            if p.symbol.name == name:
+                return idx
+
     @staticmethod
     def from_string(grammar_str):
         from parglare import Parser
         global pg_productions, GRAMMAR, pg_actions
         p = Parser(create_grammar(pg_productions, GRAMMAR), actions=pg_actions)
         prods = p.parse(grammar_str)
-        return Grammar(prods)
+        g = Grammar(prods)
+        g.print_debug()
+        return g
 
     @staticmethod
     def from_file(file_name):
@@ -382,18 +412,19 @@ def act_production_rhs(_, nodes):
 
 
 def act_grammar(_, nodes):
-    res = nodes[0]
+    prods = nodes[0]
 
     # Remove terminal production rules but first replace its
     # references.
     terms = {}
     to_del = []
-    for idx, p in enumerate(res):
+    for idx, p in enumerate(prods):
         if len(p.rhs) == 1 and isinstance(p.rhs[0], Terminal):
             # Optimization: If a production has a single terminal RHS and there
             # is only one production for this grammar symbol then treat is as a
             # terminal.
-            if len([x for x in res if x.symbol == p.symbol]) == 1:
+            if len([x for x in prods if x.symbol == p.symbol]) == 1 and \
+               p.symbol.name != 'LAYOUT':
                 t = p.rhs[0]
                 terms[p.symbol.name] = t
                 t.name = p.symbol.name
@@ -406,10 +437,10 @@ def act_grammar(_, nodes):
                 to_del.append(idx)
 
     for idx in sorted(to_del, reverse=True):
-        del res[idx]
+        del prods[idx]
 
     # Change terminal references
-    for p in res:
+    for p in prods:
         for idx, ref in enumerate(p.rhs):
             if ref.name in terms:
                 p.rhs[idx] = terms[ref.name]
@@ -418,7 +449,7 @@ def act_grammar(_, nodes):
             elif ref.name == 'EOF':
                 p.rhs[idx] = EOF
 
-    return res
+    return prods
 
 
 pg_actions = {
