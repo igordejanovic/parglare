@@ -1,13 +1,13 @@
 import pytest
-from parglare.parser import Parser
+from parglare import Parser, Grammar
 from parglare.exceptions import ParseError
-from .expression_grammar import get_grammar, E
+from .expression_grammar import get_grammar
 
 
 def test_default_whitespaces():
 
     grammar = get_grammar()
-    p = Parser(grammar, E)
+    p = Parser(grammar)
 
     p.parse("""id+  id * (id
     +id  )
@@ -19,7 +19,7 @@ def test_whitespace_redefinition():
     grammar = get_grammar()
 
     # Make newline treated as non-ws characted
-    p = Parser(grammar, E, ws=' \t')
+    p = Parser(grammar, ws=' \t')
 
     p.parse("""id+  id * (id +id  ) """)
 
@@ -31,14 +31,15 @@ def test_whitespace_redefinition():
         assert e.position == 13
 
 
-def test_whitespace_noskip():
-
-    grammar = get_grammar()
-
-    # Make newline treated as non-ws characted
-    p = Parser(grammar, E, skip_ws=False)
-
-    try:
-        p.parse("""id+  id * (id +id  ) """)
-    except ParseError as e:
-        assert e.position == 3
+def test_whitespace_not_used_if_layout():
+    """
+    If LAYOUT rule is used, ws definition is ignored.
+    """
+    grammar = """
+    S = 'a' 'b';
+    LAYOUT = 'k' | EMPTY;
+    """
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+    with pytest.raises(ParseError):
+        parser.parse('a b')
