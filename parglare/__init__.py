@@ -6,4 +6,4 @@ from parglare.grammar import Grammar, NonTerminal, Terminal, TerminalStr, \
 
 __author__ = """Igor R. Dejanovic"""
 __email__ = 'igor DOT dejanovic AT gmail DOT com'
-__version__ = '0.1.0'
+__version__ = '0.1'
