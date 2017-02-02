@@ -51,29 +51,26 @@ lint: ## check style with flake8
 	flake8 parglare tests
 
 test: ## run tests quickly with the default Python
-	py.test
-	
+	py.test tests/func
+
 
 test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source parglare -m pytest tests
-	
+	coverage run --source parglare -m pytest tests/func
+
 		coverage report -m
 		coverage html
 		$(BROWSER) htmlcov/index.html
 
-docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/parglare.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ parglare
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
+docs: ## generate MkDocs HTML documentation
+	mkdocs build
 	$(BROWSER) docs/_build/html/index.html
 
-servedocs: docs ## compile the docs watching for changes
-	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
+servedocs: ## compile the docs watching for changes
+	mkdocs serve
+	$(BROWSER) "http://localhost:8000/"
 
 release: clean ## package and upload a release
 	python setup.py sdist upload
