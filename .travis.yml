@@ -18,17 +18,17 @@ deploy:
       SjdhSTh2TU80QjBicmdFZExZKy9QUmtNdE05U0MwelE4MWxLM0JHMjk1ZVFOdk5JdmpNLzNRZ1Jn
       Mkw3YnAvakoyV05tbFVjNXpuQ0Z4bDZxWWMxWE16SFR4NVpzZ0tlVVJ6YkVqQ1NvMWpkSDRzblE9
   true:
-    condition: $TOXENV == py27
     repo: igordejanovic/parglare
     tags: true
-env:
-- TOXENV=py36
-- TOXENV=py35
-- TOXENV=py34
-- TOXENV=py33
-- TOXENV=py27
-- TOXENV=pypy
-install: pip install -U tox
+
+sudo: false
 language: python
-python: 3.6
-script: tox -e ${TOXENV}
+python:
+    - "2.7"
+    - "3.3"
+    - "3.4"
+    - "3.5"
+    - "3.6"
+    - "pypy"
+install: pip install -U tox-travis
+script: tox
