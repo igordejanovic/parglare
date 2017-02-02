@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import pytest
+from os.path import join, dirname
 from parglare import Parser, Grammar, SLR, LALR
 from .expression_grammar import get_grammar
 from parglare.exceptions import ShiftReduceConflict, ParseError
@@ -8,7 +9,13 @@ from parglare.exceptions import ShiftReduceConflict, ParseError
 def test_parsing():
     grammar = get_grammar()
     p = Parser(grammar)
-    p.parse("id+id+id")
+    assert p.parse("id+id+id")
+
+
+def test_parsing_from_file():
+    grammar = get_grammar()
+    p = Parser(grammar)
+    assert p.parse_file(join(dirname(__file__), 'parsing_from_file.txt'))
 
 
 def test_lr_1_grammar():
@@ -67,7 +74,7 @@ def test_lalr_reduce_reduce_conflict():
 
 def test_partial_parse():
     """
-    Not giving EOF at the end of the sequence enables parsing of the beggining
+    Not giving EOF at the end of the sequence enables parsing of the beginning
     of the input string.
     """
     grammar = """

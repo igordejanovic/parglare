@@ -1,7 +1,8 @@
 import pytest
+import os
 from parglare.parser import Parser
 from parglare.exceptions import ParseError
-from .expression_grammar import get_grammar, E
+from .expression_grammar import get_grammar
 
 
 def test_invalid_input():
@@ -73,3 +74,17 @@ id + id * id + id + error * id
         assert e.position == 22
         assert e.line == 3
         assert e.column == 20
+
+
+def test_file_name():
+    "Test that file name is given in the error string when parsing file."
+    grammar = get_grammar()
+    p = Parser(grammar)
+
+    input_file = os.path.join(os.path.dirname(__file__),
+                              'parsing_errors.txt')
+
+    try:
+        p.parse_file(input_file)
+    except ParseError as e:
+        assert 'parsing_errors.txt' in str(e)

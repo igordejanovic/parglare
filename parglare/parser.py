@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
+import codecs
 from .grammar import Grammar, TerminalStr, EMPTY, AUGSYMBOL, EOF, STOP
 from .exceptions import ParseError
 
@@ -38,6 +39,7 @@ class Parser(object):
         self.position = position
         self.debug = debug
         self.layout_debug = layout_debug
+        self.file_name = None
 
         self._states = []
         self._actions = []
@@ -98,8 +100,24 @@ class Parser(object):
         # If all fails return the first with the longest match.
         return tokens[0]
 
+    def parse_file(self, file_name):
+        """
+        Parses content from the given file.
+        Args:
+            file_name(str): A file name.
+        """
+        self.file_name = file_name
+        with codecs.open(file_name, 'r', 'utf-8') as f:
+            content = f.read()
+        return self.parse(content)
+
     def parse(self, input_str, position=0):
-        """ LR parsing. """
+        """
+        Parses the given input string.
+        Args:
+            input_str(str): A string to parse.
+            position(int): Position to start from.
+        """
 
         if self.debug:
             print("*** Parsing started")
@@ -176,7 +194,8 @@ class Parser(object):
             act = actions.get(ntok_sym)
 
             if not act:
-                raise ParseError(input_str, position, actions.keys())
+                raise ParseError(self.file_name, input_str, position,
+                                 actions.keys())
 
             context.position = position
 
