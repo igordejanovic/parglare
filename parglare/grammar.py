@@ -5,7 +5,7 @@ import re
 from parglare.exceptions import GrammarError
 
 if sys.version < '3':
-    text = unicode
+    text = unicode  # NOQA
 else:
     text = str
 
