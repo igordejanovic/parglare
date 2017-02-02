@@ -1,7 +1,5 @@
-[![Build Status](https://travis-ci.org/igordejanovic/parglare.svg?branch=master)](https://travis-ci.org/igordejanovic/parglare)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
+[![Build Status](https://travis-ci.org/igordejanovic/parglare.svg?branch=master)](https://travis-ci.org/igordejanovic/parglare)
 
 # parglare
 
@@ -11,7 +9,7 @@ This lib is in the early phase of development. It is not tested extensively yet.
 Do not use it for anything important.
 
 
-# What is done so far
+## What is done so far
 
 - Textual syntax for grammar specification. Parsed with parglare.
 - SLR and LALR tables calculation (LALR is the default)
@@ -36,7 +34,7 @@ Do not use it for anything important.
 - Tests
 - Few examples (see `examples` folder)
 
-# TODO
+## TODO
 
 - Docs
 - Tables caching/loading (currently tables are calculated whenever `Parser` is
@@ -44,7 +42,7 @@ Do not use it for anything important.
 - GLR parsing (Tomita's algorithm)
 - Error recovery
 
-# Quick intro
+## Quick intro
 
 This is just a small example to get the general idea. This example shows how to
 parse and evaluate expressions with 5 operations with different priority and
@@ -92,15 +90,15 @@ print("Result = ", result)
 # Result = 700.8
 ```
 
-# License
+## License
 
 MIT
 
-# Python versions
+## Python versions
 
 Tested with 2.7, 3.3-3.6
 
-# Credits
+## Credits
 
 Initial layout/content of this package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and the [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage) project template.
 
