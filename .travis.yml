@@ -29,6 +29,5 @@ python:
     - "3.4"
     - "3.5"
     - "3.6"
-    - "pypy"
 install: pip install -U tox-travis
 script: tox
