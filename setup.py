@@ -23,8 +23,18 @@ if sys.argv[-1].startswith('publish'):
         sys.exit()
     os.system("python setup.py sdist bdist_wheel")
     if sys.argv[-1] == 'publishtest':
+        os.system("twine register -r test dist/parglare-{}.tar.gz"
+                  .format(VERSION))
+        os.system(
+            "twine register -r test dist/parglare-{}-py2.py3-none-any.whl"
+            .format(VERSION))
         os.system("twine upload -r test dist/*")
     else:
+        os.system("twine register dist/parglare-{}.tar.gz"
+                  .format(VERSION))
+        os.system(
+            "twine register dist/parglare-{}-py2.py3-none-any.whl"
+            .format(VERSION))
         os.system("twine upload dist/*")
         print("You probably want to also tag the version now:")
         print("  git tag -a {0} -m 'version {0}'".format(VERSION))
