@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.org/igordejanovic/parglare.svg?branch=master)](https://travis-ci.org/igordejanovic/parglare)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 # parglare
 
 A pure Python Scannerless LR parser (will be GLR soon) with LALR or SLR tables.
@@ -90,6 +95,10 @@ print("Result = ", result)
 # License
 
 MIT
+
+# Python versions
+
+Tested with 2.7, 3.3-3.6
 
 # Credits
 
