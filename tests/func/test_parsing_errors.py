@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa
 import os
 from parglare.parser import Parser
 from parglare.exceptions import ParseError

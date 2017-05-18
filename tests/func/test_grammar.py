@@ -33,7 +33,7 @@ def test_terminal_nonterminal():
     assert Terminal("B") in g.terminals
     assert NonTerminal("B") not in g.nonterminals
 
-    # Here A shoud be non-terminal while B will be terminal.
+    # Here A should be non-terminal while B should be terminal.
     grammar = """
     S = A B;
     A = B;

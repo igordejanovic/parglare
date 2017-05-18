@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa
 from parglare.parser import first, follow
 from parglare import Grammar, NonTerminal, TerminalStr, EMPTY
 from parglare.grammar import STOP

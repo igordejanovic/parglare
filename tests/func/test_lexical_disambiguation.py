@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa
 from parglare import Parser, Grammar
 
 
@@ -119,9 +119,9 @@ def test_if_all_fails():
     TODO: Maybe some kind of warning would be useful.
     """
 
-    # In this grammar all three terminal rules could be applied for string "b56"
-    # They are of the same priority, same length match and all are regexes.
-    # In this case choose the first one.
+    # In this grammar all three terminal rules could be applied for string
+    # "b56". They are of the same priority, same length match and all are
+    # regexes. In this case choose the first one.
     grammar = """
     S = First | Second | Third;
     First = /(a|b)\d+/;

@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa
 from parglare import Parser, Grammar
 
 

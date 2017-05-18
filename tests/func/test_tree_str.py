@@ -1,6 +1,6 @@
-import pytest
+import pytest  # noqa
 from parglare.parser import Parser
-from .expression_grammar import get_grammar, E
+from .expression_grammar import get_grammar
 
 
 def test_tree_str():
