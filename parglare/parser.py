@@ -176,6 +176,9 @@ class Parser(object):
                 ntok = ''
                 if position == in_len and EMPTY not in actions \
                    and STOP not in actions:
+                    # Execute EOF action at end of input only if EMTPY and
+                    # STOP terminals are not in actions as this might call
+                    # for reduction.
                     ntok_sym = EOF
                 else:
                     tokens = []
