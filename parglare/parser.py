@@ -293,6 +293,12 @@ class Action(object):
 
 
 class LRItem(object):
+    """
+    Represents an item in the items set. Item is defined by a production and a
+    position inside production (the dot). If the item is of LR_1 type follow
+    set is also defined. Follow set is a set of terminals that can follow
+    non-terminal at given position in the given production.
+    """
     __slots__ = ('production', 'position', 'follow')
 
     def __init__(self, production, position, follow=None):
