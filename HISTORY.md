@@ -1,6 +1,11 @@
 # History
 
-- 2016-02-02 - Version 0.1
+- Development version
+
+  - Lexical recognizers.
+
+- 2017-02-02 - Version 0.1
+
   - Textual syntax for grammar specification. Parsed with parglare.
   - SLR and LALR tables calculation (LALR is the default)
   - Scannerless LR(1) parsing
