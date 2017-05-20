@@ -5,7 +5,7 @@ grammar = r"""
 CSVFile = OptionalNewLines Records OptionalNewLines;
 Records = Record | Records OptionalNewLines Record;
 Record = Fields NewLine;
-Fields = Fields "," Field | Field;
+Fields = Field | Fields "," Field;
 Field = QuotedField | FieldContent;
 NewLines = NewLine | NewLines NewLine;
 OptionalNewLines = NewLines | EMPTY;
@@ -16,21 +16,15 @@ NewLine = "\n";
 """
 
 
-def list_one_or_more_sep(_, nodes):
-    if len(nodes) == 1:
-        res = [nodes[0]]
-    else:
-        res = nodes[0]
-        res.append(nodes[2])
+def collect_with_sep(_, nodes):
+    res = nodes[0]
+    res.append(nodes[2])
     return res
 
 
-def list_one_or_more(_, nodes):
-    if len(nodes) == 1:
-        res = [nodes[0]]
-    else:
-        res = nodes[0]
-        res.append(nodes[1])
+def collect(_, nodes):
+    res = nodes[0]
+    res.append(nodes[1])
     return res
 
 
@@ -49,13 +43,15 @@ def pass_none(_, n):
 # Semantic Actions
 actions = {
     "CSVFile": lambda _, nodes: nodes[1],
-    "Records": list_one_or_more_sep,
+    "Records:1": lambda _, nodes: [nodes[0]],
+    "Records:2": collect_with_sep,
     "Record": lambda _, nodes: nodes[0],
-    "Fields": list_one_or_more_sep,
+    "Fields:1": lambda _, nodes: [nodes[0]],
+    "Fields:2": collect_with_sep,
     "Field": pass_single_node,
     "QuotedField": lambda _, nodes: nodes[1],
     "FieldContent": pass_value,
-    "FieldContentQuoted": lambda _, value: value[3:],
+    "FieldContentQuoted": pass_value,
     "NewLines": pass_none,
     "NewLine": pass_none,
     "OptionalNewLines": pass_none,
@@ -67,7 +63,7 @@ def main(debug=False):
     parser = Parser(g, ws='\t ', actions=actions, debug=debug)
 
     input_str = """
-    First, Second with multiple words, "Third quoted"
+    First, Second with multiple words, "Third, quoted with comma"
 
 
     Next line, Previous line has newlines, 2
