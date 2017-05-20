@@ -61,19 +61,19 @@ E = E '+' E  {left, 1}
   | E '*' E  {left, 2}
   | E '/' E  {left, 2}
   | E '^' E  {right, 3}
-  | '(' E ')';
-E = number;
+  | '(' E ')'
+  | number;
 number = /\d+(\.\d+)?/;
 """
 
 actions = {
-    "E:0": lambda _, nodes: nodes[0] + nodes[2],
-    "E:1": lambda _, nodes: nodes[0] - nodes[2],
-    "E:2": lambda _, nodes: nodes[0] * nodes[2],
-    "E:3": lambda _, nodes: nodes[0] / nodes[2],
-    "E:4": lambda _, nodes: nodes[0] ** nodes[2],
-    "E:5": lambda _, nodes: nodes[1],
-    "E:6": lambda _, nodes: nodes[0],
+    "E:1": lambda _, nodes: nodes[0] + nodes[2],
+    "E:2": lambda _, nodes: nodes[0] - nodes[2],
+    "E:3": lambda _, nodes: nodes[0] * nodes[2],
+    "E:4": lambda _, nodes: nodes[0] / nodes[2],
+    "E:5": lambda _, nodes: nodes[0] ** nodes[2],
+    "E:6": lambda _, nodes: nodes[1],
+    "E:7": lambda _, nodes: nodes[0],
     "number": lambda _, value: float(value),
 }
 

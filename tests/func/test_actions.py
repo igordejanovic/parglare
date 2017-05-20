@@ -24,13 +24,13 @@ def test_actions():
     actions = {
         "number": lambda _, value: float(value),
         # Check action for each alternative
-        "E:0": sum_act,
-        "E:1": pass_act,
+        "E:1": sum_act,
+        "E:2": pass_act,
         # Check symbol-level action
         "T": t_act,
         # Again action for each alternative
-        "F:0": parenthesses_act,
-        "F:1": pass_act
+        "F:1": parenthesses_act,
+        "F:2": pass_act
     }
 
     p = Parser(grammar, actions=actions)

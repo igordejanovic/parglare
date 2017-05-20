@@ -201,8 +201,8 @@ class Grammar(object):
         for idx, s in enumerate(self.productions):
             s.prod_id = idx
             s.prod_symbol_id = "{}:{}".format(s.symbol,
-                                              idx_per_symbol.get(s.symbol, 0))
-            idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 0) + 1
+                                              idx_per_symbol.get(s.symbol, 1))
+            idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 1) + 1
             for ref in s.rhs:
                 if ref not in self.nonterminals and ref not in self.terminals:
                     raise GrammarError("Undefined grammar symbol '%s' "
@@ -447,25 +447,25 @@ def act_grammar(_, nodes):
 
 
 pg_actions = {
-    "Assoc:0": lambda _, nodes: nodes[0].value,
     "Assoc:1": lambda _, nodes: nodes[0].value,
-    "AssocPrior:0": lambda _, nodes: [nodes[0]],
+    "Assoc:2": lambda _, nodes: nodes[0].value,
     "AssocPrior:1": lambda _, nodes: [nodes[0]],
-    "AssocPrior:2": act_assoc_prior,
+    "AssocPrior:2": lambda _, nodes: [nodes[0]],
+    "AssocPrior:3": act_assoc_prior,
     "Prior": lambda _, value: int(value),
-    "Term:0": act_term_str,
-    "Term:1": act_term_regex,
+    "Term:1": act_term_str,
+    "Term:2": act_term_regex,
     "Name": lambda _, value: value,
     "NonTermRef": lambda _, nodes: NonTerminal(nodes[0]),
     "GSymbol": lambda _, nodes: nodes[0],
-    "Sequence:0": lambda _, nodes: [nodes[0]],
-    "Sequence:1": act_sequence,
-    "ProductionRHS:0": lambda _, nodes: [ProductionRHS(nodes[0])],
-    "ProductionRHS:1": act_production_rhs,
-    "ProductionRHSs:0": lambda _, nodes: [nodes[0]],
-    "ProductionRHSs:1": act_prod_rhss,
+    "Sequence:1": lambda _, nodes: [nodes[0]],
+    "Sequence:2": act_sequence,
+    "ProductionRHS:1": lambda _, nodes: [ProductionRHS(nodes[0])],
+    "ProductionRHS:2": act_production_rhs,
+    "ProductionRHSs:1": lambda _, nodes: [nodes[0]],
+    "ProductionRHSs:2": act_prod_rhss,
     "Production": act_production,
-    "ProductionSet:0": lambda _, nodes: nodes[0],
-    "ProductionSet:1": act_prodset,
+    "ProductionSet:1": lambda _, nodes: nodes[0],
+    "ProductionSet:2": act_prodset,
     "Grammar": act_grammar
 }
