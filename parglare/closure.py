@@ -22,7 +22,7 @@ def closure(state, itemset_type, first_sets=None):
         for item in state.items:
             gs = item.production.rhs[item.position]
             if isinstance(gs, NonTerminal):
-                for p in state.parser.grammar.productions:
+                for p in state.grammar.productions:
                     if p.symbol == gs:
 
                         if itemset_type is LR_1:

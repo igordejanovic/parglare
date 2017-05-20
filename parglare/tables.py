@@ -7,21 +7,24 @@ from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
 
 
-def create_tables(parser, itemset_type):
+def create_tables(grammar, itemset_type, start_production=1):
 
-    first_sets = first(parser.grammar)
-    follow_sets = follow(parser.grammar, first_sets)
+    first_sets = first(grammar)
+    follow_sets = follow(grammar, first_sets)
 
-    g = parser.grammar
-    start_prod_symbol = g.productions[parser.start_production].symbol
-    g.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
+    start_prod_symbol = grammar.productions[start_production].symbol
+    grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
 
     # Create a state for the first production (augmented)
-    s = LRState(parser, 0, AUGSYMBOL,
-                [LRItem(g.productions[0], 0, set())])
+    s = LRState(grammar, 0, AUGSYMBOL,
+                [LRItem(grammar.productions[0], 0, set())])
 
     state_queue = [s]
     state_id = 1
+
+    states = []
+    all_goto = []
+    all_actions = []
 
     while state_queue:
         # For each state calculate its closure first, i.e. starting from a
@@ -30,13 +33,13 @@ def create_tables(parser, itemset_type):
         # dicts will be keyed by a grammar symbol.
         state = state_queue.pop(0)
         closure(state, itemset_type, first_sets)
-        parser._states.append(state)
+        states.append(state)
 
         # Each state has its corresponding GOTO and ACTION tables
         goto = OrderedDict()
-        parser._goto.append(goto)
+        all_goto.append(goto)
         actions = OrderedDict()
-        parser._actions.append(actions)
+        all_actions.append(actions)
 
         # To find out other states we examine following grammar symbols
         # in the current state (symbols following current position/"dot")
@@ -65,11 +68,11 @@ def create_tables(parser, itemset_type):
         # items from the group items with positions moved one step ahead.
         for symbol, items in state._per_next_symbol.items():
             inc_items = [i.get_pos_inc() for i in items]
-            maybe_new_state = LRState(parser, state_id, symbol, inc_items)
+            maybe_new_state = LRState(grammar, state_id, symbol, inc_items)
             target_state = maybe_new_state
             try:
-                idx = parser._states.index(maybe_new_state)
-                target_state = parser._states[idx]
+                idx = states.index(maybe_new_state)
+                target_state = states[idx]
             except ValueError:
                 try:
                     idx = state_queue.index(maybe_new_state)
@@ -107,7 +110,7 @@ def create_tables(parser, itemset_type):
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
     # merging might change item's follow in previous states
     if itemset_type is LR_1:
-        for state in parser._states:
+        for state in states:
 
             # First refresh current state's follows
             closure(state, LR_1, first_sets)
@@ -115,15 +118,15 @@ def create_tables(parser, itemset_type):
             # Propagate follows to next states. GOTO table keeps information
             # about states created from this state
             inc_items = [i.get_pos_inc() for i in state.items]
-            for target_state in parser._goto[state.state_id].values():
+            for target_state in all_goto[state.state_id].values():
                 for next_item in target_state.kernel_items:
                     next_item.follow.update(
                         inc_items[inc_items.index(next_item)].follow)
 
     # Calculate REDUCTION entries in ACTION tables and resolve possible
     # conflicts.
-    for state in parser._states:
-        actions = parser._actions[state.state_id]
+    for state in states:
+        actions = all_actions[state.state_id]
 
         for i in state.items:
             if i.is_at_end:
@@ -147,8 +150,6 @@ def create_tables(parser, itemset_type):
                             prod = i.production
                             if prod.prior == act_prior:
                                 if prod.assoc == ASSOC_NONE:
-                                    if parser.debug:
-                                        parser.print_debug()
                                     raise ShiftReduceConflict(state,
                                                               act.state.symbol,
                                                               prod)
@@ -170,8 +171,6 @@ def create_tables(parser, itemset_type):
                             assert act.prod != i.production
                             prod = i.production
                             if act.prod.prior == prod.prior:
-                                if parser.debug:
-                                    parser.print_debug()
                                 raise ReduceReduceConflict(state,
                                                            t,
                                                            act.prod,
@@ -182,8 +181,7 @@ def create_tables(parser, itemset_type):
                     else:
                         actions[t] = Action(REDUCE, prod=i.production)
 
-    if parser.debug:
-        parser.print_debug()
+    return states, all_actions, all_goto
 
 
 def merge_states(old_state, new_state):

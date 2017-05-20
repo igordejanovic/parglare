@@ -41,10 +41,6 @@ class Parser(object):
         self.layout_debug = layout_debug
         self.file_name = None
 
-        self._states = []
-        self._actions = []
-        self._goto = []
-
         self.default_actions = default_actions
 
         from .closure import LR_0, LR_1
@@ -53,7 +49,14 @@ class Parser(object):
             itemset_type = LR_0
         else:
             itemset_type = LR_1
-        create_tables(self, itemset_type)
+        states, actions, goto = create_tables(grammar, itemset_type,
+                                              start_production)
+        self._states = states
+        self._actions = actions
+        self._goto = goto
+
+        if debug:
+            self.print_debug()
 
     def print_debug(self):
         if self.layout and self.layout_debug:
@@ -346,11 +349,11 @@ class LRItem(object):
 
 class LRState(object):
     """LR State is a set of LR items."""
-    __slots__ = ['parser', 'state_id', 'symbol', 'items',
+    __slots__ = ['grammar', 'state_id', 'symbol', 'items',
                  '_per_next_symbol', '_max_prior_per_symbol']
 
-    def __init__(self, parser, state_id, symbol, items):
-        self.parser = parser
+    def __init__(self, grammar, state_id, symbol, items):
+        self.grammar = grammar
         self.state_id = state_id
         self.symbol = symbol
         self.items = items if items else []
