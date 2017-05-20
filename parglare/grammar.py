@@ -321,7 +321,7 @@ def create_grammar(productions, start_symbol=None):
  REGEX_TERM,
  PRIOR) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
            [
-               ('Name', r'[a-zA-Z0-9]+'),
+               ('Name', r'[a-zA-Z0-9_]+'),
                ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
                            r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
                ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
