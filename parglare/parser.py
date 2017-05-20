@@ -87,22 +87,23 @@ class Parser(object):
         if len(tokens) == 1:
             return tokens[0]
 
-        # Multiple with the same priority. Use longest-match rule.
-        tokens.sort(key=lambda x: len(x[1]), reverse=True)
-        max_len = len(tokens[0][1])
-        tokens = [x for x in tokens if len(x[1]) == max_len]
-        if len(tokens) == 1:
-            return tokens[0]
-
-        # Multiple with the same length. Use most-specific rule.
+        # Multiple with the same priority. Favor string recognizer as
+        # more specific.
         tokens_str = [x for x in tokens if isinstance(x[0].recognizer,
                                                       StringRecognizer)]
-        if len(tokens_str) > 0:
-            # In any case return the first one
-            return tokens_str[0]
-
-        # If all fails return the first with the longest match.
-        return tokens[0]
+        if tokens_str:
+            if len(tokens_str) == 1:
+                # If only one string recognizer
+                return tokens_str[0]
+            else:
+                # If more than one string recognizer use the longest-match rule
+                # on the string recognizer tokens
+                tokens_str.sort(key=lambda x: len(x[1]), reverse=True)
+                return tokens_str[0]
+        else:
+            # No string recognizers. Use longest-match rule on all tokens.
+            tokens.sort(key=lambda x: len(x[1]), reverse=True)
+            return tokens[0]
 
     def parse_file(self, file_name):
         """
