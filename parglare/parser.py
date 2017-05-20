@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 import codecs
-from .grammar import Grammar, TerminalStr, EMPTY, AUGSYMBOL, EOF, STOP
+from .grammar import Grammar, StringRecognizer, EMPTY, AUGSYMBOL, EOF, STOP
 from .exceptions import ParseError
 
 SHIFT = 0
@@ -95,7 +95,8 @@ class Parser(object):
             return tokens[0]
 
         # Multiple with the same length. Use most-specific rule.
-        tokens_str = [x for x in tokens if isinstance(x[0], TerminalStr)]
+        tokens_str = [x for x in tokens if isinstance(x[0].recognizer,
+                                                      StringRecognizer)]
         if len(tokens_str) > 0:
             # In any case return the first one
             return tokens_str[0]
@@ -178,7 +179,7 @@ class Parser(object):
                 else:
                     tokens = []
                     for symbol in actions:
-                        tok = symbol.parse(input_str, position)
+                        tok = symbol.recognizer(input_str, position)
                         if tok:
                             tokens.append((symbol, tok))
                     if not tokens:

@@ -1,6 +1,6 @@
 import pytest  # noqa
 from parglare.parser import first, follow
-from parglare import Grammar, NonTerminal, TerminalStr, EMPTY
+from parglare import Grammar, NonTerminal, Terminal, EMPTY
 from parglare.grammar import STOP
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 
@@ -38,12 +38,12 @@ def test_first_empty_in_rhs():
     first_set = first(g)
 
     assert EMPTY in first_set[NonTerminal('A')]
-    assert TerminalStr('B') in first_set[NonTerminal('A')]
+    assert Terminal('B') in first_set[NonTerminal('A')]
 
-    assert TerminalStr('B') in first_set[NonTerminal('S')]
+    assert Terminal('B') in first_set[NonTerminal('S')]
 
     # 'A' can derive empty, thus 'C' must be in firsts of 'S'.
-    assert TerminalStr('C') in first_set[NonTerminal('S')]
+    assert Terminal('C') in first_set[NonTerminal('S')]
 
 
 def test_follow():

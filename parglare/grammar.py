@@ -23,6 +23,12 @@ def escape(instr):
 
 
 class GrammarSymbol(object):
+    """
+    Represents an abstract grammar symbol.
+
+    Attributes:
+    name(str): The name of this grammar symbol.
+    """
     def __init__(self, name):
         self.name = escape(name)
 
@@ -47,58 +53,63 @@ class NonTerminal(GrammarSymbol):
 
 
 class Terminal(GrammarSymbol):
-    def __init__(self, name):
+    """Represent a terminal symbol of the grammar.
+
+    Attributes:
+    prior(int): Priority used for lexical disambiguation.
+
+    recognizer(callable): Called with input list of objects and position in the
+        stream. Should return a sublist of recognized objects. The sublist
+        should be rooted at the given position.
+    """
+    def __init__(self, name, recognizer=None):
         self.prior = DEFAULT_PRIORITY
+        self.recognizer = recognizer if recognizer else StringRecognizer(name)
         super(Terminal, self).__init__(name)
 
 
-class TerminalStr(Terminal):
-    def __init__(self, name, value=None):
-        super(TerminalStr, self).__init__(name)
-        self.value = value if value else name
+class StringRecognizer(object):
+    def __init__(self, value):
+        self.value = value
 
-    def parse(self, in_str, pos):
+    def __call__(self, in_str, pos):
         if in_str[pos:pos+len(self.value)] == self.value:
             return self.value
 
 
-class TerminalRegEx(Terminal):
-    def __init__(self, name, regex=None):
-        super(TerminalRegEx, self).__init__(name)
-        self._regex = regex if regex else name
+class RegExRecognizer(object):
+    def __init__(self, regex):
+        self._regex = regex
         self.regex = re.compile(self._regex)
 
-    def parse(self, in_str, pos):
+    def __call__(self, in_str, pos):
         m = self.regex.match(in_str, pos)
         if m:
             matched = m.group()
             return matched
 
 
-class TerminalEmpty(Terminal):
-    def parse(self, in_str, pos):
-        pass
+def EMPTY_recognizer(input, pos):
+    pass
 
 
-class TerminalEOF(Terminal):
-    def parse(self, in_str, pos):
-        pass
+def EOF_recognizer(input, pos):
+    pass
 
 
-class TerminalStop(Terminal):
-    def parse(self, in_str, pos):
-        pass
+def STOP_recognizer(input, pos):
+    pass
 
 
 # These two terminals are special terminals used internally.
 AUGSYMBOL = NonTerminal("S'")
-STOP = TerminalStop("STOP")
+STOP = Terminal("STOP", STOP_recognizer)
 
 # These two terminals are special terminals used in the grammars.
-# EMPTY will match nothing and always succeeds.
+# EMPTY will match nothing and always succeed.
 # EOF will match only at the end of the input string.
-EMPTY = TerminalEmpty("EMPTY")
-EOF = TerminalEOF("EOF")
+EMPTY = Terminal("EMPTY", EMPTY_recognizer)
+EOF = Terminal("EOF", EOF_recognizer)
 
 
 class Production(object):
@@ -192,7 +203,7 @@ class Grammar(object):
                 if isinstance(t, Terminal):
                     self.terminals.add(t)
                 elif isinstance(t, text):
-                    term = TerminalStr(t)
+                    term = Terminal(t)
                     self.terminals.add(term)
                     s.rhs[idx] = term
 
@@ -304,13 +315,19 @@ def create_grammar(productions, start_symbol=None):
     'Assoc',
     'AssocPrior',
     'Sequence']]
-NAME = TerminalRegEx('Name', r'[a-zA-Z0-9]+')
-STR_TERM = TerminalRegEx("StrTerm",
-                         r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
-                         r'''("[^"\\]*(?:\\.[^"\\]*)*")''')
-REGEX_TERM = TerminalRegEx("RegExTerm",
-                           r'''\/((\\/)|[^/])*\/''')
-PRIOR = TerminalRegEx("Prior", r'\d+')
+
+(NAME,
+ STR_TERM,
+ REGEX_TERM,
+ PRIOR) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
+           [
+               ('Name', r'[a-zA-Z0-9]+'),
+               ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
+                           r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
+               ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
+               ('Prior', r'\d+')
+           ]]
+
 pg_productions = [
     [GRAMMAR, [PRODUCTION_SET]],
     [PRODUCTION_SET, [PRODUCTION]],
@@ -343,12 +360,12 @@ def act_term_str(_, nodes):
                  .replace(r"\\", "\\")\
                  .replace(r"\n", "\n")\
                  .replace(r"\t", "\t")
-    return TerminalStr(name, value)
+    return Terminal(name, StringRecognizer(value))
 
 
 def act_term_regex(_, nodes):
     value = nodes[0].value[1:-1]
-    return TerminalRegEx(value, value)
+    return Terminal(value, RegExRecognizer(value))
 
 
 def act_sequence(_, nodes):

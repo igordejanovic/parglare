@@ -1,10 +1,10 @@
-from parglare import NonTerminal, TerminalStr, create_grammar
+from parglare import NonTerminal, Terminal, create_grammar
 
 
 # Expression grammar
 E, T, F = [NonTerminal(name) for name in ['E', 'T', 'F']]
 PLUS, MULT, ID, OPEN, CLOSE = [
-    TerminalStr(value, value) for value in ['+', '*', 'id', '(', ')']]
+    Terminal(value) for value in ['+', '*', 'id', '(', ')']]
 productions = [
     (E, (E, PLUS, T)),
     (E, (T, )),

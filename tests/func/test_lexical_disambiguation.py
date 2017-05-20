@@ -84,8 +84,8 @@ def test_longest_match():
 
 def test_most_specific():
     """If multiple terminals are of the same priority and matches the same length
-    strings we shall prefer the most specific, i.e. TerminalStr over
-    TerminalRegEx.
+    strings we shall prefer the result of the most specific recognizer, i.e.
+    StringRecognizer over RegExRecognizer.
     """
 
     grammar = """

@@ -1,12 +1,12 @@
 from parglare import create_grammar
-from parglare import NonTerminal, TerminalStr, TerminalRegEx
+from parglare import NonTerminal, Terminal, RegExRecognizer
 
 
 # Expression grammar with float numbers
 E, T, F = [NonTerminal(name) for name in ['E', 'T', 'F']]
 PLUS, MULT, OPEN, CLOSE = [
-    TerminalStr(value, value) for value in ['+', '*', '(', ')']]
-NUMBER = TerminalRegEx('number', r'\d+(\.\d+)?')
+    Terminal(value) for value in ['+', '*', '(', ')']]
+NUMBER = Terminal('number', RegExRecognizer(r'\d+(\.\d+)?'))
 productions = [
     (E, (E, PLUS, T)),
     (E, (T, )),
