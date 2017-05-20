@@ -80,11 +80,18 @@ class Parser(object):
         tokens (list of tuples (Terminal, matched str))
         """
 
+        if self.debug:
+            print("\tLexical disambiguation. Tokens:",
+                  [x[1] for x in tokens])
+
         # By priority
         tokens.sort(key=lambda x: x[0].prior, reverse=True)
         prior = tokens[0][0].prior
         tokens = [x for x in tokens if x[0].prior == prior]
         if len(tokens) == 1:
+            if self.debug:
+                print("\tDisambiguate by priority: {}, prior={}"
+                      .format(tokens[0][1], prior))
             return tokens[0]
 
         # Multiple with the same priority. Favor string recognizer as
@@ -94,14 +101,22 @@ class Parser(object):
         if tokens_str:
             if len(tokens_str) == 1:
                 # If only one string recognizer
+                if self.debug:
+                    print("\tDisambiguation by str. recognizer as "
+                          "more specific.")
                 return tokens_str[0]
             else:
                 # If more than one string recognizer use the longest-match rule
                 # on the string recognizer tokens
                 tokens_str.sort(key=lambda x: len(x[1]), reverse=True)
+                if self.debug:
+                    print("\tDisambiguation by str. recognizer and "
+                          "longest match.")
                 return tokens_str[0]
         else:
             # No string recognizers. Use longest-match rule on all tokens.
+            if self.debug:
+                print("\tDisambiguation by longest-match strategy.")
             tokens.sort(key=lambda x: len(x[1]), reverse=True)
             return tokens[0]
 
