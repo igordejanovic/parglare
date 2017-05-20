@@ -33,12 +33,12 @@ atom_pattern = "|".join(atom_names)
 grammar += '\nATOM = /{}/;'.format(atom_pattern)
 
 actions = {
-    'mw:0': lambda _, __: 0.0,
-    'mw:1': lambda _, nodes: nodes[0],
-    'formula:0': lambda _, nodes: nodes[0],
-    'formula:1': lambda _, nodes: nodes[0] + nodes[1],
-    'species:0': lambda _, nodes: nodes[0] * nodes[1],
-    'species:1': lambda _, nodes: nodes[0],
+    'mw:1': lambda _, __: 0.0,
+    'mw:2': lambda _, nodes: nodes[0],
+    'formula:1': lambda _, nodes: nodes[0],
+    'formula:2': lambda _, nodes: nodes[0] + nodes[1],
+    'species:1': lambda _, nodes: nodes[0] * nodes[1],
+    'species:2': lambda _, nodes: nodes[0],
     'ATOM': lambda _, value: mw_table[value],
     'DIGITS': lambda _, value: int(value)
 }
