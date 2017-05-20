@@ -340,6 +340,13 @@ class LRItem(object):
             return LRItem(self.production, self.position+1, self.follow)
 
     @property
+    def symbol_at_position(self):
+        """
+        Returns symbol from production RHS at the position of this item.
+        """
+        return self.production.rhs[self.position]
+
+    @property
     def is_at_end(self):
         """
         Is this items at the end position, e.g. a candidate for reduction.

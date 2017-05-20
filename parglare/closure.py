@@ -20,7 +20,7 @@ def closure(state, itemset_type, first_sets=None):
         has_additions = False
         to_add = []
         for item in state.items:
-            gs = item.production.rhs[item.position]
+            gs = item.symbol_at_position
             if isinstance(gs, NonTerminal):
                 for p in state.grammar.productions:
                     if p.symbol == gs:
