@@ -74,52 +74,6 @@ class Parser(object):
             print("\t", ", ".join(["%s->%s" % (k, str(v))
                                    for k, v in a.items()]))
 
-    def lexical_disambiguation(self, tokens):
-        """For the given list of matched tokens apply disambiguation strategy.
-        Args:
-        tokens (list of tuples (Terminal, matched str))
-        """
-
-        if self.debug:
-            print("\tLexical disambiguation. Tokens:",
-                  [x[1] for x in tokens])
-
-        # By priority
-        tokens.sort(key=lambda x: x[0].prior, reverse=True)
-        prior = tokens[0][0].prior
-        tokens = [x for x in tokens if x[0].prior == prior]
-        if len(tokens) == 1:
-            if self.debug:
-                print("\tDisambiguate by priority: {}, prior={}"
-                      .format(tokens[0][1], prior))
-            return tokens[0]
-
-        # Multiple with the same priority. Favor string recognizer as
-        # more specific.
-        tokens_str = [x for x in tokens if isinstance(x[0].recognizer,
-                                                      StringRecognizer)]
-        if tokens_str:
-            if len(tokens_str) == 1:
-                # If only one string recognizer
-                if self.debug:
-                    print("\tDisambiguation by str. recognizer as "
-                          "more specific.")
-                return tokens_str[0]
-            else:
-                # If more than one string recognizer use the longest-match rule
-                # on the string recognizer tokens
-                tokens_str.sort(key=lambda x: len(x[1]), reverse=True)
-                if self.debug:
-                    print("\tDisambiguation by str. recognizer and "
-                          "longest match.")
-                return tokens_str[0]
-        else:
-            # No string recognizers. Use longest-match rule on all tokens.
-            if self.debug:
-                print("\tDisambiguation by longest-match strategy.")
-            tokens.sort(key=lambda x: len(x[1]), reverse=True)
-            return tokens[0]
-
     def parse_file(self, file_name):
         """
         Parses content from the given file.
@@ -146,7 +100,6 @@ class Parser(object):
         results_stack = []
         position_stack = [0]
         position = position
-        in_len = len(input_str)
 
         context = type(str("Context"), (), {})
 
@@ -157,7 +110,6 @@ class Parser(object):
             cur_state = state_stack[-1]
             if self.debug:
                 print("Current state =", cur_state.state_id)
-            goto = self._goto[cur_state.state_id]
             actions = self._actions[cur_state.state_id]
 
             if new_token or ntok_sym not in actions:
@@ -168,48 +120,9 @@ class Parser(object):
                 # token. This could happen if old token is not available in the
                 # actions of the current state but EMPTY is and will match
                 # always leading to reduction.
-
-                # Parse layout
-                layout_content = ''
-                if self.layout_parser:
-                    layout_content, pos = self.layout_parser.parse(
-                        input_str, position)
-                    layout_content = input_str[position:pos]
-                    context.layout = layout_content
-                    position = pos
-                elif self.ws:
-                    old_pos = position
-                    while position < in_len and input_str[position] in self.ws:
-                        position += 1
-                    layout_content = input_str[old_pos:position]
-                    context.layout = layout_content
-
-                if self.debug:
-                    print("\tLayout content: '{}'".format(layout_content))
-
-                # Find the next token in the input
-                ntok = ''
-                if position == in_len and EMPTY not in actions \
-                   and STOP not in actions:
-                    # Execute EOF action at end of input only if EMTPY and
-                    # STOP terminals are not in actions as this might call
-                    # for reduction.
-                    ntok_sym = EOF
-                else:
-                    tokens = []
-                    for symbol in actions:
-                        tok = symbol.recognizer(input_str, position)
-                        if tok:
-                            tokens.append((symbol, tok))
-                    if not tokens:
-                        if STOP in actions:
-                            ntok_sym = STOP
-                        else:
-                            ntok_sym = EMPTY
-                    elif len(tokens) == 1:
-                        ntok_sym, ntok = tokens[0]
-                    else:
-                        ntok_sym, ntok = self.lexical_disambiguation(tokens)
+                ntok_sym, ntok, position = self._next_token(actions, input_str,
+                                                            position, context,
+                                                            new_token)
 
             if self.debug:
                 print("\tToken ahead:", ntok_sym)
@@ -289,6 +202,107 @@ class Parser(object):
                     return results_stack[0], position
                 else:
                     return results_stack[0]
+
+    def _next_token(self, actions, input_str, position, context, new_token):
+        """
+        For the current position in the input stream and actions in the current
+        state find next token.
+        """
+
+        in_len = len(input_str)
+
+        if new_token:
+            # Parse layout
+            layout_content = ''
+            if self.layout_parser:
+                layout_content, pos = self.layout_parser.parse(
+                    input_str, position)
+                layout_content = input_str[position:pos]
+                context.layout = layout_content
+                position = pos
+            elif self.ws:
+                old_pos = position
+                while position < in_len and input_str[position] in self.ws:
+                    position += 1
+                layout_content = input_str[old_pos:position]
+                context.layout = layout_content
+
+            if self.debug:
+                print("\tLayout content: '{}'".format(layout_content))
+
+        # Find the next token in the input
+        ntok = ''
+        if position == in_len and EMPTY not in actions \
+           and STOP not in actions:
+            # Execute EOF action at end of input only if EMTPY and
+            # STOP terminals are not in actions as this might call
+            # for reduction.
+            ntok_sym = EOF
+        else:
+            tokens = []
+            for symbol in actions:
+                tok = symbol.recognizer(input_str, position)
+                if tok:
+                    tokens.append((symbol, tok))
+            if not tokens:
+                if STOP in actions:
+                    ntok_sym = STOP
+                else:
+                    ntok_sym = EMPTY
+            elif len(tokens) == 1:
+                ntok_sym, ntok = tokens[0]
+            else:
+                ntok_sym, ntok = self._lexical_disambiguation(tokens)
+
+        return ntok_sym, ntok, position
+
+    def _lexical_disambiguation(self, tokens):
+        """
+        For the given list of matched tokens apply disambiguation strategy.
+
+        Args:
+        tokens (list of tuples (Terminal, matched str))
+        """
+
+        if self.debug:
+            print("\tLexical disambiguation. Tokens:",
+                  [x[1] for x in tokens])
+
+        # By priority
+        tokens.sort(key=lambda x: x[0].prior, reverse=True)
+        prior = tokens[0][0].prior
+        tokens = [x for x in tokens if x[0].prior == prior]
+        if len(tokens) == 1:
+            if self.debug:
+                print("\tDisambiguate by priority: {}, prior={}"
+                      .format(tokens[0][1], prior))
+            return tokens[0]
+
+        # Multiple with the same priority. Favor string recognizer as
+        # more specific.
+        tokens_str = [x for x in tokens if isinstance(x[0].recognizer,
+                                                      StringRecognizer)]
+        if tokens_str:
+            if len(tokens_str) == 1:
+                # If only one string recognizer
+                if self.debug:
+                    print("\tDisambiguation by str. recognizer as "
+                          "more specific.")
+                return tokens_str[0]
+            else:
+                # If more than one string recognizer use the longest-match rule
+                # on the string recognizer tokens
+                tokens_str.sort(key=lambda x: len(x[1]), reverse=True)
+                if self.debug:
+                    print("\tDisambiguation by str. recognizer and "
+                          "longest match.")
+                return tokens_str[0]
+        else:
+            # No string recognizers. Use longest-match rule on all tokens.
+            if self.debug:
+                print("\tDisambiguation by longest-match strategy.")
+            tokens.sort(key=lambda x: len(x[1]), reverse=True)
+            return tokens[0]
 
 
 class Action(object):
