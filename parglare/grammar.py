@@ -60,8 +60,6 @@ class TerminalStr(Terminal):
     def parse(self, in_str, pos):
         if in_str[pos:pos+len(self.value)] == self.value:
             return self.value
-        else:
-            return ''
 
 
 class TerminalRegEx(Terminal):
@@ -75,23 +73,21 @@ class TerminalRegEx(Terminal):
         if m:
             matched = m.group()
             return matched
-        else:
-            return ''
 
 
 class TerminalEmpty(Terminal):
     def parse(self, in_str, pos):
-        return ''
+        pass
 
 
 class TerminalEOF(Terminal):
     def parse(self, in_str, pos):
-        return ''
+        pass
 
 
 class TerminalStop(Terminal):
     def parse(self, in_str, pos):
-        return ''
+        pass
 
 
 # These two terminals are special terminals used internally.
