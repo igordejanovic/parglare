@@ -444,7 +444,6 @@ def act_grammar(_, nodes):
                     raise GrammarError(
                         'Terminals should not define associativity '
                         '(terminal "{}").'.format(t.name))
-                assert p.assoc == ASSOC_NONE
                 to_del.append(idx)
 
     for idx in sorted(to_del, reverse=True):
