@@ -67,13 +67,13 @@ number = /\d+(\.\d+)?/;
 """
 
 actions = {
-    "E:1": lambda _, nodes: nodes[0] + nodes[2],
-    "E:2": lambda _, nodes: nodes[0] - nodes[2],
-    "E:3": lambda _, nodes: nodes[0] * nodes[2],
-    "E:4": lambda _, nodes: nodes[0] / nodes[2],
-    "E:5": lambda _, nodes: nodes[0] ** nodes[2],
-    "E:6": lambda _, nodes: nodes[1],
-    "E:7": lambda _, nodes: nodes[0],
+    "E": [lambda _, nodes: nodes[0] + nodes[2],
+          lambda _, nodes: nodes[0] - nodes[2],
+          lambda _, nodes: nodes[0] * nodes[2],
+          lambda _, nodes: nodes[0] / nodes[2],
+          lambda _, nodes: nodes[0] ** nodes[2],
+          lambda _, nodes: nodes[1],
+          lambda _, nodes: nodes[0]],
     "number": lambda _, value: float(value),
 }
 

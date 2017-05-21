@@ -22,7 +22,7 @@ class Parser(object):
                  tables=LALR, layout=False, position=False):
         self.grammar = grammar
         self.start_production = start_production
-        self.actions = actions if actions else {}
+        self.sem_actions = actions if actions else {}
 
         self.layout_parser = None
         if not layout:
@@ -146,8 +146,8 @@ class Parser(object):
                           "=>", position_context(input_str, position))
 
                 res = None
-                if state.symbol.name in self.actions:
-                    res = self.actions[state.symbol.name](context, ntok)
+                if state.symbol.name in self.sem_actions:
+                    res = self.sem_actions[state.symbol.name](context, ntok)
                 elif self.default_actions:
                     res = default_shift_action(context, ntok)
 
@@ -178,12 +178,13 @@ class Parser(object):
 
                 # Calling semantic actions
                 res = None
-                if act.prod.prod_symbol_id in self.actions:
-                    res = self.actions[
-                        act.prod.prod_symbol_id](context, subresults)
-                elif act.prod.symbol.name in self.actions:
-                    res = self.actions[
-                        act.prod.symbol.name](context, subresults)
+                sem_action = self.sem_actions.get(act.prod.symbol.name)
+                if sem_action:
+                    if type(sem_action) is list:
+                        res = sem_action[act.prod.prod_symbol_id](context,
+                                                                  subresults)
+                    else:
+                        res = sem_action(context, subresults)
                 elif self.default_actions:
                     res = default_reduce_action(context, nodes=subresults)
 

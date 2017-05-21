@@ -121,9 +121,8 @@ class Production(object):
     assoc (int): Associativity. Used for ambiguity (shift/reduce) resolution.
     prior (int): Priority. Used for ambiguity (shift/reduce) resolution.
     prod_id (int): Ordinal number of the production.
-    prod_symbol_id (str): Ident of production in the form "<Symbol>:ord" where
-        ordinal is ordinal of the alternative choice starting from 0. Used to
-        map actions.
+    prod_symbol_id (int): A zero-based ordinal of alternative choice for this
+        production grammar symbol.
     """
 
     def __init__(self, symbol, rhs, assoc=ASSOC_NONE, prior=DEFAULT_PRIORITY):
@@ -211,9 +210,8 @@ class Grammar(object):
         idx_per_symbol = {}
         for idx, s in enumerate(self.productions):
             s.prod_id = idx
-            s.prod_symbol_id = "{}:{}".format(s.symbol,
-                                              idx_per_symbol.get(s.symbol, 1))
-            idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 1) + 1
+            s.prod_symbol_id = idx_per_symbol.get(s.symbol, 0)
+            idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 0) + 1
             for ref in s.rhs:
                 if ref not in self.nonterminals and ref not in self.terminals:
                     raise GrammarError("Undefined grammar symbol '%s' "
@@ -463,25 +461,21 @@ def act_grammar(_, nodes):
 
 
 pg_actions = {
-    "Assoc:1": lambda _, nodes: nodes[0].value,
-    "Assoc:2": lambda _, nodes: nodes[0].value,
-    "AssocPrior:1": lambda _, nodes: [nodes[0]],
-    "AssocPrior:2": lambda _, nodes: [nodes[0]],
-    "AssocPrior:3": act_assoc_prior,
+    "Assoc": lambda _, nodes: nodes[0].value,
+    "AssocPrior": [lambda _, nodes: [nodes[0]],
+                   lambda _, nodes: [nodes[0]],
+                   act_assoc_prior],
     "Prior": lambda _, value: int(value),
-    "Term:1": act_term_str,
-    "Term:2": act_term_regex,
+    "Term": [act_term_str, act_term_regex],
     "Name": lambda _, value: value,
     "NonTermRef": lambda _, nodes: NonTerminal(nodes[0]),
     "GSymbol": lambda _, nodes: nodes[0],
-    "Sequence:1": lambda _, nodes: [nodes[0]],
-    "Sequence:2": act_sequence,
-    "ProductionRHS:1": lambda _, nodes: [ProductionRHS(nodes[0])],
-    "ProductionRHS:2": act_production_rhs,
-    "ProductionRHSs:1": lambda _, nodes: [nodes[0]],
-    "ProductionRHSs:2": act_prod_rhss,
+    "Sequence": [lambda _, nodes: [nodes[0]], act_sequence],
+    "ProductionRHS": [lambda _, nodes: [ProductionRHS(nodes[0])],
+                      act_production_rhs],
+    "ProductionRHSs": [lambda _, nodes: [nodes[0]],
+                       act_prod_rhss],
     "Production": act_production,
-    "ProductionSet:1": lambda _, nodes: nodes[0],
-    "ProductionSet:2": act_prodset,
+    "ProductionSet": [lambda _, nodes: nodes[0], act_prodset],
     "Grammar": act_grammar
 }
