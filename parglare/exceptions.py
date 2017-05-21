@@ -46,3 +46,10 @@ class ReduceReduceConflict(LRConflict):
                   "decide whether to reduce by production '{}' or by '{}'." \
             .format(state.state_id, symbol, production1, production2)
         super(ReduceReduceConflict, self).__init__(message, state, symbol)
+
+
+class NoActionsForRootRule(Exception):
+    def __init__(self):
+        super(NoActionsForRootRule, self).__init__(
+            "No SHIFT actions for root rule. Is your root rule infinitely "
+            "recursive?")
