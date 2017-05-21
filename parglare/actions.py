@@ -10,10 +10,7 @@ def pass_none(_, value):
     return None
 
 
-def pass_value(_, value):
-    """
-    Return terminal string.
-    """
+def pass_nochange(_, value):
     return value
 
 

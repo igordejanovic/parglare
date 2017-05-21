@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 import sys
 import re
 from parglare.exceptions import GrammarError
+from parglare.actions import pass_single, pass_single_value, pass_nochange
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -461,21 +462,18 @@ def act_grammar(_, nodes):
 
 
 pg_actions = {
-    "Assoc": lambda _, nodes: nodes[0].value,
-    "AssocPrior": [lambda _, nodes: nodes,
-                   lambda _, nodes: nodes,
-                   act_assoc_prior],
+    "Assoc": pass_single_value,
+    "AssocPrior": [pass_nochange, pass_nochange, act_assoc_prior],
     "Prior": lambda _, value: int(value),
     "Term": [act_term_str, act_term_regex],
-    "Name": lambda _, value: value,
+    "Name": pass_nochange,
     "NonTermRef": lambda _, nodes: NonTerminal(nodes[0]),
-    "GSymbol": lambda _, nodes: nodes[0],
-    "Sequence": [lambda _, nodes: nodes, act_sequence],
+    "GSymbol": pass_single,
+    "Sequence": [pass_nochange, act_sequence],
     "ProductionRHS": [lambda _, nodes: [ProductionRHS(nodes[0])],
                       act_production_rhs],
-    "ProductionRHSs": [lambda _, nodes: nodes,
-                       act_prod_rhss],
+    "ProductionRHSs": [pass_nochange, act_prod_rhss],
     "Production": act_production,
-    "ProductionSet": [lambda _, nodes: nodes[0], act_prodset],
+    "ProductionSet": [pass_single, act_prodset],
     "Grammar": act_grammar
 }
