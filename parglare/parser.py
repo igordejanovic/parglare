@@ -26,7 +26,7 @@ class Parser(object):
 
         self.layout_parser = None
         if not layout:
-            layout_prod = grammar.get_production('LAYOUT')
+            layout_prod = grammar.get_production_id('LAYOUT')
             if layout_prod:
                 self.layout_parser = Parser(grammar,
                                             start_production=layout_prod,

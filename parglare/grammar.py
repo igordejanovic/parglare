@@ -320,11 +320,11 @@ class Grammar(object):
             s = self.get_nonterminal(name)
         return s
 
-    def get_production(self, name):
-        "Returns first production number for the given symbol name"
-        for idx, p in enumerate(self.productions):
+    def get_production_id(self, name):
+        "Returns first production id for the given symbol name"
+        for p in self.productions:
             if p.symbol.name == name:
-                return idx
+                return p.prod_id
 
     @staticmethod
     def _create_productions(productions, start_symbol=None):
