@@ -1,5 +1,4 @@
-from parglare import create_grammar
-from parglare import NonTerminal, Terminal, RegExRecognizer
+from parglare import Grammar, NonTerminal, Terminal, RegExRecognizer
 
 
 # Expression grammar with float numbers
@@ -18,4 +17,4 @@ productions = [
 
 
 def get_grammar():
-    return create_grammar(productions, E)
+    return Grammar.from_struct(productions, E)

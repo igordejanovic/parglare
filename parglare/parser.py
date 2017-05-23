@@ -125,7 +125,8 @@ class Parser(object):
                                                             new_token)
 
             if self.debug:
-                print("\tToken ahead:", ntok_sym)
+                print("\tContext:", position_context(input_str, position))
+                print("\tToken ahead: name={} str='{}'".format(ntok_sym, ntok))
 
             act = actions.get(ntok_sym)
 
@@ -142,8 +143,7 @@ class Parser(object):
                 if self.debug:
                     print("\tShift:{} \"{}\"".format(state.state_id, ntok),
                           "at position",
-                          pos_to_line_col(input_str, position),
-                          "=>", position_context(input_str, position))
+                          pos_to_line_col(input_str, position))
 
                 res = None
                 if state.symbol.name in self.sem_actions:
@@ -152,7 +152,8 @@ class Parser(object):
                     res = default_shift_action(context, ntok)
 
                 if self.debug:
-                    print("\tAction result =", str(res))
+                    print("\tAction result = type:{} value:{}"
+                          .format(type(res), repr(res)))
 
                 state_stack.append(state)
                 results_stack.append(res)
@@ -189,7 +190,8 @@ class Parser(object):
                     res = default_reduce_action(context, nodes=subresults)
 
                 if self.debug:
-                    print("\tAction result =", str(res))
+                    print("\tAction result = type:{} value:{}"
+                          .format(type(res), repr(res)))
 
                 state_stack.append(goto[production.symbol])
                 results_stack.append(res)
@@ -481,8 +483,11 @@ class NodeTerm(Node):
                                    self.value)
 
     def __str__(self):
-        return '<Node({}, {}, {})>'.format(self.position,
-                                           self.symbol, self.value)
+        return '<NodeTerm({}, {}, {})>'.format(self.position,
+                                               self.symbol, self.value)
+
+    def __repr__(self):
+        return str(self)
 
 
 def default_shift_action(context, value):

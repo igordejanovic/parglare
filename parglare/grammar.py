@@ -3,7 +3,8 @@ from __future__ import unicode_literals, print_function
 import sys
 import re
 from parglare.exceptions import GrammarError
-from parglare.actions import pass_single, pass_single_value, pass_nochange
+from parglare.actions import pass_single, pass_value, pass_nochange, \
+    collect, collect_sep
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -69,8 +70,30 @@ class Terminal(GrammarSymbol):
         super(Terminal, self).__init__(name)
 
 
-class StringRecognizer(object):
+class Reference(object):
+    """
+    A name reference to a GrammarSymbol used for cross-resolving during
+    grammar construction.
+    """
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return self.name
+
+
+class Recognizer(object):
+    """
+    Recognizers are objects capable of recognizing low-level patterns
+    (a.k.a tokens) from the input.
+    """
+    def __init__(self, name):
+        self.name = name
+
+
+class StringRecognizer(Recognizer):
     def __init__(self, value):
+        super(StringRecognizer, self).__init__(value)
         self.value = value
 
     def __call__(self, in_str, pos):
@@ -78,8 +101,9 @@ class StringRecognizer(object):
             return self.value
 
 
-class RegExRecognizer(object):
+class RegExRecognizer(Recognizer):
     def __init__(self, regex):
+        super(RegExRecognizer, self).__init__(regex)
         self._regex = regex
         self.regex = re.compile(self._regex)
 
@@ -157,6 +181,10 @@ class ProductionRHS(list):
     def __str__(self):
         return " ".join([str(x) for x in self])
 
+    def __repr__(self):
+        return "<ProductionRHS([{}])>".format(
+            ", ".join([str(x) for x in self]))
+
 
 class Grammar(object):
     """
@@ -166,18 +194,22 @@ class Grammar(object):
     Attributes:
     productions (list of Production):
     root_symbol (GrammarSymbol): start/root symbol of the grammar.
+    recognizers (dict of callables): A set of Python callables used as a
+        terminal recognizers not specified in the grammar.
     nonterminals (set of NonTerminal):
     terminals(set of Terminal):
 
     """
 
-    def __init__(self, productions, root_symbol=None):
+    def __init__(self, productions, root_symbol=None, recognizers=None):
         self.productions = productions
         self.root_symbol = \
             root_symbol if root_symbol else productions[0].symbol
-        self.init_grammar()
+        self.recognizers = recognizers if recognizers else {}
 
-    def init_grammar(self):
+        self._init_grammar()
+
+    def _init_grammar(self):
         """
         Extracts all grammar symbol (nonterminal and terminal) from the
         grammar and check references in productions.
@@ -189,35 +221,85 @@ class Grammar(object):
         # automata calculation.
         self.productions.insert(
             0,
-            Production(AUGSYMBOL, ProductionRHS([self.productions[0].symbol,
-                                                 STOP])))
+            Production(AUGSYMBOL, ProductionRHS([self.root_symbol, STOP])))
 
-        for s in self.productions:
-            if isinstance(s.symbol, NonTerminal):
-                self.nonterminals.add(s.symbol)
+        # Collect all terminal and non-terminal symbols
+        by_name = {}
+        for p in self.productions:
+            if isinstance(p.symbol, NonTerminal):
+                self.nonterminals.add(p.symbol)
             else:
-                raise GrammarError("Invalid production symbol '%s' "
-                                   "for production '%s'" % (s.symbol,
-                                                            text(s)))
-            for idx, t in enumerate(s.rhs):
-                if isinstance(t, Terminal):
-                    self.terminals.add(t)
-                elif isinstance(t, text):
-                    term = Terminal(t)
-                    self.terminals.add(term)
-                    s.rhs[idx] = term
+                # Multiple definitions of Terminals
+                if p.symbol.name in by_name \
+                   and isinstance(by_name[p.symbol.name], Terminal):
+                    # If a terminal is defined multiple times assume it to
+                    # be a nonterminal with alternative terminals.
+                    self.terminals.remove(p.symbol)
+                    nt = NonTerminal(p.symbol.name)
+                    for i in self.productions:
+                        if i.symbol.name == p.symbol.name:
+                            i.symbol = nt
+                    self.nonterminals.add(nt)
+                else:
+                    self.terminals.add(p.symbol)
 
-        # Enumerate productions
+            by_name[p.symbol.name] = p.symbol
+
+        # Add special terminals
+        by_name['EMPTY'] = EMPTY
+        by_name['EOF'] = EOF
+        by_name['STOP'] = STOP
+        self.terminals.update([EMPTY, EOF, STOP])
+
+        # Resolve all references
+        for idx, p in enumerate(self.productions):
+            for idx_ref, ref in enumerate(p.rhs):
+                if isinstance(ref, Recognizer):
+                    # If terminal with the same "name" is registered use it.
+                    # If not, create new.
+                    if ref.name in by_name:
+                        ref_sym = by_name[ref.name]
+                    ref_sym = Terminal(ref.name, ref)
+                    by_name[ref.name] = ref_sym
+                    self.terminals.add(ref_sym)
+
+                else:
+                    # Element of RHS must be either a Terminal, a NonTerminal
+                    # or a Reference. Replace it by the collected LHS elements
+                    # just to be sure that we have a single instance of each in
+                    # the grammar.
+                    assert isinstance(ref, Terminal) \
+                        or isinstance(ref, NonTerminal) \
+                        or isinstance(ref, Reference)
+                    if ref.name not in by_name:
+                        # Terminals might be only on the RHS for grammars
+                        # constructed from data structure.
+                        if isinstance(ref, Terminal):
+                            by_name[ref.name] = ref
+                            self.terminals.add(ref)
+                        else:
+                            raise GrammarError(
+                                "Unknown symbol '{}' "
+                                "referenced from production '{}'.".
+                                format(ref.name, text(p)))
+
+                    ref_sym = by_name[ref.name]
+
+                p.rhs[idx_ref] = ref_sym
+
+        # At the end remove terminal productions as those are not the real
+        # productions, but just a symbolic names for terminals.
+        self.productions[:] = [p for p in self.productions
+                               if isinstance(p.symbol, NonTerminal)]
+
+        self._enumerate_productions()
+
+    def _enumerate_productions(self):
         idx_per_symbol = {}
         for idx, s in enumerate(self.productions):
             s.prod_id = idx
             s.prod_symbol_id = idx_per_symbol.get(s.symbol, 0)
             idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 0) + 1
-            for ref in s.rhs:
-                if ref not in self.nonterminals and ref not in self.terminals:
-                    raise GrammarError("Undefined grammar symbol '%s' "
-                                       "referenced from production '%s'."
-                                       % (ref, s))
 
     def get_terminal(self, name):
         "Returns terminal with the given name."
@@ -245,20 +327,49 @@ class Grammar(object):
                 return idx
 
     @staticmethod
+    def _create_productions(productions, start_symbol=None):
+        """Creates Production instances from the list of productions given in
+        the form:
+        [LHS, RHS, optional ASSOC, optional PRIOR].
+        Where LHS is grammar symbol and RHS is a list or tuple of grammar
+        symbols from the right-hand side of the production.
+        """
+        gp = []
+        for p in productions:
+            assoc = ASSOC_NONE
+            prior = DEFAULT_PRIORITY
+            symbol = p[0]
+            if not isinstance(symbol, NonTerminal):
+                raise GrammarError("Invalid production symbol '{}' "
+                                   "for production '{}'".format(symbol,
+                                                                text(p)))
+            rhs = ProductionRHS(p[1])
+            if len(p) > 2:
+                assoc = p[2]
+            if len(p) > 3:
+                prior = p[3]
+
+            # Convert strings to Terminals with string recognizers
+            for idx, t in enumerate(rhs):
+                if isinstance(t, text):
+                    rhs[idx] = Terminal(t)
+
+            gp.append(Production(symbol, rhs, assoc, prior))
+
+        return gp
+
+    @staticmethod
+    def from_struct(productions, start_symbol):
+        return Grammar(Grammar._create_productions(productions, start_symbol),
+                       start_symbol)
+
+    @staticmethod
     def from_string(grammar_str):
-        from parglare import Parser
-        global pg_productions, GRAMMAR, pg_actions
-        p = Parser(create_grammar(pg_productions, GRAMMAR), actions=pg_actions)
-        prods = p.parse(grammar_str)
-        return Grammar(prods)
+        return Grammar(get_grammar_parser().parse(grammar_str))
 
     @staticmethod
     def from_file(file_name):
-        from parglare import Parser
-        global pg_productions, GRAMMAR, pg_actions
-        p = Parser(create_grammar(pg_productions, GRAMMAR), actions=pg_actions)
-        prods = p.parse_file(file_name)
-        return Grammar(prods)
+        return Grammar(get_grammar_parser().parse_file(file_name))
 
     def print_debug(self):
         print("Terminals:")
@@ -271,46 +382,29 @@ class Grammar(object):
             print(p)
 
 
-def create_grammar(productions, start_symbol=None):
-    """Creates grammar from a list of productions given in the form: (LHS, RHS).
-    Where LHS is grammar symbol and RHS is a list or tuple of grammar symbols
-    from the right-hand side of the production.
-    """
-    gp = []
-    for p in productions:
-        assoc = ASSOC_NONE
-        prior = DEFAULT_PRIORITY
-        if len(p) > 2:
-            assoc = p[2]
-        if len(p) > 3:
-            prior = p[3]
-
-        gp.append(Production(p[0], ProductionRHS(p[1]), assoc, prior))
-    g = Grammar(gp, start_symbol)
-    return g
-
-
 # Grammar for grammars
 
 (GRAMMAR,
  PRODUCTION_SET,
  PRODUCTION,
+ TERM_PRODUCTION,
  PRODUCTION_RHSS,
  PRODUCTION_RHS,
  GSYMBOL,
  NONTERM_REF,
- TERM,
+ RECOGNIZER,
  ASSOC,
  ASSOC_PRIOR,
  SEQUENCE) = [NonTerminal(name) for name in [
     'Grammar',
     'ProductionSet',
     'Production',
+    'TermProduction',
     'ProductionRHSs',
     'ProductionRHS',
     'GSymbol',
     'NonTermRef',
-    'Term',
+    'Recognizer',
     'Assoc',
     'AssocPrior',
     'Sequence']]
@@ -329,58 +423,64 @@ def create_grammar(productions, start_symbol=None):
 
 pg_productions = [
     [GRAMMAR, [PRODUCTION_SET]],
-    [PRODUCTION_SET, [PRODUCTION]],
     [PRODUCTION_SET, [PRODUCTION_SET, PRODUCTION]],
+    [PRODUCTION_SET, [PRODUCTION_SET, TERM_PRODUCTION]],
+    [PRODUCTION_SET, [PRODUCTION]],
+    [PRODUCTION_SET, [TERM_PRODUCTION]],
     [PRODUCTION, [NAME, '=', PRODUCTION_RHSS, ';']],
+    [TERM_PRODUCTION, [NAME, '=', RECOGNIZER, ';'], ASSOC_LEFT, 15],
+    [TERM_PRODUCTION, [NAME, '=', RECOGNIZER, '{', PRIOR, '}', ';'],
+     ASSOC_LEFT, 15],
     [PRODUCTION_RHS, [SEQUENCE]],
     [PRODUCTION_RHS, [SEQUENCE, '{', ASSOC_PRIOR, '}']],
-    [PRODUCTION_RHSS, [PRODUCTION_RHS], ASSOC_LEFT, 5],
     [PRODUCTION_RHSS, [PRODUCTION_RHSS, '|', PRODUCTION_RHS], ASSOC_LEFT, 5],
+    [PRODUCTION_RHSS, [PRODUCTION_RHS], ASSOC_LEFT, 5],
     [ASSOC_PRIOR, [ASSOC]],
     [ASSOC_PRIOR, [PRIOR]],
     [ASSOC_PRIOR, [ASSOC_PRIOR, ',', ASSOC_PRIOR], ASSOC_LEFT],
     [ASSOC, ['left']],
     [ASSOC, ['right']],
-    [SEQUENCE, [GSYMBOL]],
     [SEQUENCE, [SEQUENCE, GSYMBOL]],
-    [GSYMBOL, [NONTERM_REF]],
-    [GSYMBOL, [TERM]],
-    [NONTERM_REF, [NAME]],
-    [TERM, [STR_TERM]],
-    [TERM, [REGEX_TERM]],
+    [SEQUENCE, [GSYMBOL]],
+    [GSYMBOL, [NAME]],
+    [GSYMBOL, [RECOGNIZER]],
+    [RECOGNIZER, [STR_TERM]],
+    [RECOGNIZER, [REGEX_TERM]],
 ]
 
 
-def act_term_str(_, nodes):
+grammar_parser = None
+
+
+def get_grammar_parser():
+    global grammar_parser
+    if not grammar_parser:
+        from parglare import Parser
+        grammar_parser = Parser(Grammar.from_struct(pg_productions, GRAMMAR),
+                                actions=pg_actions, debug=True)
+    return grammar_parser
+
+
+def act_recognizer_str(_, nodes):
     value = nodes[0].value[1:-1]
-    name = value
     value = value.replace(r'\"', '"')\
                  .replace(r"\'", "'")\
                  .replace(r"\\", "\\")\
                  .replace(r"\n", "\n")\
                  .replace(r"\t", "\t")
-    return Terminal(name, StringRecognizer(value))
+    return StringRecognizer(value)
 
 
-def act_term_regex(_, nodes):
+def act_recognizer_regex(_, nodes):
     value = nodes[0].value[1:-1]
-    return Terminal(value, RegExRecognizer(value))
-
-
-def act_sequence(_, nodes):
-    res = nodes[0]
-    res.append(nodes[1])
-    return res
-
-
-def act_prod_rhss(_, nodes):
-    res = nodes[0]
-    res.append(nodes[2])
-    return res
+    return RegExRecognizer(value)
 
 
 def act_production(_, nodes):
+
     symbol = NonTerminal(nodes[0])
+
+    # Collect all productions for this non-terminal
     prods = []
     for p_rhs in nodes[2]:
         asoc = ASSOC_NONE
@@ -394,10 +494,12 @@ def act_production(_, nodes):
     return prods
 
 
-def act_prodset(_, nodes):
-    res = nodes[0]
-    res.extend(nodes[1])
-    return res
+def act_term_production(_, nodes):
+
+    term = Terminal(nodes[0], nodes[2])
+    if len(nodes) > 4:
+        term.prior = nodes[4]
+    return [Production(term, ProductionRHS([term]), prior=term.prior)]
 
 
 def act_assoc_prior(_, nodes):
@@ -405,6 +507,10 @@ def act_assoc_prior(_, nodes):
     res.extend(nodes[0])
     res.extend(nodes[2])
     return res
+
+
+def act_production_rhs_simple(_, nodes):
+    return (ProductionRHS(nodes[0]),)
 
 
 def act_production_rhs(_, nodes):
@@ -418,62 +524,36 @@ def act_production_rhs(_, nodes):
                 assoc = ASSOC_LEFT
             elif ap == 'right':
                 assoc = ASSOC_RIGHT
-    return [ProductionRHS(nodes[0]), assoc, prior]
+    return (ProductionRHS(nodes[0]), assoc, prior)
 
 
-def act_grammar(_, nodes):
-    prods = nodes[0]
+def act_production_set(_, nodes):
+    e1, e2 = nodes
+    e1.extend(e2)
+    return e1
 
-    # Remove terminal production rules but first replace its
-    # references.
-    terms = {}
-    to_del = []
-    for idx, p in enumerate(prods):
-        if len(p.rhs) == 1 and isinstance(p.rhs[0], Terminal):
-            # Optimization: If a production has a single terminal RHS and there
-            # is only one production for this grammar symbol then treat is as a
-            # terminal.
-            if len([x for x in prods if x.symbol == p.symbol]) == 1 and \
-               p.symbol.name != 'LAYOUT':
-                t = p.rhs[0]
-                terms[p.symbol.name] = t
-                t.name = p.symbol.name
-                t.prior = p.prior
-                if p.assoc != ASSOC_NONE:
-                    raise GrammarError(
-                        'Terminals should not define associativity '
-                        '(terminal "{}").'.format(t.name))
-                to_del.append(idx)
 
-    for idx in sorted(to_del, reverse=True):
-        del prods[idx]
-
-    # Change terminal references
-    for p in prods:
-        for idx, ref in enumerate(p.rhs):
-            if ref.name in terms:
-                p.rhs[idx] = terms[ref.name]
-            elif ref.name == 'EMPTY':
-                p.rhs[idx] = EMPTY
-            elif ref.name == 'EOF':
-                p.rhs[idx] = EOF
-
-    return prods
+def act_gsymbol(_, name):
+    return Reference(name)
 
 
 pg_actions = {
-    "Assoc": pass_single_value,
+    "Assoc": pass_value,
     "AssocPrior": [pass_nochange, pass_nochange, act_assoc_prior],
     "Prior": lambda _, value: int(value),
-    "Term": [act_term_str, act_term_regex],
+    "Recognizer": [act_recognizer_str, act_recognizer_regex],
     "Name": pass_nochange,
-    "NonTermRef": lambda _, nodes: NonTerminal(nodes[0]),
-    "GSymbol": pass_single,
-    "Sequence": [pass_nochange, act_sequence],
-    "ProductionRHS": [lambda _, nodes: [ProductionRHS(nodes[0])],
+    "GSymbol": [lambda _, nodes: Reference(nodes[0]),
+                pass_single],
+    "Sequence": collect,
+    "ProductionRHS": [act_production_rhs_simple,
+                      act_production_rhs,
+                      act_production_rhs_simple,
                       act_production_rhs],
-    "ProductionRHSs": [pass_nochange, act_prod_rhss],
+    "ProductionRHSs": collect_sep,
     "Production": act_production,
-    "ProductionSet": [pass_single, act_prodset],
-    "Grammar": act_grammar
+    "TermProduction": act_term_production,
+    "ProductionSet": [act_production_set, act_production_set,
+                      pass_single, pass_single],
+    "Grammar": pass_single
 }

@@ -1,7 +1,7 @@
 import pytest
 from parglare.grammar import Grammar, Terminal, NonTerminal, ASSOC_LEFT, \
     ASSOC_RIGHT, DEFAULT_PRIORITY
-from parglare.exceptions import GrammarError
+from parglare.exceptions import GrammarError, ParseError
 
 
 def test_undefined_grammar_symbol():
@@ -14,7 +14,7 @@ def test_undefined_grammar_symbol():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Undefined grammar symbol' in str(e)
+    assert 'Unknown symbol' in str(e)
     assert 'B = id' in str(e)
 
 
@@ -112,7 +112,7 @@ def test_no_terminal_associavitity():
     B = 'b';
     """
 
-    with pytest.raises(GrammarError) as e:
+    with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar)
 
-    assert 'associativity' in str(e)
+    assert 'Error at position 3,15' in str(e)

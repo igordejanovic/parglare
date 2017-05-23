@@ -1,4 +1,4 @@
-from parglare import NonTerminal, Terminal, create_grammar
+from parglare import NonTerminal, Terminal, Grammar
 
 
 # Expression grammar
@@ -16,4 +16,4 @@ productions = [
 
 
 def get_grammar():
-    return create_grammar(productions, E)
+    return Grammar.from_struct(productions, E)
