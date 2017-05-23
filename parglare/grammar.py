@@ -84,8 +84,8 @@ class Reference(object):
 
 class Recognizer(object):
     """
-    Recognizers are objects capable of recognizing low-level patterns
-    (a.k.a tokens) from the input.
+    Recognizers are callables capable of recognizing low-level patterns
+    (a.k.a tokens) in the input.
     """
     def __init__(self, name):
         self.name = name
