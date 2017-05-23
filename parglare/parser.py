@@ -39,7 +39,6 @@ class Parser(object):
         self.position = position
         self.debug = debug
         self.layout_debug = layout_debug
-        self.file_name = None
 
         self.default_actions = default_actions
 
@@ -80,17 +79,17 @@ class Parser(object):
         Args:
             file_name(str): A file name.
         """
-        self.file_name = file_name
         with codecs.open(file_name, 'r', 'utf-8') as f:
             content = f.read()
-        return self.parse(content)
+        return self.parse(content, file_name=file_name)
 
-    def parse(self, input_str, position=0):
+    def parse(self, input_str, position=0, file_name=None):
         """
         Parses the given input string.
         Args:
             input_str(str): A string to parse.
             position(int): Position to start from.
+            file_name(str): File name if applicable. Used in error reporting.
         """
 
         if self.debug:
@@ -131,7 +130,7 @@ class Parser(object):
             act = actions.get(ntok_sym)
 
             if not act:
-                raise ParseError(self.file_name, input_str, position,
+                raise ParseError(file_name, input_str, position,
                                  actions.keys())
 
             context.position = position
