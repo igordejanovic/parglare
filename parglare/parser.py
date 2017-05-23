@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 import codecs
+import sys
 from .grammar import Grammar, StringRecognizer, EMPTY, AUGSYMBOL, EOF, STOP
 from .exceptions import ParseError
+
+if sys.version < '3':
+    text = unicode  # NOQA
+else:
+    text = str
 
 SHIFT = 0
 REDUCE = 1
@@ -35,7 +41,8 @@ class Parser(object):
                                             debug=layout_debug)
 
         self.layout = layout
-        self.ws = ws
+        # If user recognizers are registered disable white-space skipping
+        self.ws = ws if not grammar.recognizers else None
         self.position = position
         self.debug = debug
         self.layout_debug = layout_debug
@@ -595,7 +602,7 @@ def position_context(input_str, position):
     Returns position context string.
     """
     start = max(position-10, 0)
-    c = input_str[start:position] + "*" \
-        + input_str[position:position+10]
+    c = text(input_str[start:position]) + "*" \
+        + text(input_str[position:position+10])
     c = c.replace("\n", "\\n")
     return c

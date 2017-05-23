@@ -212,7 +212,8 @@ class Grammar(object):
     def _init_grammar(self):
         """
         Extracts all grammar symbol (nonterminal and terminal) from the
-        grammar and check references in productions.
+        grammar, resolves and check references in productions, unify all
+        grammar symbol objects and enumerate production.
         """
         self.nonterminals = set()
         self.terminals = set()
@@ -223,7 +224,27 @@ class Grammar(object):
             0,
             Production(AUGSYMBOL, ProductionRHS([self.root_symbol, STOP])))
 
-        # Collect all terminal and non-terminal symbols
+        by_name = self._collect_grammar_symbols()
+
+        # Add special terminals
+        by_name['EMPTY'] = EMPTY
+        by_name['EOF'] = EOF
+        by_name['STOP'] = STOP
+        self.terminals.update([EMPTY, EOF, STOP])
+
+        self._resolve_references(by_name)
+
+        # At the end remove terminal productions as those are not the real
+        # productions, but just a symbolic names for terminals.
+        self.productions[:] = [p for p in self.productions
+                               if isinstance(p.symbol, NonTerminal)]
+
+        self._enumerate_productions()
+
+    def _collect_grammar_symbols(self):
+        """
+        Collect all terminal and non-terminal symbols.
+        """
         by_name = {}
         for p in self.productions:
             if isinstance(p.symbol, NonTerminal):
@@ -245,13 +266,16 @@ class Grammar(object):
 
             by_name[p.symbol.name] = p.symbol
 
-        # Add special terminals
-        by_name['EMPTY'] = EMPTY
-        by_name['EOF'] = EOF
-        by_name['STOP'] = STOP
-        self.terminals.update([EMPTY, EOF, STOP])
+        return by_name
 
-        # Resolve all references
+    def _resolve_references(self, by_name):
+        """
+        Resolve all references and unify objects so that we have single
+        instances of each terminal and non-terminal in the grammar.
+        Create Terminal for Recognizer instance or a reference to user
+        supplied Recognizer.
+        """
+
         for idx, p in enumerate(self.productions):
             for idx_ref, ref in enumerate(p.rhs):
                 if isinstance(ref, Recognizer):
@@ -272,29 +296,38 @@ class Grammar(object):
                         or isinstance(ref, NonTerminal) \
                         or isinstance(ref, Reference)
                     if ref.name not in by_name:
-                        # Terminals might be only on the RHS for grammars
-                        # constructed from data structure.
+                        # Terminals might only be on the RHS for grammars
+                        # constructed from data structure. All non-terminals
+                        # must already be registered in `by_name` as they must
+                        # be found as LHS of some of the productions.
                         if isinstance(ref, Terminal):
                             by_name[ref.name] = ref
                             self.terminals.add(ref)
-                        else:
-                            raise GrammarError(
-                                "Unknown symbol '{}' "
-                                "referenced from production '{}'.".
-                                format(ref.name, text(p)))
+                        elif isinstance(ref, Reference):
+                            # The last option is that the reference is a name
+                            # of user supplied Recognizer. If so create a
+                            # terminal for it.
+                            if ref.name in self.recognizers:
+                                ref_sym = Terminal(ref.name,
+                                                   self.recognizers[ref.name])
+                                by_name[ref.name] = ref_sym
+                                self.terminals.add(ref_sym)
+
+                    if ref.name not in by_name:
+                        raise GrammarError(
+                            "Unknown symbol '{}' "
+                            "referenced from production '{}'.".
+                            format(ref.name, text(p)))
 
                     ref_sym = by_name[ref.name]
 
                 p.rhs[idx_ref] = ref_sym
 
-        # At the end remove terminal productions as those are not the real
-        # productions, but just a symbolic names for terminals.
-        self.productions[:] = [p for p in self.productions
-                               if isinstance(p.symbol, NonTerminal)]
-
-        self._enumerate_productions()
-
     def _enumerate_productions(self):
+        """
+        Enumerates all productions (prod_id) and production per symbol
+        (prod_symbol_id).
+        """
         idx_per_symbol = {}
         for idx, s in enumerate(self.productions):
             s.prod_id = idx
@@ -359,17 +392,19 @@ class Grammar(object):
         return gp
 
     @staticmethod
-    def from_struct(productions, start_symbol):
+    def from_struct(productions, start_symbol, recognizers=None):
         return Grammar(Grammar._create_productions(productions, start_symbol),
-                       start_symbol)
+                       start_symbol, recognizers=recognizers)
 
     @staticmethod
-    def from_string(grammar_str):
-        return Grammar(get_grammar_parser().parse(grammar_str))
+    def from_string(grammar_str, recognizers=None, debug=False):
+        return Grammar(get_grammar_parser(debug).parse(grammar_str),
+                       recognizers=recognizers)
 
     @staticmethod
-    def from_file(file_name):
-        return Grammar(get_grammar_parser().parse_file(file_name))
+    def from_file(file_name, recognizers=None, debug=False):
+        return Grammar(get_grammar_parser(debug).parse_file(file_name),
+                       recognizers=recognizers)
 
     def print_debug(self):
         print("Terminals:")
@@ -452,12 +487,12 @@ pg_productions = [
 grammar_parser = None
 
 
-def get_grammar_parser():
+def get_grammar_parser(debug):
     global grammar_parser
     if not grammar_parser:
         from parglare import Parser
         grammar_parser = Parser(Grammar.from_struct(pg_productions, GRAMMAR),
-                                actions=pg_actions, debug=True)
+                                actions=pg_actions, debug=debug)
     return grammar_parser
 
 
