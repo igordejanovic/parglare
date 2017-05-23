@@ -32,8 +32,12 @@ Do not use it for anything important.
 - Support for language comments/whitespaces using special rule `LAYOUT`.
 - Debug print/tracing (set `debug=True` and/or `layout_debug=True`to the
   `Parser` instantiation).
-- Tests
-- Few examples (see `examples` folder)
+- Parsing list of arbitrary objects: bytes, numbers, any Python objects!
+  See `recognizers` parameter to grammar construction in
+  `test_parse_list_of_objects.py` test.
+- Tests. Code coverage is pretty high at the moment and I strive to be even
+  higher.
+- There are a few examples (see `examples` folder).
 
 ## TODO
 
@@ -48,6 +52,8 @@ Do not use it for anything important.
 This is just a small example to get the general idea. This example shows how to
 parse and evaluate expressions with 5 operations with different priority and
 associativity. Evaluation is done using semantic/reduction actions.
+
+The whole expression evaluator is done in under 30 lines of code!
 
 Until docs is done see the `example` folder and `tests` for more.
 
