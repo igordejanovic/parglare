@@ -42,9 +42,8 @@ def collect_single(_, nodes):
 
 def collect_first(_, nodes):
     """
+    Used for:
     Elements = Elements Element;
-    or:
-    Elements = Element Elements;
     """
     e1, e2 = nodes
     if e2 is not None:
@@ -54,13 +53,32 @@ def collect_first(_, nodes):
 
 def collect_first_sep(_, nodes):
     """
+    Used for:
     Elements = Elements "," Element;
-    or:
-    Elements = Element "," Elements;
     """
     e1, _, e2 = nodes
     if e2 is not None:
         e1.append(e2)
+    return e1
+
+
+def collect_right_first(_, nodes):
+    """
+    Used for:
+    Elements = Element Elements;
+    """
+    e1, e2 = [nodes[0]], nodes[1]
+    e1.extend(e2)
+    return e1
+
+
+def collect_right_first_sep(_, nodes):
+    """
+    Used for:
+    Elements = Element "," Elements;
+    """
+    e1, e2 = [nodes[0]], nodes[2]
+    e1.extend(e2)
     return e1
 
 
@@ -90,6 +108,36 @@ collect_optional = [
 # Elements = Elements "," Element | Element | EMPTY;
 collect_sep_optional = [
     collect_first_sep,
+    pass_nochange,
+    pass_empty
+]
+
+# Used for productions of the form - one or more elements:
+# Elements = Element Elements | Element;
+collect_right = [
+    collect_right_first,
+    pass_nochange
+]
+
+# Used for productions of the form - one or more elements:
+# Elements = Element "," Elements | Element;
+collect_right_sep = [
+    collect_right_first_sep,
+    pass_nochange
+]
+
+# Used for productions of the form - zero or more elements:
+# Elements = Element Elements | Element | EMPTY;
+collect_optional = [
+    collect_right_first,
+    pass_nochange,
+    pass_empty
+]
+
+# Used for productions of the form - zero or more elements:
+# Elements = Element "," Elements | Element | EMPTY;
+collect_sep_optional = [
+    collect_right_first_sep,
     pass_nochange,
     pass_empty
 ]

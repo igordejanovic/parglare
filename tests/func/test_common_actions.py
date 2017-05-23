@@ -1,6 +1,8 @@
 import pytest  # noqa
 from parglare.actions import collect, collect_optional, \
-    collect_sep, collect_sep_optional, pass_value
+    collect_sep, collect_sep_optional, collect_right, \
+    collect_right_optional, collect_right_sep, \
+    collect_right_sep_optional, pass_value
 from parglare import Grammar, Parser
 
 
@@ -99,8 +101,8 @@ def test_collect_right():
     g = Grammar.from_string(grammar)
 
     actions = {
-        "Elements": collect,
-        "Element": collect_single
+        "Elements": collect_right,
+        "Element": pass_value
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -119,8 +121,8 @@ def test_collect_right_optional():
     g = Grammar.from_string(grammar)
 
     actions = {
-        "Elements": collect_optional,
-        "Element": collect_single
+        "Elements": collect_right_optional,
+        "Element": pass_value
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -142,8 +144,8 @@ def test_collect_right_sep():
     g = Grammar.from_string(grammar)
 
     actions = {
-        "Elements": collect_sep,
-        "Element": collect_single
+        "Elements": collect_right_sep,
+        "Element": pass_value
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -162,8 +164,8 @@ def test_collect_right_sep_optional():
     g = Grammar.from_string(grammar)
 
     actions = {
-        "Elements": collect_sep_optional,
-        "Element": collect_single
+        "Elements": collect_right_sep_optional,
+        "Element": pass_value
     }
 
     parser = Parser(g, actions=actions, debug=True)
