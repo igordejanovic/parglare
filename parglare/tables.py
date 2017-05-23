@@ -3,7 +3,7 @@ from parglare.parser import LRItem, LRState
 from parglare import NonTerminal
 from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_NONE, STOP
 from .exceptions import ShiftReduceConflict, ReduceReduceConflict, \
-    NoActionsForRootRule
+    NoActionsForStartRule
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
 
@@ -110,7 +110,7 @@ def create_tables(grammar, itemset_type, start_production=1):
 
     # Sanity check. First rule must have SHIFT actions.
     if not all_actions[0]:
-        raise NoActionsForRootRule()
+        raise NoActionsForStartRule()
 
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
     # merging might change item's follow in previous states

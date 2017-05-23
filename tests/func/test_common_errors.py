@@ -1,6 +1,6 @@
 import pytest  # noqa
 from parglare import Grammar, Parser
-from parglare.exceptions import NoActionsForRootRule
+from parglare.exceptions import NoActionsForStartRule
 
 
 def test_no_actions_root_rule():
@@ -23,5 +23,5 @@ def test_no_actions_root_rule():
 
     g = Grammar.from_string(grammar)
 
-    with pytest.raises(NoActionsForRootRule):
+    with pytest.raises(NoActionsForStartRule):
         Parser(g)
