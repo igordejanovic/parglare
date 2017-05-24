@@ -430,34 +430,42 @@ class Grammar(object):
  RECOGNIZER,
  ASSOC,
  ASSOC_PRIOR,
- SEQUENCE) = [NonTerminal(name) for name in [
-    'Grammar',
-    'ProductionSet',
-    'Production',
-    'TermProduction',
-    'ProductionRHSs',
-    'ProductionRHS',
-    'GSymbol',
-    'NonTermRef',
-    'Recognizer',
-    'Assoc',
-    'AssocPrior',
-    'Sequence']]
+ SEQUENCE,
+ LAYOUT,
+ LAYOUT_ITEM) = [NonTerminal(name) for name in [
+     'Grammar',
+     'ProductionSet',
+     'Production',
+     'TermProduction',
+     'ProductionRHSs',
+     'ProductionRHS',
+     'GSymbol',
+     'NonTermRef',
+     'Recognizer',
+     'Assoc',
+     'AssocPrior',
+     'Sequence',
+     'LAYOUT',
+     'LAYOUT_ITEM']]
 
 (NAME,
  STR_TERM,
  REGEX_TERM,
- PRIOR) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
-           [
+ PRIOR,
+ WS,
+ COMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
+             [
                ('Name', r'[a-zA-Z0-9_]+'),
                ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
                            r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
                ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
-               ('Prior', r'\d+')
-           ]]
+               ('Prior', r'\d+'),
+               ('WS', r'\s+'),
+               ('Comment', r'\/\/.*'),
+             ]]
 
 pg_productions = [
-    [GRAMMAR, [PRODUCTION_SET]],
+    [GRAMMAR, [PRODUCTION_SET, EOF]],
     [PRODUCTION_SET, [PRODUCTION_SET, PRODUCTION]],
     [PRODUCTION_SET, [PRODUCTION_SET, TERM_PRODUCTION]],
     [PRODUCTION_SET, [PRODUCTION]],
@@ -481,6 +489,13 @@ pg_productions = [
     [GSYMBOL, [RECOGNIZER]],
     [RECOGNIZER, [STR_TERM]],
     [RECOGNIZER, [REGEX_TERM]],
+
+    # Support for comments,
+    [LAYOUT, [LAYOUT_ITEM]],
+    [LAYOUT, [LAYOUT, LAYOUT_ITEM]],
+    [LAYOUT_ITEM, [WS]],
+    [LAYOUT_ITEM, [COMMENT]],
+    [LAYOUT_ITEM, [EMPTY]],
 ]
 
 
