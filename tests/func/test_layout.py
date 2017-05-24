@@ -57,7 +57,7 @@ def test_layout_nested_comments():
     Comment = '/*' CorNCs '*/' | /\/\/.*/;
     CorNCs = CorNC | CorNCs CorNC | EMPTY;
     CorNC = Comment | NotComment | WS;
-    NotComment = /((\*[^\/])|[^*\/]|\/[^\*])+/;
+    NotComment = /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)

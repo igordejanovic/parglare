@@ -3,7 +3,8 @@ from __future__ import unicode_literals, print_function
 import codecs
 import sys
 from .grammar import Grammar, StringRecognizer, EMPTY, AUGSYMBOL, EOF, STOP
-from .exceptions import ParseError
+from .exceptions import ParseError, DisambiguationError, \
+    disambiguation_error, nomatch_error
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -116,6 +117,7 @@ class Parser(object):
             cur_state = state_stack[-1]
             if self.debug:
                 print("Current state =", cur_state.state_id)
+
             actions = self._actions[cur_state.state_id]
 
             if new_token or ntok_sym not in actions:
@@ -126,9 +128,13 @@ class Parser(object):
                 # token. This could happen if old token is not available in the
                 # actions of the current state but EMPTY is and will match
                 # always leading to reduction.
-                ntok_sym, ntok, position = self._next_token(actions, input_str,
-                                                            position, context,
-                                                            new_token)
+                try:
+                    ntok_sym, ntok, position = \
+                        self._next_token(actions, input_str, position, context,
+                                         new_token)
+                except DisambiguationError as e:
+                    raise ParseError(file_name, input_str, position,
+                                     disambiguation_error(e.symbols))
 
             if self.debug:
                 print("\tContext:", position_context(input_str, position))
@@ -138,7 +144,7 @@ class Parser(object):
 
             if not act:
                 raise ParseError(file_name, input_str, position,
-                                 actions.keys())
+                                 nomatch_error(actions.keys()))
 
             context.position = position
 
@@ -270,7 +276,7 @@ class Parser(object):
         For the given list of matched tokens apply disambiguation strategy.
 
         Args:
-        tokens (list of tuples (Terminal, matched str))
+        tokens (list of tuples (Terminal, matched token))
         """
 
         if self.debug:
@@ -279,12 +285,12 @@ class Parser(object):
 
         # By priority
         tokens.sort(key=lambda x: x[0].prior, reverse=True)
-        prior = tokens[0][0].prior
-        tokens = [x for x in tokens if x[0].prior == prior]
+        max_prior = tokens[0][0].prior
+        tokens = [x for x in tokens if x[0].prior == max_prior]
         if len(tokens) == 1:
             if self.debug:
                 print("\tDisambiguate by priority: {}, prior={}"
-                      .format(tokens[0][1], prior))
+                      .format(tokens[0][1], max_prior))
             return tokens[0]
 
         # Multiple with the same priority. Favor string recognizer as
@@ -311,6 +317,9 @@ class Parser(object):
             if self.debug:
                 print("\tDisambiguation by longest-match strategy.")
             tokens.sort(key=lambda x: len(x[1]), reverse=True)
+            if len(tokens[0][1]) == len(tokens[1][1]):
+                symbols = [x[0] for x in tokens if x[1] == tokens[0][1]]
+                raise DisambiguationError(symbols)
             return tokens[0]
 
 

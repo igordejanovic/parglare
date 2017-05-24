@@ -7,8 +7,11 @@ Value=        STRING | INT | FLOAT | GUID | Object | ID;
 
 
 STRING = /("(\\"|[^"])*")|(\'(\\\'|[^\'])*\')/;
-INT = /[-+]?[0-9]+\b/;
+
+// INT and FLOAT are ambiguous. Prefer INT by giving higher priority.
+INT = /[-+]?[0-9]+\b/ {15};
 FLOAT = /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
+
 GUID = /[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*/;
 OptionalSemiColon = ';' | EMPTY;
 ID = /[a-zA-Z_][a-zA-Z_0-9]*/;

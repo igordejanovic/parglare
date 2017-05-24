@@ -3,23 +3,53 @@ class GrammarError(Exception):
 
 
 class ParseError(Exception):
-    def __init__(self, file_name, input_str, position, symbols):
-        from parglare.parser import pos_to_line_col, position_context
+    def __init__(self, file_name, input_str, position, message_factory):
+        from parglare.parser import pos_to_line_col
         self.file_name = file_name
         self.position = position
-        self.symbols = symbols
         self.line, self.column = pos_to_line_col(input_str, position)
-        context = position_context(input_str, position)
         super(ParseError, self).__init__(
-            'Error {}at position {},{} => "{}". Expected: {}'.format(
-                'in file "{}" '.format(self.file_name)
-                if self.file_name else "",
-                self.line, self.column, context,
-                ' or '.join([s.name for s in symbols])))
+            message_factory(file_name, input_str, position))
+
+
+# Error message factories
+def _full_context(input_str, position):
+    from parglare.parser import pos_to_line_col, position_context
+    line, column = pos_to_line_col(input_str, position)
+    context = position_context(input_str, position)
+    return context, line, column
+
+
+def nomatch_error(symbols):
+    def _inner(file_name, input_str, position):
+        context, line, column = _full_context(input_str, position)
+        return 'Error {}at position {},{} => "{}". Expected: {}'.format(
+                'in file "{}" '.format(file_name)
+                if file_name else "",
+                line, column, context,
+                ' or '.join([s.name for s in symbols]))
+    return _inner
+
+
+def disambiguation_error(symbols):
+    def _inner(file_name, input_str, position):
+        context, line, column = _full_context(input_str, position)
+        return 'Error {}at position {},{} => "{}". ' \
+            'Can\'t disambiguate between: {}'.format(
+                'in file "{}" '.format(file_name)
+                if file_name else "",
+                line, column, context,
+                ' or '.join([s.name for s in symbols]))
+    return _inner
 
 
 class ParserInitError(Exception):
     pass
+
+
+class DisambiguationError(Exception):
+    def __init__(self, symbols):
+        self.symbols = symbols
 
 
 class LRConflict(Exception):
@@ -53,3 +83,4 @@ class NoActionsForStartRule(Exception):
         super(NoActionsForStartRule, self).__init__(
             "No SHIFT actions for root rule. Is your root rule infinitely "
             "recursive?")
+

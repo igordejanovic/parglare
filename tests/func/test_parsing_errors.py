@@ -10,14 +10,12 @@ def test_invalid_input():
     grammar = get_grammar()
     p = Parser(grammar)
 
-    try:
+    with pytest.raises(ParseError) as e:
         p.parse("id+id*+id")
-    except ParseError as e:
-        assert e.position == 6
-        symbol_names = [s.name for s in e.symbols]
-        assert "(" in symbol_names
-        assert "id" in symbol_names
-        assert len(symbol_names) == 2
+
+    assert e.value.position == 6
+    assert "(" in str(e)
+    assert "id" in str(e)
 
 
 def test_premature_end():
@@ -25,14 +23,12 @@ def test_premature_end():
     grammar = get_grammar()
     p = Parser(grammar)
 
-    try:
+    with pytest.raises(ParseError) as e:
         p.parse("id+id*")
-    except ParseError as e:
-        assert e.position == 6
-        symbol_names = [s.name for s in e.symbols]
-        assert "(" in symbol_names
-        assert "id" in symbol_names
-        assert len(symbol_names) == 2
+
+    assert e.value.position == 6
+    assert "(" in str(e)
+    assert "id" in str(e)
 
 
 def test_line_column():
