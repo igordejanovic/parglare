@@ -583,10 +583,6 @@ def act_production_set(_, nodes):
     return e1
 
 
-def act_gsymbol(_, name):
-    return Reference(name)
-
-
 pg_actions = {
     "Assoc": pass_value,
     "AssocPrior": [pass_nochange, pass_nochange, act_assoc_prior],
