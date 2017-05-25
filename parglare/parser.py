@@ -120,7 +120,7 @@ class Parser(object):
 
             actions = self._actions[cur_state.state_id]
 
-            if new_token or ntok_sym not in actions:
+            if new_token or ntok.symbol not in actions:
                 # Try to recognize a new token in the input only after
                 # successful SHIFT operation, i.e. when the input position has
                 # moved. REDUCE operation doesn't move position. If the current
