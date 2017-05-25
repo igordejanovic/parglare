@@ -512,6 +512,7 @@ class Token(object):
     """
     Token or lexeme matched from the input.
     """
+    __slots__ = ['symbol', 'value']
     def __init__(self, symbol=None, value=''):
         self.symbol = symbol
         self.value = value
