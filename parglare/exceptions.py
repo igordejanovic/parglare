@@ -81,6 +81,5 @@ class ReduceReduceConflict(LRConflict):
 class NoActionsForStartRule(Exception):
     def __init__(self):
         super(NoActionsForStartRule, self).__init__(
-            "No SHIFT actions for root rule. Is your root rule infinitely "
-            "recursive?")
-
+            "No SHIFT actions for start rule. Your start rule is probably "
+            "infinitely recursive.")

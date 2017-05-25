@@ -407,7 +407,7 @@ class LRItem(object):
     @property
     def is_at_end(self):
         """
-        Is this items at the end position, e.g. a candidate for reduction.
+        Is the position at the end? If so, it is a candidate for reduction.
         """
         return self.position == len(self.production.rhs)
 
