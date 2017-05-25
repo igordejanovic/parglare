@@ -129,7 +129,7 @@ class Parser(object):
                 # actions of the current state but EMPTY is and will match
                 # always leading to reduction.
                 try:
-                    ntok_sym, ntok, position = \
+                    ntok, position = \
                         self._next_token(actions, input_str, position, context,
                                          new_token)
                 except DisambiguationError as e:
@@ -138,9 +138,9 @@ class Parser(object):
 
             if self.debug:
                 print("\tContext:", position_context(input_str, position))
-                print("\tToken ahead: name={} str='{}'".format(ntok_sym, ntok))
+                print("\tToken ahead: {}".format(ntok))
 
-            act = actions.get(ntok_sym)
+            act = actions.get(ntok.symbol)
 
             if not act:
                 raise ParseError(file_name, input_str, position,
@@ -153,15 +153,18 @@ class Parser(object):
                 context.symbol = state.symbol
 
                 if self.debug:
-                    print("\tShift:{} \"{}\"".format(state.state_id, ntok),
+                    print("\tShift:{} \"{}\"".format(state.state_id,
+                                                     ntok.value),
                           "at position",
                           pos_to_line_col(input_str, position))
 
                 res = None
                 if state.symbol.name in self.sem_actions:
-                    res = self.sem_actions[state.symbol.name](context, ntok)
+                    res = self.sem_actions[state.symbol.name](context,
+                                                              ntok.value)
                 elif self.default_actions:
-                    res = default_shift_action(context, ntok)
+                    res = default_shift_action(context,
+                                               ntok.value)
 
                 if self.debug:
                     print("\tAction result = type:{} value:{}"
@@ -170,7 +173,7 @@ class Parser(object):
                 state_stack.append(state)
                 results_stack.append(res)
                 position_stack.append(position)
-                position += len(ntok)
+                position += len(ntok.value)
                 new_token = True
 
             elif act.action is REDUCE:
@@ -246,56 +249,56 @@ class Parser(object):
                 print("\tLayout content: '{}'".format(layout_content))
 
         # Find the next token in the input
-        ntok = ''
+        ntok = Token()
         if position == in_len and EMPTY not in actions \
            and STOP not in actions:
             # Execute EOF action at end of input only if EMTPY and
             # STOP terminals are not in actions as this might call
             # for reduction.
-            ntok_sym = EOF
+            ntok.symbol = EOF
         else:
             tokens = []
             for symbol in actions:
                 tok = symbol.recognizer(input_str, position)
                 if tok:
-                    tokens.append((symbol, tok))
+                    tokens.append(Token(symbol, tok))
             if not tokens:
                 if STOP in actions:
-                    ntok_sym = STOP
+                    ntok.symbol = STOP
                 else:
-                    ntok_sym = EMPTY
+                    ntok.symbol = EMPTY
             elif len(tokens) == 1:
-                ntok_sym, ntok = tokens[0]
+                ntok = tokens[0]
             else:
-                ntok_sym, ntok = self._lexical_disambiguation(tokens)
+                ntok = self._lexical_disambiguation(tokens)
 
-        return ntok_sym, ntok, position
+        return ntok, position
 
     def _lexical_disambiguation(self, tokens):
         """
         For the given list of matched tokens apply disambiguation strategy.
 
         Args:
-        tokens (list of tuples (Terminal, matched token))
+        tokens (list of Token)
         """
 
         if self.debug:
             print("\tLexical disambiguation. Tokens:",
-                  [x[1] for x in tokens])
+                  [x for x in tokens])
 
         # By priority
-        tokens.sort(key=lambda x: x[0].prior, reverse=True)
-        max_prior = tokens[0][0].prior
-        tokens = [x for x in tokens if x[0].prior == max_prior]
+        tokens.sort(key=lambda x: x.symbol.prior, reverse=True)
+        max_prior = tokens[0].symbol.prior
+        tokens = [x for x in tokens if x.symbol.prior == max_prior]
         if len(tokens) == 1:
             if self.debug:
                 print("\tDisambiguate by priority: {}, prior={}"
-                      .format(tokens[0][1], max_prior))
+                      .format(tokens[0].value, max_prior))
             return tokens[0]
 
         # Multiple with the same priority. Favor string recognizer as
         # more specific.
-        tokens_str = [x for x in tokens if isinstance(x[0].recognizer,
+        tokens_str = [x for x in tokens if isinstance(x.symbol.recognizer,
                                                       StringRecognizer)]
         if tokens_str:
             if len(tokens_str) == 1:
@@ -307,7 +310,7 @@ class Parser(object):
             else:
                 # If more than one string recognizer use the longest-match rule
                 # on the string recognizer tokens
-                tokens_str.sort(key=lambda x: len(x[1]), reverse=True)
+                tokens_str.sort(key=lambda x: len(x.value), reverse=True)
                 if self.debug:
                     print("\tDisambiguation by str. recognizer and "
                           "longest match.")
@@ -316,11 +319,11 @@ class Parser(object):
             # No string recognizers. Use longest-match rule on all tokens.
             if self.debug:
                 print("\tDisambiguation by longest-match strategy.")
-            tokens.sort(key=lambda x: len(x[1]), reverse=True)
-            if len(tokens[0][1]) == len(tokens[1][1]):
-                symbols = [x[0] for x in tokens if x[1] == tokens[0][1]]
-                raise DisambiguationError(symbols)
-            return tokens[0]
+            max_len = max((len(x.value) for x in tokens))
+            tokens_len = [x for x in tokens if len(x.value) == max_len]
+            if len(tokens_len) > 1:
+                raise DisambiguationError([x.symbol for x in tokens_len])
+            return tokens_len[0]
 
 
 class Action(object):
@@ -503,6 +506,18 @@ class NodeTerm(Node):
 
     def __repr__(self):
         return str(self)
+
+
+class Token(object):
+    """
+    Token or lexeme matched from the input.
+    """
+    def __init__(self, symbol=None, value=''):
+        self.symbol = symbol
+        self.value = value
+
+    def __repr__(self):
+        return "<{}({})>".format(text(self.symbol), text(self.value))
 
 
 def default_shift_action(context, value):
