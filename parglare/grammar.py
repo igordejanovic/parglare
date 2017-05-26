@@ -63,10 +63,13 @@ class Terminal(GrammarSymbol):
     recognizer(callable): Called with input list of objects and position in the
         stream. Should return a sublist of recognized objects. The sublist
         should be rooted at the given position.
+    from_recognizer(bool): Used in grammar construction to indicate that
+        terminal is created from str/regex recognizer.
     """
-    def __init__(self, name, recognizer=None):
+    def __init__(self, name, recognizer=None, from_recognizer=False):
         self.prior = DEFAULT_PRIORITY
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
+        self.from_recognizer = from_recognizer
         super(Terminal, self).__init__(name)
 
 
@@ -224,15 +227,15 @@ class Grammar(object):
             0,
             Production(AUGSYMBOL, ProductionRHS([self.root_symbol, STOP])))
 
-        by_name, by_str_recognizer = self._collect_grammar_symbols()
+        self._collect_grammar_symbols()
 
         # Add special terminals
-        by_name['EMPTY'] = EMPTY
-        by_name['EOF'] = EOF
-        by_name['STOP'] = STOP
+        self._by_name['EMPTY'] = EMPTY
+        self._by_name['EOF'] = EOF
+        self._by_name['STOP'] = STOP
         self.terminals.update([EMPTY, EOF, STOP])
 
-        self._resolve_references(by_name, by_str_recognizer)
+        self._resolve_references()
 
         # At the end remove terminal productions as those are not the real
         # productions, but just a symbolic names for terminals.
@@ -243,95 +246,94 @@ class Grammar(object):
 
     def _collect_grammar_symbols(self):
         """
-        Collect all terminal and non-terminal symbols.
+        Collect all terminal and non-terminal symbols from LHS of productions.
         """
-        by_name = {}
-        by_str_recognizer = {}
+        self._by_name = {}
+        self._term_to_lhs = {}
         for p in self.productions:
-            if isinstance(p.symbol, NonTerminal):
-                self.nonterminals.add(p.symbol)
-            else:
-                # Multiple definitions of Terminals
-                if p.symbol.name in by_name \
-                   and isinstance(by_name[p.symbol.name], Terminal):
-                    # If a terminal is defined multiple times assume it to
-                    # be a nonterminal with alternative terminals.
-                    self.terminals.remove(p.symbol)
-                    nt = NonTerminal(p.symbol.name)
-                    for i in self.productions:
-                        if i.symbol.name == p.symbol.name:
-                            i.symbol = nt
-                    self.nonterminals.add(nt)
+            new_symbol = p.symbol
+            if isinstance(new_symbol, Terminal):
+                prev_symbol = self._by_name.get(new_symbol.name)
+                if prev_symbol:
+                    if isinstance(prev_symbol, Terminal):
+                        # Multiple definitions of Terminals. Consider it a
+                        # non-terminal with alternative terminals.
+                        new_symbol = NonTerminal(new_symbol.name)
+                    else:
+                        new_symbol = prev_symbol
+
+                if isinstance(new_symbol, Terminal):
+                    self._term_to_lhs[p.rhs[0].name] = new_symbol
                 else:
-                    if isinstance(p.symbol.recognizer, StringRecognizer):
-                        by_str_recognizer[p.symbol.recognizer.value] = p.symbol
-                    self.terminals.add(p.symbol)
+                    for k, v in self._term_to_lhs.items():
+                        if v.name == new_symbol.name:
+                            del self._term_to_lhs[k]
+                            break
 
-            by_name[p.symbol.name] = p.symbol
+            self._by_name[new_symbol.name] = new_symbol
 
-        return by_name, by_str_recognizer
+        self.terminals = set([x for x in self._by_name.values()
+                              if isinstance(x, Terminal)])
+        self.nonterminals = set([x for x in self._by_name.values()
+                                 if isinstance(x, NonTerminal)])
 
-    def _resolve_references(self, by_name, by_str_recognizer):
+    def _resolve_references(self):
         """
         Resolve all references and unify objects so that we have single
         instances of each terminal and non-terminal in the grammar.
-        Create Terminal for Recognizer instance or a reference to user
-        supplied Recognizer.
+        Create Terminal for user supplied Recognizer.
         """
 
         for idx, p in enumerate(self.productions):
+            if p.symbol.name in self._by_name:
+                p.symbol = self._by_name[p.symbol.name]
             for idx_ref, ref in enumerate(p.rhs):
-                if isinstance(ref, Recognizer):
-                    # If terminal with the same "name" is registered use it.
-                    # If not, create new.
-                    if ref.name in by_name:
-                        ref_sym = by_name[ref.name]
-                    # If string recognizer check if terminal with the same
-                    # recognizer exists
-                    if isinstance(ref, StringRecognizer) \
-                       and ref.name in by_str_recognizer:
-                        raise GrammarError(
-                            "Terminal '{}' used in production '{}' already "
-                            "exists by the name '{}'.".format(
-                                text(ref.name), text(p.symbol),
-                                text(by_str_recognizer[ref.name])))
-                    ref_sym = Terminal(ref.name, ref)
-                    by_name[ref.name] = ref_sym
-                    self.terminals.add(ref_sym)
-
+                ref_sym = None
+                if ref.name in self._by_name:
+                    ref_sym = self._by_name[ref.name]
                 else:
-                    # Element of RHS must be either a Terminal, a NonTerminal
-                    # or a Reference. Replace it by the collected LHS elements
-                    # just to be sure that we have a single instance of each in
-                    # the grammar.
-                    assert isinstance(ref, Terminal) \
-                        or isinstance(ref, NonTerminal) \
-                        or isinstance(ref, Reference)
-                    if ref.name not in by_name:
-                        # Terminals might only be on the RHS for grammars
-                        # constructed from data structure. All non-terminals
-                        # must already be registered in `by_name` as they must
-                        # be found as LHS of some of the productions.
-                        if isinstance(ref, Terminal):
-                            by_name[ref.name] = ref
-                            self.terminals.add(ref)
-                        elif isinstance(ref, Reference):
+                    if isinstance(ref, Terminal):
+                        # Register terminal by name
+                        ref_sym = ref
+                        self._by_name[ref.name] = ref_sym
+
+                        # If terminal is registered by str recognizer and is
+                        # referenced in a RHS of some other production report
+                        # error.
+                        if not isinstance(p.symbol, Terminal):
+                            term_by_rec = self._term_to_lhs.get(ref.name)
+                            if term_by_rec:
+                                raise GrammarError(
+                                    "Terminal '{}' used in production '{}' "
+                                    "already exists by the name '{}'.".format(
+                                        text(ref.name), text(p.symbol),
+                                        text(term_by_rec)))
+                        self.terminals.add(ref_sym)
+
+                    else:
+                        # Element of RHS must be either a Terminal, a
+                        # NonTerminal or a Reference. Replace it by the
+                        # collected LHS elements just to be sure that we have a
+                        # single instance of each in the grammar.
+                        assert isinstance(ref, NonTerminal) \
+                            or isinstance(ref, Reference)
+                        # All non-terminals must already be registered in
+                        # `self._by_name` as they must be found as LHS of some
+                        # of the productions.
+                        if isinstance(ref, Reference):
                             # The last option is that the reference is a name
                             # of user supplied Recognizer. If so create a
                             # terminal for it.
                             if ref.name in self.recognizers:
                                 ref_sym = Terminal(ref.name,
                                                    self.recognizers[ref.name])
-                                by_name[ref.name] = ref_sym
+                                self._by_name[ref.name] = ref_sym
                                 self.terminals.add(ref_sym)
 
-                    if ref.name not in by_name:
-                        raise GrammarError(
-                            "Unknown symbol '{}' "
-                            "referenced from production '{}'.".
-                            format(ref.name, text(p)))
-
-                    ref_sym = by_name[ref.name]
+                if not ref_sym:
+                    raise GrammarError(
+                        "Unknown symbol '{}' referenced from production '{}'.".
+                        format(ref.name, text(p)))
 
                 p.rhs[idx_ref] = ref_sym
 
@@ -530,12 +532,12 @@ def act_recognizer_str(_, nodes):
                  .replace(r"\\", "\\")\
                  .replace(r"\n", "\n")\
                  .replace(r"\t", "\t")
-    return StringRecognizer(value)
+    return Terminal(value, StringRecognizer(value), from_recognizer=True)
 
 
 def act_recognizer_regex(_, nodes):
     value = nodes[0].value[1:-1]
-    return RegExRecognizer(value)
+    return Terminal(value, RegExRecognizer(value), from_recognizer=True)
 
 
 def act_production(_, nodes):
@@ -558,10 +560,11 @@ def act_production(_, nodes):
 
 def act_term_production(_, nodes):
 
-    term = Terminal(nodes[0], nodes[2])
+    rhs_term = nodes[2]
+    term = Terminal(nodes[0], rhs_term.recognizer)
     if len(nodes) > 4:
         term.prior = nodes[4]
-    return [Production(term, ProductionRHS([term]), prior=term.prior)]
+    return [Production(term, ProductionRHS([rhs_term]), prior=term.prior)]
 
 
 def act_assoc_prior(_, nodes):
