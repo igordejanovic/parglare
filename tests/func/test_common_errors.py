@@ -45,3 +45,20 @@ def test_terminals_with_different_names():
     assert 'B' in str(e)
     assert 'd' in str(e)
     assert 'already exists' in str(e)
+
+
+def todo_test_unreachable_accept_state():
+    """
+    TODO: Language of even palindromes without ending empty match will produce
+    DPDA with infinite transition between two state without possibility
+    to reach ACCEPT state for any input string.
+   """
+    grammar = """
+    S = A | B;
+    A = '1' S '1';
+    B = '0' S '0';
+    """
+
+    g = Grammar.from_string(grammar)
+    p = Parser(g)
+    p.parse('0101000110001010')
