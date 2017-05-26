@@ -170,7 +170,7 @@ def create_tables(grammar, itemset_type, start_production=1):
                                 # If priority of existing SHIFT action is
                                 # higher then leave it instead
 
-                        else:
+                        elif act.action is REDUCE:
                             # REDUCE/REDUCE conflict
                             # Try to resolve using priorities
                             assert act.prod != i.production
