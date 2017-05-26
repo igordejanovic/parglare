@@ -224,7 +224,7 @@ class Grammar(object):
             0,
             Production(AUGSYMBOL, ProductionRHS([self.root_symbol, STOP])))
 
-        by_name = self._collect_grammar_symbols()
+        by_name, by_str_recognizer = self._collect_grammar_symbols()
 
         # Add special terminals
         by_name['EMPTY'] = EMPTY
@@ -232,7 +232,7 @@ class Grammar(object):
         by_name['STOP'] = STOP
         self.terminals.update([EMPTY, EOF, STOP])
 
-        self._resolve_references(by_name)
+        self._resolve_references(by_name, by_str_recognizer)
 
         # At the end remove terminal productions as those are not the real
         # productions, but just a symbolic names for terminals.
@@ -246,6 +246,7 @@ class Grammar(object):
         Collect all terminal and non-terminal symbols.
         """
         by_name = {}
+        by_str_recognizer = {}
         for p in self.productions:
             if isinstance(p.symbol, NonTerminal):
                 self.nonterminals.add(p.symbol)
@@ -262,13 +263,15 @@ class Grammar(object):
                             i.symbol = nt
                     self.nonterminals.add(nt)
                 else:
+                    if isinstance(p.symbol.recognizer, StringRecognizer):
+                        by_str_recognizer[p.symbol.recognizer.value] = p.symbol
                     self.terminals.add(p.symbol)
 
             by_name[p.symbol.name] = p.symbol
 
-        return by_name
+        return by_name, by_str_recognizer
 
-    def _resolve_references(self, by_name):
+    def _resolve_references(self, by_name, by_str_recognizer):
         """
         Resolve all references and unify objects so that we have single
         instances of each terminal and non-terminal in the grammar.
@@ -283,6 +286,15 @@ class Grammar(object):
                     # If not, create new.
                     if ref.name in by_name:
                         ref_sym = by_name[ref.name]
+                    # If string recognizer check if terminal with the same
+                    # recognizer exists
+                    if isinstance(ref, StringRecognizer) \
+                       and ref.name in by_str_recognizer:
+                        raise GrammarError(
+                            "Terminal '{}' used in production '{}' already "
+                            "exists by the name '{}'.".format(
+                                text(ref.name), text(p.symbol),
+                                text(by_str_recognizer[ref.name])))
                     ref_sym = Terminal(ref.name, ref)
                     by_name[ref.name] = ref_sym
                     self.terminals.add(ref_sym)

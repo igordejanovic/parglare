@@ -24,9 +24,8 @@ def test_lr_1_grammar():
 
     """
     grammar = """
-    S = 'a' A 'd' | 'b' A B;
+    S = 'a' A 'd' | 'b' A 'd';
     A = 'c' A | 'c';
-    B = 'd';
     """
 
     g = Grammar.from_string(grammar)
