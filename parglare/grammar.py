@@ -427,7 +427,7 @@ class Grammar(object):
         return g
 
     def print_debug(self):
-        print("*** GRAMMAR ***")
+        print("\n\n*** GRAMMAR ***")
         print("Terminals:")
         print(" ".join([text(t) for t in self.terminals]))
         print("NonTerminals:")

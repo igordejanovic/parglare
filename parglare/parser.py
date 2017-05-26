@@ -68,7 +68,6 @@ class Parser(object):
     def print_debug(self):
         if self.layout and self.layout_debug:
             print('\n\n*** LAYOUT parser ***\n')
-        self.grammar.print_debug()
         print("\n\n*** STATES ***")
         for s, g, a in zip(self._states, self._goto, self._actions):
             s.print_debug()
