@@ -21,11 +21,13 @@ Do not use it for anything important.
 - Declarative associativity and priority based conflict resolution for productions
   - See the `calc` example, or the quick intro bellow.
 - Lexical disambiguation strategy.
-  - The default strategy is longest-match first and then `str` over `regex` match
+  - The longest-match strategy is used first and then `str` over `regex` match
     (i.e. the most specific match). Terminal priority can be provided for
-    override if necessary.
-- Semantic actions and default actions which builds the parse tree (controlled
-  by `actions` and `default_actions` parameters for the `Parser` class).
+    further disambiguation if multiple regexes might match with the same length.
+- Semantic actions and default (controlled by `actions` and `default_actions`
+  parameters for the `Parser` class).
+  - If no action is specified for a given reduction, default will be called
+    which will build nodes of a parse tree.
   - If no actions are provided and the default actions are explicitely disabled
     parser works as a recognizer, i.e. no reduction actions are called and the
     only output of the parser is whether the input was recognized or not.

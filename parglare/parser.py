@@ -286,44 +286,36 @@ class Parser(object):
             print("\tLexical disambiguation. Tokens:",
                   [x for x in tokens])
 
-        # By priority
-        tokens.sort(key=lambda x: x.symbol.prior, reverse=True)
-        max_prior = tokens[0].symbol.prior
-        tokens = [x for x in tokens if x.symbol.prior == max_prior]
+        # Longest-match strategy.
+        max_len = max((len(x.value) for x in tokens))
+        tokens = [x for x in tokens if len(x.value) == max_len]
+        if self.debug:
+            print("\tDisambiguation by longest-match strategy. Tokens:",
+                  [x for x in tokens])
         if len(tokens) == 1:
-            if self.debug:
-                print("\tDisambiguate by priority: {}, prior={}"
-                      .format(tokens[0].value, max_prior))
             return tokens[0]
 
-        # Multiple with the same priority. Favor string recognizer as
+        # Multiple with the same lenght. Favor string recognizer as
         # more specific.
         tokens_str = [x for x in tokens if isinstance(x.symbol.recognizer,
                                                       StringRecognizer)]
-        if tokens_str:
-            if len(tokens_str) == 1:
-                # If only one string recognizer
-                if self.debug:
-                    print("\tDisambiguation by str. recognizer as "
-                          "more specific.")
-                return tokens_str[0]
-            else:
-                # If more than one string recognizer use the longest-match rule
-                # on the string recognizer tokens
-                tokens_str.sort(key=lambda x: len(x.value), reverse=True)
-                if self.debug:
-                    print("\tDisambiguation by str. recognizer and "
-                          "longest match.")
-                return tokens_str[0]
-        else:
-            # No string recognizers. Use longest-match rule on all tokens.
-            if self.debug:
-                print("\tDisambiguation by longest-match strategy.")
-            max_len = max((len(x.value) for x in tokens))
-            tokens_len = [x for x in tokens if len(x.value) == max_len]
-            if len(tokens_len) > 1:
-                raise DisambiguationError([x.symbol for x in tokens_len])
-            return tokens_len[0]
+        if self.debug:
+            print("\tDisambiguation by str. recognizer as more specific."
+                  "Tokens:", [x for x in tokens_str])
+        if len(tokens_str) == 1:
+            # If only one string recognizer
+            return tokens_str[0]
+
+        # By priority
+        max_prior = max((x.symbol.prior) for x in tokens)
+        tokens = [x for x in tokens if x.symbol.prior == max_prior]
+        if self.debug:
+            print("\tDisambiguate by priority. Tokens: ",
+                  [(x, x.symbol.prior) for x in tokens])
+        if len(tokens) == 1:
+            return tokens[0]
+
+        raise DisambiguationError([x.symbol for x in tokens])
 
 
 class Action(object):

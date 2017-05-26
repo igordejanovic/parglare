@@ -1,18 +1,39 @@
+"""Test lexical disambiguation strategy.
+
+Longest-match strategy is first used. If more tokens has the same length
+priority is given to the more specific match (i.e. str match over regex).
+If ambiguity is still unresolved priority is checked as the last resort.
+At the end disambiguation error is reported.
+
+"""
 import pytest  # noqa
 from parglare import Parser, Grammar
 from parglare.exceptions import ParseError
 
 
-def assert_false(_, __):
-    assert False
+called = [False, False, False]
 
 
-def test_priority():
-    """
-    Terminal priority is first checked. If there is multiple terminals
-    that can match at given location, the one with the highest priority
-    will be used.
-    """
+def act_called(which_called):
+    def _called(_, __):
+        called[which_called] = True
+    return _called
+
+
+actions = {
+    "First": act_called(0),
+    "Second": act_called(1),
+    "Third": act_called(2),
+}
+
+
+@pytest.fixture()
+def cf():
+    global called
+    called = [False, False, False]
+
+
+def test_longest_match(cf):
 
     grammar = """
     S = First | Second | Third;
@@ -21,131 +42,70 @@ def test_priority():
     Third = /\d+/ {15};
     """
 
-    called = [False]
-
-    def act_called(_, __):
-        called[0] = True
-
     g = Grammar.from_string(grammar)
-    actions = {
-        "First": assert_false,
-        "Second": assert_false,
-        "Third": act_called,
-    }
     parser = Parser(g, actions=actions)
 
-    parser.parse('14')
+    # Longest-match is honored first.
+    parser.parse('14.17')
+    assert called == [True, False, False]
 
-    assert called[0]
 
-
-def test_longest_match():
-    "If priorities are the same longest-match strategy is used."
+def test_most_specific(cf):
 
     grammar = """
     S = First | Second | Third;
     First = /\d+\.\d+/;
-    Second = /\d+/;
-    Third = /\d+a/;
+    Second = '14';
+    Third = /\d+/ {15};
     """
+
     g = Grammar.from_string(grammar)
+    parser = Parser(g, actions=actions, debug=True)
 
-    called = [False]
-
-    def act_called(_, __):
-        called[0] = True
-
-    actions = {
-        "First": act_called,
-        "Second": assert_false,
-        "Third": assert_false,
-    }
-    parser = Parser(g, actions=actions)
-
-    # "First" will be used as it can match longer string.
-    parser.parse('45.67')
-    assert called[0]
-
-    called = [False]
-
-    def act_called(_, __):
-        called[0] = True
-
-    actions = {
-        "First": assert_false,
-        "Second": assert_false,
-        "Third": act_called
-    }
-    parser = Parser(g, actions=actions)
-
-    # "Third" will be used as it can match longer string.
-    parser.parse('45a')
-    assert called[0]
+    # String match in rule Second is more specific than Third regexp rule.
+    parser.parse('14')
+    assert called == [False, True, False]
 
 
-def test_most_specific():
-    """If multiple terminals are of the same priority and matches the same length
-    strings we shall prefer the result of the most specific recognizer, i.e.
-    StringRecognizer over RegExRecognizer.
-    """
+def test_priority(cf):
 
     grammar = """
     S = First | Second | Third;
-    First = "45";
-    Second = /\d+/;
-    Third = /\d+\.\d+/;
+    First = /\d+\.\d+/ {15};
+    Second = '14.7';
+    Third = /\d+\.75/;
     """
-
-    called = [False]
-
-    def act_called(_, __):
-        called[0] = True
 
     g = Grammar.from_string(grammar)
-    actions = {
-        "First": act_called,
-        "Second": assert_false,
-        "Third": assert_false,
-    }
-    parser = Parser(g, actions=actions)
+    parser = Parser(g, actions=actions, debug=True)
 
-    # "First" will be used as it is the most specific.
-    parser.parse('45')
-    assert called[0]
+    # All rules will match but First and Third will match more.
+    # Both are regexes so priority will be used.
+    # First has higher priority.
+    parser.parse('14.75')
+    assert called == [True, False, False]
 
 
-def test_if_all_fails():
-    """
-    If all strategies doesn't result in a single token raise an error.
-    """
+def test_failed_disambiguation(cf):
 
-    # In this grammar all three terminal rules could be applied for string
-    # "b56". They are of the same priority, same length match and all are
-    # regexes.
     grammar = """
     S = First | Second | Third;
-    First = /(a|b)\d+/;
-    Second = /(a|b|c)\d+/;
-    Third = /(a|b|c|d)\d+/;
+    First = /\d+\.\d+/;
+    Second = '14.7';
+    Third = /\d+\.75/;
     """
 
-    called = [False]
-
-    def act_called(_, __):
-        called[0] = True
-
     g = Grammar.from_string(grammar)
-    actions = {
-        "First": act_called,
-        "Second": assert_false,
-        "Third": assert_false,
-    }
-    parser = Parser(g, actions=actions)
+    parser = Parser(g, actions=actions, debug=True)
+
+    # All rules will match but First and Third will match more.
+    # Both are regexes so priority will be used.
+    # Both have the same priority
 
     with pytest.raises(ParseError) as e:
-        parser.parse("b56")
+        parser.parse('14.75')
 
     assert 'disambiguate' in str(e)
     assert 'First' in str(e)
-    assert 'Second' in str(e)
+    assert 'Second' not in str(e)
     assert 'Third' in str(e)
