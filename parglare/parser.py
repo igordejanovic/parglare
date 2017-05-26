@@ -111,7 +111,7 @@ class Parser(object):
         context = type(str("Context"), (), {})
 
         new_token = True
-        ntok_sym = None
+        ntok = Token()
 
         while True:
             cur_state = state_stack[-1]
@@ -513,6 +513,7 @@ class Token(object):
     Token or lexeme matched from the input.
     """
     __slots__ = ['symbol', 'value']
+
     def __init__(self, symbol=None, value=''):
         self.symbol = symbol
         self.value = value
