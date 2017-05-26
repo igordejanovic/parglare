@@ -46,6 +46,28 @@ def test_terminal_nonterminal():
     assert Terminal("B") in g.terminals
     assert NonTerminal("B") not in g.nonterminals
 
+    grammar = """
+    S = A;
+    A = S;
+    A = 'x';
+    """
+    g = Grammar.from_string(grammar)
+    assert NonTerminal("S") in g.nonterminals
+    assert NonTerminal("A") in g.nonterminals
+    assert Terminal("A") not in g.terminals
+    assert Terminal("x") in g.terminals
+
+    grammar = """
+    S = S S;
+    S = 'x';
+    S = EMPTY;
+    """
+    g = Grammar.from_string(grammar)
+    assert NonTerminal("S") in g.nonterminals
+    assert Terminal("x") in g.terminals
+    assert NonTerminal("x") not in g.nonterminals
+    assert Terminal("S") not in g.terminals
+
 
 def test_multiple_terminal_definition():
 
