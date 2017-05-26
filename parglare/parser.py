@@ -449,17 +449,14 @@ class LRState(object):
 
 
 class Node(object):
-    """A node of the parse tree.
-    """
-    __slots__ = ['position', 'symbol']
-
+    """A node of the parse tree."""
     def __init__(self, position, symbol):
         self.position = position
         self.symbol = symbol
 
 
 class NodeNonTerm(Node):
-    __slots__ = ['nodes']
+    __slots__ = ['position', 'symbol', 'nodes']
 
     def __init__(self, position, symbol, nodes):
         super(NodeNonTerm, self).__init__(position, symbol)
@@ -482,7 +479,7 @@ class NodeNonTerm(Node):
 
 
 class NodeTerm(Node):
-    __slots__ = ['value']
+    __slots__ = ['position', 'symbol', 'value']
 
     def __init__(self, position, symbol, value):
         super(NodeTerm, self).__init__(position, symbol)
