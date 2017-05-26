@@ -412,15 +412,22 @@ class Grammar(object):
 
     @staticmethod
     def from_string(grammar_str, recognizers=None, debug=False):
-        return Grammar(get_grammar_parser(debug).parse(grammar_str),
-                       recognizers=recognizers)
+        g = Grammar(get_grammar_parser(debug).parse(grammar_str),
+                    recognizers=recognizers)
+        if debug:
+            g.print_debug()
+        return g
 
     @staticmethod
     def from_file(file_name, recognizers=None, debug=False):
-        return Grammar(get_grammar_parser(debug).parse_file(file_name),
-                       recognizers=recognizers)
+        g = Grammar(get_grammar_parser(debug).parse_file(file_name),
+                    recognizers=recognizers)
+        if debug:
+            g.print_debug()
+        return g
 
     def print_debug(self):
+        print("*** GRAMMAR ***")
         print("Terminals:")
         print(" ".join([text(t) for t in self.terminals]))
         print("NonTerminals:")
