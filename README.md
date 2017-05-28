@@ -1,44 +1,55 @@
 [![Build Status](https://travis-ci.org/igordejanovic/parglare.svg?branch=master)](https://travis-ci.org/igordejanovic/parglare)
 [![Coverage Status](https://coveralls.io/repos/github/igordejanovic/parglare/badge.svg?branch=master)](https://coveralls.io/github/igordejanovic/parglare?branch=master)
+![Status](https://img.shields.io/pypi/status/parglare.svg)
+![Python versions](https://img.shields.io/pypi/pyversions/parglare.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # parglare
 
 A pure Python Scannerless LR parser (will be GLR soon) with LALR or SLR tables.
 
-This lib is in the early phase of development. It is not tested extensively yet.
-Do not use it for anything important.
+This lib is in the beta. It is not tested extensively in real-world projects yet.
 
 
 ## What is done so far
 
 - Textual syntax for grammar specification. Parsed with parglare.
-- SLR and LALR tables calculation (LALR is the default)
-- Scannerless LR(1) parsing
+- LR parser with SLR and LALR tables calculation (LALR is the default). LALR is
+  modified to avoid REDUCE/REDUCE conflicts on state merging. Although not
+  proven, this should enable handling of all LR(1) grammars with reduced set of
+  states and without conflicts. For grammars that are not LR(1) a
+  non-deterministic parsing will be provided in the form of GLR parsing.
+- Scannerless LR parsing
   - Scanner is integrated into parsing. This give more power as the token
     recognition is postponed and done in the parsing context at the current
     parsing location.
-- Declarative associativity and priority based conflict resolution for productions
+- Parsing list of arbitrary objects: bytes, numbers, any Python objects!
+  See `recognizers` parameter to grammar construction in
+  `test_parse_list_of_objects.py` test.
+- Declarative associativity and priority-based conflict resolution for productions
   - See the `calc` example, or the quick intro bellow.
 - Lexical disambiguation strategy.
   - The longest-match strategy is used first and then `str` over `regex` match
     (i.e. the most specific match). Terminal priority can be provided for
     further disambiguation if multiple regexes might match with the same length.
-- Semantic actions and default (controlled by `actions` and `default_actions`
-  parameters for the `Parser` class).
+- Semantic actions with default actions (controlled by `actions` and
+  `default_actions` parameters for the `Parser` class).
   - If no action is specified for a given reduction, default will be called
-    which will build nodes of a parse tree.
+    which will build nodes of a parse tree. With default actions enabled and no
+    user actions parglare will return a parse tree.
   - If no actions are provided and the default actions are explicitely disabled
     parser works as a recognizer, i.e. no reduction actions are called and the
     only output of the parser is whether the input was recognized or not.
 - Support for language comments/whitespaces using special rule `LAYOUT`.
-- Debug print/tracing (set `debug=True` and/or `layout_debug=True`to the
-  `Parser` instantiation).
-- Parsing list of arbitrary objects: bytes, numbers, any Python objects!
-  See `recognizers` parameter to grammar construction in
-  `test_parse_list_of_objects.py` test.
-- Tests. Code coverage is pretty high at the moment and I strive to be even
-  higher.
+  By default whitespaces are skipped. This is controled by `ws` parameter to the
+  parser constructor which is by default set to `\t\n `. If set to `None` no
+  whitespace skipping is provided. If there is a rule `LAYOUT` in the grammar
+  this rule is used instead. An additional parser with the layout grammar will
+  be built to handle whitespaces.
+- Debug print/tracing of both grammar construction, DPDA states construction and
+  parsing process (set `debug=True` and/or `layout_debug=True`to the
+  `Parser` instantiation and/or call to `Grammar.from_<>`).
+- Tests. I'm trying to maintain high test code coverage.
 - There are a few examples (see `examples` folder).
 
 ## TODO
@@ -46,7 +57,8 @@ Do not use it for anything important.
 - Docs
 - Tables caching/loading (currently tables are calculated whenever `Parser` is
   instantiated)
-- GLR parsing (Tomita's algorithm)
+- GLR parsing (Tomita's algorithm) with a modification to work as scannerless
+  parser. Optional lexical disambiguation using GLR machinery.
 - Error recovery
 
 ## Quick intro
