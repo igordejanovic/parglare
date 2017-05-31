@@ -198,9 +198,9 @@ def merge_states(old_state, new_state):
     """
 
     item_pairs = []
-    for i in old_state.kernel_items:
-        new_item = new_state.get_item(i)
-        item_pairs.append((i, new_item))
+    for old_item in old_state.kernel_items:
+        new_item = new_state.get_item(old_item)
+        item_pairs.append((old_item, new_item))
 
     # Check if merging would result in R/R conflict
     check_set = set()
