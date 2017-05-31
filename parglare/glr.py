@@ -33,8 +33,10 @@ class GLRStackNode(object):
         state(LRState):
         position(int):
         parents_production(dict): { production: parent GLRStackNode}
-             Each stack node might have multiple parents.
-        tokens_ahead(list of Token)
+             Each stack node might have multiple parents which represent
+             multiple path parses took to reach the current state.
+        tokens_ahead(list of Token): A list of tokens recognized in the
+             input in the current state and position.
         actions(list of lists of Action): Possible actions for each token.
     """
     def __init__(self, state, position):
