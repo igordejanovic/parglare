@@ -3,7 +3,8 @@ Test non-deterministic parsing.
 """
 import pytest  # noqa
 from parglare import Parser, Grammar, SLR, LALR
-from parglare.exceptions import GrammarError, ShiftReduceConflict
+from parglare.exceptions import GrammarError, ShiftReduceConflict, \
+    ReduceReduceConflict
 
 
 def test_lr_1_grammar():
@@ -92,7 +93,7 @@ def todo_test_nondeterministic_LR_raise_error():
 def test_cyclic_grammar_1():
     """
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
-    TODO: This should be a problem for GLR?
+    TODO: This should be a problem for GLR.
     """
     grammar = """
     S = A;
@@ -117,3 +118,34 @@ def test_cyclic_grammar_2():
 
     with pytest.raises(ShiftReduceConflict):
         Parser(g, debug=True)
+
+
+def test_highly_ambiguous_grammar():
+    grammar = """
+    S = "b" | S S | S S S;
+    """
+
+    g = Grammar.from_string(grammar, debug=True)
+
+    with pytest.raises(ReduceReduceConflict):
+        Parser(g, debug=True)
+
+
+def test_indirect_left_recursive():
+    """Grammar with indirect/hidden left recursion.
+
+    parglare will handle this using implicit longest-match disambiguation
+    between "b" and EMPTY, i.e. it will greadily match "b" tokens and than
+    match EMPTY before "a" and start to reduce by 'B="b" B' production.
+
+    """
+
+    grammar = """
+    S = B "a";
+    B = "b" B | EMPTY;
+    """
+
+    g = Grammar.from_string(grammar)
+    p = Parser(g)
+
+    p.parse("bbbbbbbbbbbba")
