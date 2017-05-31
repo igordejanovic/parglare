@@ -53,7 +53,7 @@ def create_tables(grammar, itemset_type, start_production=1):
         state._max_prior_per_symbol = {}
 
         for i in state.items:
-            symbol = i.production.rhs[i.position]
+            symbol = i.symbol_at_position
             if symbol:
                 state._per_next_symbol.setdefault(symbol, []).append(i)
 
