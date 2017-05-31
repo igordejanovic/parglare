@@ -217,11 +217,21 @@ def merge_states(old_state, new_state):
 
 
 def _check_reduce_reduce(state):
+    """Check if given state has REDUCE/REDUCE conflicts.
+
+    There will be R/R conflicts if there are more than one LR item that would
+    call for reduction for the same terminal.
+
+    """
 
     items_at_end = [x for x in state.kernel_items if x.is_at_end]
     for i in items_at_end:
         for j in items_at_end:
             if i is not j:
+                # If the follow sets of two distinct items with position at the
+                # end have non-empty intersection we have REDUCE/REDUCE
+                # conflict. For the terminals in the intersection both items
+                # would call for reduction.
                 common = i.follow.intersection(j.follow)
                 if common:
                     raise ReduceReduceConflict(state, [str(x) for x in common],
