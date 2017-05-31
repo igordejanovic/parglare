@@ -53,29 +53,30 @@ class DisambiguationError(Exception):
 
 
 class LRConflict(Exception):
-    def __init__(self, message, state, symbol):
+    def __init__(self, message, state, symbols):
         self.state = state
-        self.symbol = symbol
+        self.symbols = symbols
         super(LRConflict, self).__init__(message)
 
 
 class ShiftReduceConflict(LRConflict):
-    def __init__(self, state, symbol, production):
+    def __init__(self, state, symbols, production):
         self.production = production
-        message = "In state {} and input symbol '{}' can't " \
+        message = "{}\nIn state {} and input symbol {} can't " \
                   "decide whether to shift or reduce by production '{}'." \
-            .format(state.state_id, symbol, production)
-        super(ShiftReduceConflict, self).__init__(message, state, symbol)
+            .format(str(state), state.state_id, symbols, production)
+        super(ShiftReduceConflict, self).__init__(message, state, symbols)
 
 
 class ReduceReduceConflict(LRConflict):
-    def __init__(self, state, symbol, production1, production2):
+    def __init__(self, state, symbols, production1, production2):
         self.production1 = production1
         self.production2 = production2
-        message = "In state {} and input symbol '{}' can't " \
+        message = "{}\nIn state {} and input symbol(s) {} can't " \
                   "decide whether to reduce by production '{}' or by '{}'." \
-            .format(state.state_id, symbol, production1, production2)
-        super(ReduceReduceConflict, self).__init__(message, state, symbol)
+            .format(str(state), state.state_id, symbols,
+                    production1, production2)
+        super(ReduceReduceConflict, self).__init__(message, state, symbols)
 
 
 class NoActionsForStartRule(Exception):

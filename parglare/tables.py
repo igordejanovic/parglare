@@ -83,12 +83,15 @@ def create_tables(grammar, itemset_type, start_production=1):
 
             # We've found a new state. Register it for later processing.
             if target_state is maybe_new_state:
+                _check_reduce_reduce(target_state)
                 state_queue.append(target_state)
                 state_id += 1
             else:
                 # State with this kernel items already exists.
                 if itemset_type is LR_1:
-                    # LALR: Try to merge states.
+                    # LALR: First check if there is R/R conflict in the new
+                    #       state. If not, try to merge states.
+                    _check_reduce_reduce(maybe_new_state)
                     if not merge_states(target_state, maybe_new_state):
                         target_state = maybe_new_state
                         state_queue.append(target_state)
@@ -211,3 +214,15 @@ def merge_states(old_state, new_state):
     for old, new in item_pairs:
         old.follow.update(new.follow)
     return True
+
+
+def _check_reduce_reduce(state):
+
+    items_at_end = [x for x in state.kernel_items if x.is_at_end]
+    for i in items_at_end:
+        for j in items_at_end:
+            if i is not j:
+                common = i.follow.intersection(j.follow)
+                if common:
+                    raise ReduceReduceConflict(state, [str(x) for x in common],
+                                               i.production, j.production)

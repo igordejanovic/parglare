@@ -441,10 +441,17 @@ class LRState(object):
         """
         return self.items[self.items.index(other_item)]
 
-    def print_debug(self):
-        print("\nState %d" % self.state_id)
+    def __str__(self):
+        s = "\nState %d" % self.state_id
         for i in self.items:
-            print("\t", i)
+            s += "\t{}\n".format(i)
+        return s
+
+    def __unicode__(self):
+        return str(self)
+
+    def print_debug(self):
+        print(text(self))
 
 
 class Node(object):
