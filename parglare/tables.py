@@ -105,7 +105,7 @@ def create_tables(grammar, itemset_type, start_production=1):
 
             else:
                 if symbol is STOP:
-                    actions[symbol] = Action(ACCEPT)
+                    actions[symbol] = Action(ACCEPT, state=target_state)
                 else:
                     # For each terminal symbol we create SHIFT action in the
                     # ACTION table.

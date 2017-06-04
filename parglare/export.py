@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from parglare.closure import LR_1
 from parglare.tables import create_tables
-from parglare.parser import REDUCE, SHIFT
+from parglare.parser import REDUCE, SHIFT, ACCEPT
 import codecs
 import sys
 if sys.version < '3':
@@ -81,9 +81,10 @@ def grammar_pda_export(grammar, file_name):
             # SHIFT and GOTOs as links
             for term, action in ((term, action) for term, action
                                  in state_actions[state.state_id].items()
-                                 if action.action == SHIFT):
-                    f.write('{} -> {} [label="SHIFT:{}"]'.format(
-                        state.state_id, action.state.state_id, term))
+                                 if action.action in [SHIFT, ACCEPT]):
+                    f.write('{} -> {} [label="{}:{}"]'.format(
+                        state.state_id, action.state.state_id,
+                        "SHIFT" if action.action == SHIFT else "ACCEPT", term))
 
             for symb, goto_state in ((symb, goto) for symb, goto
                                      in state_goto[state.state_id].items()):
