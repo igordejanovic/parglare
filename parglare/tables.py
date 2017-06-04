@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from itertools import chain
 from parglare.parser import LRItem, LRState
 from parglare import NonTerminal
 from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_NONE, STOP
@@ -118,18 +119,30 @@ def create_tables(grammar, itemset_type, start_production=1):
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
     # merging might change item's follow in previous states
     if itemset_type is LR_1:
-        for state in states:
 
-            # First refresh current state's follows
-            closure(state, LR_1, first_sets)
+        # Propagate updates as long as there were items propagated in the last
+        # loop run.
+        update = True
+        while update:
+            update = False
 
-            # Propagate follows to next states. GOTO table keeps information
-            # about states created from this state
-            inc_items = [i.get_pos_inc() for i in state.items]
-            for target_state in all_goto[state.state_id].values():
-                for next_item in target_state.kernel_items:
-                    next_item.follow.update(
-                        inc_items[inc_items.index(next_item)].follow)
+            for state in states:
+
+                # First refresh current state's follows
+                closure(state, LR_1, first_sets)
+
+                # Propagate follows to next states. GOTO/ACTION tables keep
+                # information about states created from this state
+                inc_items = [i.get_pos_inc() for i in state.items]
+                for target_state in chain(
+                        all_goto[state.state_id].values(),
+                        [a.state for a in all_actions[state.state_id].values()
+                         if a.action in [SHIFT, ACCEPT]]):
+                    for next_item in target_state.kernel_items:
+                        this_item = inc_items[inc_items.index(next_item)]
+                        if this_item.follow.difference(next_item.follow):
+                            update = True
+                            next_item.follow.update(this_item.follow)
 
     # Calculate REDUCTION entries in ACTION tables and resolve possible
     # conflicts.
