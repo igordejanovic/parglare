@@ -67,6 +67,11 @@ setup(
     license="MIT license",
     zip_safe=False,
     keywords='parglare',
+    entry_points={
+        'console_scripts': [
+            'pglr = parglare.cli:pglr'
+        ]
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

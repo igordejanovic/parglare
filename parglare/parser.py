@@ -369,9 +369,12 @@ class LRItem(object):
             s.append(".")
         s = " ".join(s)
 
-        return "%d: %s = %s   follow=%s" % (self.production.prod_id,
-                                            self.production.symbol, s,
-                                            self.follow)
+        follow = "{{{}}}".format(", ".join([str(t) for t in self.follow])) \
+                 if self.follow else "{}"
+
+        return "%d: %s = %s   %s" % (self.production.prod_id,
+                                     self.production.symbol, s,
+                                     follow)
 
     @property
     def is_kernel(self):
@@ -434,6 +437,13 @@ class LRState(object):
         Returns kernel items of this state.
         """
         return [i for i in self.items if i.is_kernel]
+
+    @property
+    def nonkernel_items(self):
+        """
+        Returns nonkernel items of this state.
+        """
+        return [i for i in self.items if not i.is_kernel]
 
     def get_item(self, other_item):
         """

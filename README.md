@@ -46,6 +46,7 @@ This lib is in the beta. It is not tested extensively in real-world projects yet
   whitespace skipping is provided. If there is a rule `LAYOUT` in the grammar
   this rule is used instead. An additional parser with the layout grammar will
   be built to handle whitespaces.
+- cli command `pglr` for grammar check and PDA visualization (export to dot).
 - Debug print/tracing of both grammar construction, DPDA states construction and
   parsing process (set `debug=True` and/or `layout_debug=True`to the
   `Parser` instantiation and/or call to `Grammar.from_<>`).
