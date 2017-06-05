@@ -1,19 +1,19 @@
 import pytest  # noqa
 from parglare import Grammar, Parser
-from parglare.exceptions import NoActionsForStartRule, GrammarError
+from parglare.exceptions import GrammarError
 
 
-def test_no_actions_root_rule():
+def test_infinite_recursions():
     """
-    If root rule have no recursion termination alternative as for example:
+    If rule have no recursion termination alternative as for example:
 
     Elements = Elements Element;
 
     instead of:
     Elements = Elements Element | Element;
 
-    Action set for the first state will have no elements so parsing can't even
-    begin as no SHIFT actions can occur.
+    first set of "Elements" will be empty. GrammarError will be produced during
+    parser construction.
     """
 
     grammar = """
@@ -23,8 +23,11 @@ def test_no_actions_root_rule():
 
     g = Grammar.from_string(grammar)
 
-    with pytest.raises(NoActionsForStartRule):
+    with pytest.raises(GrammarError) as e:
         Parser(g)
+
+    assert 'First set empty for grammar symbol "Elements"' in str(e)
+    assert 'infinite recursion' in str(e)
 
 
 def test_terminals_with_different_names():

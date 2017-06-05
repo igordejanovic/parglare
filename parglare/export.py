@@ -1,6 +1,4 @@
 from __future__ import unicode_literals
-from parglare.closure import LR_1
-from parglare.tables import create_tables
 from parglare.parser import REDUCE, SHIFT, ACCEPT
 import codecs
 import sys
@@ -39,9 +37,7 @@ def dot_escape(s):
             .replace('?', r'\?')
 
 
-def grammar_pda_export(grammar, file_name):
-
-    states, state_actions, state_goto = create_tables(grammar, LR_1)
+def grammar_pda_export(states, all_actions, all_goto, file_name):
 
     with codecs.open(file_name, 'w', encoding="utf-8") as f:
         f.write(HEADER)
@@ -60,7 +56,7 @@ def grammar_pda_export(grammar, file_name):
             # REDUCE actions will be presented inside each node.
             reduce_actions = [(term, action)
                               for term, action
-                              in state_actions[state.state_id].items()
+                              in all_actions[state.state_id].items()
                               if action.action == REDUCE]
             reductions = ""
             if reduce_actions:
@@ -80,14 +76,14 @@ def grammar_pda_export(grammar, file_name):
 
             # SHIFT and GOTOs as links
             for term, action in ((term, action) for term, action
-                                 in state_actions[state.state_id].items()
+                                 in all_actions[state.state_id].items()
                                  if action.action in [SHIFT, ACCEPT]):
                     f.write('{} -> {} [label="{}:{}"]'.format(
                         state.state_id, action.state.state_id,
                         "SHIFT" if action.action == SHIFT else "ACCEPT", term))
 
             for symb, goto_state in ((symb, goto) for symb, goto
-                                     in state_goto[state.state_id].items()):
+                                     in all_goto[state.state_id].items()):
                     f.write('{} -> {} [label="GOTO:{}"]'.format(
                         state.state_id, goto_state.state_id, symb))
 

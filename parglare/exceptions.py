@@ -77,10 +77,3 @@ class ReduceReduceConflict(LRConflict):
             .format(str(state), state.state_id, symbols,
                     production1, production2)
         super(ReduceReduceConflict, self).__init__(message, state, symbols)
-
-
-class NoActionsForStartRule(Exception):
-    def __init__(self):
-        super(NoActionsForStartRule, self).__init__(
-            "No SHIFT actions for start rule. Your start rule is probably "
-            "infinitely recursive.")

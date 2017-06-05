@@ -3,6 +3,9 @@ import sys
 import argparse
 from parglare import Grammar, ParseError, GrammarError
 from parglare.export import grammar_pda_export
+from parglare.tables import create_table, check_table
+from parglare.closure import LR_1
+from parglare.parser import first, follow
 
 
 def pglr():
@@ -38,7 +41,7 @@ def pglr():
 
     try:
         g = Grammar.from_file(args.grammar, debug=args.d)
-        print("Grammar OK.")
+        states, all_actions, all_goto = create_table(g)
     except (GrammarError, ParseError) as e:
         print("Error in grammar file.")
         print(e)
@@ -47,4 +50,4 @@ def pglr():
     if args.cmd == "viz":
         print("Generating '%s.dot' file for the grammar PDA." % args.grammar)
         print("To convert to png run 'dot -Tpng -O %s.dot'" % args.grammar)
-        grammar_pda_export(g, "%s.dot" % args.grammar)
+        grammar_pda_export(states, all_actions, all_goto, "%s.dot" % args.grammar)

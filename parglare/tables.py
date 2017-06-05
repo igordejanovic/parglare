@@ -4,15 +4,25 @@ from parglare.parser import LRItem, LRState
 from parglare import NonTerminal
 from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_NONE, STOP
 from .exceptions import ShiftReduceConflict, ReduceReduceConflict, \
-    NoActionsForStartRule
+    GrammarError
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
 
 
-def create_tables(grammar, itemset_type, start_production=1):
+def create_table(grammar, first_sets=None, follow_sets=None,
+                 itemset_type=LR_1, start_production=1):
 
-    first_sets = first(grammar)
-    follow_sets = follow(grammar, first_sets)
+    first_sets = first_sets if first_sets else first(grammar)
+
+    # Check for states with GOTO links but without SHIFT links.
+    # This is invalid as the GOTO link will never be traversed.
+    for nt, firsts in first_sets.items():
+        if nt.name != 'S\'' and not firsts:
+            raise GrammarError(
+                'First set empty for grammar symbol "{}". '
+                'An infinite recursion on the grammar symbol.'.format(nt))
+
+    follow_sets = follow_sets if follow_sets else follow(grammar, first_sets)
 
     start_prod_symbol = grammar.productions[start_production].symbol
     grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
@@ -111,10 +121,6 @@ def create_tables(grammar, itemset_type, start_production=1):
                     # For each terminal symbol we create SHIFT action in the
                     # ACTION table.
                     actions[symbol] = Action(SHIFT, state=target_state)
-
-    # Sanity check. First rule must have SHIFT actions.
-    if not all_actions[0]:
-        raise NoActionsForStartRule()
 
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
     # merging might change item's follow in previous states
@@ -249,3 +255,20 @@ def _check_reduce_reduce(state):
                 if common:
                     raise ReduceReduceConflict(state, [str(x) for x in common],
                                                i.production, j.production)
+
+
+def check_table(states, all_actions, all_goto, first_sets, follow_sets):
+    """
+    Return a list of errors for the given table.
+    """
+
+    errors = []
+    # Check for states with GOTO links but without SHIFT links.
+    # This is invalid as the GOTO link will never be traversed.
+    for nt, firsts in first_sets.items():
+        if nt.name != 'S\'' and not firsts:
+            errors.append(
+                'First set empty for grammar symbol "{}". '
+                'An infinite recursion on the grammar symbol.'.format(nt))
+
+    return errors

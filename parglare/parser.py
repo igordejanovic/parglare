@@ -51,13 +51,14 @@ class Parser(object):
         self.default_actions = default_actions
 
         from .closure import LR_0, LR_1
-        from .tables import create_tables
+        from .tables import create_table
         if tables == SLR:
             itemset_type = LR_0
         else:
             itemset_type = LR_1
-        states, actions, goto = create_tables(grammar, itemset_type,
-                                              start_production)
+        states, actions, goto = create_table(grammar,
+                                             itemset_type=itemset_type,
+                                             start_production=start_production)
         self._states = states
         self._actions = actions
         self._goto = goto
