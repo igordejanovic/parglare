@@ -2,9 +2,8 @@ from collections import OrderedDict
 from itertools import chain
 from parglare.parser import LRItem, LRState
 from parglare import NonTerminal
-from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_NONE, STOP
-from .exceptions import ShiftReduceConflict, ReduceReduceConflict, \
-    GrammarError
+from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_RIGHT, STOP
+from .exceptions import GrammarError, SRConflict, RRConflict
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
 
@@ -35,8 +34,6 @@ def create_table(grammar, first_sets=None, follow_sets=None,
     state_id = 1
 
     states = []
-    all_goto = []
-    all_actions = []
 
     while state_queue:
         # For each state calculate its closure first, i.e. starting from a
@@ -46,12 +43,6 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         state = state_queue.pop(0)
         closure(state, itemset_type, first_sets)
         states.append(state)
-
-        # Each state has its corresponding GOTO and ACTION tables
-        goto = OrderedDict()
-        all_goto.append(goto)
-        actions = OrderedDict()
-        all_actions.append(actions)
 
         # To find out other states we examine following grammar symbols
         # in the current state (symbols following current position/"dot")
@@ -94,15 +85,12 @@ def create_table(grammar, first_sets=None, follow_sets=None,
 
             # We've found a new state. Register it for later processing.
             if target_state is maybe_new_state:
-                _check_reduce_reduce(target_state)
                 state_queue.append(target_state)
                 state_id += 1
             else:
                 # State with this kernel items already exists.
                 if itemset_type is LR_1:
-                    # LALR: First check if there is R/R conflict in the new
-                    #       state. If not, try to merge states.
-                    _check_reduce_reduce(maybe_new_state)
+                    # LALR: Try to merge states, i.e. update items follow sets.
                     if not merge_states(target_state, maybe_new_state):
                         target_state = maybe_new_state
                         state_queue.append(target_state)
@@ -112,15 +100,16 @@ def create_table(grammar, first_sets=None, follow_sets=None,
             if isinstance(symbol, NonTerminal):
                 # For each non-terminal symbol we create an entry in GOTO
                 # table.
-                goto[symbol] = target_state
+                state.gotos[symbol] = target_state
 
             else:
                 if symbol is STOP:
-                    actions[symbol] = Action(ACCEPT, state=target_state)
+                    state.actions[symbol] = [Action(ACCEPT,
+                                                    state=target_state)]
                 else:
                     # For each terminal symbol we create SHIFT action in the
                     # ACTION table.
-                    actions[symbol] = Action(SHIFT, state=target_state)
+                    state.actions[symbol] = [Action(SHIFT, state=target_state)]
 
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
     # merging might change item's follow in previous states
@@ -137,13 +126,13 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                 # First refresh current state's follows
                 closure(state, LR_1, first_sets)
 
-                # Propagate follows to next states. GOTO/ACTION tables keep
+                # Propagate follows to next states. GOTOs/ACTIONs keep
                 # information about states created from this state
                 inc_items = [i.get_pos_inc() for i in state.items]
                 for target_state in chain(
-                        all_goto[state.state_id].values(),
-                        [a.state for a in all_actions[state.state_id].values()
-                         if a.action in [SHIFT, ACCEPT]]):
+                        state.gotos.values(),
+                        [a.state for i in state.actions.values()
+                         for a in i if a.action is SHIFT]):
                     for next_item in target_state.kernel_items:
                         this_item = inc_items[inc_items.index(next_item)]
                         if this_item.follow.difference(next_item.follow):
@@ -153,7 +142,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
     # Calculate REDUCTION entries in ACTION tables and resolve possible
     # conflicts.
     for state in states:
-        actions = all_actions[state.state_id]
+        actions = state.actions
 
         for i in state.items:
             if i.is_at_end:
@@ -165,96 +154,109 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                     f_set = i.follow
                 else:
                     f_set = follow_sets[i.production.symbol]
+
+                prod = i.production
+                new_reduce = Action(REDUCE, prod=prod)
+
                 for t in f_set:
-                    if t in actions:
+                    if t not in actions:
+                        actions[t] = [new_reduce]
+                    else:
                         # Conflict! Try to resolve
-                        act = actions[t]
-                        if act.action is SHIFT:
+                        t_acts = actions[t]
+                        should_reduce = True
+
+                        # Only one SHIFT might exists for single terminal
+                        try:
+                            t_shift = [x for x in t_acts
+                                       if x.action is SHIFT][0]
+                        except IndexError:
+                            t_shift = None
+
+                        # But many REDUCE might exist
+                        t_reduces = [x for x in t_acts if x.action is REDUCE]
+
+                        # We should try to resolve using standard
+                        # disambiguation rules between current reduction and
+                        # all previous actions.
+
+                        if t_shift:
                             # SHIFT/REDUCE conflict. Use assoc and priority to
                             # resolve
-                            act_prior = state._max_prior_per_symbol[
-                                act.state.symbol]
-                            prod = i.production
-                            if prod.prior == act_prior:
-                                if prod.assoc == ASSOC_NONE:
-                                    raise ShiftReduceConflict(state,
-                                                              act.state.symbol,
-                                                              prod)
-                                elif prod.assoc == ASSOC_LEFT:
-                                    # Override with REDUCE
-                                    actions[t] = Action(REDUCE, prod=prod)
-                                # If associativity is right leave SHIFT
-                                # action
-                            elif prod.prior > act_prior:
+                            sh_prior = state._max_prior_per_symbol[
+                                t_shift.state.symbol]
+                            if prod.prior == sh_prior:
+                                if prod.assoc == ASSOC_LEFT:
+                                    # Override SHIFT with this REDUCE
+                                    actions[t].remove(t_shift)
+                                elif prod.assoc == ASSOC_RIGHT:
+                                    # If associativity is right leave SHIFT
+                                    # action as "stronger" and don't consider
+                                    # this reduction any more. Right
+                                    # assiciative reductions can't be in the
+                                    # same set of actions together with SHIFTs.
+                                    should_reduce = False
+
+                            elif prod.prior > sh_prior:
                                 # This item operation priority is higher =>
                                 # override with reduce
-                                actions[t] = Action(REDUCE, prod=prod)
+                                actions[t].remove(t_shift)
+                            else:
                                 # If priority of existing SHIFT action is
                                 # higher then leave it instead
+                                should_reduce = False
 
-                        elif act.action is REDUCE:
-                            # REDUCE/REDUCE conflict
-                            # Try to resolve using priorities
-                            assert act.prod != i.production
-                            prod = i.production
-                            if act.prod.prior == prod.prior:
-                                raise ReduceReduceConflict(state,
-                                                           t,
-                                                           act.prod,
-                                                           i.production)
-                            elif prod.prior > act.prod.prior:
-                                actions[t] = Action(REDUCE, prod=prod)
+                        if should_reduce:
+                            if not t_reduces:
+                                actions[t].append(new_reduce)
+                            else:
+                                # REDUCE/REDUCE conflicts
+                                # Try to resolve using priorities
+                                if prod.prior == t_reduces[0].prod.prior:
+                                    actions[t].append(new_reduce)
+                                elif prod.priod > t_reduces[0].prod.prior:
+                                    # If this production priority is higher
+                                    # it should override all other reductions.
+                                    actions[t][:] = [x for x in actions[t]
+                                                     if x.action is not REDUCE]
+                                    actions[t].append(new_reduce)
 
-                    else:
-                        actions[t] = Action(REDUCE, prod=i.production)
-
-    return states, all_actions, all_goto
+    table = LRTable(states, first_sets, follow_sets, grammar)
+    table.calc_conflicts()
+    return table
 
 
 def merge_states(old_state, new_state):
-    """Try to merge new_state on old_state if possible. If not possible return
+    """Try to merge new_state to old_state if possible. If not possible return
     False.
+
+    If old state has no R/R conflicts additional check is made and merging is
+    not done if it would add R/R conflict.
     """
 
+    # If states are not equal (e.g. have the same kernel items)
+    # no merge is possible
+    if old_state != new_state:
+        return False
+
     item_pairs = []
-    for old_item in old_state.kernel_items:
+    for old_item in (s for s in old_state.kernel_items if s.is_at_end):
         new_item = new_state.get_item(old_item)
         item_pairs.append((old_item, new_item))
 
-    # Check if merging would result in R/R conflict
-    check_set = set()
-    for old, new in [x for x in item_pairs if x[0].is_at_end]:
-        if old.follow.intersection(check_set) \
-               or new.follow.intersection(check_set):
-            return False
-        check_set.update(old.follow)
-        check_set.update(new.follow)
+    # Check if merging would result in additional R/R conflict
+    for old, new in item_pairs:
+        (new.follow.difference(old.follow))
+        for s in (s for s in old_state.kernel_items
+                  if s.is_at_end and s is not old):
+            if s.follow.intersection(
+                    new.follow.difference(old.follow)):
+                return False
 
+    # Do the merge
     for old, new in item_pairs:
         old.follow.update(new.follow)
     return True
-
-
-def _check_reduce_reduce(state):
-    """Check if given state has REDUCE/REDUCE conflicts.
-
-    There will be R/R conflicts if there are more than one LR item that would
-    call for reduction for the same terminal.
-
-    """
-
-    items_at_end = [x for x in state.kernel_items if x.is_at_end]
-    for i in items_at_end:
-        for j in items_at_end:
-            if i is not j:
-                # If the follow sets of two distinct items with position at the
-                # end have non-empty intersection we have REDUCE/REDUCE
-                # conflict. For the terminals in the intersection both items
-                # would call for reduction.
-                common = i.follow.intersection(j.follow)
-                if common:
-                    raise ReduceReduceConflict(state, [str(x) for x in common],
-                                               i.production, j.production)
 
 
 def check_table(states, all_actions, all_goto, first_sets, follow_sets):
@@ -272,3 +274,47 @@ def check_table(states, all_actions, all_goto, first_sets, follow_sets):
                 'An infinite recursion on the grammar symbol.'.format(nt))
 
     return errors
+
+
+class LRTable(object):
+    def __init__(self, states, first_sets=None, follow_sets=None,
+                 grammar=None):
+        self.states = states
+        self.first_sets = first_sets
+        self.follow_sets = follow_sets
+        self.grammar = grammar
+
+    def calc_conflicts(self):
+        """
+        Determine S/R and R/R conflicts.
+        """
+        self.sr_conflicts = []
+        self.rr_conflicts = []
+        for state in self.states:
+            for term, actions in state.actions.items():
+                if len(actions) > 1:
+                    if actions[0].action in [SHIFT, ACCEPT]:
+                        # Create SR conflicts for each S-R pair of actions
+                        for r_act in actions[1:]:
+                            self.sr_conflicts.append(
+                                SRConflict(state, term,
+                                           [x.prod for x in actions[1:]]))
+                    else:
+                        self.rr_conflicts.append(
+                            RRConflict(state, term, [x.prod for x in actions]))
+
+    def print_debug(self):
+        print("\n\n*** STATES ***")
+        for state in self.states:
+            state.print_debug()
+
+            if state.gotos:
+                print("\n\n\tGOTO:")
+                print("\t", ", ".join(["%s->%d" % (k, v.state_id)
+                                       for k, v in state.gotos.items()]))
+            print("\n\tACTIONS:")
+            print("\t", ", ".join(
+                ["%s->%s" % (k, str(v[0])
+                             if len(v) == 1 else "[{}]".format(
+                                     ",".join([str(x) for x in v])))
+                 for k, v in state.actions.items()]))

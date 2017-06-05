@@ -52,28 +52,46 @@ class DisambiguationError(Exception):
         self.symbols = symbols
 
 
-class LRConflict(Exception):
-    def __init__(self, message, state, symbols):
+class LRConflict(object):
+    def __init__(self, message, state, term, productions):
+        self.message = message
         self.state = state
-        self.symbols = symbols
-        super(LRConflict, self).__init__(message)
+        self.term = term
+        self.productions = productions
 
 
-class ShiftReduceConflict(LRConflict):
-    def __init__(self, state, symbols, production):
-        self.production = production
+class SRConflict(LRConflict):
+    def __init__(self, state, term, productions):
+        prod_str = " or ".join(["'{}'".format(str(p))
+                                for p in productions])
         message = "{}\nIn state {} and input symbol {} can't " \
-                  "decide whether to shift or reduce by production '{}'." \
-            .format(str(state), state.state_id, symbols, production)
-        super(ShiftReduceConflict, self).__init__(message, state, symbols)
+                  "decide whether to shift or reduce by production(s) {}." \
+            .format(str(state), state.state_id, term, prod_str)
+        super(SRConflict, self).__init__(message, state, term, productions)
 
 
-class ReduceReduceConflict(LRConflict):
-    def __init__(self, state, symbols, production1, production2):
-        self.production1 = production1
-        self.production2 = production2
-        message = "{}\nIn state {} and input symbol(s) {} can't " \
-                  "decide whether to reduce by production '{}' or by '{}'." \
-            .format(str(state), state.state_id, symbols,
-                    production1, production2)
-        super(ReduceReduceConflict, self).__init__(message, state, symbols)
+class RRConflict(LRConflict):
+    def __init__(self, state, term, productions):
+        prod_str = " or ".join(["'{}'".format(str(p))
+                                for p in productions])
+        message = "{}\nIn state {} and input symbol '{}' can't " \
+                  "decide which reduction to perform: {}." \
+                  .format(str(state), state.state_id, term, prod_str)
+        super(RRConflict, self).__init__(message, state, term, productions)
+
+
+class LRConflicts(Exception):
+    def __init__(self, conflicts):
+        self.conflicts = conflicts
+        message = "\n{} conflicts in following states: {}"\
+                  .format(self.kind,
+                          [c.state.state_id for c in conflicts])
+        super(LRConflicts, self).__init__(message)
+
+
+class SRConflicts(LRConflicts):
+    kind = "Shift/Reduce"
+
+
+class RRConflicts(LRConflicts):
+    kind = "Reduce/Reduce"

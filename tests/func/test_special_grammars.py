@@ -3,8 +3,7 @@ Test non-deterministic parsing.
 """
 import pytest  # noqa
 from parglare import Parser, Grammar, SLR, LALR
-from parglare.exceptions import GrammarError, ShiftReduceConflict, \
-    ReduceReduceConflict
+from parglare.exceptions import GrammarError, SRConflicts, RRConflicts
 
 
 def test_lr_1_grammar():
@@ -38,7 +37,7 @@ def test_slr_conflict():
     """
 
     grammar = Grammar.from_string(grammar)
-    with pytest.raises(ShiftReduceConflict):
+    with pytest.raises(SRConflicts):
         Parser(grammar, tables=SLR)
 
     Parser(grammar, tables=LALR)
@@ -100,9 +99,9 @@ def test_cyclic_grammar_1():
     A = S;
     A = 'x';
     """
-    g = Grammar.from_string(grammar, debug=True)
-    p = Parser(g, debug=True)
-    p.parse('x')
+    g = Grammar.from_string(grammar)
+    with pytest.raises(SRConflicts):
+        Parser(g)
 
 
 def test_cyclic_grammar_2():
@@ -116,19 +115,29 @@ def test_cyclic_grammar_2():
     """
     g = Grammar.from_string(grammar, debug=True)
 
-    with pytest.raises(ShiftReduceConflict):
+    with pytest.raises(SRConflicts):
         Parser(g, debug=True)
 
 
 def test_highly_ambiguous_grammar():
+    """
+    This grammar has both Shift/Reduce and Reduce/Reduce conflicts and
+    thus can't be parsed by a deterministic LR parsing.
+    Shift/Reduce can be resolved by prefer_shifts strategy.
+    """
     grammar = """
     S = "b" | S S | S S S;
     """
 
     g = Grammar.from_string(grammar, debug=True)
 
-    with pytest.raises(ReduceReduceConflict):
+    with pytest.raises(SRConflicts):
         Parser(g, debug=True)
+
+    # S/R are resolved by selecting prefer_shifts strategy.
+    # But R/R conflicts remain.
+    with pytest.raises(RRConflicts):
+        Parser(g, prefer_shifts=True, debug=True)
 
 
 def test_indirect_left_recursive():

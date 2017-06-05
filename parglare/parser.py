@@ -2,9 +2,10 @@
 from __future__ import unicode_literals, print_function
 import codecs
 import sys
+from collections import OrderedDict
 from .grammar import Grammar, StringRecognizer, EMPTY, AUGSYMBOL, EOF, STOP
 from .exceptions import ParseError, DisambiguationError, \
-    disambiguation_error, nomatch_error
+    disambiguation_error, nomatch_error, SRConflicts, RRConflicts
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -26,7 +27,8 @@ class Parser(object):
     """
     def __init__(self, grammar, start_production=1, actions=None, debug=False,
                  layout_debug=False, ws='\n\t ', default_actions=True,
-                 tables=LALR, layout=False, position=False):
+                 tables=LALR, layout=False, position=False,
+                 prefer_shifts=False):
         self.grammar = grammar
         self.start_production = start_production
         self.sem_actions = actions if actions else {}
@@ -50,18 +52,25 @@ class Parser(object):
 
         self.default_actions = default_actions
 
+        self.prefer_shifts = prefer_shifts
+
         from .closure import LR_0, LR_1
         from .tables import create_table
         if tables == SLR:
             itemset_type = LR_0
         else:
             itemset_type = LR_1
-        states, actions, goto = create_table(grammar,
-                                             itemset_type=itemset_type,
-                                             start_production=start_production)
-        self._states = states
-        self._actions = actions
-        self._goto = goto
+        self.table = create_table(grammar, itemset_type=itemset_type,
+                                  start_production=start_production)
+
+        if self.table.sr_conflicts and not prefer_shifts:
+            self.print_debug()
+            raise SRConflicts(self.table.sr_conflicts)
+
+        # Reduce/Reduce conflicts are fatal for LR parsing
+        if self.table.rr_conflicts:
+            self.print_debug()
+            raise RRConflicts(self.table.rr_conflicts)
 
         if debug:
             self.print_debug()
@@ -69,17 +78,7 @@ class Parser(object):
     def print_debug(self):
         if self.layout and self.layout_debug:
             print('\n\n*** LAYOUT parser ***\n')
-        print("\n\n*** STATES ***")
-        for s, g, a in zip(self._states, self._goto, self._actions):
-            s.print_debug()
-
-            if g:
-                print("\n\n\tGOTO:")
-                print("\t", ", ".join(["%s->%d" % (k, v.state_id)
-                                       for k, v in g.items()]))
-            print("\n\tACTIONS:")
-            print("\t", ", ".join(["%s->%s" % (k, str(v))
-                                   for k, v in a.items()]))
+        self.table.print_debug()
 
     def parse_file(self, file_name):
         """
@@ -103,7 +102,7 @@ class Parser(object):
         if self.debug:
             print("*** Parsing started")
 
-        state_stack = [self._states[0]]
+        state_stack = [self.table.states[0]]
         results_stack = []
         position_stack = [0]
         position = position
@@ -118,7 +117,7 @@ class Parser(object):
             if self.debug:
                 print("Current state =", cur_state.state_id)
 
-            actions = self._actions[cur_state.state_id]
+            actions = cur_state.actions
 
             if new_token or ntok.symbol not in actions:
                 # Try to recognize a new token in the input only after
@@ -140,11 +139,18 @@ class Parser(object):
                 print("\tContext:", position_context(input_str, position))
                 print("\tToken ahead: {}".format(ntok))
 
-            act = actions.get(ntok.symbol)
+            acts = actions.get(ntok.symbol)
 
-            if not act:
+            if not acts:
                 raise ParseError(file_name, input_str, position,
                                  nomatch_error(actions.keys()))
+
+            # Use first action -- SHIFT if exists there are SHIFT available or
+            # REDUCE. This parser would raise exception during contstruction if
+            # there are R/R conflicts or if there are S/R conflicts and
+            # prefer_shifts strategy is not selected. Thus, we are safe to get
+            # the first action.
+            act = acts[0]
 
             context.position = position
 
@@ -183,13 +189,14 @@ class Parser(object):
                 if self.debug:
                     print("\tReducing by prod '%s'." % str(production))
 
-                subresults = results_stack[-len(production.rhs):]
-                del state_stack[-len(production.rhs):]
-                del results_stack[-len(production.rhs):]
-                if len(production.rhs) > 1:
-                    del position_stack[-(len(production.rhs)-1):]
+                r_length = len(production.rhs)
+                subresults = results_stack[-r_length:]
+                del state_stack[-r_length:]
+                del results_stack[-r_length:]
+                if r_length > 1:
+                    del position_stack[-(r_length - 1):]
                 cur_state = state_stack[-1]
-                goto = self._goto[cur_state.state_id]
+                goto = cur_state.gotos
                 context.position = position_stack[-1]
 
                 # Calling semantic actions
@@ -414,8 +421,12 @@ class LRItem(object):
 
 
 class LRState(object):
-    """LR State is a set of LR items."""
+    """LR State is a set of LR items and a dict of LR automata actions and
+    gotos.
+
+    """
     __slots__ = ['grammar', 'state_id', 'symbol', 'items',
+                 'actions', 'gotos',
                  '_per_next_symbol', '_max_prior_per_symbol']
 
     def __init__(self, grammar, state_id, symbol, items):
@@ -423,6 +434,9 @@ class LRState(object):
         self.state_id = state_id
         self.symbol = symbol
         self.items = items if items else []
+
+        self.actions = OrderedDict()
+        self.gotos = OrderedDict()
 
     def __eq__(self, other):
         """Two states are equal if their kernel items are equal."""

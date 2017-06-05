@@ -40,8 +40,14 @@ def pglr():
         sys.exit(1)
 
     try:
-        g = Grammar.from_file(args.grammar, debug=args.d)
-        states, all_actions, all_goto = create_table(g)
+        g = Grammar.from_file(args.grammar)
+        if args.d:
+            g.print_debug()
+        table = create_table(g)
+        if args.d:
+            table.print_debug()
+
+        print("\nGrammar OK.")
     except (GrammarError, ParseError) as e:
         print("Error in grammar file.")
         print(e)
@@ -49,5 +55,7 @@ def pglr():
 
     if args.cmd == "viz":
         print("Generating '%s.dot' file for the grammar PDA." % args.grammar)
-        print("To convert to png run 'dot -Tpng -O %s.dot'" % args.grammar)
-        grammar_pda_export(states, all_actions, all_goto, "%s.dot" % args.grammar)
+        print("Use dot viewer (e.g. xdot)")
+        print("or convert to pdf by running 'dot -Tpdf -O %s.dot'"
+              % args.grammar)
+        grammar_pda_export(table, "%s.dot" % args.grammar)

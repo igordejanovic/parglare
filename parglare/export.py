@@ -37,12 +37,12 @@ def dot_escape(s):
             .replace('?', r'\?')
 
 
-def grammar_pda_export(states, all_actions, all_goto, file_name):
+def grammar_pda_export(table, file_name):
 
     with codecs.open(file_name, 'w', encoding="utf-8") as f:
         f.write(HEADER)
 
-        for state in states:
+        for state in table.states:
 
             kernel_items = ""
             for item in state.kernel_items:
@@ -54,14 +54,19 @@ def grammar_pda_export(states, all_actions, all_goto, file_name):
 
             # SHIFT actions and GOTOs will be encoded in links.
             # REDUCE actions will be presented inside each node.
-            reduce_actions = [(term, action)
-                              for term, action
-                              in all_actions[state.state_id].items()
-                              if action.action == REDUCE]
+            reduce_actions = []
+            for term, actions in state.actions.items():
+                r_actions = [a for a in actions if a.action is REDUCE]
+                if r_actions:
+                    reduce_actions.append((term, r_actions))
+
             reductions = ""
             if reduce_actions:
                 reductions = "|Reductions:\\l{}".format(
-                    ", ".join(["{}:{}".format(x[0], x[1].prod.prod_id)
+                    ", ".join(["{}:{}".format(
+                        x[0], x[1][0].prod.prod_id
+                        if len(x[1]) == 1 else "[{}]".format(
+                                ",".join([i.prod.prod_id for i in x[1]])))
                                for x in reduce_actions]))
 
             # States
@@ -75,15 +80,17 @@ def grammar_pda_export(states, all_actions, all_goto, file_name):
             f.write("\n")
 
             # SHIFT and GOTOs as links
-            for term, action in ((term, action) for term, action
-                                 in all_actions[state.state_id].items()
-                                 if action.action in [SHIFT, ACCEPT]):
+            shacc = []
+            for term, actions in state.actions.items():
+                for a in [a for a in actions if a.action in [SHIFT, ACCEPT]]:
+                    shacc.append((term, a))
+            for term, action in shacc:
                     f.write('{} -> {} [label="{}:{}"]'.format(
                         state.state_id, action.state.state_id,
                         "SHIFT" if action.action == SHIFT else "ACCEPT", term))
 
             for symb, goto_state in ((symb, goto) for symb, goto
-                                     in all_goto[state.state_id].items()):
+                                     in state.gotos.items()):
                     f.write('{} -> {} [label="GOTO:{}"]'.format(
                         state.state_id, goto_state.state_id, symb))
 
