@@ -538,6 +538,8 @@ def default_reduce_action(context, nodes):
 def first(grammar):
     """Calculates the sets of terminals that can start the sentence derived from
     all grammar symbols.
+
+    The Dragon book p. 221.
     """
     assert isinstance(grammar, Grammar), \
         "grammar parameter should be Grammar instance."
@@ -545,29 +547,31 @@ def first(grammar):
     first_sets = {}
     for t in grammar.terminals:
         first_sets[t] = set([t])
-
-    def _first(nt):
-        if nt in first_sets:
-            return first_sets[nt]
-        fs = set()
-        first_sets[nt] = fs
-        for p in grammar.productions:
-            if p.symbol == nt:
-                pfs = set()
-                for r in p.rhs:
-                    if r == nt:
-                        pfs.discard(EMPTY)
-                        break
-                    f = _first(r)
-                    pfs.update(f)
-                    if EMPTY not in f:
-                        pfs.discard(EMPTY)
-                        break
-                fs.update(pfs)
-        return fs
-
     for nt in grammar.nonterminals:
-        first_sets[nt] = _first(nt)
+        first_sets[nt] = set()
+
+    additions = True
+    while additions:
+        additions = False
+
+        for p in grammar.productions:
+            nonterm = p.symbol
+            for rhs_symbol in p.rhs:
+                rhs_symbol_first = set(first_sets[rhs_symbol])
+                rhs_symbol_first.discard(EMPTY)
+                if rhs_symbol_first.difference(first_sets[nonterm]):
+                    first_sets[nonterm].update(first_sets[rhs_symbol])
+                    additions = True
+                # If current RHS symbol can't derive EMPTY
+                # this production can't add any more members of
+                # the first set for LHS nonterminal.
+                if EMPTY not in first_sets[rhs_symbol]:
+                    break
+            else:
+                # If we reached the end of the RHS and each
+                # symbol along the way could derive EMPTY than
+                # we must add EMPTY to the first set of LHS symbol.
+                first_sets[nonterm].add(EMPTY)
 
     return first_sets
 
@@ -588,9 +592,9 @@ def follow(grammar, first_sets=None):
     for symbol in grammar.nonterminals:
         follow_sets[symbol] = set()
 
-    has_additions = True
-    while has_additions:
-        has_additions = False
+    additions = True
+    while additions:
+        additions = False
         for symbol in grammar.nonterminals:
             for p in grammar.productions:
                 for idx, s in enumerate(p.rhs):
@@ -605,7 +609,7 @@ def follow(grammar, first_sets=None):
                             prod_follow.update(follow_sets[p.symbol])
                         prod_follow.discard(EMPTY)
                         if prod_follow.difference(follow_sets[symbol]):
-                            has_additions = True
+                            additions = True
                             follow_sets[symbol].update(prod_follow)
     return follow_sets
 
