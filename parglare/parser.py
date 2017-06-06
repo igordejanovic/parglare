@@ -357,6 +357,9 @@ class LRItem(object):
         return other and self.production == other.production and \
             self.position == other.position
 
+    def __ne__(self, other):
+        return not self == other
+
     def __repr__(self):
         return str(self)
 
@@ -431,6 +434,9 @@ class LRState(object):
             if item not in other_kernel:
                 return False
         return True
+
+    def __ne__(self, other):
+        return not self == other
 
     @property
     def kernel_items(self):

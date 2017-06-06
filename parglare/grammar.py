@@ -50,6 +50,9 @@ class GrammarSymbol(object):
     def __eq__(self, other):
         return self.name == other.name
 
+    def __ne__(self, other):
+        return not self == other
+
 
 class NonTerminal(GrammarSymbol):
     pass
