@@ -33,6 +33,7 @@ class GrammarSymbol(object):
     """
     def __init__(self, name):
         self.name = escape(name)
+        self._hash = hash(name)
 
     def __unicode__(self):
         return str(self)
@@ -44,7 +45,7 @@ class GrammarSymbol(object):
         return "{}({})".format(type(self).__name__, str(self))
 
     def __hash__(self):
-        return hash(self.name)
+        return self._hash
 
     def __eq__(self, other):
         return self.name == other.name
