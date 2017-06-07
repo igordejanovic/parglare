@@ -229,8 +229,9 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         other types of recognizers.
         """
         symbol, act = act_item
-        return symbol.prior * 1000 + (500 if type(symbol.recognizer)
-                                      is StringRecognizer else 0)
+        return symbol.prior * 1000000 + (500000 + len(symbol.recognizer.value)
+                                         if type(symbol.recognizer)
+                                         is StringRecognizer else 0)
     for state in states:
         finish_flags = []
         state.actions = OrderedDict(sorted(state.actions.items(),

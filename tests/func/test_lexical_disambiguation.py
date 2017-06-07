@@ -67,6 +67,24 @@ def test_most_specific(cf):
     assert called == [False, True, False]
 
 
+def test_most_specific_longest_match(cf):
+
+    grammar = """
+    S = First | Second | Third;
+    First = '147';
+    Second = '14';
+    Third = /\d+/;
+    """
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g, actions=actions, debug=True)
+
+    # All three rules could match. First is tried first because it is
+    # more specific (str match) and longest. It succeeds so other two
+    # are not tried at all.
+    parser.parse('147')
+    assert called == [True, False, False]
+
 def test_longest_match(cf):
 
     grammar = """
