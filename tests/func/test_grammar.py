@@ -137,4 +137,4 @@ def test_no_terminal_associavitity():
     with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Error at position 3,15' in str(e)
+    assert 'Error at position 3,17' in str(e)

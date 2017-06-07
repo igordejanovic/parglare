@@ -73,6 +73,8 @@ class Terminal(GrammarSymbol):
     def __init__(self, name, recognizer=None, from_recognizer=False):
         self.prior = DEFAULT_PRIORITY
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
+        self.finish = False
+        self.prefer = False
         self.from_recognizer = from_recognizer
         super(Terminal, self).__init__(name)
 
@@ -455,6 +457,8 @@ class Grammar(object):
  RECOGNIZER,
  ASSOC,
  ASSOC_PRIOR,
+ TERM_RULE,
+ TERM_RULES,
  SEQUENCE,
  LAYOUT,
  LAYOUT_ITEM) = [NonTerminal(name) for name in [
@@ -469,6 +473,8 @@ class Grammar(object):
      'Recognizer',
      'Assoc',
      'AssocPrior',
+     'TermRule',
+     'TermRules',
      'Sequence',
      'LAYOUT',
      'LAYOUT_ITEM']]
@@ -497,7 +503,7 @@ pg_productions = [
     [PRODUCTION_SET, [TERM_PRODUCTION]],
     [PRODUCTION, [NAME, '=', PRODUCTION_RHSS, ';']],
     [TERM_PRODUCTION, [NAME, '=', RECOGNIZER, ';'], ASSOC_LEFT, 15],
-    [TERM_PRODUCTION, [NAME, '=', RECOGNIZER, '{', PRIOR, '}', ';'],
+    [TERM_PRODUCTION, [NAME, '=', RECOGNIZER, '{', TERM_RULES, '}', ';'],
      ASSOC_LEFT, 15],
     [PRODUCTION_RHS, [SEQUENCE]],
     [PRODUCTION_RHS, [SEQUENCE, '{', ASSOC_PRIOR, '}']],
@@ -508,6 +514,11 @@ pg_productions = [
     [ASSOC_PRIOR, [ASSOC_PRIOR, ',', ASSOC_PRIOR], ASSOC_LEFT],
     [ASSOC, ['left']],
     [ASSOC, ['right']],
+    [TERM_RULE, ['prefer']],
+    [TERM_RULE, ['finish']],
+    [TERM_RULE, [PRIOR]],
+    [TERM_RULES, [TERM_RULE]],
+    [TERM_RULES, [TERM_RULES, ',', TERM_RULE]],
     [SEQUENCE, [SEQUENCE, GSYMBOL]],
     [SEQUENCE, [GSYMBOL]],
     [GSYMBOL, [NAME]],
@@ -574,7 +585,16 @@ def act_term_production(_, nodes):
     rhs_term = nodes[2]
     term = Terminal(nodes[0], rhs_term.recognizer)
     if len(nodes) > 4:
-        term.prior = nodes[4]
+        for t in nodes[4]:
+            if type(t) is int:
+                term.prior = t
+            elif t == 'finish':
+                term.finish = True
+            elif t == 'prefer':
+                term.prefer = True
+            else:
+                print(t)
+                assert False
     return [Production(term, ProductionRHS([rhs_term]), prior=term.prior)]
 
 
@@ -582,6 +602,12 @@ def act_assoc_prior(_, nodes):
     res = []
     res.extend(nodes[0])
     res.extend(nodes[2])
+    return res
+
+
+def act_term_rules(_, nodes):
+    res = nodes[0]
+    res.append(nodes[2])
     return res
 
 
@@ -625,6 +651,8 @@ pg_actions = {
     "ProductionRHSs": collect_sep,
     "Production": act_production,
     "TermProduction": act_term_production,
+    "TermRule": [pass_value, pass_value, pass_single],
+    "TermRules": [pass_nochange, act_term_rules],
     "ProductionSet": [act_production_set, act_production_set,
                       pass_single, pass_single],
     "Grammar": pass_single

@@ -305,6 +305,13 @@ class Parser(object):
                   [x for x in tokens])
         if len(tokens) == 1:
             return tokens[0]
+        else:
+            # Finally try to find preferred token.
+            pref_tokens = [x for x in tokens if x.symbol.prefer]
+            if len(pref_tokens) == 1:
+                return pref_tokens[0]
+            elif len(pref_tokens) > 1:
+                tokens = pref_tokens
 
         raise DisambiguationError([x.symbol for x in tokens])
 

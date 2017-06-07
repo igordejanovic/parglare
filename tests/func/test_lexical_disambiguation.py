@@ -108,3 +108,24 @@ def test_failed_disambiguation(cf):
     assert 'First' in str(e)
     assert 'Second' not in str(e)
     assert 'Third' in str(e)
+
+
+def test_longest_match_prefer(cf):
+
+    grammar = """
+    S = First | Second | Third;
+    First = /\d+\.\d+/ {15};
+    Second = '14.7';
+    Third = /\d+\.75/ {15, prefer};
+    """
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g, actions=actions)
+
+    # All rules will match but First and Third have higher priority.
+    # Both are regexes so longest match will be used.
+    # Both have the same length but the third rule is preferred.
+
+    parser.parse('14.75')
+    assert called == [False, False, True]
+
