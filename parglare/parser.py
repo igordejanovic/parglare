@@ -267,7 +267,7 @@ class Parser(object):
             ntok = EOF_token
         else:
             tokens = []
-            for idx, (symbol, act_list) in enumerate(actions.items()):
+            for idx, symbol in enumerate(actions):
                 tok = symbol.recognizer(input_str, position)
                 if tok:
                     tokens.append(Token(symbol, tok))
