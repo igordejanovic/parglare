@@ -2,7 +2,8 @@ from collections import OrderedDict
 from itertools import chain
 from parglare.parser import LRItem, LRState
 from parglare import NonTerminal
-from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_RIGHT, STOP
+from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_RIGHT, STOP, \
+    StringRecognizer
 from .exceptions import GrammarError, SRConflict, RRConflict
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
@@ -220,6 +221,29 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                                     actions[t][:] = [x for x in actions[t]
                                                      if x.action is not REDUCE]
                                     actions[t].append(new_reduce)
+
+    # Scanning optimization. Preorder actions based on terminal priority and
+    # specificity. Set _finish flags.
+    def act_order(act_item):
+        """Priority is the strongest property. After that honor string recognizer over
+        other types of recognizers.
+        """
+        symbol, act = act_item
+        return symbol.prior * 1000 + (500 if type(symbol.recognizer)
+                                      is StringRecognizer else 0)
+    for state in states:
+        finish_flags = []
+        state.actions = OrderedDict(sorted(state.actions.items(),
+                                           key=act_order, reverse=True))
+        # Finish flags
+        prior = None
+        for symbol, act in reversed(state.actions.items()):
+            finish_flags.append((symbol.prior > prior if prior else False)
+                                or type(symbol.recognizer) is StringRecognizer)
+            prior = symbol.prior
+
+        finish_flags.reverse()
+        state.finish_flags = finish_flags
 
     table = LRTable(states, first_sets, follow_sets, grammar)
     table.calc_conflicts()

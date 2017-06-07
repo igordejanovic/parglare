@@ -129,8 +129,8 @@ class Parser(object):
                 # always leading to reduction.
                 try:
                     ntok, position = \
-                        self._next_token(actions, input_str, position, context,
-                                         new_token)
+                        self._next_token(cur_state, input_str, position,
+                                         context, new_token)
                 except DisambiguationError as e:
                     raise ParseError(file_name, input_str, position,
                                      disambiguation_error(e.symbols))
@@ -228,11 +228,14 @@ class Parser(object):
                 else:
                     return results_stack[0]
 
-    def _next_token(self, actions, input_str, position, context, new_token):
+    def _next_token(self, state, input_str, position, context, new_token):
         """
         For the current position in the input stream and actions in the current
         state find next token.
         """
+
+        actions = state.actions
+        finish_flags = state.finish_flags
 
         in_len = len(input_str)
 
@@ -256,24 +259,25 @@ class Parser(object):
                 print("\tLayout content: '{}'".format(layout_content))
 
         # Find the next token in the input
-        ntok = Token()
         if position == in_len and EMPTY not in actions \
            and STOP not in actions:
             # Execute EOF action at end of input only if EMTPY and
             # STOP terminals are not in actions as this might call
             # for reduction.
-            ntok.symbol = EOF
+            ntok = EOF_token
         else:
             tokens = []
-            for symbol in actions:
+            for idx, (symbol, act_list) in enumerate(actions.items()):
                 tok = symbol.recognizer(input_str, position)
                 if tok:
                     tokens.append(Token(symbol, tok))
+                    if finish_flags[idx]:
+                        break
             if not tokens:
                 if STOP in actions:
-                    ntok.symbol = STOP
+                    ntok = STOP_token
                 else:
-                    ntok.symbol = EMPTY
+                    ntok = EMPTY_token
             elif len(tokens) == 1:
                 ntok = tokens[0]
             else:
@@ -299,26 +303,6 @@ class Parser(object):
         if self.debug:
             print("\tDisambiguation by longest-match strategy. Tokens:",
                   [x for x in tokens])
-        if len(tokens) == 1:
-            return tokens[0]
-
-        # Multiple with the same lenght. Favor string recognizer as
-        # more specific.
-        tokens_str = [x for x in tokens if isinstance(x.symbol.recognizer,
-                                                      StringRecognizer)]
-        if self.debug:
-            print("\tDisambiguation by str. recognizer as more specific."
-                  "Tokens:", [x for x in tokens_str])
-        if len(tokens_str) == 1:
-            # If only one string recognizer
-            return tokens_str[0]
-
-        # By priority
-        max_prior = max((x.symbol.prior) for x in tokens)
-        tokens = [x for x in tokens if x.symbol.prior == max_prior]
-        if self.debug:
-            print("\tDisambiguate by priority. Tokens: ",
-                  [(x, x.symbol.prior) for x in tokens])
         if len(tokens) == 1:
             return tokens[0]
 
@@ -426,7 +410,7 @@ class LRState(object):
 
     """
     __slots__ = ['grammar', 'state_id', 'symbol', 'items',
-                 'actions', 'gotos',
+                 'actions', 'gotos', 'finish_flags',
                  '_per_next_symbol', '_max_prior_per_symbol']
 
     def __init__(self, grammar, state_id, symbol, items):
@@ -546,6 +530,11 @@ class Token(object):
 
     def __repr__(self):
         return "<{}({})>".format(text(self.symbol), text(self.value))
+
+
+STOP_token = Token(STOP)
+EMPTY_token = Token(EMPTY)
+EOF_token = Token(EOF)
 
 
 def default_shift_action(context, value):

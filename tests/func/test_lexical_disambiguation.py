@@ -33,20 +33,20 @@ def cf():
     called = [False, False, False]
 
 
-def test_longest_match(cf):
+def test_priority(cf):
 
     grammar = """
     S = First | Second | Third;
-    First = /\d+\.\d+/;
-    Second = '14';
-    Third = /\d+/ {15};
+    First = /\d+\.\d+/ {15};
+    Second = '14.75';
+    Third = /\d+\.75/;
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
+    parser = Parser(g, actions=actions, debug=True)
 
-    # Longest-match is honored first.
-    parser.parse('14.17')
+    # Priority is used first
+    parser.parse('14.75')
     assert called == [True, False, False]
 
 
@@ -56,7 +56,7 @@ def test_most_specific(cf):
     S = First | Second | Third;
     First = /\d+\.\d+/;
     Second = '14';
-    Third = /\d+/ {15};
+    Third = /\d+/;
     """
 
     g = Grammar.from_string(grammar)
@@ -67,22 +67,21 @@ def test_most_specific(cf):
     assert called == [False, True, False]
 
 
-def test_priority(cf):
+def test_longest_match(cf):
 
     grammar = """
     S = First | Second | Third;
-    First = /\d+\.\d+/ {15};
-    Second = '14.7';
-    Third = /\d+\.75/;
+    First = /\d+\.\d+/;
+    Second = '13';
+    Third = /\d+/;
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=actions)
 
-    # All rules will match but First and Third will match more.
-    # Both are regexes so priority will be used.
-    # First has higher priority.
-    parser.parse('14.75')
+    # If all matches are regexes of the same priority use longest match
+    # disambiguation.
+    parser.parse('14.17')
     assert called == [True, False, False]
 
 
@@ -90,17 +89,17 @@ def test_failed_disambiguation(cf):
 
     grammar = """
     S = First | Second | Third;
-    First = /\d+\.\d+/;
+    First = /\d+\.\d+/ {15};
     Second = '14.7';
-    Third = /\d+\.75/;
+    Third = /\d+\.75/ {15};
     """
 
     g = Grammar.from_string(grammar)
     parser = Parser(g, actions=actions, debug=True)
 
-    # All rules will match but First and Third will match more.
-    # Both are regexes so priority will be used.
-    # Both have the same priority
+    # All rules will match but First and Third have higher priority.
+    # Both are regexes so longest match will be used.
+    # Both have the same length.
 
     with pytest.raises(ParseError) as e:
         parser.parse('14.75')
