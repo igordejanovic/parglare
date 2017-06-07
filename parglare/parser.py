@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 import codecs
 import sys
 from collections import OrderedDict
-from .grammar import Grammar, StringRecognizer, EMPTY, AUGSYMBOL, EOF, STOP
+from .grammar import Grammar, EMPTY, AUGSYMBOL, EOF, STOP
 from .exceptions import ParseError, DisambiguationError, \
     disambiguation_error, nomatch_error, SRConflicts, RRConflicts
 
@@ -63,7 +63,12 @@ class Parser(object):
         self.table = create_table(grammar, itemset_type=itemset_type,
                                   start_production=start_production)
 
-        if self.table.sr_conflicts and not prefer_shifts:
+        self._check_parser()
+        if debug:
+            self.print_debug()
+
+    def _check_parser(self):
+        if self.table.sr_conflicts and not self.prefer_shifts:
             self.print_debug()
             raise SRConflicts(self.table.sr_conflicts)
 
@@ -71,9 +76,6 @@ class Parser(object):
         if self.table.rr_conflicts:
             self.print_debug()
             raise RRConflicts(self.table.rr_conflicts)
-
-        if debug:
-            self.print_debug()
 
     def print_debug(self):
         if self.layout and self.layout_debug:
