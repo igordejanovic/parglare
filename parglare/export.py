@@ -48,7 +48,7 @@ def grammar_pda_export(states, all_actions, all_goto, file_name):
             for item in state.kernel_items:
                 kernel_items += "{}\\l".format(dot_escape(text(item)))
 
-            nonkernel_items = ""
+            nonkernel_items = "|" if state.nonkernel_items else ""
             for item in state.nonkernel_items:
                 nonkernel_items += "{}\\l".format(dot_escape(text(item)))
 
@@ -60,12 +60,12 @@ def grammar_pda_export(states, all_actions, all_goto, file_name):
                               if action.action == REDUCE]
             reductions = ""
             if reduce_actions:
-                reductions = "Reductions:\\l{}".format(
+                reductions = "|Reductions:\\l{}".format(
                     ", ".join(["{}:{}".format(x[0], x[1].prod.prod_id)
                                for x in reduce_actions]))
 
             # States
-            f.write('{}[label="{}|{}|{}|{}"]\n'
+            f.write('{}[label="{}|{}{}{}"]\n'
                     .format(
                         state.state_id,
                         dot_escape("{}:{}"
