@@ -103,3 +103,29 @@ def test_expressions():
     results = p.parse("4 + 2 * 3 + 8 * 5 * 3")
     assert len(results) == 1
     assert results[0] == 4 + 2 * 3 + 8 * 5 * 3
+
+
+def test_epsilon_grammar():
+
+    grammar = """
+    Model = Prods EOF;
+    Prods = Prod | Prods Prod | EMPTY;
+    Prod = ID "=" ProdRefs;
+    ProdRefs = ID | ProdRefs ID;
+    ID = /\w+/;
+    """
+
+    g = Grammar.from_string(grammar)
+    p = GLRParser(g, debug=True)
+
+    txt = """
+    First = One Two three
+    Second = Foo Bar
+    Third = Baz
+    """
+
+    results = p.parse(txt)
+    assert len(results) == 1
+
+    results = p.parse("")
+    assert len(results) == 1

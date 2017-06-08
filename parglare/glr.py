@@ -1,7 +1,9 @@
 from parglare import Parser
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
-    default_reduce_action, default_shift_action, pos_to_line_col
+    default_reduce_action, default_shift_action, pos_to_line_col, \
+    EMPTY_token
+from .grammar import EMPTY
 
 
 class GLRParser(Parser):
@@ -32,7 +34,7 @@ class GLRParser(Parser):
         self.input_str = input_str
         context = type(str("Context"), (), {})
         context.debug = self.debug
-        results = []
+        finish_head = None
 
         self.last_shifts = {}
 
@@ -70,6 +72,11 @@ class GLRParser(Parser):
 
                 head.position = position
 
+            valid_tokens = [token for token in tokens
+                            if token.symbol in actions]
+            if not valid_tokens and EMPTY in actions:
+                valid_tokens.append(EMPTY_token)
+
             if self.debug:
                 print("\tPosition:", pos_to_line_col(input_str, position))
                 print("\tContext:", position_context(input_str, position))
@@ -79,19 +86,15 @@ class GLRParser(Parser):
 
             context.position = position
 
+            tokens = valid_tokens
+            if not tokens:
+                if self.debug:
+                    # This head is dying
+                    print("\t***Killing this head.")
+
             for token in tokens:
                 symbol = token.symbol
-                if symbol not in actions:
-                    # This head is dying
-                    if self.debug:
-                        print("\t***Killing this head.")
 
-                    if not self.heads:
-                        # Last head got killed. Report parsing error.
-                        raise ParseError(file_name, input_str, position,
-                                         nomatch_error([x for x in actions]))
-
-                    break
                 # Do all reductions for this head and token
                 context.symbol = symbol
                 for action in (a for a in actions[symbol]
@@ -104,9 +107,15 @@ class GLRParser(Parser):
                     self.shift(head, token, action.state, context)
 
                 elif action.action is ACCEPT:
-                    print("\t*** SUCCESS!!!!")
+                    if self.debug:
+                        print("\t*** SUCCESS!!!!")
+                    finish_head = head
 
-        results = [x[1] for x in head.parents]
+        if not finish_head:
+            raise ParseError(file_name, input_str, position,
+                             nomatch_error([x for x in actions]))
+
+        results = [x[1] for x in finish_head.parents]
         if self.debug:
             print("*** {} sucessful parse(s).".format(len(results)))
 
@@ -213,8 +222,7 @@ class GLRParser(Parser):
             # position.
             last_shifts[state.state_id] = new_head
 
-            # Open question: Is it possible for this head to be
-            # merged?
+            # Open question: Is it possible for this head to be merged?
             self.heads.append(new_head)
             if self.debug:
                 print("\tNew shifted head {}.".format(
