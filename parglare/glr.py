@@ -257,6 +257,8 @@ class GSSNode(object):
              will have token set to None and will do scanning to obtain
              possible tokens ahead.
     """
+    __slots__ = ['state', 'position', 'parents', 'token']
+
     def __init__(self, state, position):
         self.state = state
         self.position = position
