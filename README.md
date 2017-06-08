@@ -53,7 +53,8 @@ This lib is in the beta. It is not tested extensively in real-world projects yet
 - Debug print/tracing of both grammar construction, DPDA states construction and
   parsing process (set `debug=True` and/or `layout_debug=True`to the
   `Parser` instantiation and/or call to `Grammar.from_<>`).
-- Tests. I'm trying to maintain high test code coverage.
+- Tests. I'm trying to maintain high test code coverage. Until docs are written
+  tests serve as a good source of information.
 - There are a few examples (see `examples` folder).
 
 ## TODO
