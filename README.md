@@ -6,7 +6,7 @@
 
 # parglare
 
-A pure Python Scannerless LR parser (will be GLR soon) with LALR or SLR tables.
+A pure Python (G)LR parser with LALR or SLR tables and integrated scanner.
 
 This lib is in the beta. It is not tested extensively in real-world projects yet.
 
@@ -17,21 +17,24 @@ This lib is in the beta. It is not tested extensively in real-world projects yet
 - LR parser with SLR and LALR tables calculation (LALR is the default). LALR is
   modified to avoid REDUCE/REDUCE conflicts on state merging. Although not
   proven, this should enable handling of all LR(1) grammars with reduced set of
-  states and without conflicts. For grammars that are not LR(1) a
-  non-deterministic parsing will be provided in the form of GLR parsing.
-- Scannerless LR parsing
-  - Scanner is integrated into parsing. This give more power as the token
-    recognition is postponed and done in the parsing context at the current
-    parsing location.
+  states and without conflicts. For grammars that are not LR(1) a GLR parsing is
+  provided.
+- Scanner is integrated into parsing. This give more power as the token
+  recognition is postponed and done in the parsing context at the current
+  parsing location.
+- GLR parsing (Tomita-style algorithm) with a modification to work with
+  integrated scanning. Optional lexical disambiguation using GLR machinery.
 - Parsing list of arbitrary objects: bytes, numbers, any Python objects!
   See `recognizers` parameter to grammar construction in
   `test_parse_list_of_objects.py` test.
 - Declarative associativity and priority-based conflict resolution for productions
   - See the `calc` example, or the quick intro bellow.
 - Lexical disambiguation strategy.
-  - The longest-match strategy is used first and then `str` over `regex` match
-    (i.e. the most specific match). Terminal priority can be provided for
-    further disambiguation if multiple regexes might match with the same length.
+  - Priorities are used first.
+  - String recognizers are preferred over regexes (i.e. the most specific match).
+  - The longest-match strategy is used if multiple regexes matches with the same
+    priority. For further disambiguation if longest-match fails `prefer` rule
+    may be given in terminal definition.
 - Semantic actions with default actions (controlled by `actions` and
   `default_actions` parameters for the `Parser` class).
   - If no action is specified for a given reduction, default will be called
@@ -40,8 +43,8 @@ This lib is in the beta. It is not tested extensively in real-world projects yet
   - If no actions are provided and the default actions are explicitely disabled
     parser works as a recognizer, i.e. no reduction actions are called and the
     only output of the parser is whether the input was recognized or not.
-- Support for language comments/whitespaces using special rule `LAYOUT`.
-  By default whitespaces are skipped. This is controled by `ws` parameter to the
+- Support for language comments/whitespaces using special rule `LAYOUT`. By
+  default whitespaces are skipped. This is controled by `ws` parameter to the
   parser constructor which is by default set to `\t\n `. If set to `None` no
   whitespace skipping is provided. If there is a rule `LAYOUT` in the grammar
   this rule is used instead. An additional parser with the layout grammar will
@@ -58,8 +61,6 @@ This lib is in the beta. It is not tested extensively in real-world projects yet
 - Docs
 - Tables caching/loading (currently tables are calculated whenever `Parser` is
   instantiated)
-- GLR parsing (Tomita's algorithm) with a modification to work as scannerless
-  parser. Optional lexical disambiguation using GLR machinery.
 - Error recovery
 
 ## Quick intro
