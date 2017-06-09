@@ -10,10 +10,10 @@ from __future__ import print_function, unicode_literals
 
 import time
 from os.path import dirname, join, getsize
-from parglare import Parser, Grammar
+from parglare import Grammar
 
 
-def timeit(file_name, message, **kwargs):
+def timeit(parser_class, file_name, message, **kwargs):
     print(message, 'File:', file_name)
     file_name = join(dirname(__file__), 'test_inputs', file_name)
     file_size = getsize(file_name)
@@ -21,7 +21,7 @@ def timeit(file_name, message, **kwargs):
 
     this_folder = dirname(__file__)
     g = Grammar.from_file(join(this_folder, 'rhapsody.pg'))
-    parser = Parser(g, **kwargs)
+    parser = parser_class(g, **kwargs)
 
     t_start = time.time()
     with open(file_name) as f:
@@ -33,7 +33,7 @@ def timeit(file_name, message, **kwargs):
           'KB/sec\n')
 
 
-def main():
+def run_tests(parser_class):
 
     # Small file
     file_name_small = 'LightSwitch.rpy'
@@ -42,22 +42,18 @@ def main():
 
     # Without semantic actions
     for i in range(3):
-        timeit(file_name_small,
+        timeit(parser_class, file_name_small,
                '{}. Small file without sem. actions.'.format(i + 1),
                default_actions=False)
-        timeit(file_name_large,
+        timeit(parser_class, file_name_large,
                '{}. Large file without sem. actions.'.format(i + 1),
                default_actions=False)
 
     # With default semantic actions.
     for i in range(3):
-        timeit(file_name_small,
+        timeit(parser_class, file_name_small,
                '{}. Small file with default semantic actions.'.format(i + 1),
                default_actions=True)
-        timeit(file_name_large,
+        timeit(parser_class, file_name_large,
                '{}. Large file with default semantic actions.'.format(i + 1),
                default_actions=True)
-
-
-if __name__ == '__main__':
-    main()

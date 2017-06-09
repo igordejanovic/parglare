@@ -1,0 +1,21 @@
+Python 3.6.1
+Filename: test_memory_lr.py
+
+Line #    Mem usage    Increment   Line Contents
+================================================
+     6     13.8 MiB      0.0 MiB   @profile
+     7                             def run():
+     8     14.4 MiB      0.5 MiB       g = Grammar.from_file('rhapsody.pg')
+     9                             
+    10     14.4 MiB      0.0 MiB       this_folder = dirname(__file__)
+    11     14.4 MiB      0.0 MiB       parser = Parser(g)
+    12                             
+    13                                 # Small file
+    14     14.4 MiB      0.0 MiB       result = parser.parse_file(join(this_folder, 'test_inputs',
+    15     47.0 MiB     32.6 MiB                                       'LightSwitch.rpy'))
+    16                             
+    17                                 # Large file
+    18     47.0 MiB      0.0 MiB       result = parser.parse_file(join(this_folder, 'test_inputs',
+    19     81.8 MiB     34.8 MiB                                       'LightSwitchDouble.rpy'))
+
+

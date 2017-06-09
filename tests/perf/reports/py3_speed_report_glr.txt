@@ -1,0 +1,61 @@
+Python 3.6.1
+1. Small file without sem. actions. File: LightSwitch.rpy
+File size: 672.24 KB
+Elapsed time: 3.40 sec
+Speed = 197.84 KB/sec
+
+1. Large file without sem. actions. File: LightSwitchDouble.rpy
+File size: 1344.08 KB
+Elapsed time: 6.33 sec
+Speed = 212.32 KB/sec
+
+2. Small file without sem. actions. File: LightSwitch.rpy
+File size: 672.24 KB
+Elapsed time: 3.12 sec
+Speed = 215.44 KB/sec
+
+2. Large file without sem. actions. File: LightSwitchDouble.rpy
+File size: 1344.08 KB
+Elapsed time: 6.73 sec
+Speed = 199.86 KB/sec
+
+3. Small file without sem. actions. File: LightSwitch.rpy
+File size: 672.24 KB
+Elapsed time: 3.37 sec
+Speed = 199.66 KB/sec
+
+3. Large file without sem. actions. File: LightSwitchDouble.rpy
+File size: 1344.08 KB
+Elapsed time: 6.80 sec
+Speed = 197.69 KB/sec
+
+1. Small file with default semantic actions. File: LightSwitch.rpy
+File size: 672.24 KB
+Elapsed time: 3.64 sec
+Speed = 184.52 KB/sec
+
+1. Large file with default semantic actions. File: LightSwitchDouble.rpy
+File size: 1344.08 KB
+Elapsed time: 7.49 sec
+Speed = 179.50 KB/sec
+
+2. Small file with default semantic actions. File: LightSwitch.rpy
+File size: 672.24 KB
+Elapsed time: 3.78 sec
+Speed = 177.77 KB/sec
+
+2. Large file with default semantic actions. File: LightSwitchDouble.rpy
+File size: 1344.08 KB
+Elapsed time: 7.45 sec
+Speed = 180.49 KB/sec
+
+3. Small file with default semantic actions. File: LightSwitch.rpy
+File size: 672.24 KB
+Elapsed time: 3.73 sec
+Speed = 180.14 KB/sec
+
+3. Large file with default semantic actions. File: LightSwitchDouble.rpy
+File size: 1344.08 KB
+Elapsed time: 7.48 sec
+Speed = 179.74 KB/sec
+
