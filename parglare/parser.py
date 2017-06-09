@@ -109,6 +109,11 @@ class Parser(object):
         position_stack = [0]
         position = position
 
+        default_actions = self.default_actions
+        sem_actions = self.sem_actions
+        next_token = self._next_token
+        debug = self.debug
+
         context = type(str("Context"), (), {})
 
         new_token = True
@@ -116,7 +121,7 @@ class Parser(object):
 
         while True:
             cur_state = state_stack[-1]
-            if self.debug:
+            if debug:
                 print("Current state =", cur_state.state_id)
 
             actions = cur_state.actions
@@ -130,14 +135,13 @@ class Parser(object):
                 # actions of the current state but EMPTY is and will match
                 # always leading to reduction.
                 try:
-                    ntok, position = \
-                        self._next_token(cur_state, input_str, position,
-                                         context, new_token)
+                    ntok, position = next_token(cur_state, input_str, position,
+                                                context, new_token)
                 except DisambiguationError as e:
                     raise ParseError(file_name, input_str, position,
                                      disambiguation_error(e.symbols))
 
-            if self.debug:
+            if debug:
                 print("\tContext:", position_context(input_str, position))
                 print("\tToken ahead: {}".format(ntok))
 
@@ -159,22 +163,21 @@ class Parser(object):
             if act.action is SHIFT:
                 state = act.state
                 context.symbol = state.symbol
+                symbol = state.symbol
 
-                if self.debug:
+                if debug:
                     print("\tShift:{} \"{}\"".format(state.state_id,
                                                      ntok.value),
                           "at position",
                           pos_to_line_col(input_str, position))
 
                 res = None
-                if state.symbol.name in self.sem_actions:
-                    res = self.sem_actions[state.symbol.name](context,
-                                                              ntok.value)
-                elif self.default_actions:
-                    res = default_shift_action(context,
-                                               ntok.value)
+                if symbol.name in sem_actions:
+                    res = sem_actions[state.symbol.name](context, ntok.value)
+                elif default_actions:
+                    res = default_shift_action(context, ntok.value)
 
-                if self.debug:
+                if debug:
                     print("\tAction result = type:{} value:{}"
                           .format(type(res), repr(res)))
 
@@ -186,9 +189,10 @@ class Parser(object):
 
             elif act.action is REDUCE:
                 production = act.prod
-                context.symbol = act.prod.symbol
+                symbol = production.symbol
+                context.symbol = symbol
 
-                if self.debug:
+                if debug:
                     print("\tReducing by prod '%s'." % str(production))
 
                 r_length = len(production.rhs)
@@ -203,17 +207,17 @@ class Parser(object):
 
                 # Calling semantic actions
                 res = None
-                sem_action = self.sem_actions.get(act.prod.symbol.name)
+                sem_action = sem_actions.get(symbol.name)
                 if sem_action:
                     if type(sem_action) is list:
-                        res = sem_action[act.prod.prod_symbol_id](context,
-                                                                  subresults)
+                        res = sem_action[production.prod_symbol_id](context,
+                                                                    subresults)
                     else:
                         res = sem_action(context, subresults)
-                elif self.default_actions:
+                elif default_actions:
                     res = default_reduce_action(context, nodes=subresults)
 
-                if self.debug:
+                if debug:
                     print("\tAction result = type:{} value:{}"
                           .format(type(res), repr(res)))
 
@@ -222,7 +226,7 @@ class Parser(object):
                 new_token = False
 
             elif act.action is ACCEPT:
-                if self.debug:
+                if debug:
                     print("SUCCESS!!!")
                 assert len(results_stack) == 1
                 if self.position:

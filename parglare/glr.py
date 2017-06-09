@@ -33,21 +33,27 @@ class GLRParser(Parser):
         self.heads = [GSSNode(self.table.states[0], position)]
         self.input_str = input_str
         context = type(str("Context"), (), {})
-        context.debug = self.debug
         finish_head = None
 
         self.last_shifts = {}
 
-        while self.heads:
+        # Prefething
+        heads = self.heads
+        debug = self.debug
+        next_token = self._next_token
+        shift = self.shift
+        reduce = self.reduce
 
-            self.heads.sort(key=lambda x: x.position, reverse=True)
+        while heads:
 
-            if self.debug:
+            heads.sort(key=lambda x: x.position, reverse=True)
+
+            if debug:
                 print("Active heads {}: {}".format(len(self.heads),
                                                    self.heads))
 
-            head = self.heads.pop()
-            if self.debug:
+            head = heads.pop()
+            if debug:
                 print("Current head: {}".format(str(head)))
 
             if head.position > position:
@@ -59,11 +65,12 @@ class GLRParser(Parser):
 
             if head.token:
                 tokens = [head.token]
+                if EMPTY in actions:
+                    tokens.append(EMPTY_token)
             else:
                 try:
                     token, position = \
-                        self._next_token(state, input_str, position,
-                                         context, True)
+                        next_token(state, input_str, position, context, True)
                     tokens = [token]
                 except DisambiguationError as e:
                     # Lexical ambiguity will be handled by GLR
@@ -74,10 +81,8 @@ class GLRParser(Parser):
 
             valid_tokens = [token for token in tokens
                             if token.symbol in actions]
-            if not valid_tokens and EMPTY in actions:
-                valid_tokens.append(EMPTY_token)
 
-            if self.debug:
+            if debug:
                 print("\tPosition:", pos_to_line_col(input_str, position))
                 print("\tContext:", position_context(input_str, position))
                 print("\tExpecting: {}".format(
@@ -88,7 +93,7 @@ class GLRParser(Parser):
 
             tokens = valid_tokens
             if not tokens:
-                if self.debug:
+                if debug:
                     # This head is dying
                     print("\t***Killing this head.")
 
@@ -99,15 +104,15 @@ class GLRParser(Parser):
                 context.symbol = symbol
                 for action in (a for a in actions[symbol]
                                if a.action is REDUCE):
-                    self.reduce(head, action.prod, token, context)
+                    reduce(head, action.prod, token, context)
 
                 # If there is shift action for this token do it.
                 action = actions[symbol][0]
                 if action.action is SHIFT:
-                    self.shift(head, token, action.state, context)
+                    shift(head, token, action.state, context)
 
                 elif action.action is ACCEPT:
-                    if self.debug:
+                    if debug:
                         print("\t*** SUCCESS!!!!")
                     finish_head = head
 
@@ -116,7 +121,7 @@ class GLRParser(Parser):
                              nomatch_error([x for x in actions]))
 
         results = [x[1] for x in finish_head.parents]
-        if self.debug:
+        if debug:
             print("*** {} sucessful parse(s).".format(len(results)))
 
         return results
@@ -131,8 +136,10 @@ class GLRParser(Parser):
         head exists. Execute reduce semantic action.
         """
         context.symbol = production.symbol
+        debug = self.debug
+        sem_actions = self.sem_actions
 
-        if context.debug:
+        if debug:
             print("\tReducing by prod {}".format(production))
 
         # Find roots of new heads
@@ -149,7 +156,7 @@ class GLRParser(Parser):
                 else:
                     roots.append((parent, parent_subres))
 
-        if self.debug:
+        if debug:
             print("\tRoots {}: {}".format(len(roots), roots))
 
         # Create new heads. Execute semantic actions.
@@ -161,7 +168,7 @@ class GLRParser(Parser):
 
             # Calling semantic actions
             res = None
-            sem_action = self.sem_actions.get(production.symbol.name)
+            sem_action = sem_actions.get(production.symbol.name)
             if sem_action:
                 if type(sem_action) is list:
                     res = sem_action[production.prod_symbol_id](context,
@@ -171,7 +178,7 @@ class GLRParser(Parser):
             elif self.default_actions:
                 res = default_reduce_action(context, nodes=subresults)
 
-            if context.debug:
+            if debug:
                 print("\tAction result = type:{} value:{}"
                       .format(type(res), repr(res)))
 
@@ -187,12 +194,14 @@ class GLRParser(Parser):
         """
 
         last_shifts = self.last_shifts
+        debug = self.debug
+
         if state.state_id in last_shifts:
             # If this token has already been shifted connect
             # shifted head to this head.
             res = last_shifts[state.state_id].parents[0][1]
             last_shifts[state.state_id].parents.append((head, res))
-            if self.debug:
+            if debug:
                 print("\tReusing shifted head {}.".format(
                     self.last_shifts[state.state_id]))
 
@@ -210,7 +219,7 @@ class GLRParser(Parser):
             elif self.default_actions:
                 res = default_shift_action(context, token.value)
 
-            if context.debug:
+            if debug:
                 print("\tAction result = type:{} value:{}"
                       .format(type(res), repr(res)))
 
@@ -224,9 +233,8 @@ class GLRParser(Parser):
 
             # Open question: Is it possible for this head to be merged?
             self.heads.append(new_head)
-            if self.debug:
-                print("\tNew shifted head {}.".format(
-                    str(new_head)))
+            if debug:
+                print("\tNew shifted head {}.".format(str(new_head)))
 
     def merge_heads(self, new_head):
         for head in self.heads:
