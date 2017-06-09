@@ -31,9 +31,7 @@ class GLRParser(Parser):
 
         if self.debug:
             print("*** Parsing started")
-            self.dot_trace = 'killed [label="Killed"];\n'
-            self.dot_trace += 'success [label="SUCCESS"];\n'
-            self.trace_step = 1
+            self._start_trace()
 
         # We start with a single parser head in state 0.
         self.heads = [GSSNode(self.table.states[0], position)]
@@ -51,8 +49,7 @@ class GLRParser(Parser):
         reduce = self.reduce
 
         if debug:
-            self.dot_trace += '{} [label="{}"];\n'.format(
-                heads[0].key, heads[0].state.state_id)
+            self._trace_head(heads[0], str(heads[0].state.state_id))
 
         while heads:
 
@@ -106,9 +103,7 @@ class GLRParser(Parser):
                 if debug:
                     # This head is dying
                     print("\t***Killing this head.")
-                    self.dot_trace += '{} -> killed [label="{}"];\n'.format(
-                        head.key, self.trace_step)
-                    self.trace_step += 1
+                    self._trace_link_kill(head)
 
             for token in tokens:
                 symbol = token.symbol
@@ -127,12 +122,12 @@ class GLRParser(Parser):
                 elif action.action is ACCEPT:
                     if debug:
                         print("\t*** SUCCESS!!!!")
-                        self.dot_trace += '{} -> success [label="{}"];\n'\
-                            .format(head.key, self.trace_step)
-                        self.trace_step += 1
+                        self._trace_link_finish(head)
                     self.finish_head = head
 
         if not self.finish_head:
+            if debug:
+                self._export_dot_trace()
             raise ParseError(file_name, input_str, position,
                              nomatch_error([x for x in actions]))
 
@@ -222,10 +217,9 @@ class GLRParser(Parser):
             shifted_head.parents.append((head, res))
             if debug:
                 print("\tReusing shifted head {}.".format(shifted_head))
-                self.dot_trace += '{} -> {} [label="{} S-reuse:{}"];\n'.format(
-                    head.key, shifted_head.key, self.trace_step,
-                    dot_escape(state.symbol.name))
-                self.trace_step += 1
+                self._trace_link(head, shifted_head,
+                                 "S-reuse:{}".format(
+                                     dot_escape(state.symbol.name)))
 
         else:
 
@@ -257,13 +251,12 @@ class GLRParser(Parser):
             self.heads.append(new_head)
             if debug:
                 print("\tNew shifted head {}.".format(str(new_head)))
-                self.dot_trace += '{} [label="{}:{}"];\n'.format(
-                    new_head.key, state.state_id,
-                    dot_escape(state.symbol.name))
-                self.dot_trace += '{} -> {} [label="{} S:{}"];\n'.format(
-                    head.key, new_head.key,
-                    self.trace_step, dot_escape(token.symbol.name))
-                self.trace_step += 1
+                self._trace_head(new_head,
+                                 "{}:{}".format(state.state_id,
+                                                dot_escape(state.symbol.name)))
+                self._trace_link(head, new_head,
+                                 "S:{}".format(
+                                     dot_escape(token.symbol.name)))
 
     def merge_heads(self, new_head, old_head, production):
         for head in chain(self.heads,
@@ -271,28 +264,42 @@ class GLRParser(Parser):
             if head == new_head:
                 if self.debug:
                     print("\tMerging heads {}.".format(str(head)))
-                    self.dot_trace += \
-                        '{} -> {} [label="{} R-merge\:{}"];\n'.format(
-                            old_head.key, head.key,
-                            self.trace_step,
-                            dot_escape(head.state.symbol.name))
-                    self.trace_step += 1
+                    self._trace_link(old_head, head,
+                                     "R-merge:{}".format(
+                                         dot_escape(head.state.symbol.name)))
                 head.parents.extend(new_head.parents)
                 break
         else:
             self.heads.append(new_head)
             if self.debug:
                 print("\tNew reduced head {}.".format(str(new_head)))
-                self.dot_trace += \
-                    '{} [label="{}:{}"];\n'.format(
-                        new_head.key, new_head.state.state_id,
-                        dot_escape(new_head.state.symbol.name))
-                self.dot_trace += \
-                    '{} -> {} [label="{} R\:{}"];\n'.format(
-                        old_head.key, new_head.key,
-                        self.trace_step,
-                        dot_escape(str(production)))
-                self.trace_step += 1
+                self._trace_head(new_head, "{}:{}".format(
+                        new_head.state.state_id,
+                        dot_escape(new_head.state.symbol.name)))
+                self._trace_link(old_head, new_head,
+                                 "R:{}".format(dot_escape(str(production))))
+
+    def _start_trace(self):
+        self.dot_trace = ""
+        self.trace_step = 1
+
+    def _trace_head(self, new_head, label):
+        self.dot_trace += '{} [label="{}"];\n'.format(new_head.key, label)
+
+    def _trace_link(self, from_head, to_head, label):
+        self.dot_trace += '{} -> {} [label="{} {}"];\n'.format(
+            from_head.key, to_head.key, self.trace_step, label)
+        self.trace_step += 1
+
+    def _trace_link_finish(self, from_head):
+        self.dot_trace += '{} -> success [label="{}"];\n'.format(
+            from_head.key, self.trace_step)
+        self.trace_step += 1
+
+    def _trace_link_kill(self, from_head):
+        self.dot_trace += '{} -> killed [label="{}"];\n'.format(
+            from_head.key, self.trace_step)
+        self.trace_step += 1
 
     def _export_dot_trace(self):
         file_name = "{}_trace.dot".format(self.file_name) \
@@ -301,6 +308,11 @@ class GLRParser(Parser):
             f.write(DOT_HEADER)
             f.write(self.dot_trace)
             f.write("}\n")
+
+        print("Generated file {}.".format(file_name))
+        print("You can use dot viewer or generate pdf with the "
+              "following command:")
+        print("dot -Tpdf {0} -O {0}.pdf".format(file_name))
 
 
 class GSSNode(object):
