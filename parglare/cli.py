@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 import sys
 import argparse
-from parglare import Grammar, ParseError, GrammarError
+from parglare import Grammar, ParseError, GrammarError, GLRParser
 from parglare.export import grammar_pda_export
-from parglare.tables import create_table, check_table
-from parglare.closure import LR_1
-from parglare.parser import first, follow
+from parglare.tables import create_table
 
 
 def pglr():
@@ -23,13 +21,19 @@ def pglr():
             self.print_help()
             sys.exit(2)
 
-    commands = ['viz', 'check']
+    commands = ['viz', 'check', 'trace']
     commands_str = "'{}'".format("' or '".join(commands))
 
-    parser = MyParser(description='parglare checker and PDA visualizer')
+    parser = MyParser(description='parglare checker and visualizer')
     parser.add_argument('cmd', help='Command - {}'.format(commands_str))
     parser.add_argument('grammar', help='parglare grammar file')
+    parser.add_argument('input_file',
+                        help='input file for GLR trace subcommand.',
+                        nargs='?')
     parser.add_argument('-d', help='run in debug mode',
+                        action='store_true')
+    parser.add_argument('-i',
+                        help='input_file for trace is input string, not file.',
                         action='store_true')
 
     args = parser.parse_args()
@@ -47,7 +51,7 @@ def pglr():
         if args.d:
             table.print_debug()
 
-        print("\nGrammar OK.")
+        print("Grammar OK.")
     except (GrammarError, ParseError) as e:
         print("Error in grammar file.")
         print(e)
@@ -59,3 +63,13 @@ def pglr():
         print("or convert to pdf by running 'dot -Tpdf -O %s.dot'"
               % args.grammar)
         grammar_pda_export(table, "%s.dot" % args.grammar)
+
+    elif args.cmd == "trace":
+        if not args.input_file:
+            print("input_file is mandatory for trace command.")
+            sys.exit(1)
+        parser = GLRParser(g, debug=True)
+        if args.i:
+            parser.parse(args.input_file)
+        else:
+            parser.parse_file(args.input_file)
