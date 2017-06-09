@@ -295,7 +295,8 @@ class GLRParser(Parser):
                 self.trace_step += 1
 
     def _export_dot_trace(self):
-        file_name = self.file_name if self.file_name else "parglare_trace.dot"
+        file_name = "{}_trace.dot".format(self.file_name) \
+                    if self.file_name else "parglare_trace.dot"
         with codecs.open(file_name, 'w', encoding="utf-8") as f:
             f.write(DOT_HEADER)
             f.write(self.dot_trace)
