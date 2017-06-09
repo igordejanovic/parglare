@@ -321,10 +321,15 @@ class LRTable(object):
                 if len(actions) > 1:
                     if actions[0].action in [SHIFT, ACCEPT]:
                         # Create SR conflicts for each S-R pair of actions
+                        # except EMPTY reduction as SHIFT will always be
+                        # preferred in LR parsing and GLR has a special
+                        # handling of EMPTY reduce in order to avoid infinite
+                        # looping.
                         for r_act in actions[1:]:
-                            self.sr_conflicts.append(
-                                SRConflict(state, term,
-                                           [x.prod for x in actions[1:]]))
+                            if len(r_act.prod.rhs):
+                                self.sr_conflicts.append(
+                                    SRConflict(state, term,
+                                               [x.prod for x in actions[1:]]))
                     else:
                         self.rr_conflicts.append(
                             RRConflict(state, term, [x.prod for x in actions]))

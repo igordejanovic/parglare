@@ -181,11 +181,19 @@ class Production(object):
 
 
 class ProductionRHS(list):
-    def __getitem__(self, key):
+    def __getitem__(self, idx):
         try:
-            return super(ProductionRHS, self).__getitem__(key)
+            while True:
+                symbol = super(ProductionRHS, self).__getitem__(idx)
+                if symbol is not EMPTY:
+                    break
+                idx += 1
+            return symbol
         except IndexError:
             return None
+
+    def __len__(self):
+        return super(ProductionRHS, self).__len__() - self.count(EMPTY)
 
     def __str__(self):
         return " ".join([str(x) for x in self])

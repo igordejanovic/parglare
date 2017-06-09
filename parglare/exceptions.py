@@ -31,7 +31,7 @@ def nomatch_error(symbols):
     return _inner
 
 
-def disambiguation_error(symbols):
+def disambiguation_error(tokens):
     def _inner(file_name, input_str, position):
         context, line, column = _full_context(input_str, position)
         return 'Error {}at position {},{} => "{}". ' \
@@ -39,7 +39,7 @@ def disambiguation_error(symbols):
                 'in file "{}" '.format(file_name)
                 if file_name else "",
                 line, column, context,
-                ' or '.join([s.name for s in symbols]))
+                ' or '.join([t for t in tokens]))
     return _inner
 
 
@@ -48,8 +48,8 @@ class ParserInitError(Exception):
 
 
 class DisambiguationError(Exception):
-    def __init__(self, symbols):
-        self.symbols = symbols
+    def __init__(self, tokens):
+        self.tokens = tokens
 
 
 class LRConflict(object):

@@ -135,11 +135,17 @@ class Parser(object):
                 # actions of the current state but EMPTY is and will match
                 # always leading to reduction.
                 try:
-                    ntok, position = next_token(cur_state, input_str, position,
-                                                context, new_token)
+
+                    position, layout_content = self._skipws(input_str,
+                                                            position)
+                    if self.debug:
+                        print("\tLayout content: '{}'".format(layout_content))
+
+                    ntok = next_token(cur_state, input_str, position)
+
                 except DisambiguationError as e:
                     raise ParseError(file_name, input_str, position,
-                                     disambiguation_error(e.symbols))
+                                     disambiguation_error(e.tokens))
 
             if debug:
                 print("\tContext:", position_context(input_str, position))
@@ -196,14 +202,18 @@ class Parser(object):
                     print("\tReducing by prod '%s'." % str(production))
 
                 r_length = len(production.rhs)
-                subresults = results_stack[-r_length:]
-                del state_stack[-r_length:]
-                del results_stack[-r_length:]
-                if r_length > 1:
-                    del position_stack[-(r_length - 1):]
-                cur_state = state_stack[-1]
-                goto = cur_state.gotos
-                context.position = position_stack[-1]
+                if r_length:
+                    subresults = results_stack[-r_length:]
+                    del state_stack[-r_length:]
+                    del results_stack[-r_length:]
+                    if r_length > 1:
+                        del position_stack[-(r_length - 1):]
+
+                    cur_state = state_stack[-1]
+                    context.position = position_stack[-1]
+
+                else:
+                    subresults = []
 
                 # Calling semantic actions
                 res = None
@@ -221,6 +231,7 @@ class Parser(object):
                     print("\tAction result = type:{} value:{}"
                           .format(type(res), repr(res)))
 
+                goto = cur_state.gotos
                 state_stack.append(goto[production.symbol])
                 results_stack.append(res)
                 new_token = False
@@ -234,7 +245,28 @@ class Parser(object):
                 else:
                     return results_stack[0]
 
-    def _next_token(self, state, input_str, position, context, new_token):
+    def _skipws(self, input_str, position):
+        in_len = len(input_str)
+        layout_content = ''
+        if self.layout_parser:
+            layout_content, pos = self.layout_parser.parse(
+                input_str, position)
+            layout_content = input_str[position:pos]
+            position = pos
+        elif self.ws:
+            old_pos = position
+            while position < in_len and input_str[position] in self.ws:
+                position += 1
+            layout_content = input_str[old_pos:position]
+
+        if self.debug:
+            print("\tSkipping whitespaces: '{}'".format(
+                layout_content.replace("\n", "\\n")))
+            print("\tNew position:", pos_to_line_col(input_str, position))
+
+        return position, layout_content
+
+    def _next_token(self, state, input_str, position):
         """
         For the current position in the input stream and actions in the current
         state find next token.
@@ -244,25 +276,6 @@ class Parser(object):
         finish_flags = state.finish_flags
 
         in_len = len(input_str)
-
-        if new_token:
-            # Parse layout
-            layout_content = ''
-            if self.layout_parser:
-                layout_content, pos = self.layout_parser.parse(
-                    input_str, position)
-                layout_content = input_str[position:pos]
-                context.layout = layout_content
-                position = pos
-            elif self.ws:
-                old_pos = position
-                while position < in_len and input_str[position] in self.ws:
-                    position += 1
-                layout_content = input_str[old_pos:position]
-                context.layout = layout_content
-
-            if self.debug:
-                print("\tLayout content: '{}'".format(layout_content))
 
         # Find the next token in the input
         if position == in_len and EMPTY not in actions \
@@ -289,7 +302,7 @@ class Parser(object):
             else:
                 ntok = self._lexical_disambiguation(tokens)
 
-        return ntok, position
+        return ntok
 
     def _lexical_disambiguation(self, tokens):
         """
@@ -321,7 +334,7 @@ class Parser(object):
             elif len(pref_tokens) > 1:
                 tokens = pref_tokens
 
-        raise DisambiguationError([x.symbol for x in tokens])
+        raise DisambiguationError(tokens)
 
 
 class Action(object):

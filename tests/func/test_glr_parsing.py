@@ -6,7 +6,7 @@ from parglare.exceptions import SRConflicts
 def test_lr2_grammar():
 
     grammar = """
-    Model = Prods EOF;
+    Model = Prods;
     Prods = Prod | Prods Prod;
     Prod = ID "=" ProdRefs;
     ProdRefs = ID | ProdRefs ID;
@@ -108,7 +108,7 @@ def test_expressions():
 def test_epsilon_grammar():
 
     grammar = """
-    Model = Prods EOF;
+    Model = Prods;
     Prods = Prod | Prods Prod | EMPTY;
     Prod = ID "=" ProdRefs;
     ProdRefs = ID | ProdRefs ID;

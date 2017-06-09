@@ -123,6 +123,12 @@ def test_cyclic_grammar_2():
     p = GLRParser(g)
     p.parse('xxxxx')
 
+def test_cyclic_grammar_3():
+    grammar = """
+    S = S A | A;
+    A = "a" | EMPTY;
+    """
+
 
 def test_highly_ambiguous_grammar():
     """
