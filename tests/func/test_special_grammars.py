@@ -177,3 +177,24 @@ def test_indirect_left_recursive():
 
     p = GLRParser(g)
     p.parse("bbbbbbbbbbbba")
+
+
+def todo_test_reduce_enough_empty():
+    """TODO: In this grammar parser must reduce as many empty tokens as there are
+    "b" tokens ahead to be able to finish sucessfuly.
+
+    Language is: xb^n, n>=0
+
+    From: Rekers, Joan Gerard: "Parser generation for interactive environments",
+    phD thesis, Universiteit van Amsterdam, 1992.
+
+    """
+    grammar = """
+    S = A S "b";
+    S = "x";
+    A = EMPTY;
+    """
+    g = Grammar.from_string(grammar)
+
+    p = GLRParser(g)
+    p.parse("xbbb")
