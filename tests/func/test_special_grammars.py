@@ -2,7 +2,7 @@
 Test non-deterministic parsing.
 """
 import pytest  # noqa
-from parglare import Parser, Grammar, SLR, LALR
+from parglare import Parser, GLRParser, Grammar, SLR, LALR
 from parglare.exceptions import GrammarError, SRConflicts, RRConflicts
 
 
@@ -85,14 +85,13 @@ def todo_test_nondeterministic_LR_raise_error():
 
     g = Grammar.from_string(grammar)
     with pytest.raises(GrammarError):
-        p = Parser(g, debug=True)
+        p = Parser(g)
         p.parse('0101000110001010')
 
 
 def test_cyclic_grammar_1():
     """
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
-    TODO: This should be a problem for GLR.
     """
     grammar = """
     S = A;
@@ -102,6 +101,9 @@ def test_cyclic_grammar_1():
     g = Grammar.from_string(grammar)
     with pytest.raises(SRConflicts):
         Parser(g)
+
+    p = GLRParser(g)
+    p.parse('xxxxx')
 
 
 def test_cyclic_grammar_2():
@@ -116,7 +118,10 @@ def test_cyclic_grammar_2():
     g = Grammar.from_string(grammar, debug=True)
 
     with pytest.raises(SRConflicts):
-        Parser(g, debug=True)
+        Parser(g)
+
+    p = GLRParser(g)
+    p.parse('xxxxx')
 
 
 def test_highly_ambiguous_grammar():
@@ -129,15 +134,26 @@ def test_highly_ambiguous_grammar():
     S = "b" | S S | S S S;
     """
 
-    g = Grammar.from_string(grammar, debug=True)
+    g = Grammar.from_string(grammar)
 
     with pytest.raises(SRConflicts):
-        Parser(g, debug=True)
+        Parser(g)
 
     # S/R are resolved by selecting prefer_shifts strategy.
     # But R/R conflicts remain.
     with pytest.raises(RRConflicts):
-        Parser(g, prefer_shifts=True, debug=True)
+        Parser(g, prefer_shifts=True)
+
+    # GLR parser handles this fine.
+    p = GLRParser(g)
+
+    # For three tokens we have 3 valid derivations/trees.
+    results = p.parse("bbb")
+    assert len(results) == 3
+
+    # For 4 tokens we have 10 valid derivations.
+    results = p.parse("bbbb")
+    assert len(results) == 10
 
 
 def test_indirect_left_recursive():
@@ -155,6 +171,9 @@ def test_indirect_left_recursive():
     """
 
     g = Grammar.from_string(grammar)
-    p = Parser(g)
 
+    p = Parser(g)
+    p.parse("bbbbbbbbbbbba")
+
+    p = GLRParser(g)
     p.parse("bbbbbbbbbbbba")
