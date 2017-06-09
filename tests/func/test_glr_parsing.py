@@ -129,3 +129,24 @@ def test_epsilon_grammar():
 
     results = p.parse("")
     assert len(results) == 1
+
+
+def test_highly_ambiguous_grammar():
+    """
+    This grammar has both Shift/Reduce and Reduce/Reduce conflicts and
+    thus can't be parsed by a deterministic LR parsing.
+    """
+    grammar = """
+    S = "b" | S S | S S S;
+    """
+
+    g = Grammar.from_string(grammar)
+    p = GLRParser(g, debug=True)
+
+    # For three tokens we have 3 valid derivations/trees.
+    results = p.parse("bbb")
+    assert len(results) == 3
+
+    # For 4 tokens we have 10 valid derivations.
+    results = p.parse("bbbb")
+    assert len(results) == 10

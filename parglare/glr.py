@@ -1,9 +1,12 @@
 from parglare import Parser
+import codecs
+from itertools import chain
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
     default_reduce_action, default_shift_action, pos_to_line_col, \
     EMPTY_token
 from .grammar import EMPTY
+from .export import dot_escape
 
 
 class GLRParser(Parser):
@@ -28,14 +31,17 @@ class GLRParser(Parser):
 
         if self.debug:
             print("*** Parsing started")
+            self.dot_trace = 'killed [label="Killed"];\n'
+            self.dot_trace += 'success [label="SUCCESS"];\n'
+            self.trace_step = 1
 
         # We start with a single parser head in state 0.
         self.heads = [GSSNode(self.table.states[0], position)]
         self.input_str = input_str
-        context = type(str("Context"), (), {})
-        finish_head = None
-
+        self.file_name = file_name
+        self.finish_head = None
         self.last_shifts = {}
+        context = type(str("Context"), (), {})
 
         # Prefething
         heads = self.heads
@@ -43,6 +49,10 @@ class GLRParser(Parser):
         next_token = self._next_token
         shift = self.shift
         reduce = self.reduce
+
+        if debug:
+            self.dot_trace += '{} [label="{}"];\n'.format(
+                heads[0].key, heads[0].state.state_id)
 
         while heads:
 
@@ -96,6 +106,9 @@ class GLRParser(Parser):
                 if debug:
                     # This head is dying
                     print("\t***Killing this head.")
+                    self.dot_trace += '{} -> killed [label="{}"];\n'.format(
+                        head.key, self.trace_step)
+                    self.trace_step += 1
 
             for token in tokens:
                 symbol = token.symbol
@@ -114,15 +127,19 @@ class GLRParser(Parser):
                 elif action.action is ACCEPT:
                     if debug:
                         print("\t*** SUCCESS!!!!")
-                    finish_head = head
+                        self.dot_trace += '{} -> success [label="{}"];\n'\
+                            .format(head.key, self.trace_step)
+                        self.trace_step += 1
+                    self.finish_head = head
 
-        if not finish_head:
+        if not self.finish_head:
             raise ParseError(file_name, input_str, position,
                              nomatch_error([x for x in actions]))
 
-        results = [x[1] for x in finish_head.parents]
+        results = [x[1] for x in self.finish_head.parents]
         if debug:
             print("*** {} sucessful parse(s).".format(len(results)))
+            self._export_dot_trace()
 
         return results
 
@@ -183,7 +200,7 @@ class GLRParser(Parser):
                       .format(type(res), repr(res)))
 
             new_head.parents.append((root, res))
-            self.merge_heads(new_head)
+            self.merge_heads(new_head, head, production)
 
     def shift(self, head, token, state, context):
         """Execute shift operation at the given position to the given state.
@@ -196,14 +213,19 @@ class GLRParser(Parser):
         last_shifts = self.last_shifts
         debug = self.debug
 
-        if state.state_id in last_shifts:
+        shifted_head = last_shifts.get((state.state_id, context.position),
+                                       None)
+        if shifted_head:
             # If this token has already been shifted connect
             # shifted head to this head.
-            res = last_shifts[state.state_id].parents[0][1]
-            last_shifts[state.state_id].parents.append((head, res))
+            res = shifted_head.parents[0][1]
+            shifted_head.parents.append((head, res))
             if debug:
-                print("\tReusing shifted head {}.".format(
-                    self.last_shifts[state.state_id]))
+                print("\tReusing shifted head {}.".format(shifted_head))
+                self.dot_trace += '{} -> {} [label="{} S-reuse:{}"];\n'.format(
+                    head.key, shifted_head.key, self.trace_step,
+                    dot_escape(state.symbol.name))
+                self.trace_step += 1
 
         else:
 
@@ -229,24 +251,55 @@ class GLRParser(Parser):
 
             # Cache this shift for further shift of the same symbol on the same
             # position.
-            last_shifts[state.state_id] = new_head
+            last_shifts[(state.state_id, context.position)] = new_head
 
             # Open question: Is it possible for this head to be merged?
             self.heads.append(new_head)
             if debug:
                 print("\tNew shifted head {}.".format(str(new_head)))
+                self.dot_trace += '{} [label="{}:{}"];\n'.format(
+                    new_head.key, state.state_id,
+                    dot_escape(state.symbol.name))
+                self.dot_trace += '{} -> {} [label="{} S:{}"];\n'.format(
+                    head.key, new_head.key,
+                    self.trace_step, dot_escape(token.symbol.name))
+                self.trace_step += 1
 
-    def merge_heads(self, new_head):
-        for head in self.heads:
+    def merge_heads(self, new_head, old_head, production):
+        for head in chain(self.heads,
+                          [self.finish_head] if self.finish_head else []):
             if head == new_head:
                 if self.debug:
                     print("\tMerging heads {}.".format(str(head)))
+                    self.dot_trace += \
+                        '{} -> {} [label="{} R-merge\:{}"];\n'.format(
+                            old_head.key, head.key,
+                            self.trace_step,
+                            dot_escape(head.state.symbol.name))
+                    self.trace_step += 1
                 head.parents.extend(new_head.parents)
                 break
         else:
             self.heads.append(new_head)
             if self.debug:
                 print("\tNew reduced head {}.".format(str(new_head)))
+                self.dot_trace += \
+                    '{} [label="{}:{}"];\n'.format(
+                        new_head.key, new_head.state.state_id,
+                        dot_escape(new_head.state.symbol.name))
+                self.dot_trace += \
+                    '{} -> {} [label="{} R\:{}"];\n'.format(
+                        old_head.key, new_head.key,
+                        self.trace_step,
+                        dot_escape(str(production)))
+                self.trace_step += 1
+
+    def _export_dot_trace(self):
+        file_name = self.file_name if self.file_name else "parglare_trace.dot"
+        with codecs.open(file_name, 'w', encoding="utf-8") as f:
+            f.write(DOT_HEADER)
+            f.write(self.dot_trace)
+            f.write("}\n")
 
 
 class GSSNode(object):
@@ -287,3 +340,23 @@ class GSSNode(object):
 
     def __repr__(self):
         return str(self)
+
+    @property
+    def key(self):
+        """Head unique idenfier"""
+        return 100000000 * self.state.state_id + self.position
+
+
+DOT_HEADER = """
+    digraph parglare_trace {
+    rankdir=LR
+    fontname = "Bitstream Vera Sans"
+    fontsize = 8
+    node[
+        style=filled,
+        fillcolor=aliceblue
+    ]
+    nodesep = 0.3
+    edge[dir=black,arrowtail=empty]
+
+"""
