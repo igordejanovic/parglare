@@ -318,10 +318,11 @@ class GSSNode(object):
              will have token set to None and will do scanning to obtain
              possible tokens ahead.
     """
-    __slots__ = ['state', 'position', 'parents', 'token']
+    __slots__ = ['state', '_key_position', 'position', 'parents', 'token']
 
     def __init__(self, state, position):
         self.state = state
+        self._key_position = position
         self.position = position
         self.parents = []
         self.token = None
@@ -329,7 +330,7 @@ class GSSNode(object):
     def __eq__(self, other):
         """Stack nodes are equal if they are on the same position in the same state.
         """
-        return self.position == other.position and self.state == other.state
+        return self.key == other.key
 
     def __ne__(self, other):
         return not self == other
@@ -344,7 +345,7 @@ class GSSNode(object):
     @property
     def key(self):
         """Head unique idenfier"""
-        return 100000000 * self.state.state_id + self.position
+        return 100000000 * self.state.state_id + self._key_position
 
 
 DOT_HEADER = """
