@@ -66,7 +66,7 @@ def grammar_pda_export(table, file_name):
                     ", ".join(["{}:{}".format(
                         dot_escape(x[0].name), x[1][0].prod.prod_id
                         if len(x[1]) == 1 else "[{}]".format(
-                                ",".join([i.prod.prod_id for i in x[1]])))
+                                ",".join([str(i.prod.prod_id) for i in x[1]])))
                                for x in reduce_actions]))
 
             # States
