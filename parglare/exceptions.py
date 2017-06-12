@@ -39,7 +39,7 @@ def disambiguation_error(tokens):
                 'in file "{}" '.format(file_name)
                 if file_name else "",
                 line, column, context,
-                ' or '.join([t for t in tokens]))
+                ' or '.join([str(t) for t in tokens]))
     return _inner
 
 
@@ -85,7 +85,7 @@ class LRConflicts(Exception):
         self.conflicts = conflicts
         message = "\n{} conflicts in following states: {}"\
                   .format(self.kind,
-                          [c.state.state_id for c in conflicts])
+                          set([c.state.state_id for c in conflicts]))
         super(LRConflicts, self).__init__(message)
 
 

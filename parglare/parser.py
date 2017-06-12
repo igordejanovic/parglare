@@ -104,23 +104,19 @@ class Parser(object):
         if self.debug:
             print("*** Parsing started")
 
-        state_stack = [self.table.states[0]]
-        results_stack = []
-        position_stack = [0]
-        position = position
+        state_stack = [StackNode(self.table.states[0], None)]
+        context = Context()
 
         default_actions = self.default_actions
         sem_actions = self.sem_actions
         next_token = self._next_token
         debug = self.debug
 
-        context = type(str("Context"), (), {})
-
         new_token = True
         ntok = Token()
 
         while True:
-            cur_state = state_stack[-1]
+            cur_state = state_stack[-1].state
             if debug:
                 print("Current state =", cur_state.state_id)
 
@@ -142,10 +138,14 @@ class Parser(object):
                         print("\tLayout content: '{}'".format(layout_content))
 
                     ntok = next_token(cur_state, input_str, position)
+                    context.layout_content = layout_content
 
                 except DisambiguationError as e:
                     raise ParseError(file_name, input_str, position,
                                      disambiguation_error(e.tokens))
+
+            context.start_position = position
+            context.end_position = position + len(ntok.value)
 
             if debug:
                 print("\tContext:", position_context(input_str, position))
@@ -164,12 +164,10 @@ class Parser(object):
             # the first action.
             act = acts[0]
 
-            context.position = position
-
             if act.action is SHIFT:
                 state = act.state
-                context.symbol = state.symbol
                 symbol = state.symbol
+                context.symbol = symbol
 
                 if debug:
                     print("\tShift:{} \"{}\"".format(state.state_id,
@@ -177,23 +175,27 @@ class Parser(object):
                           "at position",
                           pos_to_line_col(input_str, position))
 
-                res = None
+                result = None
                 if symbol.name in sem_actions:
-                    res = sem_actions[state.symbol.name](context, ntok.value)
+                    result = sem_actions[state.symbol.name](context,
+                                                            ntok.value)
                 elif default_actions:
-                    res = default_shift_action(context, ntok.value)
+                    result = default_shift_action(context, ntok.value)
 
                 if debug:
                     print("\tAction result = type:{} value:{}"
-                          .format(type(res), repr(res)))
+                          .format(type(result), repr(result)))
 
-                state_stack.append(state)
-                results_stack.append(res)
-                position_stack.append(position)
-                position += len(ntok.value)
+                state_stack.append(StackNode(state, result))
+                position = context.end_position
                 new_token = True
 
             elif act.action is REDUCE:
+                # if this is EMPTY reduction try to take another if
+                # exists.
+                if len(act.prod.rhs) == 0:
+                    if len(acts) > 1:
+                        act = acts[1]
                 production = act.prod
                 symbol = production.symbol
                 context.symbol = symbol
@@ -203,47 +205,40 @@ class Parser(object):
 
                 r_length = len(production.rhs)
                 if r_length:
-                    subresults = results_stack[-r_length:]
+                    subresults = [x.result for x in state_stack[-r_length:]]
                     del state_stack[-r_length:]
-                    del results_stack[-r_length:]
-                    if r_length > 1:
-                        del position_stack[-(r_length - 1):]
-
-                    cur_state = state_stack[-1]
-                    context.position = position_stack[-1]
-
+                    cur_state = state_stack[-1].state
                 else:
                     subresults = []
 
                 # Calling semantic actions
-                res = None
+                result = None
                 sem_action = sem_actions.get(symbol.name)
                 if sem_action:
                     if type(sem_action) is list:
-                        res = sem_action[production.prod_symbol_id](context,
-                                                                    subresults)
+                        result = sem_action[production.prod_symbol_id](
+                            context, subresults)
                     else:
-                        res = sem_action(context, subresults)
+                        result = sem_action(context, subresults)
                 elif default_actions:
-                    res = default_reduce_action(context, nodes=subresults)
+                    result = default_reduce_action(context, nodes=subresults)
 
                 if debug:
                     print("\tAction result = type:{} value:{}"
-                          .format(type(res), repr(res)))
+                          .format(type(result), repr(result)))
 
-                goto = cur_state.gotos
-                state_stack.append(goto[production.symbol])
-                results_stack.append(res)
+                cur_state = cur_state.gotos[production.symbol]
+                state_stack.append(StackNode(cur_state, result))
                 new_token = False
 
             elif act.action is ACCEPT:
                 if debug:
                     print("SUCCESS!!!")
-                assert len(results_stack) == 1
+                assert len(state_stack) == 2
                 if self.position:
-                    return results_stack[0], position
+                    return state_stack[1].result, position
                 else:
-                    return results_stack[0]
+                    return state_stack[1].result
 
     def _skipws(self, input_str, position):
         in_len = len(input_str)
@@ -335,6 +330,18 @@ class Parser(object):
                 tokens = pref_tokens
 
         raise DisambiguationError(tokens)
+
+
+class Context:
+    pass
+
+
+class StackNode:
+    __slots__ = ['state', 'result']
+
+    def __init__(self, state, result):
+        self.state = state
+        self.result = result
 
 
 class Action(object):
@@ -499,21 +506,23 @@ class LRState(object):
 
 class Node(object):
     """A node of the parse tree."""
-    def __init__(self, position, symbol):
-        self.position = position
+    def __init__(self, start_position, end_position, symbol):
+        self.start_position = start_position
+        self.end_position = end_position
         self.symbol = symbol
 
 
 class NodeNonTerm(Node):
-    __slots__ = ['position', 'symbol', 'nodes']
+    __slots__ = ['start_position', 'end_position', 'symbol', 'nodes']
 
-    def __init__(self, position, symbol, nodes):
-        super(NodeNonTerm, self).__init__(position, symbol)
+    def __init__(self, start_position, end_position, symbol, nodes):
+        super(NodeNonTerm, self).__init__(start_position,
+                                          end_position, symbol)
         self.nodes = nodes
 
     def tree_str(self, depth=0):
         indent = '  ' * depth
-        s = '{}[{}]'.format(self.symbol, self.position)
+        s = '{}[{}]'.format(self.symbol, self.start_position)
         if self.nodes:
             for n in self.nodes:
                 if hasattr(n, 'tree_str'):
@@ -524,22 +533,23 @@ class NodeNonTerm(Node):
         return s
 
     def __str__(self):
-        return '<Node({}, {})>'.format(self.position, self.symbol)
+        return '<Node({}, {})>'.format(self.start_position, self.symbol)
 
 
 class NodeTerm(Node):
-    __slots__ = ['position', 'symbol', 'value']
+    __slots__ = ['start_position', 'end_position', 'symbol', 'value']
 
-    def __init__(self, position, symbol, value):
-        super(NodeTerm, self).__init__(position, symbol)
+    def __init__(self, start_position, end_position, symbol, value):
+        super(NodeTerm, self).__init__(start_position,
+                                       end_position, symbol)
         self.value = value
 
     def tree_str(self, depth=0):
-        return '{}[{}, {}]'.format(self.symbol, self.position,
+        return '{}[{}, {}]'.format(self.symbol, self.start_position,
                                    self.value)
 
     def __str__(self):
-        return '<NodeTerm({}, {}, {})>'.format(self.position,
+        return '<NodeTerm({}, {}, {})>'.format(self.start_position,
                                                self.symbol, self.value)
 
     def __repr__(self):
@@ -566,11 +576,13 @@ EOF_token = Token(EOF)
 
 
 def default_shift_action(context, value):
-    return NodeTerm(context.position, context.symbol, value)
+    return NodeTerm(context.start_position, context.end_position,
+                    context.symbol, value)
 
 
 def default_reduce_action(context, nodes):
-    return NodeNonTerm(context.position, context.symbol, nodes)
+    return NodeNonTerm(context.start_position, context.end_position,
+                       context.symbol, nodes)
 
 
 def first(grammar):

@@ -140,7 +140,7 @@ class GLRParser(Parser):
                         [a.name for a in actions]))
                     print("\tTokens ahead: {}".format(tokens))
 
-            context.position = position
+            context.start_position = position
             context.layout_content = layout_content
 
             if not tokens:
@@ -200,7 +200,7 @@ class GLRParser(Parser):
             actions = state.actions
             token = head.token_ahead
 
-            context.position = position
+            context.start_position = position
             context.layout_content = layout_content
             context.symbol = symbol = token.symbol
 
@@ -233,7 +233,7 @@ class GLRParser(Parser):
         if debug:
             print("\tReducing by prod {}".format(production))
 
-        def execute_actions(subresults):
+        def execute_actions(context, subresults):
             res = None
             sem_action = sem_actions.get(production.symbol.name)
             if sem_action:
@@ -262,7 +262,8 @@ class GLRParser(Parser):
                 if debug:
                     print("\tEmpty production '{}' execute and cache cache."
                           .format(str(production)))
-                res = execute_actions([])
+                context.end_position = context.start_position
+                res = execute_actions(context, [])
                 self.empty_reductions_res[
                     (head.state.state_id, production.prod_id)] = res
                 new_state = head.state.gotos[production.symbol]
@@ -273,8 +274,8 @@ class GLRParser(Parser):
                 else:
                     new_head = GSSNode(
                         new_state,
-                        start_position=context.position,
-                        end_position=context.position,
+                        start_position=context.start_position,
+                        end_position=context.start_position,
                         layout_content=context.layout_content,
                         empty=True)
                     new_head.token_ahead = token_ahead
@@ -328,7 +329,9 @@ class GLRParser(Parser):
 
             # Create new heads. Execute semantic actions.
             for root, subresults, empty in roots:
-                res = execute_actions(subresults)
+                context.start_position = root.next_position
+                context.end_position = head.end_position
+                res = execute_actions(context, subresults)
                 new_state = root.state.gotos[production.symbol]
                 new_head = GSSNode(new_state,
                                    start_position=root.next_position,
@@ -356,7 +359,7 @@ class GLRParser(Parser):
         debug = self.debug
 
         shifted_head = last_shifts.get((state.state_id,
-                                        context.position, token.symbol),
+                                        context.start_position, token.symbol),
                                        None)
         if shifted_head:
             # If this token has already been shifted connect
@@ -368,8 +371,9 @@ class GLRParser(Parser):
             if self.debug:
                 print("\tShift:{} \"{}\"".format(state.state_id, token.value),
                       "at position",
-                      pos_to_line_col(self.input_str, context.position))
+                      pos_to_line_col(self.input_str, context.start_position))
 
+            context.end_position = context.start_position + len(token.value)
             res = None
             if state.symbol.name in self.sem_actions:
                 res = self.sem_actions[state.symbol.name](context,
@@ -383,8 +387,8 @@ class GLRParser(Parser):
 
             new_head = GSSNode(
                 state,
-                start_position=context.position,
-                end_position=context.position + len(token.value),
+                start_position=context.start_position,
+                end_position=context.end_position,
                 layout_content=context.layout_content,
                 empty=False)
 
@@ -392,7 +396,7 @@ class GLRParser(Parser):
 
             # Cache this shift for further shift of the same symbol on the same
             # position.
-            last_shifts[(state.state_id, context.position,
+            last_shifts[(state.state_id, context.start_position,
                          token.symbol)] = new_head
 
             self.heads_for_reduce.append(new_head)

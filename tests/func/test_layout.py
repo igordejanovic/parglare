@@ -97,7 +97,7 @@ def test_layout_context():
 
     def layout_action(context, _):
         layout_called[0] = True
-        if 'This is a comment' in context.layout:
+        if 'This is a comment' in context.layout_content:
             layout_passed[0] = True
 
     actions = {
