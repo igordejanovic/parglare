@@ -331,8 +331,12 @@ class LRTable(object):
                                     SRConflict(state, term,
                                                [x.prod for x in actions[1:]]))
                     else:
-                        self.rr_conflicts.append(
-                            RRConflict(state, term, [x.prod for x in actions]))
+                        prods = [x.prod for x in actions if len(x.prod.rhs)]
+                        empty_prods = [x.prod for x in actions
+                                       if not len(x.prod.rhs)]
+                        if len(empty_prods) > 1 or len(prods) > 1:
+                            self.rr_conflicts.append(
+                                RRConflict(state, term, prods))
 
     def print_debug(self):
         print("\n\n*** STATES ***")
