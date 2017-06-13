@@ -280,8 +280,8 @@ class GLRParser(Parser):
                         empty=True)
                     new_head.token_ahead = token_ahead
 
-                    self.merge_heads(new_head, head, production)
-                    new_head.create_link(head, res, self)
+                    self.merge_create_head(new_head, head, head, res,
+                                           production)
         else:
             # Find roots of new heads
             # Collect subresults along the way to be used with semantic actions
@@ -342,8 +342,7 @@ class GLRParser(Parser):
                 new_head.next_layout_content = head.next_layout_content
                 new_head.next_position = head.next_position
 
-                self.merge_heads(new_head, head, production)
-                new_head.create_link(root, res, self)
+                self.merge_create_head(new_head, head, root, res, production)
 
         return bool(roots)
 
@@ -392,8 +391,6 @@ class GLRParser(Parser):
                 layout_content=context.layout_content,
                 empty=False)
 
-            new_head.create_link(head, res, self)
-
             # Cache this shift for further shift of the same symbol on the same
             # position.
             last_shifts[(state.state_id, context.start_position,
@@ -409,6 +406,8 @@ class GLRParser(Parser):
                                  "S:{}".format(
                                      dot_escape(token.symbol.name)))
 
+            new_head.create_link(head, res, self)
+
     def add_to_heads_for_shift(self, new_head):
         """Adds new head for shift or merges if already added."""
         for head in self.heads_for_shift:
@@ -422,7 +421,9 @@ class GLRParser(Parser):
                 print("\tNew head for shifting: {}.".format(str(new_head)))
             self.heads_for_shift.append(new_head)
 
-    def merge_heads(self, new_head, old_head, production):
+    def merge_create_head(self, new_head, old_head, root_head, result,
+                          production):
+        new_head.create_link(root_head, result, self)
         for head in chain(self.heads_for_reduce,
                           [self.finish_head] if self.finish_head else []):
             if head == new_head:
@@ -563,7 +564,8 @@ class GSSNode(object):
             self.parents.extend(other.parents)
             self.number_of_trees += other.number_of_trees
             if parser.debug:
-                print("\tMerging head: {}.".format(str(self)))
+                print("\tMerging head {} \n\t\tto head {}.".format(
+                    str(other), str(self)))
                 parser._trace_link(other, self,
                                    "R-merge:{}".format(
                                      dot_escape(self.state.symbol.name)))
@@ -621,12 +623,12 @@ class GSSNode(object):
         return not self == other
 
     def __str__(self):
-        return "state={}:{}, pos={}, endpos={}{}, empty={}, trees={}".format(
+        return "state={}:{}, pos={}, endpos={}{}, empty={}, parents={}, trees={}".format(
             self.state.state_id, self.state.symbol,
             self.start_position, self.end_position,
             ", token ahead={}".format(self.token_ahead)
             if self.token_ahead else "",
-            self.empty, self.number_of_trees)
+            self.empty, len(self.parents), self.number_of_trees)
 
     def __repr__(self):
         return str(self)
