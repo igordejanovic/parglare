@@ -24,7 +24,7 @@ def test_lr2_grammar():
         Parser(g)
 
     # But it can be parsed unambiguously by GLR.
-    p = GLRParser(g, debug=True)
+    p = GLRParser(g)
 
     txt = """
     First = One Two three
@@ -53,7 +53,7 @@ def test_expressions():
     E = E "+" E | E "*" E | "(" E ")" | /\d+/;
     """
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, actions=actions, debug=True)
+    p = GLRParser(g, actions=actions)
 
     # Even this simple expression has 2 different interpretations
     # (4 + 2) * 3 and

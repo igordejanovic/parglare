@@ -22,6 +22,10 @@ def test_lr_1_grammar():
     parser.parse("acccccccccd")
     parser.parse("bcccccccccd")
 
+    parser = GLRParser(g)
+    assert len(parser.parse("accccccccd")) == 1
+    assert len(parser.parse("bccccccccd")) == 1
+
 
 def test_slr_conflict():
     """
@@ -59,7 +63,7 @@ def test_lalr_reduce_reduce_conflict():
     Parser(grammar)
 
 
-def todo_test_nondeterministic_LR_raise_error():
+def test_nondeterministic_LR_raise_error():
     """TODO: Language of even length palindromes.
 
     This is a non-deterministic grammar and the language is non-ambiguous.
@@ -88,6 +92,9 @@ def todo_test_nondeterministic_LR_raise_error():
         p = Parser(g)
         p.parse('0101000110001010')
 
+    p = GLRParser(g)
+    p.parse('0101000110001010')
+
 
 def test_cyclic_grammar_1():
     """
@@ -103,7 +110,11 @@ def test_cyclic_grammar_1():
         Parser(g)
 
     p = GLRParser(g)
-    p.parse('xxxxx')
+    results = p.parse('x')
+
+    # TODO: This one returns 2 parses. I would like to see just x -> A -> S
+    # assert len(results) == 1
+    assert len(results) == 2
 
 
 def test_cyclic_grammar_2():
@@ -115,19 +126,37 @@ def test_cyclic_grammar_2():
     S = 'x';
     S = EMPTY;
     """
-    g = Grammar.from_string(grammar, debug=True)
+    g = Grammar.from_string(grammar)
 
     with pytest.raises(SRConflicts):
         Parser(g)
 
     p = GLRParser(g)
-    p.parse('xxxxx')
+    results = p.parse('xx')
+
+    # TODO: This grammar parses but I would like to minimize the number of
+    # returned results by favouring non-empty subtrees.
+    # assert len(results) == 2
+
 
 def test_cyclic_grammar_3():
     grammar = """
     S = S A | A;
     A = "a" | EMPTY;
     """
+
+    g = Grammar.from_string(grammar)
+
+    Parser(g)
+
+    p = GLRParser(g)
+    results = p.parse('aa')
+
+    # TODO: This grammar produces multiple parses with GLR.
+    # Although all results are valid those with empty reductions should
+    # be eliminated.
+    # assert len(results) == 1
+    assert len(results) == 3
 
 
 def test_highly_ambiguous_grammar():
@@ -185,13 +214,19 @@ def test_indirect_left_recursive():
     p.parse("bbbbbbbbbbbba")
 
 
-def todo_test_reduce_enough_empty():
-    """TODO: In this grammar parser must reduce as many empty tokens as there are
-    "b" tokens ahead to be able to finish sucessfuly.
+def test_reduce_enough_empty():
+    """In this unamibuous grammar parser must reduce as many empty A productions as
+    there are "b" tokens ahead to be able to finish sucessfuly thus it needs
+    unlimited lookahead.
 
     Language is: xb^n, n>=0
 
-    From: Rekers, Joan Gerard: "Parser generation for interactive environments",
+    References:
+
+    Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers", Generalized LR
+    parsing, Springer, 1991.
+
+    Rekers, Joan Gerard: "Parser generation for interactive environments",
     phD thesis, Universiteit van Amsterdam, 1992.
 
     """
