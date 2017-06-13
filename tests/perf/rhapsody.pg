@@ -2,13 +2,14 @@ Model=        Header Object EOF;
 Object=       '{' ID Properties '}';
 Properties=   Property | Properties Property;
 Property=     '-' ID '=' Values OptionalSemiColon;
-Values=       Value  | Values ';' Value | Values Value | EMPTY;
-Value=        STRING | SIGN INT | SIGN FLOAT | GUID | Object | ID;
+Property=     '-' ID '=' ';';
+Values=       Values ';' Value | Values Value | Value;
+Value=        STRING | INT | FLOAT | GUID | Object | ID;
 
 
 STRING = /("(\\"|[^"])*")|(\'(\\\'|[^\'])*\')/;
-INT = /[0-9]+\b/ {prefer};
-FLOAT = /[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
+INT = /[-+]?[0-9]+\b/ {prefer};
+FLOAT = /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
 SIGN = '+' | '-' | EMPTY;
 GUID = /[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*/;
 OptionalSemiColon = ';' | EMPTY;
