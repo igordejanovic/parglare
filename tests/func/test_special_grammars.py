@@ -216,9 +216,9 @@ def test_indirect_left_recursive():
 
 
 def test_reduce_enough_empty():
-    """In this unamibuous grammar parser must reduce as many empty A productions as
-    there are "b" tokens ahead to be able to finish sucessfuly thus it needs
-    unlimited lookahead.
+    """In this unambiguous grammar parser must reduce as many empty A productions
+    as there are "b" tokens ahead to be able to finish successfully, thus it
+    needs unlimited lookahead
 
     Language is: xb^n, n>=0
 
