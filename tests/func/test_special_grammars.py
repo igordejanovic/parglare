@@ -3,7 +3,7 @@ Test non-deterministic parsing.
 """
 import pytest  # noqa
 from parglare import Parser, GLRParser, Grammar, SLR, LALR
-from parglare.exceptions import GrammarError, SRConflicts, RRConflicts
+from parglare.exceptions import ParseError, SRConflicts, RRConflicts
 
 
 def test_lr_1_grammar():
@@ -64,21 +64,20 @@ def test_lalr_reduce_reduce_conflict():
 
 
 def test_nondeterministic_LR_raise_error():
-    """TODO: Language of even length palindromes.
+    """Language of even length palindromes.
 
     This is a non-deterministic grammar and the language is non-ambiguous.
 
-    If the string is a even length palindrome parser should match EMPTY at he
-    middle of the string and start to reduce.
+    If the string is a even length palindrome parser should reduce EMPTY at he
+    middle of the string and start to reduce by A and B.
 
-    In parglare currently this can't happen because EMPTY will be overriden by
-    '1' or '0' match using longest-match disambiguation strategy so it will try
-    to reduce only at the end of the string.
+    LR parsing is deterministic so this grammar can't parse the input as the
+    EMPTY reduction will be tried only after consuming all the input by
+    implicit disambiguation strategy of favouring shift over empty productions.
 
-    In GLR parsing this could be supported by using GLR fork/split to resolve
-    all ambiguities, even lexical. Of course, this would be a big negative
-    impact on preformances as each state that has EMPTY in the action table
-    would need to fork as the EMPTY always matches.
+    OTOH, GLR parser can handle this by forking parser at each step and trying
+    both empty reductions and shifts. Only the parser that has reduced empty at
+    the middle of the input will succeed.
 
     """
     grammar = """
@@ -88,12 +87,14 @@ def test_nondeterministic_LR_raise_error():
     """
 
     g = Grammar.from_string(grammar)
-    with pytest.raises(GrammarError):
+    with pytest.raises(ParseError):
         p = Parser(g)
         p.parse('0101000110001010')
 
     p = GLRParser(g)
-    p.parse('0101000110001010')
+    results = p.parse('0101000110001010')
+
+    assert len(results) == 1
 
 
 def test_cyclic_grammar_1():
@@ -131,12 +132,12 @@ def test_cyclic_grammar_2():
     with pytest.raises(SRConflicts):
         Parser(g)
 
-    p = GLRParser(g)
+    p = GLRParser(g, debug=True)
     results = p.parse('xx')
 
-    # TODO: This grammar parses but I would like to minimize the number of
-    # returned results by favouring non-empty subtrees.
-    # assert len(results) == 2
+    # This grammar has infinite ambiguity but by minimizing empty reductions
+    # we shall get only one result xx -> xS -> SS -> S
+    assert len(results) == 1
 
 
 def test_cyclic_grammar_3():
@@ -152,11 +153,7 @@ def test_cyclic_grammar_3():
     p = GLRParser(g)
     results = p.parse('aa')
 
-    # TODO: This grammar produces multiple parses with GLR.
-    # Although all results are valid those with empty reductions should
-    # be eliminated.
-    # assert len(results) == 1
-    assert len(results) == 3
+    assert len(results) == 1
 
 
 def test_highly_ambiguous_grammar():
@@ -194,9 +191,9 @@ def test_highly_ambiguous_grammar():
 def test_indirect_left_recursive():
     """Grammar with indirect/hidden left recursion.
 
-    parglare will handle this using implicit longest-match disambiguation
-    between "b" and EMPTY, i.e. it will greadily match "b" tokens and than
-    match EMPTY before "a" and start to reduce by 'B="b" B' production.
+    parglare will handle this using implicit disambiguation by prefering shifts
+    over empty reductions. It will greadily match "b" tokens and than reduce
+    EMPTY before "a" and start to reduce by 'B="b" B' production.
 
     """
 
@@ -210,8 +207,9 @@ def test_indirect_left_recursive():
     p = Parser(g)
     p.parse("bbbbbbbbbbbba")
 
-    p = GLRParser(g)
-    p.parse("bbbbbbbbbbbba")
+    p = GLRParser(g, debug=True)
+    results = p.parse("bbbbbbbbbbbba")
+    assert len(results) == 1
 
 
 def test_reduce_enough_empty():
@@ -237,5 +235,7 @@ def test_reduce_enough_empty():
     """
     g = Grammar.from_string(grammar)
 
-    p = GLRParser(g)
-    p.parse("xbbb")
+    p = GLRParser(g, debug=True)
+    results = p.parse("xbbb")
+
+    assert len(results) == 1
