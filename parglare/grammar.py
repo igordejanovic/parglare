@@ -469,7 +469,10 @@ class Grammar(object):
  TERM_RULES,
  SEQUENCE,
  LAYOUT,
- LAYOUT_ITEM) = [NonTerminal(name) for name in [
+ LAYOUT_ITEM,
+ COMMENT,
+ CORNC,
+ CORNCS) = [NonTerminal(name) for name in [
      'Grammar',
      'ProductionSet',
      'Production',
@@ -485,14 +488,18 @@ class Grammar(object):
      'TermRules',
      'Sequence',
      'LAYOUT',
-     'LAYOUT_ITEM']]
+     'LAYOUT_ITEM',
+     'Comment',
+     'CORNC',
+     'CORNCS']]
 
 (NAME,
  STR_TERM,
  REGEX_TERM,
  PRIOR,
  WS,
- COMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
+ COMMENTLINE,
+ NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
              [
                ('Name', r'[a-zA-Z0-9_]+'),
                ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
@@ -500,7 +507,8 @@ class Grammar(object):
                ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
                ('Prior', r'\d+'),
                ('WS', r'\s+'),
-               ('Comment', r'\/\/.*'),
+               ('CommentLine', r'\/\/.*'),
+               ('NotComment', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
              ]]
 
 pg_productions = [
@@ -540,6 +548,14 @@ pg_productions = [
     [LAYOUT_ITEM, [WS]],
     [LAYOUT_ITEM, [COMMENT]],
     [LAYOUT_ITEM, [EMPTY]],
+    [COMMENT, ['/*', CORNCS, '*/']],
+    [COMMENT, [COMMENTLINE]],
+    [CORNCS, [CORNC]],
+    [CORNCS, [CORNCS, CORNC]],
+    [CORNCS, [EMPTY]],
+    [CORNC, [COMMENT]],
+    [CORNC, [NOTCOMMENT]],
+    [CORNC, [WS]]
 ]
 
 
