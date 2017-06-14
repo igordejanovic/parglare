@@ -1,4 +1,4 @@
-Model=        Header Object EOF;
+Model=        Header Object;
 Object=       '{' ID Properties '}';
 Properties=   Property | Properties Property;
 Property=     '-' ID '=' Values OptionalSemiColon;
