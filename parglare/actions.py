@@ -25,6 +25,14 @@ def pass_single(_, nodes):
     return nodes[0]
 
 
+def pass_single_if_exists(_, nodes):
+    """
+    Unpack single value and pass up if value exists, if not return None.
+    """
+    if nodes:
+        return nodes[0]
+
+
 def pass_value(_, nodes):
     """
     Used for productions which represent alternatives of terminals:

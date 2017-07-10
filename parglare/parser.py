@@ -39,6 +39,8 @@ class Parser(object):
             if layout_prod:
                 self.layout_parser = Parser(grammar,
                                             start_production=layout_prod,
+                                            actions=actions,
+                                            default_actions=False,
                                             ws=None, layout=True,
                                             position=True,
                                             debug=layout_debug)
@@ -246,7 +248,8 @@ class Parser(object):
         if self.layout_parser:
             layout_content, pos = self.layout_parser.parse(
                 input_str, position)
-            layout_content = input_str[position:pos]
+            if not layout_content:
+                layout_content = input_str[position:pos]
             position = pos
         elif self.ws:
             old_pos = position
