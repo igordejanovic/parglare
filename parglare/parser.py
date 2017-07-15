@@ -284,12 +284,13 @@ class Parser(object):
             ntok = EOF_token
         else:
             tokens = []
-            for idx, symbol in enumerate(actions):
-                tok = symbol.recognizer(input_str, position)
-                if tok:
-                    tokens.append(Token(symbol, tok))
-                    if finish_flags[idx]:
-                        break
+            if position < in_len:
+                for idx, symbol in enumerate(actions):
+                    tok = symbol.recognizer(input_str, position)
+                    if tok:
+                        tokens.append(Token(symbol, tok))
+                        if finish_flags[idx]:
+                            break
             if not tokens:
                 if STOP in actions:
                     ntok = STOP_token
