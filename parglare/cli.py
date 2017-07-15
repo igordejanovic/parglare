@@ -72,8 +72,8 @@ def pglr():
 
     if args.cmd == "viz":
         print("Generating '%s.dot' file for the grammar PDA." % args.grammar)
-        print("Use dot viewer (e.g. xdot)")
-        print("or convert to pdf by running 'dot -Tpdf -O %s.dot'"
+        print("Use dot viewer (e.g. xdot) "
+              "or convert to pdf by running 'dot -Tpdf -O %s.dot'"
               % args.grammar)
         grammar_pda_export(table, "%s.dot" % args.grammar)
 

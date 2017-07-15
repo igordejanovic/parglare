@@ -64,7 +64,7 @@ class SRConflict(LRConflict):
     def __init__(self, state, term, productions):
         prod_str = " or ".join(["'{}'".format(str(p))
                                 for p in productions])
-        message = "{}\nIn state {} and input symbol {} can't " \
+        message = "{}\nIn state {} and input symbol '{}' can't " \
                   "decide whether to shift or reduce by production(s) {}." \
             .format(str(state), state.state_id, term, prod_str)
         super(SRConflict, self).__init__(message, state, term, productions)

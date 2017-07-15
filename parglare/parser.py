@@ -496,7 +496,7 @@ class LRState(object):
         return self.items[self.items.index(other_item)]
 
     def __str__(self):
-        s = "\nState %d" % self.state_id
+        s = "\nState %d\n" % self.state_id
         for i in self.items:
             s += "\t{}\n".format(i)
         return s
