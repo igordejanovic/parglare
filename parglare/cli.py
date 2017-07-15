@@ -52,6 +52,19 @@ def pglr():
             table.print_debug()
 
         print("Grammar OK.")
+        if table.sr_conflicts:
+            print("There are {} Shift/Reduce conflicts. "
+                  "Either use 'prefer_shifts' parser mode, try to resolve "
+                  "manually or use GLR parsing.".format(
+                      len(table.sr_conflicts)))
+        if table.rr_conflicts:
+            print("There are {} Reduce/Reduce conflicts."
+                  "Try to resolve manually or use GLR parsing.".format(
+                      len(table.rr_conflicts)))
+
+        if (table.sr_conflicts or table.rr_conflicts) and not args.d:
+            print("Run in debug mode to print all the states.")
+
     except (GrammarError, ParseError) as e:
         print("Error in grammar file.")
         print(e)

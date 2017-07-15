@@ -353,3 +353,14 @@ class LRTable(object):
                              if len(v) == 1 else "[{}]".format(
                                      ",".join([str(x) for x in v])))
                  for k, v in state.actions.items()]))
+
+        if self.sr_conflicts:
+            print("\n\n*** S/R conflicts ***")
+            print("There are {} S/R conflicts".format(len(self.sr_conflicts)))
+            for src in self.sr_conflicts:
+                print(src.message)
+
+        if self.rr_conflicts:
+            print("\n\n*** R/R conflicts ***\n")
+            for rrc in self.rr_conflicts:
+                print(rrc)
