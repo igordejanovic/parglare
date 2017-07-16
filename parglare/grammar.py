@@ -67,15 +67,12 @@ class Terminal(GrammarSymbol):
     recognizer(callable): Called with input list of objects and position in the
         stream. Should return a sublist of recognized objects. The sublist
         should be rooted at the given position.
-    from_recognizer(bool): Used in grammar construction to indicate that
-        terminal is created from str/regex recognizer.
     """
-    def __init__(self, name, recognizer=None, from_recognizer=False):
+    def __init__(self, name, recognizer=None):
         self.prior = DEFAULT_PRIORITY
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
         self.finish = False
         self.prefer = False
-        self.from_recognizer = from_recognizer
         super(Terminal, self).__init__(name)
 
 
@@ -578,12 +575,12 @@ def act_recognizer_str(_, nodes):
                  .replace(r"\\", "\\")\
                  .replace(r"\n", "\n")\
                  .replace(r"\t", "\t")
-    return Terminal(value, StringRecognizer(value), from_recognizer=True)
+    return Terminal(value, StringRecognizer(value))
 
 
 def act_recognizer_regex(_, nodes):
     value = nodes[0].value[1:-1]
-    return Terminal(value, RegExRecognizer(value), from_recognizer=True)
+    return Terminal(value, RegExRecognizer(value))
 
 
 def act_production(_, nodes):
