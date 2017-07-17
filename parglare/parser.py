@@ -257,8 +257,9 @@ class Parser(object):
             layout_content = input_str[old_pos:position]
 
         if self.debug:
-            print("\tSkipping whitespaces: '{}'".format(
-                layout_content.replace("\n", "\\n")))
+            content = layout_content.replace("\n", "\\n") \
+                      if type(layout_content) is text else layout_content
+            print("\tSkipping whitespaces: '{}'".format(content))
             print("\tNew position:", pos_to_line_col(input_str, position))
 
         return position, layout_content
