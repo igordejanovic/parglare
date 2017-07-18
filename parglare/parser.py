@@ -4,6 +4,7 @@ import codecs
 import sys
 from collections import OrderedDict
 from .grammar import Grammar, EMPTY, AUGSYMBOL, EOF, STOP
+from .errors import Error
 from .exceptions import ParseError, DisambiguationError, \
     disambiguation_error, nomatch_error, SRConflicts, RRConflicts
 
@@ -28,7 +29,7 @@ class Parser(object):
     def __init__(self, grammar, start_production=1, actions=None, debug=False,
                  layout_debug=False, ws='\n\t ', default_actions=True,
                  tables=LALR, layout=False, position=False,
-                 prefer_shifts=False):
+                 prefer_shifts=False, error_recovery=False):
         self.grammar = grammar
         self.start_production = start_production
         self.sem_actions = actions if actions else {}
@@ -55,6 +56,8 @@ class Parser(object):
         self.default_actions = default_actions
 
         self.prefer_shifts = prefer_shifts
+
+        self.error_recovery = error_recovery
 
         from .closure import LR_0, LR_1
         from .tables import create_table
@@ -106,6 +109,9 @@ class Parser(object):
         if self.debug:
             print("*** Parsing started")
 
+        self.errors = []
+        self._current_error = None
+
         state_stack = [StackNode(self.table.states[0], None)]
         context = Context()
 
@@ -156,14 +162,46 @@ class Parser(object):
             acts = actions.get(ntok.symbol)
 
             if not acts:
-                raise ParseError(file_name, input_str, position,
-                                 nomatch_error(actions.keys()))
 
-            # Use first action -- SHIFT if exists there are SHIFT available or
-            # REDUCE. This parser would raise exception during contstruction if
-            # there are R/R conflicts or if there are S/R conflicts and
-            # prefer_shifts strategy is not selected. Thus, we are safe to get
-            # the first action.
+                if self.error_recovery:
+                    if debug:
+                        print("**Error found. Recovery initiated.**")
+                    # No actions to execute. Try error recovery.
+                    if type(self.error_recovery) is bool:
+                        # Default recovery
+                        ntok, error, position = self._default_error_recovery(
+                            input_str, position, actions.keys())
+                    else:
+                        # Custom recovery provided during parser construction
+                        ntok, error, position = self.error_recovery(
+                            self, input_str, position, actions.keys())
+
+                    # The recovery may either decide to skip erroneous part
+                    # of the input and resume at the place that can
+                    # continue or it might decide to fill in/replace
+                    # missing/invalid tokens.
+                    if error:
+                        if debug:
+                            print("\tError: {}".format(str(error)))
+                        self.errors.append(error)
+
+                    if not ntok:
+                        # If token is not created we are just droping current
+                        # input and advancing position. Thus, stay in the same
+                        # state and try to continue.
+                        if debug:
+                            print("\tContinuing at position {}.".format(
+                                pos_to_line_col(input_str, position)))
+                        continue
+                else:
+                    raise ParseError(file_name, input_str, position,
+                                     nomatch_error(actions.keys()))
+
+            # Use the first action -- SHIFT if SHIFT is available or the only
+            # REDUCE otherwise. This parser would raise exception during
+            # contstruction if there are R/R conflicts or if there are S/R
+            # conflicts and prefer_shifts strategy is not selected. Thus, we
+            # are safe to get the first action.
             act = acts[0]
 
             if act.action is SHIFT:
@@ -186,6 +224,9 @@ class Parser(object):
                 if debug:
                     print("\tAction result = type:{} value:{}"
                           .format(type(result), repr(result)))
+
+                # If in error recovery mode, get out.
+                self._current_error = None
 
                 state_stack.append(StackNode(state, result))
                 position = context.end_position
@@ -334,6 +375,34 @@ class Parser(object):
                 tokens = pref_tokens
 
         raise DisambiguationError(tokens)
+
+    def _default_error_recovery(self, input, position, expected_symbols):
+        """The default recovery strategy is to drop char/object at current position
+        and try to continue.
+
+        Args:
+            input (sequence): Input string/stream of objects.
+            position (int): The current position in the input string.
+            expected_symbols (list of GrammarSymbol): The symbol that are
+                expected at the current location in the current state.
+
+        Returns:
+            (new Token or None, Error, new position)
+
+        """
+        if self._current_error:
+            self._current_error.length = position + 1 \
+                                         - self._current_error.position
+            return None, None, position + 1
+        else:
+            line, col = pos_to_line_col(input, position)
+            error = Error(position, 1,
+                          "Unexpected input at position {}. Expected: {}"
+                          .format((line, col),
+                                  " or ".join(
+                                      [t.name for t in expected_symbols])))
+            self._current_error = error
+            return None, error, position + 1
 
 
 class Context:
