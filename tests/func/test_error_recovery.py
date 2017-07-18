@@ -1,5 +1,5 @@
 import pytest  # noqa
-from parglare.parser import Parser, Grammar
+from parglare.parser import Parser, Grammar, ParseError
 from parglare.grammar import Terminal
 from parglare.actions import pass_single
 
@@ -83,6 +83,22 @@ def test_error_recovery_complete():
     assert e2.position == 12
     assert e2.length == 4
     assert 'Unexpected input at position (1, 12)' in e2.message
+
+
+def test_error_recovery_parse_error():
+    """In this test we have error that can't be recovered from by a simple
+    dropping of characters as we'll end up with invalid expression at the EOF.
+
+    The current solution is to throw ParseError at the beggining of the last
+    error that couldn't be recovered from.
+
+    """
+    parser = Parser(g, actions=actions, error_recovery=True, debug=True)
+
+    with pytest.raises(ParseError) as einfo:
+        parser.parse("1 + 2 + * 3 + & -")
+
+    assert einfo.value.position == 14
 
 
 def test_custom_error_recovery():

@@ -110,7 +110,7 @@ class Parser(object):
             print("*** Parsing started")
 
         self.errors = []
-        self._current_error = None
+        self.current_error = None
 
         state_stack = [StackNode(self.table.states[0], None)]
         context = Context()
@@ -164,6 +164,13 @@ class Parser(object):
             if not acts:
 
                 if self.error_recovery:
+                    # If we are past end of input error recovery can't be
+                    # successful and the only thing we can do is to throw
+                    # ParserError
+                    if position > len(input_str):
+                        e = self.current_error
+                        raise ParseError(file_name, input_str, e.position,
+                                         nomatch_error(actions.keys()))
                     if debug:
                         print("**Error found. Recovery initiated.**")
                     # No actions to execute. Try error recovery.
@@ -192,7 +199,10 @@ class Parser(object):
                         if debug:
                             print("\tContinuing at position {}.".format(
                                 pos_to_line_col(input_str, position)))
+
+                        new_token = True
                         continue
+
                 else:
                     raise ParseError(file_name, input_str, position,
                                      nomatch_error(actions.keys()))
@@ -226,7 +236,7 @@ class Parser(object):
                           .format(type(result), repr(result)))
 
                 # If in error recovery mode, get out.
-                self._current_error = None
+                self.current_error = None
 
                 state_stack.append(StackNode(state, result))
                 position = context.end_position
@@ -390,9 +400,9 @@ class Parser(object):
             (new Token or None, Error, new position)
 
         """
-        if self._current_error:
-            self._current_error.length = position + 1 \
-                                         - self._current_error.position
+        if self.current_error:
+            self.current_error.length = position + 1 \
+                                         - self.current_error.position
             return None, None, position + 1
         else:
             line, col = pos_to_line_col(input, position)
@@ -401,7 +411,7 @@ class Parser(object):
                           .format((line, col),
                                   " or ".join(
                                       [t.name for t in expected_symbols])))
-            self._current_error = error
+            self.current_error = error
             return None, error, position + 1
 
 
