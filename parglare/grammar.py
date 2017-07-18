@@ -497,16 +497,16 @@ class Grammar(object):
  WS,
  COMMENTLINE,
  NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
-             [
-               ('Name', r'[a-zA-Z0-9_]+'),
-               ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
-                           r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
-               ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
-               ('Prior', r'\d+'),
-               ('WS', r'\s+'),
-               ('CommentLine', r'\/\/.*'),
-               ('NotComment', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
-             ]]
+                [
+                    ('Name', r'[a-zA-Z0-9_]+'),
+                    ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
+                     r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
+                    ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
+                    ('Prior', r'\d+'),
+                    ('WS', r'\s+'),
+                    ('CommentLine', r'\/\/.*'),
+                    ('NotComment', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
+                ]]
 
 pg_productions = [
     [GRAMMAR, [PRODUCTION_SET, EOF]],
