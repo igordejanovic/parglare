@@ -157,6 +157,8 @@ class Parser(object):
 
             if debug:
                 print("\tContext:", position_context(input_str, position))
+                print("\tTokens expected: {}"
+                      .format(_expected_symbols_str(actions.keys())))
                 print("\tToken ahead: {}".format(ntok))
 
             acts = actions.get(ntok.symbol)
@@ -176,7 +178,7 @@ class Parser(object):
                     # No actions to execute. Try error recovery.
                     if type(self.error_recovery) is bool:
                         # Default recovery
-                        ntok, error, position = self._default_error_recovery(
+                        ntok, error, position = self.default_error_recovery(
                             input_str, position, actions.keys())
                     else:
                         # Custom recovery provided during parser construction
@@ -386,7 +388,7 @@ class Parser(object):
 
         raise DisambiguationError(tokens)
 
-    def _default_error_recovery(self, input, position, expected_symbols):
+    def default_error_recovery(self, input, position, expected_symbols):
         """The default recovery strategy is to drop char/object at current position
         and try to continue.
 
@@ -409,8 +411,7 @@ class Parser(object):
             error = Error(position, 1,
                           "Unexpected input at position {}. Expected: {}"
                           .format((line, col),
-                                  " or ".join(
-                                      [t.name for t in expected_symbols])))
+                                  _expected_symbols_str(expected_symbols)))
             self.current_error = error
             return None, error, position + 1
 
@@ -774,3 +775,7 @@ def position_context(input_str, position):
         + text(input_str[position:position+10])
     c = c.replace("\n", "\\n")
     return c
+
+
+def _expected_symbols_str(symbols):
+    return " or ".join([s.name for s in symbols])
