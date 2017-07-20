@@ -54,7 +54,10 @@ This lib is in the beta. It is not tested extensively in real-world projects yet
 - Debug print/tracing of both grammar construction, DPDA states construction and
   parsing process (set `debug=True` and/or `layout_debug=True`to the
   `Parser` instantiation and/or call to `Grammar.from_<>`).
-- Tests. I'm trying to maintain high test code coverage. Until docs are written
+- Error recovery. There is a builtin strategy which will drop current
+  char/object at input, register error and try to continue. A user can provide
+  hers own recovery strategy.
+- Tests. I'm trying to maintain a high test code coverage. Until docs are written
   tests serve as a good source of information.
 - There are a few examples (see `examples` folder).
 
@@ -63,7 +66,6 @@ This lib is in the beta. It is not tested extensively in real-world projects yet
 - Docs
 - Tables caching/loading (currently tables are calculated whenever `Parser` is
   instantiated)
-- Error recovery
 
 ## Quick intro
 
@@ -126,4 +128,3 @@ Tested with 2.7, 3.3-3.6
 ## Credits
 
 Initial layout/content of this package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and the [audreyr/cookiecutter-pypackage](https://github.com/audreyr/cookiecutter-pypackage) project template.
-
