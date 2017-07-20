@@ -2,7 +2,14 @@
 
 - Development version
 
-  - Lexical recognizers.
+  - First implementation of GLR parsing.
+  - Lexical recognizers. Parsing the stream of arbitrary objects.
+  - Error recovery. Builtin default recovery, custom user defined.
+  - Common semantic actions.
+  - Lexical disambiguation improvements.
+  - Support for comments in grammars.
+  - Additions to examples and tests.
+  - Various bug fixes.
 
 - 2017-02-02 - Version 0.1
 
