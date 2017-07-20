@@ -158,7 +158,7 @@ class Parser(object):
             if debug:
                 print("\tContext:", position_context(input_str, position))
                 print("\tTokens expected: {}"
-                      .format(_expected_symbols_str(actions.keys())))
+                      .format(expected_symbols_str(actions.keys())))
                 print("\tToken ahead: {}".format(ntok))
 
             acts = actions.get(ntok.symbol)
@@ -205,9 +205,12 @@ class Parser(object):
                         new_token = True
                         continue
 
-                else:
-                    raise ParseError(file_name, input_str, position,
-                                     nomatch_error(actions.keys()))
+                    else:
+                        acts = actions.get(ntok.symbol)
+
+            if not acts:
+                raise ParseError(file_name, input_str, position,
+                                 nomatch_error(actions.keys()))
 
             # Use the first action -- SHIFT if SHIFT is available or the only
             # REDUCE otherwise. This parser would raise exception during
@@ -411,7 +414,7 @@ class Parser(object):
             error = Error(position, 1,
                           "Unexpected input at position {}. Expected: {}"
                           .format((line, col),
-                                  _expected_symbols_str(expected_symbols)))
+                                  expected_symbols_str(expected_symbols)))
             self.current_error = error
             return None, error, position + 1
 
@@ -752,6 +755,11 @@ def pos_to_line_col(input_str, position):
     """
     Returns position in the (line,column) form.
     """
+
+    if type(input_str) is not str:
+        # If we are not parsing string
+        return 1, position
+
     line = 1
     old_pos = 0
     try:
@@ -777,5 +785,5 @@ def position_context(input_str, position):
     return c
 
 
-def _expected_symbols_str(symbols):
+def expected_symbols_str(symbols):
     return " or ".join([s.name for s in symbols])
