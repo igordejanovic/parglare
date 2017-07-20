@@ -112,8 +112,9 @@ class Parser(object):
         self.errors = []
         self.current_error = None
 
-        state_stack = [StackNode(self.table.states[0], None)]
+        state_stack = [StackNode(self.table.states[0], position, 0, None)]
         context = Context()
+        context.parser = self
 
         default_actions = self.default_actions
         sem_actions = self.sem_actions
@@ -243,7 +244,10 @@ class Parser(object):
                 # If in error recovery mode, get out.
                 self.current_error = None
 
-                state_stack.append(StackNode(state, result))
+                state_stack.append(StackNode(state,
+                                             context.start_position,
+                                             context.end_position,
+                                             result))
                 position = context.end_position
                 new_token = True
 
@@ -262,11 +266,16 @@ class Parser(object):
 
                 r_length = len(production.rhs)
                 if r_length:
+                    context.end_position = state_stack[-1].end_position
+                    context.start_position = \
+                        state_stack[-r_length].start_position
                     subresults = [x.result for x in state_stack[-r_length:]]
                     del state_stack[-r_length:]
                     cur_state = state_stack[-1].state
                 else:
                     subresults = []
+                    context.end_position = position
+                    context.start_position = position
 
                 # Calling semantic actions
                 result = None
@@ -285,7 +294,10 @@ class Parser(object):
                           .format(type(result), repr(result)))
 
                 cur_state = cur_state.gotos[production.symbol]
-                state_stack.append(StackNode(cur_state, result))
+                state_stack.append(StackNode(cur_state,
+                                             context.start_position,
+                                             context.end_position,
+                                             result))
                 new_token = False
 
             elif act.action is ACCEPT:
@@ -424,10 +436,15 @@ class Context:
 
 
 class StackNode:
-    __slots__ = ['state', 'result']
+    __slots__ = ['state',
+                 'start_position',
+                 'end_position',
+                 'result']
 
-    def __init__(self, state, result):
+    def __init__(self, state, start_position, end_position, result):
         self.state = state
+        self.start_position = start_position
+        self.end_position = end_position
         self.result = result
 
 
