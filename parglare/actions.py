@@ -25,6 +25,13 @@ def pass_single(_, nodes):
     return nodes[0]
 
 
+def pass_inner(_, nodes):
+    """
+    Pass inner value up, e.g. for parentheses '(' token ')'.
+    """
+    return nodes[1]
+
+
 def pass_single_if_exists(_, nodes):
     """
     Unpack single value and pass up if value exists, if not return None.
