@@ -19,13 +19,14 @@ class GLRParser(Parser):
         """
         pass
 
-    def parse(self, input_str, position=0, file_name=None):
+    def parse(self, input_str, position=0, file_name=None, context=None):
         """
         Parses the given input string.
         Args:
             input_str(str): A string to parse.
             position(int): Position to start from.
             file_name(str): File name if applicable. Used in error reporting.
+            context(Context): An object used to keep parser context info.
         """
 
         if self.debug:
@@ -35,7 +36,7 @@ class GLRParser(Parser):
         self.last_position = 0
         self.expected = set()
         self.empty_reductions_results = {}
-        position, layout_content = self._skipws(input_str, position)
+        position, layout_content = self._skipws(context, input_str, position)
 
         # We start with a single parser head in state 0.
         start_head = GSSNode(self.table.states[0],
@@ -130,7 +131,7 @@ class GLRParser(Parser):
                     print("\tLookahead token: {}".format(lookahead_token))
 
             else:
-                position, layout_content = self._skipws(input_str,
+                position, layout_content = self._skipws(context, input_str,
                                                         position)
                 tokens = next_tokens(state, input_str, position)
                 if debug:

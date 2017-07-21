@@ -97,13 +97,14 @@ class Parser(object):
             content = f.read()
         return self.parse(content, file_name=file_name)
 
-    def parse(self, input_str, position=0, file_name=None):
+    def parse(self, input_str, position=0, file_name=None, context=None):
         """
         Parses the given input string.
         Args:
             input_str(str): A string to parse.
             position(int): Position to start from.
             file_name(str): File name if applicable. Used in error reporting.
+            context(Context): An object used to keep parser context info.
         """
 
         if self.debug:
@@ -113,8 +114,7 @@ class Parser(object):
         self.current_error = None
 
         state_stack = [StackNode(self.table.states[0], position, 0, None)]
-        context = Context()
-        context.parser = self
+        context = Context() if not context else context
 
         default_actions = self.default_actions
         sem_actions = self.sem_actions
@@ -141,7 +141,7 @@ class Parser(object):
                 # always leading to reduction.
                 try:
 
-                    position, layout_content = self._skipws(input_str,
+                    position, layout_content = self._skipws(context, input_str,
                                                             position)
                     if self.debug:
                         print("\tLayout content: '{}'".format(layout_content))
@@ -153,6 +153,7 @@ class Parser(object):
                     raise ParseError(file_name, input_str, position,
                                      disambiguation_error(e.tokens))
 
+            context.parser = self
             context.start_position = position
             context.end_position = position + len(ntok.value)
 
@@ -309,12 +310,12 @@ class Parser(object):
                 else:
                     return state_stack[1].result
 
-    def _skipws(self, input_str, position):
+    def _skipws(self, context, input_str, position):
         in_len = len(input_str)
         layout_content = ''
         if self.layout_parser:
             layout_content, pos = self.layout_parser.parse(
-                input_str, position)
+                input_str, position, context=context)
             if not layout_content:
                 layout_content = input_str[position:pos]
             position = pos
