@@ -236,6 +236,9 @@ class Parser(object):
                 if symbol.name in sem_actions:
                     result = sem_actions[symbol.name](context, ntok.value)
                 elif default_actions:
+                    if debug:
+                        print("\tNo action defined for '{}'. Using default."
+                              .format(symbol.name))
                     result = default_shift_action(context, ntok.value)
 
                 if debug:
