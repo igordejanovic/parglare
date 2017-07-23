@@ -363,4 +363,4 @@ class LRTable(object):
         if self.rr_conflicts:
             print("\n\n*** R/R conflicts ***\n")
             for rrc in self.rr_conflicts:
-                print(rrc)
+                print(rrc.message)
