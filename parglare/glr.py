@@ -445,35 +445,12 @@ class GLRParser(Parser):
                                  "R:{}".format(dot_escape(str(production))))
 
     def _next_tokens(self, state, input_str, position):
-        """
-        For the current position in the input stream and actions in the current
-        state find next token.
-        """
-
-        actions = state.actions
-        finish_flags = state.finish_flags
-
-        in_len = len(input_str)
-
-        tokens = []
-        for idx, symbol in enumerate(actions):
-            tok = symbol.recognizer(input_str, position)
-            if tok:
-                tokens.append(Token(symbol, tok))
-                if finish_flags[idx]:
-                    break
-
-        if len(tokens) > 1:
-            try:
-                tok = self._lexical_disambiguation(tokens)
-                tokens = [tok]
-            except DisambiguationError as e:
-                # Lexical ambiguity will be handled by GLR
-                tokens = e.tokens
-
-        # tokens.append(EMPTY_token)
-        if position == in_len:
-            tokens.append(STOP_token)
+        try:
+            tok = super()._next_token(state, input_str, position)
+            tokens = [tok]
+        except DisambiguationError as e:
+            # Lexical ambiguity will be handled by GLR
+            tokens = e.tokens
 
         return tokens
 

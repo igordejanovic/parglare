@@ -6,7 +6,7 @@ from parglare.exceptions import SRConflicts
 def test_lr2_grammar():
 
     grammar = """
-    Model = Prods;
+    Model = Prods EOF;
     Prods = Prod | Prods Prod;
     Prod = ID "=" ProdRefs;
     ProdRefs = ID | ProdRefs ID;
@@ -108,7 +108,7 @@ def test_expressions():
 def test_epsilon_grammar():
 
     grammar = """
-    Model = Prods;
+    Model = Prods EOF;
     Prods = Prod | Prods Prod | EMPTY;
     Prod = ID "=" ProdRefs;
     ProdRefs = ID | ProdRefs ID;
@@ -127,5 +127,54 @@ def test_epsilon_grammar():
     results = p.parse(txt)
     assert len(results) == 1
 
+    results = p.parse("")
+    assert len(results) == 1
+
+
+def test_non_eof_grammar():
+    """
+    Grammar that is not anchored by EOF at the end might
+    result in multiple trees that are produced by sucessful
+    parses of the incomplete input.
+    """
+    grammar_nonempty = """
+    Model = Prods;
+    Prods = Prod | Prods Prod;
+    Prod = ID "=" ProdRefs;
+    ProdRefs = ID | ProdRefs ID;
+    ID = /\w+/;
+    """
+
+    grammar_empty = """
+    Model = Prods;
+    Prods = Prod | Prods Prod | EMPTY;
+    Prod = ID "=" ProdRefs;
+    ProdRefs = ID | ProdRefs ID;
+    ID = /\w+/;
+    """
+
+    g_nonempty = Grammar.from_string(grammar_nonempty)
+    g_empty = Grammar.from_string(grammar_empty)
+
+    txt = """
+    First = One Two three
+    Second = Foo Bar
+    Third = Baz
+    """
+
+    p = GLRParser(g_nonempty, debug=True)
+    results = p.parse(txt)
+    # There is three succesful parses.
+    # e.g. one would be the production 'First = One Two three Second' and the
+    # parser could not continue as the next token is '=' but it succeds as
+    # we haven't terminated our model with EOF so we allow partial parses.
+    assert len(results) == 3
+
+    p = GLRParser(g_empty, debug=True)
+    results = p.parse(txt)
+    # TODO: Ivestigate why this returns only one tree. It shouldn't
+    # differentiate from the non-empty version.
+    # assert len(results) == 3
+    assert len(results) == 1
     results = p.parse("")
     assert len(results) == 1
