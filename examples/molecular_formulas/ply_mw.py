@@ -8,17 +8,20 @@ from ply import lex
 from ply.lex import TOKEN
 import ply.yacc as yacc
 
+
 class ParseError(Exception):
     def __init__(self, msg, offset):
         self.msg = msg
         self.offset = offset
+
     def __repr__(self):
         return "ParseError(%r, %r)" % (self.msg, self.offset)
+
     def __str__(self):
         return "%s at position %s" % (self.msg, self.offset + 1)
 
 
-### Define the lexer
+# Define the lexer
 
 tokens = (
     "ATOM",
@@ -40,7 +43,7 @@ mw_table = {
 # Sort order is:
 #   - alphabetically on first character, to make it easier
 # for a human to look at and debug any problems
-# 
+#
 #   - then by the length of the symbol; two letters before 1
 # Needed because Python's regular expression matcher
 # uses "first match" not "longest match" rules.
@@ -54,10 +57,11 @@ mw_table = {
 
 atom_names = sorted(
     mw_table.keys(),
-    key = lambda symbol: (symbol[0], -len(symbol), symbol))
+    key=lambda symbol: (symbol[0], -len(symbol), symbol))
 
 # Creates a pattern like:  Cl|C|H|O|S
 atom_pattern = "|".join(atom_names)
+
 
 # Use a relatively new PLY feature to set the __doc__
 # string based on a Python variable.
@@ -66,55 +70,65 @@ def t_ATOM(t):
     t.value = mw_table[t.value]
     return t
 
+
 def t_DIGITS(t):
     r"\d+"
     t.value = int(t.value)
     return t
 
+
 def t_error(t):
     raise ParseError("unknown character", t.lexpos)
 
+
 lexer = lex.lex()
 
-## Here's an example of using the lexer
+# Here's an example of using the lexer
 
 # data = "H2SO4"
-# 
+#
 # lex.input(data)
-# 
+#
 # for tok in iter(lex.token, None):
 #     print tok
 
-##### Define the grammar
+# Define the grammar
+
 
 # The molecular weight of "" is 0.0
 def p_mw_empty(p):
     "mw : "
     p[0] = 0.0
 
+
 def p_mw_formula(p):
     "mw : formula"
     p[0] = p[1]
-    
+
 
 def p_first_species_term(p):
     "formula : species"
     p[0] = p[1]
 
+
 def p_species_list(p):
     "formula : formula species"
     p[0] = p[1] + p[2]
+
 
 def p_species(p):
     "species : ATOM DIGITS"
     p[0] = p[1] * p[2]
 
+
 def p_species_default(p):
     "species : ATOM"
     p[0] = p[1]
 
+
 def p_error(p):
     raise ParseError("unexpected character", p.lexpos)
+
 
 parser = yacc.yacc()
 
@@ -123,7 +137,7 @@ parser = yacc.yacc()
 # This guarantees the first parse will never be "" :)
 parser.parse("C")
 
-### Calculate molecular weight
 
+# Calculate molecular weight
 def calculate_mw(formula):
     return parser.parse(formula, lexer=lexer)
