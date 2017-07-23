@@ -3,8 +3,7 @@ import codecs
 from itertools import chain
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
-    default_reduce_action, default_shift_action, pos_to_line_col, \
-    STOP, STOP_token, Token
+    default_reduce_action, default_shift_action, pos_to_line_col, STOP
 from .export import dot_escape
 
 
@@ -448,7 +447,8 @@ class GLRParser(Parser):
 
     def _next_tokens(self, state, input_str, position):
         try:
-            tok = super()._next_token(state, input_str, position)
+            tok = super(GLRParser, self)._next_token(state, input_str,
+                                                     position)
             tokens = [tok]
         except DisambiguationError as e:
             # Lexical ambiguity will be handled by GLR
