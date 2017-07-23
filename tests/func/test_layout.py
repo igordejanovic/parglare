@@ -1,9 +1,12 @@
 import pytest  # noqa
-from parglare import Parser, Grammar
+from parglare import Parser, GLRParser, Grammar
 from parglare.actions import pass_single_if_exists
 
+parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
-def test_layout_whitespaces():
+
+@parsers
+def test_layout_whitespaces(parser_class):
     grammar = r"""
     S = K EOF;
     K = A | B;
@@ -12,18 +15,21 @@ def test_layout_whitespaces():
     LAYOUT = WS | EMPTY;
     WS = /\s+/;
     """
-
     g = Grammar.from_string(grammar)
-    parser = Parser(g)
 
-    parser.parse("""aaa a    aaaa
+    in_str = """aaa a    aaaa
     aa    aa a aaa
 
     aaa
-    """)
+    """
+
+    parser = parser_class(g, debug=True)
+    result = parser.parse(in_str)
+    assert result
 
 
-def test_layout_simple_comments():
+@parsers
+def test_layout_simple_comments(parser_class):
     grammar = r"""
     S = K EOF;
     K = A | B;
@@ -34,18 +40,20 @@ def test_layout_simple_comments():
     WS = /\s+/;
     Comment = /\/\/.*/;
     """
-
     g = Grammar.from_string(grammar)
-    parser = Parser(g)
 
-    parser.parse("""aaa a    aaaa
+    in_str = """aaa a    aaaa
     aa    aa a aaa // This is a comment
 
     aaa
-    """)
+    """
+
+    parser = parser_class(g)
+    parser.parse(in_str)
 
 
-def test_layout_nested_comments():
+@parsers
+def test_layout_nested_comments(parser_class):
     grammar = """
     S = K EOF;
     K = 'a' B | 'a' C;
@@ -61,8 +69,8 @@ def test_layout_nested_comments():
     NotComment = /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
     """
     g = Grammar.from_string(grammar)
-    parser = Parser(g)
-    parser.parse("""
+
+    in_str = """
     a  b b b   b // This is line comment
     b b b b b b  /* This is block
     comment */
@@ -75,10 +83,14 @@ def test_layout_nested_comments():
     */
 
     bbbb b b b
-    """)
+    """
+
+    parser = parser_class(g)
+    parser.parse(in_str)
 
 
-def test_layout_context():
+@parsers
+def test_layout_context(parser_class):
     """
     Test that layout is passed in the action context.
     """
@@ -92,9 +104,13 @@ def test_layout_context():
     WS = /\s+/;
     Comment = /\/\/.*/;
     """
+    g = Grammar.from_string(grammar)
 
-    layout_called = [False]
-    layout_passed = [False]
+    in_str = """aaa a    aaaa
+    aa    aa a aaa // This is a comment
+
+    aaa
+    """
 
     def layout_action(context, _):
         layout_called[0] = True
@@ -105,20 +121,18 @@ def test_layout_context():
         "a": layout_action
     }
 
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
+    layout_called = [False]
+    layout_passed = [False]
 
-    parser.parse("""aaa a    aaaa
-    aa    aa a aaa // This is a comment
-
-    aaa
-    """)
+    parser = parser_class(g, actions=actions)
+    parser.parse(in_str)
 
     assert layout_called[0]
     assert layout_passed[0]
 
 
-def test_layout_actions():
+@parsers
+def test_layout_actions(parser_class):
     """
     Test that user provided actions for layout rules are used if given.
     """
@@ -135,9 +149,11 @@ def test_layout_actions():
     """
     g = Grammar.from_string(grammar)
 
-    called = [False]
-    layout_called = [False]
-    layout_passed = [False]
+    in_str = """aaa a    aaaa
+    aa    aa a aaa // This is a comment
+
+    aaa
+    """
 
     def comment_action(_, nodes):
         called[0] = True
@@ -163,12 +179,13 @@ def test_layout_actions():
         'LAYOUT': layout_action,
         'a': a_action
     }
-    parser = Parser(g, actions=actions)
-    parser.parse("""aaa a    aaaa
-    aa    aa a aaa // This is a comment
 
-    aaa
-    """)
+    called = [False]
+    layout_called = [False]
+    layout_passed = [False]
+
+    parser = parser_class(g, actions=actions)
+    parser.parse(in_str)
 
     assert called[0]
     assert layout_called[0]
