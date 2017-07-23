@@ -229,6 +229,7 @@ class GLRParser(Parser):
         """
         debug = self.debug
         sem_actions = self.sem_actions
+        context.symbol = production.symbol
 
         if debug:
             print("\tReducing by prod {}".format(production))
@@ -360,6 +361,7 @@ class GLRParser(Parser):
 
         last_shifts = self.last_shifts
         debug = self.debug
+        context.symbol = token.symbol
 
         shifted_head = last_shifts.get((state.state_id,
                                         context.start_position, token.symbol),
