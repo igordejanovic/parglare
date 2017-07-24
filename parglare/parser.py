@@ -263,7 +263,7 @@ class Parser(object):
                         act = acts[1]
                 production = act.prod
                 symbol = production.symbol
-                context.symbol = symbol
+                context.production = production
 
                 if debug:
                     print("\tReducing by prod '%s'." % str(production))
@@ -312,6 +312,43 @@ class Parser(object):
                     return state_stack[1].result, position
                 else:
                     return state_stack[1].result
+
+    def call_actions(self, node, actions):
+        """
+        Calls semantic actions for the given tree node.
+        """
+        context = type(str("Context"), (), {})
+        context.parser = self
+
+        def inner_call_actions(node):
+            sem_action = actions.get(node.symbol.name)
+            if sem_action:
+                context.start_position = node.start_position
+                context.end_position = node.end_position
+                context.node = node
+
+                if isinstance(node, NodeTerm):
+                    return sem_action(context, node.value)
+                else:
+                    results = []
+                    # Recursive right to left, bottom up. Simulate LR
+                    # reductions.
+                    for n in reversed(node):
+                        results.append(inner_call_actions(n))
+                    results.reverse()
+
+                    if type(sem_action) is list:
+                        result = \
+                            sem_action[
+                                node.production.prod_symbol_id](context,
+                                                                results)
+                    else:
+                        result = sem_action(context, results)
+            else:
+                result = node
+            return result
+
+        return inner_call_actions(node)
 
     def _skipws(self, context, input_str, position):
         in_len = len(input_str)
@@ -614,23 +651,29 @@ class LRState(object):
 
 class Node(object):
     """A node of the parse tree."""
-    def __init__(self, start_position, end_position, symbol):
+    def __init__(self, start_position, end_position):
         self.start_position = start_position
         self.end_position = end_position
-        self.symbol = symbol
+
+    def __iter__(self):
+        return iter([])
+
+    def __reversed__(self):
+        return iter([])
 
 
 class NodeNonTerm(Node):
-    __slots__ = ['start_position', 'end_position', 'symbol', 'nodes']
+    __slots__ = ['start_position', 'end_position', 'production', 'nodes']
 
-    def __init__(self, start_position, end_position, symbol, nodes):
+    def __init__(self, start_position, end_position, production, nodes):
         super(NodeNonTerm, self).__init__(start_position,
-                                          end_position, symbol)
+                                          end_position)
+        self.production = production
         self.nodes = nodes
 
     def tree_str(self, depth=0):
         indent = '  ' * depth
-        s = '{}[{}]'.format(self.symbol, self.start_position)
+        s = '{}[{}]'.format(self.production.symbol, self.start_position)
         if self.nodes:
             for n in self.nodes:
                 if hasattr(n, 'tree_str'):
@@ -640,8 +683,19 @@ class NodeNonTerm(Node):
                          + '(' + str(n) + ')'
         return s
 
+    @property
+    def symbol(self):
+        return self.production.symbol
+
     def __str__(self):
-        return '<Node({}, {})>'.format(self.start_position, self.symbol)
+        return '<Node({}, {})>'.format(self.start_position,
+                                       self.production.symbol)
+
+    def __iter__(self):
+        return iter(self.nodes)
+
+    def __reversed__(self):
+        return reversed(self.nodes)
 
 
 class NodeTerm(Node):
@@ -649,8 +703,9 @@ class NodeTerm(Node):
 
     def __init__(self, start_position, end_position, symbol, value):
         super(NodeTerm, self).__init__(start_position,
-                                       end_position, symbol)
+                                       end_position)
         self.value = value
+        self.symbol = symbol
 
     def tree_str(self, depth=0):
         return '{}[{}, {}]'.format(self.symbol, self.start_position,
@@ -690,7 +745,7 @@ def default_shift_action(context, value):
 
 def default_reduce_action(context, nodes):
     return NodeNonTerm(context.start_position, context.end_position,
-                       context.symbol, nodes)
+                       context.production, nodes)
 
 
 def first(grammar):

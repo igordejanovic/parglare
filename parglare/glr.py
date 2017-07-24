@@ -217,7 +217,7 @@ class GLRParser(Parser):
         """
         debug = self.debug
         sem_actions = self.sem_actions
-        context.symbol = production.symbol
+        context.production = production
 
         if debug:
             print("\tReducing by prod {}".format(production))

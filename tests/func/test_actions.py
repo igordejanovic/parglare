@@ -1,9 +1,9 @@
 import pytest  # noqa
-from parglare.parser import Parser
+from parglare.parser import Parser, NodeNonTerm
 from .expression_grammar_numbers import get_grammar
 
 
-def test_actions():
+def get_actions():
 
     def sum_act(_, nodes):
         return nodes[0] + nodes[2]
@@ -20,7 +20,6 @@ def test_actions():
     def pass_act(_, nodes):
         return nodes[0]
 
-    grammar = get_grammar()
     actions = {
         "number": lambda _, value: float(value),
         # Check action for each alternative
@@ -31,9 +30,32 @@ def test_actions():
         "F": [parenthesses_act, pass_act]
     }
 
-    p = Parser(grammar, actions=actions)
+    return actions
+
+
+def test_actions():
+
+    grammar = get_grammar()
+    p = Parser(grammar, actions=get_actions())
 
     result = p.parse("""34.7+78*34 +89+
     12.223*4""")
 
     assert result == 34.7 + 78 * 34 + 89 + 12.223 * 4
+
+
+def test_actions_manual():
+    """
+    Actions may be called as a separate step.
+    """
+
+    grammar = get_grammar()
+    p = Parser(grammar)
+
+    result = p.parse("""34.7+78*34 +89+
+    12.223*4""")
+
+    assert type(result) is NodeNonTerm
+
+    assert p.call_actions(result, get_actions()) == \
+        34.7 + 78 * 34 + 89 + 12.223 * 4
