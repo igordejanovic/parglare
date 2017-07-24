@@ -80,10 +80,8 @@ class GLRParser(Parser):
         debug = self.debug
         if debug:
             print("\n**REDUCING HEADS")
-            print("Active heads {}: {}".format(len(self.heads_for_reduce),
-                                               self.heads_for_reduce))
-            print("Number of trees = {}".format(
-                sum([h.number_of_trees for h in self.heads_for_reduce])))
+            self._debug_active_heads(self.heads_for_reduce)
+
         context = type(str("Context"), (), {})
         next_tokens = self._next_tokens
         reduce = self.reduce
@@ -123,11 +121,8 @@ class GLRParser(Parser):
                 position = head.next_position
                 tokens = [lookahead_token]
                 if debug:
-                    print("\tPosition:", pos_to_line_col(input_str, position))
-                    print("\tContext:", position_context(input_str, position))
-                    print("\tLayout: '{}'".format(
-                        layout_content.replace("\n", "\\n")))
-                    print("\tLookahead token: {}".format(lookahead_token))
+                    self._debug_context(input_str, position, lookahead_token,
+                                        layout_content)
 
             else:
                 position, layout_content = self._skipws(context, input_str,
@@ -183,10 +178,7 @@ class GLRParser(Parser):
         self.last_shifts = {}
 
         if self.debug:
-            print("Active heads {}: {}".format(len(heads_for_shift),
-                                               heads_for_shift))
-            print("Number of trees = {}".format(
-                sum([h.number_of_trees for h in self.heads_for_shift])))
+            self._debug_active_heads(heads_for_shift)
 
         heads_for_shift.sort(key=lambda h: h.end_position)
         for head in heads_for_shift:
@@ -204,11 +196,8 @@ class GLRParser(Parser):
             context.symbol = symbol = token.symbol
 
             if debug:
-                print("\tPosition:", pos_to_line_col(input_str, position))
-                print("\tContext:", position_context(input_str, position))
-                print("\tLayout: '{}'".format(
-                    layout_content.replace("\n", "\\n")))
-                print("\tLookahead token: {}".format(token))
+                self._debug_context(input_str, position, token,
+                                    layout_content)
 
             # First action should be SHIFT if it is possible to shift by this
             # token.
@@ -456,6 +445,20 @@ class GLRParser(Parser):
 
         return tokens
 
+    def _debug_active_heads(self, heads):
+        print("Active heads {}: {}".format(len(heads), heads))
+        print("Number of trees = {}".format(
+            sum([h.number_of_trees for h in heads])))
+
+    def _debug_context(self, input_str, position, lookahead_token,
+                       layout_content):
+        print("\tPosition:", pos_to_line_col(input_str, position))
+        print("\tContext:", position_context(input_str, position))
+        lc = layout_content.replace("\n", "\\n") \
+            if type(layout_content) is str else layout_content
+        print("\tLayout: '{}'".format(lc))
+        print("\tLookahead token: {}".format(lookahead_token))
+
     def _start_trace(self):
         self.dot_trace = ""
         self.trace_step = 1
@@ -585,6 +588,11 @@ class GSSNode(object):
     def for_token(self, token):
         """Create head for the given token either by returning this head if the
         token is appropriate or making a clone.
+
+        This is used to support lexical ambiguity. Multiple tokens might be
+        matched at the same state and position. In this case parser should
+        fork and this is done by cloning stack head.
+
         """
         if self.token_ahead == token:
             return self
