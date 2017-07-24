@@ -26,10 +26,10 @@ class Parser(object):
     """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, start_production=1, actions=None, debug=False,
-                 layout_debug=False, ws='\n\t ', default_actions=True,
-                 tables=LALR, layout=False, position=False,
-                 prefer_shifts=False, error_recovery=False):
+    def __init__(self, grammar, start_production=1, actions=None,
+                 layout_actions=None, debug=False, layout_debug=False,
+                 ws='\n\t ', default_actions=True, tables=LALR, layout=False,
+                 position=False, prefer_shifts=False, error_recovery=False):
         self.grammar = grammar
         self.start_production = start_production
         self.sem_actions = actions if actions else {}
@@ -40,7 +40,7 @@ class Parser(object):
             if layout_prod:
                 self.layout_parser = Parser(grammar,
                                             start_production=layout_prod,
-                                            actions=actions,
+                                            actions=layout_actions,
                                             default_actions=False,
                                             ws=None, layout=True,
                                             position=True,

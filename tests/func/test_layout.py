@@ -184,7 +184,7 @@ def test_layout_actions(parser_class):
     layout_called = [False]
     layout_passed = [False]
 
-    parser = parser_class(g, actions=actions)
+    parser = parser_class(g, actions=actions, layout_actions=actions)
     parser.parse(in_str)
 
     assert called[0]
