@@ -313,11 +313,11 @@ class Parser(object):
                 else:
                     return state_stack[1].result
 
-    def call_actions(self, node, actions):
+    def call_actions(self, node, actions, context=None):
         """
         Calls semantic actions for the given tree node.
         """
-        context = type(str("Context"), (), {})
+        self.context = context = context if context else Context()
         context.parser = self
 
         def inner_call_actions(node):

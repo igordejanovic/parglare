@@ -3,7 +3,8 @@ import codecs
 from itertools import chain
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
-    default_reduce_action, default_shift_action, pos_to_line_col, STOP
+    default_reduce_action, default_shift_action, pos_to_line_col, STOP, \
+    Context
 from .export import dot_escape
 
 
@@ -35,6 +36,7 @@ class GLRParser(Parser):
         self.last_position = 0
         self.expected = set()
         self.empty_reductions_results = {}
+        self.context = context = context if context else Context()
         position, layout_content = self._skipws(context, input_str, position)
 
         # We start with a single parser head in state 0.
@@ -55,9 +57,9 @@ class GLRParser(Parser):
 
         # The main loop
         while self.heads_for_reduce:
-            self._do_reductions()
+            self._do_reductions(context)
             if self.heads_for_shift:
-                self._do_shifts()
+                self._do_shifts(context)
 
         if not self.finish_head:
             if self.debug:
@@ -73,7 +75,7 @@ class GLRParser(Parser):
 
         return results
 
-    def _do_reductions(self):
+    def _do_reductions(self, context):
         """
         Reduces active heads until no more heads can be reduced.
         """
@@ -82,7 +84,6 @@ class GLRParser(Parser):
             print("\n**REDUCING HEADS")
             self._debug_active_heads(self.heads_for_reduce)
 
-        context = type(str("Context"), (), {})
         next_tokens = self._next_tokens
         reduce = self.reduce
         input_str = self.input_str
@@ -164,7 +165,7 @@ class GLRParser(Parser):
                     print("\tNo more reductions for lookahead token {}."
                           .format(token))
 
-    def _do_shifts(self):
+    def _do_shifts(self, context):
         """
         Perform all shifts.
         """
@@ -174,7 +175,6 @@ class GLRParser(Parser):
 
         heads_for_shift = self.heads_for_shift
         input_str = self.input_str
-        context = type(str("Context"), (), {})
         self.last_shifts = {}
 
         if self.debug:
