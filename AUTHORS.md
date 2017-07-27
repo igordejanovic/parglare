@@ -4,4 +4,5 @@
 
 ##Contributors
 
-None yet. Why not be the first?
+For a full list of contributions and their activity
+see [here](https://github.com/igordejanovic/parglare/graphs/contributors).

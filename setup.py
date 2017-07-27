@@ -52,7 +52,7 @@ test_requirements = [
 setup(
     name='parglare',
     version=VERSION,
-    description="A pure Python Scannerless LR (soon GLR) parser ",
+    description="A pure Python Scannerless (G)LR parser ",
     long_description=readme + '\n\n' + history,
     author="Igor R. Dejanovic",
     author_email='igor DOT dejanovic AT gmail DOT com',

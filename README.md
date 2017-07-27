@@ -6,9 +6,7 @@
 
 # parglare
 
-A pure Python (G)LR parser with LALR or SLR tables and integrated scanner.
-
-This lib is in the beta. It is not tested extensively in real-world projects yet.
+A pure Python (G)LR parser with integrated scanner.
 
 
 ## What is done so far

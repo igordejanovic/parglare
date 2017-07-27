@@ -6,6 +6,6 @@ tox==2.3.1
 coverage==4.1
 coveralls==1.1
 cryptography==1.7
-mkdocs==0.16.1
+mkdocs==0.16.3
 pytest==2.9.2
 twine==1.8.1
