@@ -122,18 +122,20 @@ class GLRParser(Parser):
                 position = head.next_position
                 tokens = [lookahead_token]
                 if debug:
-                    self._debug_context(input_str, position, lookahead_token,
-                                        layout_content)
+                    self._debug_context(
+                        input_str, position, lookahead_token,
+                        expected_symbols=[lookahead_token.symbol],
+                        layout_content=layout_content)
 
             else:
                 position, layout_content = self._skipws(context, input_str,
                                                         position)
                 tokens = next_tokens(state, input_str, position)
                 if debug:
-                    print("\tContext:", position_context(input_str, position))
-                    print("\tTokens expected: {}".format(
-                        [a.name for a in actions]))
-                    print("\tTokens ahead: {}".format(tokens))
+                    self._debug_context(
+                        input_str, position, lookahead_token,
+                        expected_symbols=actions.keys(),
+                        layout_content=layout_content)
 
             context.start_position = position
             context.layout_content = layout_content
@@ -197,7 +199,8 @@ class GLRParser(Parser):
 
             if debug:
                 self._debug_context(input_str, position, token,
-                                    layout_content)
+                                    expected_symbols=None,
+                                    layout_content=layout_content)
 
             # First action should be SHIFT if it is possible to shift by this
             # token.
@@ -451,13 +454,18 @@ class GLRParser(Parser):
             sum([h.number_of_trees for h in heads])))
 
     def _debug_context(self, input_str, position, lookahead_token,
-                       layout_content):
+                       expected_symbols=None,
+                       layout_content=''):
         print("\tPosition:", pos_to_line_col(input_str, position))
         print("\tContext:", position_context(input_str, position))
         lc = layout_content.replace("\n", "\\n") \
             if type(layout_content) is str else layout_content
-        print("\tLayout: '{}'".format(lc))
-        print("\tLookahead token: {}".format(lookahead_token))
+        if layout_content:
+            print("\tLayout: '{}'".format(lc))
+        if expected_symbols:
+            print("\tSymbols expected: {}".format(
+                [s.name for s in expected_symbols]))
+        print("\tToken ahead: {}".format(lookahead_token))
 
     def _start_trace(self):
         self.dot_trace = ""
