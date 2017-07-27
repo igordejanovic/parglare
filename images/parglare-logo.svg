@@ -15,7 +15,10 @@
    version="1.1"
    id="svg8"
    sodipodi:docname="parglare-logo.svg"
-   inkscape:version="0.92.1 r">
+   inkscape:version="0.92.1 r"
+   inkscape:export-filename="/home/igor/repos/parglare/docs/images/parglare-logo.png"
+   inkscape:export-xdpi="89.988602"
+   inkscape:export-ydpi="89.988602">
   <defs
      id="defs2" />
   <sodipodi:namedview
@@ -26,7 +29,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.979899"
-     inkscape:cx="281.72973"
+     inkscape:cx="184.50255"
      inkscape:cy="19.93636"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -48,7 +51,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
