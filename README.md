@@ -4,7 +4,7 @@
 ![Python versions](https://img.shields.io/pypi/pyversions/parglare.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-![parglare logo](https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.svg)
+![parglare logo](https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png)
 
 A pure Python (G)LR parser with integrated scanner.
 
