@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A pure Python (G)LR parser with integrated scanner">
+  <meta name="author" content="Igor Dejanović">
+  <link rel="shortcut icon" href="./img/favicon.ico">
+  <title>Home - parglare</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="./css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="./css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Home";
+    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_url = "/";
+  </script>
+  
+  <script src="./js/jquery-2.1.1.min.js"></script>
+  <script src="./js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="./js/highlight.pack.js"></script> 
+  
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-68681917-1', 'igordejanovic.net');
+      ga('send', 'pageview');
+  </script>
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> parglare</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+          
+            <li>
+    <li class="toctree-l1 current">
+        <a class="current" href=".">Home</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#feature-highlights">Feature highlights</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#todoplaned">TODO/Planed</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#quick-intro">Quick intro</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#what-does-parglare-mean">What does parglare mean?</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#license">License</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#python-versions">Python versions</a></li>
+                
+            
+            </ul>
+        
+    </li>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>User Guide</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="grammar/">Grammar</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>About</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="about/CONTRIBUTING/">Contributing</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="about/LICENSE/">License</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">parglare</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Home</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/index.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <p><img alt="parglare logo" src="./images/parglare-logo.svg" /></p>
+<hr />
+<p>parglare is yet another parsing library for Python.</p>
+<h2 id="feature-highlights">Feature highlights<a class="headerlink" href="#feature-highlights" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><strong>Scannerless parsing</strong></p>
+<p>There is no lexing as a separate phase. There is no separate lexer grammar.
+The parser will try to reconize token during parsing at the given location.
+This brings more parsing power as there are no lexical ambiguities
+introduced by a separate lexing stage. You want variable names in your
+language to be allowed to be keyword names? No problem.</p>
+</li>
+<li>
+<p><strong>Generalized parsing - GLR</strong></p>
+<p>parglare gives you powerful tools to see where non-determinism in your
+grammar lies (the notorious shift-reduce and reduce-reduce conflicts) and
+gives detailed info on why that happened. In case your language needs
+non-deterministic parsing, either it needs additional lookahead to decide or
+your language is inherently ambiguous, you can resort to the GLR algorithm
+by a simple change of the parser class. The grammar stays the same.</p>
+<p>In the case of non-determinism (unability for a parser to deterministically
+decide what to do) the parser will fork and investigate each possibility.
+Eventualy, parsers that decided wrong will die leaving only the right one.
+In case there are multiple interpretation of your input you will get all the
+trees (a.k.a. "the parse forest").</p>
+</li>
+<li>
+<p><strong>Declarative associativity and priority rules</strong></p>
+<p>These problems arise a lot when building expression languages. Even a little
+arithmetic expression as <code>3 + 4 * 5 * 2</code> have multiple interpretation
+depending on the associativity and priority of operations. In parglare it is
+easy to specify these rules in the grammar (see the quick intro bellow
+or
+<a href="https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py">the calc example</a>).</p>
+</li>
+<li>
+<p><strong>Tracing/debuging, visualization and error reporting</strong></p>
+<p>There is an extensive support for grammar checking, debugging, automata
+visualization, and parse tracing. Check out <a href="">todo: pglr command</a>.</p>
+</li>
+<li>
+<p><strong>Parsing arbitrary list of object</strong></p>
+<p>parglare is not used only to parse the textual content. It can parse (create
+a tree) of an arbitrary list of objects (numbers, bytes, whatever) based on
+the common parglare grammar. For this you have to
+define <a href="">todo: token recognizers</a> for your input stream. The built-in
+recognizers are string and regex recognizers for parsing textual inputs.</p>
+</li>
+<li>
+<p><strong>Flexible actions calling strategies</strong></p>
+<p>During parsing you will want to do something when the grammar rule matches.
+The whole point of parsing is that you want to transform your input to some
+output. There are several options:
+- do nothing - this way your parser is a mere recognizer, it produces
+  nothing but just verifies that your input adhere to the grammar;
+- call default actions - the default actions will build a parse tree.
+- call user supplied actions - you write a Python function that is called
+  when the rule matches. You can do whatever you want at this place and the
+  result returned is used in parent rules/actions.</p>
+<p>Besides calling your actions in-line - during the parsing process - you can
+decide to build the tree first and call custom actions afterwards. This is a
+good option if you want to evaluate your tree in a multiple ways or if you
+are using GLR and want to be sure that actions are called only for the
+surviving tree.</p>
+</li>
+<li>
+<p><strong>Support for whitespaces/comments</strong></p>
+<p>Support for language comments/whitespaces is done using the special rule
+<code>LAYOUT</code>. By default whitespaces are skipped. This is controlled by <code>ws</code>
+parameter to the parser constructor which is by default set to <code>\t\n</code>. If
+set to <code>None</code> no whitespace skipping is provided. If there is a rule
+<code>LAYOUT</code> in the grammar this rule is used instead. An additional parser with
+the layout grammar will be built to handle whitespaces.</p>
+</li>
+<li>
+<p><strong>Error recovery (not for GLR at the moment)</strong></p>
+<p>This is something that often lacks in parsing libraries. More often than not
+you will want your parser to recover from an error, report it, and continue
+parsing. parglare has a built-in error recovery strategy which is currently
+a simplistic one - it will skip current character and try to continue - but
+gives you possibility to provide your own.</p>
+</li>
+<li>
+<p><strong>Test coverage</strong></p>
+<p>Test coverage is high and I'll try to keep it that way.</p>
+</li>
+</ul>
+<h2 id="todoplaned">TODO/Planed<a class="headerlink" href="#todoplaned" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><strong>Docs</strong></p>
+<p>This docs is currently work in progress. It should be done soon. Stay tuned.</p>
+</li>
+<li>
+<p><strong>Table caching</strong></p>
+<p>At the moment parser tables are constructed on-the-fly which might be slow
+for larger grammars. In the future tables will be recalculated only if the
+grammar has changed and cached.</p>
+</li>
+<li>
+<p><strong>Specify common actions in the grammar</strong></p>
+</li>
+</ul>
+<p>parglare provides some commonly used custom actions. It would reduce
+  boiler-plate in specification of these actions if a syntax is added to provide
+  that information in the grammar directly.</p>
+<p>Example:</p>
+<pre><code>  @collect
+  some_objects = some_objects some_object | some_object;
+</code></pre>
+<ul>
+<li><strong>Support for named matches</strong></li>
+</ul>
+<p>At the moment, as a parameter to action you get a list of matched elements. It
+  would be useful to reference these element by name rather than by position.</p>
+<pre><code>  my_rule = first:first_match_rule second:second_match_rule;
+  first_match_rule = ...;
+  second_match_rule = ...;
+</code></pre>
+<p>Now in your action for <code>my_rule</code> you will get <code>first</code> and <code>second</code> as a parameters.
+  This would make it easy to provide a new common action that will return a Python
+  object with supplied parameters as object attributes.</p>
+<h2 id="quick-intro">Quick intro<a class="headerlink" href="#quick-intro" title="Permanent link">&para;</a></h2>
+<p>This is just a small example to get the general idea. This example shows how to
+parse and evaluate expressions with 5 operations with different priority and
+associativity. Evaluation is done using semantic/reduction actions.</p>
+<p>The whole expression evaluator is done in under 30 lines of code!</p>
+<p>Until docs is completed
+see
+<a href="https://github.com/igordejanovic/parglare/tree/master/examples">the example folder</a> and
+<a href="https://github.com/igordejanovic/parglare/tree/master/tests/func">tests</a> for
+more.</p>
+<pre><code class="python">from parglare import Parser, Grammar
+
+grammar = r&quot;&quot;&quot;
+E = E '+' E  {left, 1}
+  | E '-' E  {left, 1}
+  | E '*' E  {left, 2}
+  | E '/' E  {left, 2}
+  | E '^' E  {right, 3}
+  | '(' E ')'
+  | number;
+number = /\d+(\.\d+)?/;
+&quot;&quot;&quot;
+
+actions = {
+    &quot;E&quot;: [lambda _, nodes: nodes[0] + nodes[2],
+          lambda _, nodes: nodes[0] - nodes[2],
+          lambda _, nodes: nodes[0] * nodes[2],
+          lambda _, nodes: nodes[0] / nodes[2],
+          lambda _, nodes: nodes[0] ** nodes[2],
+          lambda _, nodes: nodes[1],
+          lambda _, nodes: nodes[0]],
+    &quot;number&quot;: lambda _, value: float(value),
+}
+
+g = Grammar.from_string(grammar)
+parser = Parser(g, debug=True, actions=actions)
+
+result = parser.parse(&quot;34 + 4.6 / 2 * 4^2^2 + 78&quot;)
+
+print(&quot;Result = &quot;, result)
+
+# Output
+# -- Debuging/tracing output with detailed info about grammar, productions,
+# -- terminals and nonterminals, DFA states, parsing progress,
+# -- and at the end of the output:
+# Result = 700.8
+</code></pre>
+
+<h2 id="what-does-parglare-mean">What does <code>parglare</code> mean?<a class="headerlink" href="#what-does-parglare-mean" title="Permanent link">&para;</a></h2>
+<p>It is an amalgam of the words <code>parser</code> and <code>glare</code> where the second word is
+chosen to contain letters GLR and to be easy for pronunciation. I also like one
+of the translations for the word - <code>to be very bright and intense</code>
+(by <a href="http://www.thefreedictionary.com/glare">The Free Dictionary</a>)</p>
+<p>Oh, and the name <code>parglare</code> is not taken on the net. ;)</p>
+<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
+<p>MIT</p>
+<h2 id="python-versions">Python versions<a class="headerlink" href="#python-versions" title="Permanent link">&para;</a></h2>
+<p>Tested with 2.7, 3.3-3.6</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="grammar/" class="btn btn-neutral float-right" title="Grammar">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>Copyright &copy; 2017 <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/igordejanovic/parglare" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+      
+        <span style="margin-left: 15px"><a href="grammar/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script src="./js/theme.js"></script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 0.16.1
+Build Date UTC : 2017-07-27 16:41:56
+-->
