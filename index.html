@@ -71,6 +71,12 @@
                 <li class="toctree-l3"><a href="#quick-intro">Quick intro</a></li>
                 
             
+                <li class="toctree-l3"><a href="#note-on-lr-tables-calculation">Note on LR tables calculation</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#note-on-lexical-disambiguation">Note on lexical disambiguation</a></li>
+                
+            
                 <li class="toctree-l3"><a href="#what-does-parglare-mean">What does parglare mean?</a></li>
                 
             
@@ -159,7 +165,11 @@
               
                 <p><img alt="parglare logo" src="./images/parglare-logo.svg" /></p>
 <hr />
-<p>parglare is yet another parsing library for Python.</p>
+<p>A pure Python (G)LR parser with integrated scanner.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The docs are work in progress.</p>
+</div>
 <h2 id="feature-highlights">Feature highlights<a class="headerlink" href="#feature-highlights" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -204,7 +214,9 @@ visualization, and parse tracing. Check out <a href="">todo: pglr command</a>.</
 a tree) of an arbitrary list of objects (numbers, bytes, whatever) based on
 the common parglare grammar. For this you have to
 define <a href="">todo: token recognizers</a> for your input stream. The built-in
-recognizers are string and regex recognizers for parsing textual inputs.</p>
+recognizers are string and regex recognizers for parsing textual inputs.
+See <code>recognizers</code> parameter to grammar construction in
+the <a href="">test_parse_list_of_objects.py test</a>.</p>
 </li>
 <li>
 <p><strong>Flexible actions calling strategies</strong></p>
@@ -328,6 +340,22 @@ print(&quot;Result = &quot;, result)
 # Result = 700.8
 </code></pre>
 
+<h2 id="note-on-lr-tables-calculation">Note on LR tables calculation<a class="headerlink" href="#note-on-lr-tables-calculation" title="Permanent link">&para;</a></h2>
+<p>parglare provides both SLR and LALR tables calculation (LALR is the default).
+LALR is modified to avoid REDUCE/REDUCE conflicts on state merging. Although
+not proven, this should enable handling of all LR(1) grammars with reduced set
+of states and without conflicts. For grammars that are not LR(1) a GLR parsing
+is provided.</p>
+<h2 id="note-on-lexical-disambiguation">Note on lexical disambiguation<a class="headerlink" href="#note-on-lexical-disambiguation" title="Permanent link">&para;</a></h2>
+<p>Lexical ambiguity arise if multiple recognizers match at the same location.
+Lexical disambiguation is done in the following order:</p>
+<ul>
+<li>Priorities are used first.</li>
+<li>String recognizers are preferred over regexes (i.e. the most specific match).</li>
+<li>The longest-match strategy is used if multiple regexes matches with the same
+  priority. For further disambiguation if longest-match fails <code>prefer</code> rule
+  may be given in terminal definition.</li>
+</ul>
 <h2 id="what-does-parglare-mean">What does <code>parglare</code> mean?<a class="headerlink" href="#what-does-parglare-mean" title="Permanent link">&para;</a></h2>
 <p>It is an amalgam of the words <code>parser</code> and <code>glare</code> where the second word is
 chosen to contain letters GLR and to be easy for pronunciation. I also like one
@@ -388,5 +416,5 @@ of the translations for the word - <code>to be very bright and intense</code>
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-07-27 16:41:56
+Build Date UTC : 2017-07-27 17:21:17
 -->
