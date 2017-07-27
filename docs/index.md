@@ -2,7 +2,10 @@
 
 ---
 
-parglare is yet another parsing library for Python.
+A pure Python (G)LR parser with integrated scanner.
+
+!!! note
+    The docs are work in progress.
 
 ## Feature highlights
 
@@ -50,6 +53,8 @@ parglare is yet another parsing library for Python.
     the common parglare grammar. For this you have to
     define [todo: token recognizers]() for your input stream. The built-in
     recognizers are string and regex recognizers for parsing textual inputs.
+    See `recognizers` parameter to grammar construction in
+    the [test_parse_list_of_objects.py test]().
 
 * **Flexible actions calling strategies**
 
@@ -181,6 +186,25 @@ print("Result = ", result)
 # -- and at the end of the output:
 # Result = 700.8
 ```
+
+## Note on LR tables calculation
+
+parglare provides both SLR and LALR tables calculation (LALR is the default).
+LALR is modified to avoid REDUCE/REDUCE conflicts on state merging. Although
+not proven, this should enable handling of all LR(1) grammars with reduced set
+of states and without conflicts. For grammars that are not LR(1) a GLR parsing
+is provided.
+
+## Note on lexical disambiguation
+
+Lexical ambiguity arise if multiple recognizers match at the same location.
+Lexical disambiguation is done in the following order:
+
+- Priorities are used first.
+- String recognizers are preferred over regexes (i.e. the most specific match).
+- The longest-match strategy is used if multiple regexes matches with the same
+  priority. For further disambiguation if longest-match fails `prefer` rule
+  may be given in terminal definition.
 
 ## What does `parglare` mean?
 

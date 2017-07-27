@@ -4,66 +4,13 @@
 ![Python versions](https://img.shields.io/pypi/pyversions/parglare.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-# parglare
+![parglare logo](https://raw.githubusercontent.com/igordejanovic/textX/master/docs/images/parglare-logo.svg)
 
 A pure Python (G)LR parser with integrated scanner.
 
 
-## What is done so far
+For more information see [the docs](http://www.igordejanovic.net/parglare/).
 
-- Textual syntax for grammar specification. Parsed with parglare.
-- LR parser with SLR and LALR tables calculation (LALR is the default). LALR is
-  modified to avoid REDUCE/REDUCE conflicts on state merging. Although not
-  proven, this should enable handling of all LR(1) grammars with reduced set of
-  states and without conflicts. For grammars that are not LR(1) a GLR parsing is
-  provided.
-- Scanner is integrated into parsing. This give more power as the token
-  recognition is postponed and done in the parsing context at the current
-  parsing location.
-- GLR parsing (Tomita-style algorithm) with a modification to work with
-  integrated scanning. Optional lexical disambiguation using GLR machinery.
-- Parsing list of arbitrary objects: bytes, numbers, any Python objects!
-  See `recognizers` parameter to grammar construction in
-  `test_parse_list_of_objects.py` test.
-- Declarative associativity and priority-based conflict resolution for productions
-  - See the `calc` example, or the quick intro bellow.
-- Lexical disambiguation strategy.
-  - Priorities are used first.
-  - String recognizers are preferred over regexes (i.e. the most specific match).
-  - The longest-match strategy is used if multiple regexes matches with the same
-    priority. For further disambiguation if longest-match fails `prefer` rule
-    may be given in terminal definition.
-- Semantic actions with default actions (controlled by `actions` and
-  `default_actions` parameters for the `Parser` class).
-  - If no action is specified for a given reduction, default will be called
-    which will build nodes of a parse tree. With default actions enabled and no
-    user actions parglare will return a parse tree.
-  - If no actions are provided and the default actions are explicitely disabled
-    parser works as a recognizer, i.e. no reduction actions are called and the
-    only output of the parser is whether the input was recognized or not.
-- Support for language comments/whitespaces using special rule `LAYOUT`. By
-  default whitespaces are skipped. This is controled by `ws` parameter to the
-  parser constructor which is by default set to `\t\n `. If set to `None` no
-  whitespace skipping is provided. If there is a rule `LAYOUT` in the grammar
-  this rule is used instead. An additional parser with the layout grammar will
-  be built to handle whitespaces.
-- cli command `pglr` for grammar check, PDA visualization and GLR parsing trace
-  (export to dot).
-- Debug print/tracing of both grammar construction, DPDA states construction and
-  parsing process (set `debug=True` and/or `layout_debug=True`to the
-  `Parser` instantiation and/or call to `Grammar.from_<>`).
-- Error recovery. There is a builtin strategy which will drop current
-  char/object at input, register error and try to continue. A user can provide
-  hers own recovery strategy.
-- Tests. I'm trying to maintain a high test code coverage. Until docs are written
-  tests serve as a good source of information.
-- There are a few examples (see `examples` folder).
-
-## TODO
-
-- Docs
-- Tables caching/loading (currently tables are calculated whenever `Parser` is
-  instantiated)
 
 ## Quick intro
 
@@ -72,9 +19,6 @@ parse and evaluate expressions with 5 operations with different priority and
 associativity. Evaluation is done using semantic/reduction actions.
 
 The whole expression evaluator is done in under 30 lines of code!
-
-Until docs is done see the `example` folder and `tests` for more.
-
 
 ```python
 from parglare import Parser, Grammar

@@ -12,8 +12,8 @@ pages:
 - User Guide:
     - Grammar: grammar.md
 - About:
-    - Contributing: ../CONTRIBUTING.md
-    - License: ../LICENSE
+    - Contributing: about/CONTRIBUTING.md
+    - License: about/LICENSE.md
 
 markdown_extensions:
     - admonition:
