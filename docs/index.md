@@ -213,7 +213,8 @@ chosen to contain letters GLR and to be easy for pronunciation. I also like one
 of the translations for the word - `to be very bright and intense`
 (by [The Free Dictionary](http://www.thefreedictionary.com/glare))
 
-Oh, and the name `parglare` is not taken on the net. ;)
+Oh, and the name is non-generic and unique which make it easy to find on the
+net. ;)
 
 
 ## License
