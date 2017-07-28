@@ -77,6 +77,8 @@
             
                 <li class="toctree-l3"><a href="#the-parglare-grammar-language">The parglare grammar language</a></li>
                 
+                    <li><a class="toctree-l4" href="#terminals">Terminals</a></li>
+                
                     <li><a class="toctree-l4" href="#usual-patterns">Usual patterns</a></li>
                 
                     <li><a class="toctree-l4" href="#grammar-comments">Grammar comments</a></li>
@@ -175,16 +177,16 @@ terminals and non-terminals separated by choice operator <code>|</code>.</p>
 
 <p>Here <code>Fields</code> is a non-terminal grammar symbol and it is defined as either a
 single <code>Field</code> or, recursively, as <code>Fields</code> followed by a string terminal <code>,</code>
-and than by another <code>Field</code>. It is not given here by <code>Field</code> might also be
-defined as a non-terminal, for example:</p>
+and than by another <code>Field</code>. It is not given here but <code>Field</code> could also be
+defined as a non-terminal. For example:</p>
 <pre><code>Field = QuotedField | FieldContent;
 </code></pre>
 
-<p>or it could be defined as a terminal:</p>
+<p>Or it could be defined as a terminal:</p>
 <pre><code>Field = /[A-Z]*/
 </code></pre>
 
-<p>This terminal definition uses regular expression.</p>
+<p>This terminal definition uses regular expression recognizer.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you got use to various BNF extensions
@@ -194,6 +196,56 @@ scratch using just a sequence, choice and recursion. The grammars are indeed
 more verbose but, on the other hand, actions are much easier to write and you
 have full control over tree construction process. parglare might provide some
 syntactic sugar later that would make some constructs shorter to write.</p>
+</div>
+<h2 id="terminals">Terminals<a class="headerlink" href="#terminals" title="Permanent link">&para;</a></h2>
+<p>Terminal symbols of the grammar define the fundamental and atomic elements of
+your language -- tokens or lexemes (e.g. keywords, numbers). In parglare
+terminal is connected to recognizer which is an object used to recognize token
+of particular type in the input. Most of the time you will do parsing of textual
+content and you will need textual recognizers. These recognizers are built-in
+and there are two type of textual recognizers:</p>
+<ul>
+<li>string recognizer</li>
+<li>regular expression recognizer</li>
+</ul>
+<h3 id="string-recognizer">String recognizer<a class="headerlink" href="#string-recognizer" title="Permanent link">&para;</a></h3>
+<p>String recognizer is defined as a plain string inside of double quotes:</p>
+<h3 id="regular-expression-recognizer">Regular expression recognizer<a class="headerlink" href="#regular-expression-recognizer" title="Permanent link">&para;</a></h3>
+<p>Or regex recognizer for short is a regex pattern written inside slashes
+(<code>/.../</code>).</p>
+<p>For example:</p>
+<pre><code> number = /\d+/;
+</code></pre>
+<p>This rule defines terminal symbol <code>number</code> which has a regex recognizer and will
+recognize one or more digits as a number.</p>
+<h3 id="custom-recognizers">Custom recognizers<a class="headerlink" href="#custom-recognizers" title="Permanent link">&para;</a></h3>
+<p>If you are parsing arbitrary input (non-textual) you'll have to provide your own
+recognizers. In the grammar, you just have to reference your token symbol but
+you don't have to provide the definition. You will provide missing recognizers
+during grammar instantiation.</p>
+<p>Lets say that we have a list of integers (real list of Python ints, not a text
+with numbers) and we have some weird requirement to break those numbers
+according to the following grammar:</p>
+<pre><code>  Numbers = all_less_than_five ascending all_less_than_five EOF;
+  all_less_than_five = all_less_than_five int_less_than_five
+                     | int_less_than_five;
+</code></pre>
+<p>So, we should first match all numbers less than five and collect those, than we
+should match a list of ascending numbers and than list of less than five again.
+<code>int_less_than_five</code> and <code>ascending</code> are terminals/recognizers that will be
+defined in Python and passed to grammar construction. <code>int_less_than_five</code> will
+recognize Python integer that is less than five. <code>ascending</code> will recognize a
+sublist of integers in ascending order.</p>
+<p>More on this topic will be written in a separate section.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can directly write regex or string recognizer at the place of terminal:</p>
+<pre><code>some_rule = "a" aterm "a";
+aterm = "a";
+</code></pre>
+<p>Writting <code>"a"</code> in <code>some_rule</code> is equivalent to writing terminal reference
+<code>aterm</code>. Rule <code>aterm</code> is terminal definition rule. All occurences of <code>"a"</code>
+as well as <code>aterm</code> will result in the same terminal in the grammar.</p>
 </div>
 <h2 id="usual-patterns">Usual patterns<a class="headerlink" href="#usual-patterns" title="Permanent link">&para;</a></h2>
 <h3 id="one-or-more">One or more<a class="headerlink" href="#one-or-more" title="Permanent link">&para;</a></h3>
