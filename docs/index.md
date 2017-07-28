@@ -88,8 +88,8 @@ A pure Python (G)LR parser with integrated scanner.
     This is something that often lacks in parsing libraries. More often than not
     you will want your parser to recover from an error, report it, and continue
     parsing. parglare has a built-in error recovery strategy which is currently
-    a simplistic one - it will skip current character and try to continue - but
-    gives you possibility to provide your own.
+    a simplistic one -- it will skip current character and try to continue --
+    but gives you possibility to provide your own.
 
 * **Test coverage**
 
@@ -110,27 +110,27 @@ A pure Python (G)LR parser with integrated scanner.
 
 * **Specify common actions in the grammar**
 
-  parglare provides some commonly used custom actions. It would reduce
-  boiler-plate in specification of these actions if a syntax is added to provide
-  that information in the grammar directly.
+    parglare provides some commonly used custom actions. It would reduce
+    boiler-plate in specification of these actions if a syntax is added to provide
+    that information in the grammar directly.
 
-  Example:
+    Example:
 
-      @collect
-      some_objects = some_objects some_object | some_object;
+        @collect
+        some_objects = some_objects some_object | some_object;
 
 * **Support for named matches**
 
-  At the moment, as a parameter to action you get a list of matched elements. It
-  would be useful to reference these element by name rather than by position.
+    At the moment, as a parameter to action you get a list of matched elements. It
+    would be useful to reference these element by name rather than by position.
 
-      my_rule = first:first_match_rule second:second_match_rule;
-      first_match_rule = ...;
-      second_match_rule = ...;
+        my_rule = first:first_match_rule second:second_match_rule;
+        first_match_rule = ...;
+        second_match_rule = ...;
 
-  Now in your action for `my_rule` you will get `first` and `second` as a parameters.
-  This would make it easy to provide a new common action that will return a Python
-  object with supplied parameters as object attributes.
+    Now in your action for `my_rule` you will get `first` and `second` as a parameters.
+    This would make it easy to provide a new common action that will return a Python
+    object with supplied parameters as object attributes.
 
 
 ## Quick intro
