@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./css/theme.css" type="text/css" />
   <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
   <link rel="stylesheet" href="./css/highlight.css">
+  <link href="./style.css" rel="stylesheet">
   
   <script>
     // Current page data
@@ -249,8 +250,8 @@ the layout grammar will be built to handle whitespaces.</p>
 <p>This is something that often lacks in parsing libraries. More often than not
 you will want your parser to recover from an error, report it, and continue
 parsing. parglare has a built-in error recovery strategy which is currently
-a simplistic one - it will skip current character and try to continue - but
-gives you possibility to provide your own.</p>
+a simplistic one -- it will skip current character and try to continue --
+but gives you possibility to provide your own.</p>
 </li>
 <li>
 <p><strong>Test coverage</strong></p>
@@ -271,27 +272,27 @@ grammar has changed and cached.</p>
 </li>
 <li>
 <p><strong>Specify common actions in the grammar</strong></p>
-</li>
-</ul>
 <p>parglare provides some commonly used custom actions. It would reduce
-  boiler-plate in specification of these actions if a syntax is added to provide
-  that information in the grammar directly.</p>
+boiler-plate in specification of these actions if a syntax is added to provide
+that information in the grammar directly.</p>
 <p>Example:</p>
-<pre><code>  @collect
-  some_objects = some_objects some_object | some_object;
+<pre><code>@collect
+some_objects = some_objects some_object | some_object;
 </code></pre>
-<ul>
-<li><strong>Support for named matches</strong></li>
-</ul>
+</li>
+<li>
+<p><strong>Support for named matches</strong></p>
 <p>At the moment, as a parameter to action you get a list of matched elements. It
-  would be useful to reference these element by name rather than by position.</p>
-<pre><code>  my_rule = first:first_match_rule second:second_match_rule;
-  first_match_rule = ...;
-  second_match_rule = ...;
+would be useful to reference these element by name rather than by position.</p>
+<pre><code>my_rule = first:first_match_rule second:second_match_rule;
+first_match_rule = ...;
+second_match_rule = ...;
 </code></pre>
 <p>Now in your action for <code>my_rule</code> you will get <code>first</code> and <code>second</code> as a parameters.
-  This would make it easy to provide a new common action that will return a Python
-  object with supplied parameters as object attributes.</p>
+This would make it easy to provide a new common action that will return a Python
+object with supplied parameters as object attributes.</p>
+</li>
+</ul>
 <h2 id="quick-intro">Quick intro<a class="headerlink" href="#quick-intro" title="Permanent link">&para;</a></h2>
 <p>This is just a small example to get the general idea. This example shows how to
 parse and evaluate expressions with 5 operations with different priority and
@@ -417,5 +418,5 @@ net. ;)</p>
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-07-27 17:41:39
+Build Date UTC : 2017-07-28 09:11:53
 -->
