@@ -6,7 +6,7 @@
 
 ![parglare logo](https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png)
 
-A pure Python (G)LR parser with integrated scanner.
+A pure Python LR/GLR parser with integrated scanner.
 
 
 For more information see [the docs](http://www.igordejanovic.net/parglare/).

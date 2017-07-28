@@ -2,7 +2,7 @@
 
 ---
 
-A pure Python (G)LR parser with integrated scanner.
+A pure Python LR/GLR parser with integrated scanner.
 
 !!! note
     The docs are work in progress.
