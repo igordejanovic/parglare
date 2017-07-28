@@ -42,14 +42,15 @@ Field = /[A-Z]*/
 
 This terminal definition uses regular expression.
 
+!!! note
 
-If you got use to various BNF extensions
-(like [Kleene star](https://en.wikipedia.org/wiki/Kleene_star)) you might find
-this awkward because you must build `zero or more` or `one or more` pattern from
-scratch using just a sequence, choice and recursion. The grammars are indeed
-more verbose but, on the other hand, actions are much easier to write and you
-have full control over tree construction process. parglare might provide some
-syntactic sugar later that would make some constructs shorter to write.
+    If you got use to various BNF extensions
+    (like [Kleene star](https://en.wikipedia.org/wiki/Kleene_star)) you might find
+    this awkward because you must build `zero or more` or `one or more` pattern from
+    scratch using just a sequence, choice and recursion. The grammars are indeed
+    more verbose but, on the other hand, actions are much easier to write and you
+    have full control over tree construction process. parglare might provide some
+    syntactic sugar later that would make some constructs shorter to write.
 
 
 ## Usual patterns
