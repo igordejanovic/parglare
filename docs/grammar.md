@@ -27,20 +27,20 @@ Fields = Field | Fields "," Field;
 
 Here `Fields` is a non-terminal grammar symbol and it is defined as either a
 single `Field` or, recursively, as `Fields` followed by a string terminal `,`
-and than by another `Field`. It is not given here by `Field` might also be
-defined as a non-terminal, for example:
+and than by another `Field`. It is not given here but `Field` could also be
+defined as a non-terminal. For example:
 
 ```
 Field = QuotedField | FieldContent;
 ```
 
-or it could be defined as a terminal:
+Or it could be defined as a terminal:
 
 ```
 Field = /[A-Z]*/
 ```
 
-This terminal definition uses regular expression.
+This terminal definition uses regular expression recognizer.
 
 !!! note
 
@@ -51,6 +51,70 @@ This terminal definition uses regular expression.
     more verbose but, on the other hand, actions are much easier to write and you
     have full control over tree construction process. parglare might provide some
     syntactic sugar later that would make some constructs shorter to write.
+
+## Terminals
+
+Terminal symbols of the grammar define the fundamental and atomic elements of
+your language -- tokens or lexemes (e.g. keywords, numbers). In parglare
+terminal is connected to recognizer which is an object used to recognize token
+of particular type in the input. Most of the time you will do parsing of textual
+content and you will need textual recognizers. These recognizers are built-in
+and there are two type of textual recognizers:
+
+- string recognizer
+- regular expression recognizer
+
+### String recognizer
+
+String recognizer is defined as a plain string inside of double quotes:
+
+
+### Regular expression recognizer
+
+Or regex recognizer for short is a regex pattern written inside slashes
+(`/.../`).
+
+For example:
+
+     number = /\d+/;
+
+This rule defines terminal symbol `number` which has a regex recognizer and will
+recognize one or more digits as a number.
+
+### Custom recognizers
+
+If you are parsing arbitrary input (non-textual) you'll have to provide your own
+recognizers. In the grammar, you just have to reference your token symbol but
+you don't have to provide the definition. You will provide missing recognizers
+during grammar instantiation.
+
+Lets say that we have a list of integers (real list of Python ints, not a text
+with numbers) and we have some weird requirement to break those numbers
+according to the following grammar:
+
+      Numbers = all_less_than_five ascending all_less_than_five EOF;
+      all_less_than_five = all_less_than_five int_less_than_five
+                         | int_less_than_five;
+
+
+So, we should first match all numbers less than five and collect those, than we
+should match a list of ascending numbers and than list of less than five again.
+`int_less_than_five` and `ascending` are terminals/recognizers that will be
+defined in Python and passed to grammar construction. `int_less_than_five` will
+recognize Python integer that is less than five. `ascending` will recognize a
+sublist of integers in ascending order.
+
+More on this topic will be written in a separate section.
+
+!!! note
+    You can directly write regex or string recognizer at the place of terminal:
+
+        some_rule = "a" aterm "a";
+        aterm = "a";
+
+    Writting `"a"` in `some_rule` is equivalent to writing terminal reference
+    `aterm`. Rule `aterm` is terminal definition rule. All occurences of `"a"`
+    as well as `aterm` will result in the same terminal in the grammar.
 
 
 ## Usual patterns
