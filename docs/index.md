@@ -5,7 +5,7 @@
 A pure Python LR/GLR parser with integrated scanner.
 
 !!! note
-    The docs are work in progress.
+    The docs is work in progress. Stay tuned. :)
 
 ## Feature highlights
 
