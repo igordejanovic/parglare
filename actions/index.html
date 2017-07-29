@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Igor Dejanović">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Actions - parglare</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  <link href="../style.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Actions";
+    var mkdocs_page_input_path = "actions.md";
+    var mkdocs_page_url = "/actions/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-68681917-1', 'igordejanovic.net');
+      ga('send', 'pageview');
+  </script>
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> parglare</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="..">Home</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>User Guide</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../grammar/">Grammar</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Actions</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#actions">Actions</a></li>
+                
+                    <li><a class="toctree-l4" href="#custom-actions-and-default-actions">Custom actions and default actions</a></li>
+                
+                    <li><a class="toctree-l4" href="#time-of-actions-call">Time of actions call</a></li>
+                
+                    <li><a class="toctree-l4" href="#the-context-object">The Context object</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>About</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../about/CONTRIBUTING/">Contributing</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../about/LICENSE/">License</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">parglare</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>User Guide &raquo;</li>
+        
+      
+    
+    <li>Actions</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/actions.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">&para;</a></h1>
+<p>Actions (a.k.a. <em>semantic actions</em> or <em>reductions actions</em>) are Python callables
+(functions or lambdas mostly) that get called to reduce the recognized pattern
+to some higher concept. E.g. in the calc example actions are called to calculate
+subexpressions.</p>
+<p>There are two consideration to think of:</p>
+<ul>
+<li>Which actions are called?</li>
+<li>When actions are called?</li>
+</ul>
+<h2 id="custom-actions-and-default-actions">Custom actions and default actions<a class="headerlink" href="#custom-actions-and-default-actions" title="Permanent link">&para;</a></h2>
+<p>If you don't provide actions of your own the default parglare actions will build
+the parse tree.</p>
+<p>Actions are provided to the parser during parser instantiation as <code>actions</code>
+parameter which must be a Python dict where the keys are the names of the rules
+from the grammar and values are the action callables or a list of callables if
+the rule has more than one production/choice.</p>
+<p>Lets take a closer look at the quick intro example:</p>
+<pre><code>grammar = r"""
+E = E '+' E  {left, 1}
+  | E '-' E  {left, 1}
+  | E '*' E  {left, 2}
+  | E '/' E  {left, 2}
+  | E '^' E  {right, 3}
+  | '(' E ')'
+  | number;
+number = /\d+(\.\d+)?/;
+"""
+
+actions = {
+    "E": [lambda _, nodes: nodes[0] + nodes[2],
+          lambda _, nodes: nodes[0] - nodes[2],
+          lambda _, nodes: nodes[0] * nodes[2],
+          lambda _, nodes: nodes[0] / nodes[2],
+          lambda _, nodes: nodes[0] ** nodes[2],
+          lambda _, nodes: nodes[1],
+          lambda _, nodes: nodes[0]],
+    "number": lambda _, value: float(value),
+}
+
+g = Grammar.from_string(grammar)
+parser = Parser(g, actions=actions)
+result = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
+</code></pre>
+<p>Here you can see that for rule <code>E</code> we provide a list of lambdas, one lambda for
+each operation. The first element of the list corresponds to the first
+production of the <code>E</code> rule (<code>E '+' E {left, 1}</code>), the second to the second and
+so on. For <code>number</code> rule there is only a single lambda which converts the
+matched string to the Python <code>float</code> type, because <code>number</code> has only a single
+production. Actually, <code>number</code> is a terminal definition and thus the second
+parameter in action call will not be a list but a matched value itself. At the
+end we instantiate the parser and pass in our <code>actions</code> using the parameter.</p>
+<p>Each action callable receive two parameters. The first is the context object
+which gives parsing context information (like the start end end position where
+the match occured, the parser instance etc.). The second parameters <code>nodes</code> is
+the actual results of subexpressions given in the order defined in the grammar.</p>
+<p>For example:</p>
+<pre><code>lambda _, nodes: nodes[0] * nodes[2],
+</code></pre>
+<p>In this line we don't care about context thus giving it the <code>_</code> name. <code>nodes[0]</code>
+will cary the value of the left subexpression while <code>nodes[2]</code> will carry the
+result of the right subexpression. <code>nodes[1]</code> must be <code>*</code> and we don't need to
+check that as the parser already did that for us.</p>
+<p>The result of the parsing will be the evaluated expression as the actions will
+get called along the way and the result of each actions will be used as an
+element of the <code>nodes</code> parameter in calling actions higher in the hierarchy.</p>
+<p>If we don't provide <code>actions</code> the default will be used and we end up with the
+parse tree as the result of the parsing.</p>
+<h2 id="time-of-actions-call">Time of actions call<a class="headerlink" href="#time-of-actions-call" title="Permanent link">&para;</a></h2>
+<p>In parglare actions can be called during parsing (i.e. on the fly) which you
+could use if you want to transform input imediately without building the parse
+tree. But there are times when you would like to build a tree first and call
+actions afterwards. For example, you might want to do several different
+transformation of the tree. Or, another very good reason is, you are using GLR
+and you want to be sure that actions are called only on the final tree.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are using GLR be sure to call actions after the tree has been built.
+First, there are a number of things you would have to take care otherwise,
+like common subtree sharing, actions side-effects etc.</p>
+</div>
+<p>To get the tree and call actions afterwards you don't supply <code>actions</code> parameter
+to the parser. That way you get the parse tree as a result (or a list of parse
+trees in case of GLR). After that you call <code>call_actions</code> method on the parser
+giving it the root of the tree and the actions dict:</p>
+<pre><code>parser = Parser(g)
+tree = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
+result = parser.call_actions(tree, actions=actions)
+</code></pre>
+<h2 id="the-context-object">The Context object<a class="headerlink" href="#the-context-object" title="Permanent link">&para;</a></h2>
+<p>The first parameter passed to the action function is the Context object. This
+object provides us with the parsing context of where the match occured.</p>
+<p>These attributes are available on the context object:</p>
+<ul>
+<li>
+<p><code>start_position</code>/<code>end_position</code> - the beginning and the end in the input
+  stream where the match occured. <code>start_position</code> is the location of the first
+  element in the input while the <code>end_position</code> is one past the last element of
+  the match. Thus <code>end_position - start_position</code> will give the lenght of the
+  match including the layout. You can use <code>parglare.pos_to_line_col(input,
+  position)</code> function to get line, column of the position.</p>
+</li>
+<li>
+<p><code>layout_content</code> - is the layout (whitespaces, comments etc.) that are
+  collected from the previous non-layout match.</p>
+</li>
+<li>
+<p><code>symbol</code> - the grammar symbol this match is for.</p>
+</li>
+<li>
+<p><code>production</code> - an instance of <code>parglare.grammar.Production</code> class available
+  only on reduction actions (not on shifts). Represents the grammar production.</p>
+</li>
+<li>
+<p><code>node</code> - this is available only if the actions are called over the parse tree
+  using <code>call_actions</code>. It represens the instance of <code>NodeNonTerm</code> or <code>NodeTerm</code>
+  classes from the parse tree where the actions is executed.</p>
+</li>
+<li>
+<p><code>parser</code> - is the reference to the parser instance. You should use this only
+  to investigate parser configuration not to alter its state.</p>
+</li>
+</ul>
+<p>You can also use context object to pass information between lower level and
+upper level actions. You can attach any attribute you like, the context object
+is shared between action calls.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../about/CONTRIBUTING/" class="btn btn-neutral float-right" title="Contributing">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../grammar/" class="btn btn-neutral" title="Grammar"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>Copyright &copy; 2017 <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/igordejanovic/parglare" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../grammar/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../about/CONTRIBUTING/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script src="../js/theme.js"></script>
+
+</body>
+</html>
