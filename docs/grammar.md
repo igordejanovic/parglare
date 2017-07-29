@@ -37,7 +37,7 @@ Field = QuotedField | FieldContent;
 Or it could be defined as a terminal:
 
 ```
-Field = /[A-Z]*/
+Field = /[A-Z]*/;
 ```
 
 This terminal definition uses regular expression recognizer.
@@ -54,7 +54,7 @@ This terminal definition uses regular expression recognizer.
 
 ## Terminals
 
-Terminal symbols of the grammar define the fundamental and atomic elements of
+Terminal symbols of the grammar define the fundamental or atomic elements of
 your language -- tokens or lexemes (e.g. keywords, numbers). In parglare
 terminal is connected to recognizer which is an object used to recognize token
 of particular type in the input. Most of the time you will do parsing of textual
@@ -67,6 +67,21 @@ and there are two type of textual recognizers:
 ### String recognizer
 
 String recognizer is defined as a plain string inside of double quotes:
+
+    my_rule = "start" other_rule "end";
+
+In this example `"start"` and `"end"` will be terminals with string recognizers
+that match exactly the words `start` and `end`.
+
+You can write string recognizing terminal directly in the rule expression or you
+can define terminal separately and reference it by name, like:
+
+    my_rule = start other_rule end;
+    start = "start";
+    end = "end";
+
+Either way it will be the same terminal. You will usually write as a separate
+terminal if the terminal is used at multiple places in the grammar.
 
 
 ### Regular expression recognizer
@@ -81,19 +96,20 @@ For example:
 This rule defines terminal symbol `number` which has a regex recognizer and will
 recognize one or more digits as a number.
 
+
 ### Custom recognizers
 
 If you are parsing arbitrary input (non-textual) you'll have to provide your own
-recognizers. In the grammar, you just have to reference your token symbol but
+recognizers. In the grammar, you just have to reference your terminal symbol but
 you don't have to provide the definition. You will provide missing recognizers
-during grammar instantiation.
+during grammar instantiation from Python.
 
 Lets say that we have a list of integers (real list of Python ints, not a text
 with numbers) and we have some weird requirement to break those numbers
 according to the following grammar:
 
-      Numbers = all_less_than_five ascending all_less_than_five EOF;
-      all_less_than_five = all_less_than_five int_less_than_five
+      Numbers = all_less_than_five  ascending  all_less_than_five EOF;
+      all_less_than_five = all_less_than_five  int_less_than_five
                          | int_less_than_five;
 
 
@@ -103,6 +119,8 @@ should match a list of ascending numbers and than list of less than five again.
 defined in Python and passed to grammar construction. `int_less_than_five` will
 recognize Python integer that is less than five. `ascending` will recognize a
 sublist of integers in ascending order.
+
+For more details on the usage see [this test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_parse_list_of_objects.py).
 
 More on this topic will be written in a separate section.
 
@@ -125,11 +143,13 @@ More on this topic will be written in a separate section.
     // sections rule bellow will match one or more section.
     sections = sections section | section;
 
-In this example `sections` will match one or more `section`.
+In this example `sections` will match one or more `section`. Notice the
+recursive definition of the rule. You can read this as _`sections` consist of
+sections and a section at the end or `sections` is just a single section_.
 
 !!! note
 
-    Be aware that you could do the same with this rule:
+    Please note that you could do the same with this rule:
 
         sections = section sections | section;
 

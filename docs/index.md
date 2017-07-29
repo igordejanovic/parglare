@@ -7,6 +7,9 @@ A pure Python LR/GLR parser with integrated scanner.
 !!! note
     The docs is work in progress. Stay tuned. :)
 
+    Until the docs is completed you can use [tests](https://github.com/igordejanovic/parglare/tree/master/tests/func) and [examples](https://github.com/igordejanovic/parglare/tree/master/examples) as a good source
+    of information on the possiblities and usage patterns.
+
 ## Feature highlights
 
 * **Scannerless parsing**
@@ -132,6 +135,12 @@ A pure Python LR/GLR parser with integrated scanner.
     This would make it easy to provide a new common action that will return a Python
     object with supplied parameters as object attributes.
 
+* **GLR performance optimization**
+
+    The GLR parsing has a lot of overhead compared to LR which makes it slower.
+    There are some technique that could be used to cut on this difference in
+    speed.
+
 
 ## Quick intro
 
@@ -140,13 +149,6 @@ parse and evaluate expressions with 5 operations with different priority and
 associativity. Evaluation is done using semantic/reduction actions.
 
 The whole expression evaluator is done in under 30 lines of code!
-
-Until docs is completed
-see
-[the example folder](https://github.com/igordejanovic/parglare/tree/master/examples) and
-[tests](https://github.com/igordejanovic/parglare/tree/master/tests/func) for
-more.
-
 
 ```python
 from parglare import Parser, Grammar
@@ -206,6 +208,14 @@ Lexical disambiguation is done in the following order:
   priority. For further disambiguation if longest-match fails `prefer` rule
   may be given in terminal definition.
 
+Notice that, since the scanning is integrated into parser, the lexical ambiguity
+may arise only if there is a real ambiguity in the language definition, i.e. you
+might have two or more tokens recognized at some place during parsing. For
+approaches where scanning is separate, lexical ambiguities arise whenever you
+have token recognition overlap no matter what the context is, which is a real
+PITA.
+
+
 ## What does `parglare` mean?
 
 It is an amalgam of the words `parser` and `glare` where the second word is
@@ -215,6 +225,11 @@ of the translations for the word - `to be very bright and intense`
 
 Oh, and the name is non-generic and unique which make it easy to find on the
 net. ;)
+
+The project logo is my take (not very successful) on drawing the Hydra, a
+creature with multiple heads from the Greek mythology. According to the legend,
+the Hydra had a regeneration feature: for every head chopped off, the Hydra
+would regrow a couple of new heads. This reminds me a lot of GLR parsing ;)
 
 
 ## License
