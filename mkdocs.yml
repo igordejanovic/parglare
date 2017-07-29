@@ -11,6 +11,7 @@ pages:
 - Home: index.md
 - User Guide:
     - Grammar: grammar.md
+    - Actions: actions.md
 - About:
     - Contributing: about/CONTRIBUTING.md
     - License: about/LICENSE.md
