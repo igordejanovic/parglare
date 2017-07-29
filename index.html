@@ -170,6 +170,8 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The docs is work in progress. Stay tuned. :)</p>
+<p>Until the docs is completed you can use <a href="https://github.com/igordejanovic/parglare/tree/master/tests/func">tests</a> and <a href="https://github.com/igordejanovic/parglare/tree/master/examples">examples</a> as a good source
+of information on the possiblities and usage patterns.</p>
 </div>
 <h2 id="feature-highlights">Feature highlights<a class="headerlink" href="#feature-highlights" title="Permanent link">&para;</a></h2>
 <ul>
@@ -292,17 +294,18 @@ second_match_rule = ...;
 This would make it easy to provide a new common action that will return a Python
 object with supplied parameters as object attributes.</p>
 </li>
+<li>
+<p><strong>GLR performance optimization</strong></p>
+<p>The GLR parsing has a lot of overhead compared to LR which makes it slower.
+There are some technique that could be used to cut on this difference in
+speed.</p>
+</li>
 </ul>
 <h2 id="quick-intro">Quick intro<a class="headerlink" href="#quick-intro" title="Permanent link">&para;</a></h2>
 <p>This is just a small example to get the general idea. This example shows how to
 parse and evaluate expressions with 5 operations with different priority and
 associativity. Evaluation is done using semantic/reduction actions.</p>
 <p>The whole expression evaluator is done in under 30 lines of code!</p>
-<p>Until docs is completed
-see
-<a href="https://github.com/igordejanovic/parglare/tree/master/examples">the example folder</a> and
-<a href="https://github.com/igordejanovic/parglare/tree/master/tests/func">tests</a> for
-more.</p>
 <pre><code class="python">from parglare import Parser, Grammar
 
 grammar = r&quot;&quot;&quot;
@@ -357,6 +360,12 @@ Lexical disambiguation is done in the following order:</p>
   priority. For further disambiguation if longest-match fails <code>prefer</code> rule
   may be given in terminal definition.</li>
 </ul>
+<p>Notice that, since the scanning is integrated into parser, the lexical ambiguity
+may arise only if there is a real ambiguity in the language definition, i.e. you
+might have two or more tokens recognized at some place during parsing. For
+approaches where scanning is separate, lexical ambiguities arise whenever you
+have token recognition overlap no matter what the context is, which is a real
+PITA.</p>
 <h2 id="what-does-parglare-mean">What does <code>parglare</code> mean?<a class="headerlink" href="#what-does-parglare-mean" title="Permanent link">&para;</a></h2>
 <p>It is an amalgam of the words <code>parser</code> and <code>glare</code> where the second word is
 chosen to contain letters GLR and to be easy for pronunciation. I also like one
@@ -364,6 +373,10 @@ of the translations for the word - <code>to be very bright and intense</code>
 (by <a href="http://www.thefreedictionary.com/glare">The Free Dictionary</a>)</p>
 <p>Oh, and the name is non-generic and unique which make it easy to find on the
 net. ;)</p>
+<p>The project logo is my take (not very successful) on drawing the Hydra, a
+creature with multiple heads from the Greek mythology. According to the legend,
+the Hydra had a regeneration feature: for every head chopped off, the Hydra
+would regrow a couple of new heads. This reminds me a lot of GLR parsing ;)</p>
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
 <p>MIT</p>
 <h2 id="python-versions">Python versions<a class="headerlink" href="#python-versions" title="Permanent link">&para;</a></h2>
@@ -418,5 +431,5 @@ net. ;)</p>
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-07-28 14:54:31
+Build Date UTC : 2017-07-29 10:20:26
 -->
