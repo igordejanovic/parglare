@@ -320,14 +320,18 @@ class Parser(object):
         self.context = context = context if context else Context()
         context.parser = self
 
+        def set_context(context, node):
+            context.start_position = node.start_position
+            context.end_position = node.end_position
+            context.node = node
+            context.symbol = node.symbol
+            context.layout_content = node.layout_content
+
         def inner_call_actions(node):
             sem_action = actions.get(node.symbol.name)
             if sem_action:
-                context.start_position = node.start_position
-                context.end_position = node.end_position
-                context.node = node
-
                 if isinstance(node, NodeTerm):
+                    set_context(context, node)
                     return sem_action(context, node.value)
                 else:
                     results = []
@@ -337,6 +341,7 @@ class Parser(object):
                         results.append(inner_call_actions(n))
                     results.reverse()
 
+                    set_context(context, node)
                     if type(sem_action) is list:
                         result = \
                             sem_action[
@@ -651,9 +656,13 @@ class LRState(object):
 
 class Node(object):
     """A node of the parse tree."""
-    def __init__(self, start_position, end_position):
+    def __init__(self, start_position, end_position, layout_content=None):
         self.start_position = start_position
         self.end_position = end_position
+        self.layout_content = layout_content
+
+    def __repr__(self):
+        return str(self)
 
     def __iter__(self):
         return iter([])
@@ -665,9 +674,11 @@ class Node(object):
 class NodeNonTerm(Node):
     __slots__ = ['start_position', 'end_position', 'production', 'nodes']
 
-    def __init__(self, start_position, end_position, production, nodes):
+    def __init__(self, start_position, end_position, production, nodes,
+                 layout_content=None):
         super(NodeNonTerm, self).__init__(start_position,
-                                          end_position)
+                                          end_position,
+                                          layout_content=layout_content)
         self.production = production
         self.nodes = nodes
 
@@ -688,8 +699,9 @@ class NodeNonTerm(Node):
         return self.production.symbol
 
     def __str__(self):
-        return '<Node({}, {})>'.format(self.start_position,
-                                       self.production.symbol)
+        return '<NonTerm(start={}, end={}, sym={})>'\
+            .format(self.start_position, self.end_position,
+                    self.production.symbol)
 
     def __iter__(self):
         return iter(self.nodes)
@@ -701,9 +713,11 @@ class NodeNonTerm(Node):
 class NodeTerm(Node):
     __slots__ = ['start_position', 'end_position', 'symbol', 'value']
 
-    def __init__(self, start_position, end_position, symbol, value):
+    def __init__(self, start_position, end_position, symbol, value,
+                 layout_content=None):
         super(NodeTerm, self).__init__(start_position,
-                                       end_position)
+                                       end_position,
+                                       layout_content=layout_content)
         self.value = value
         self.symbol = symbol
 
@@ -712,11 +726,9 @@ class NodeTerm(Node):
                                    self.value)
 
     def __str__(self):
-        return '<NodeTerm({}, {}, {})>'.format(self.start_position,
-                                               self.symbol, self.value)
-
-    def __repr__(self):
-        return str(self)
+        return '<Term(start={}, end={}, sym={}, val="{}")>'\
+            .format(self.start_position, self.end_position, self.symbol,
+                    self.value[:20])
 
 
 class Token(object):
@@ -740,12 +752,12 @@ EOF_token = Token(EOF)
 
 def default_shift_action(context, value):
     return NodeTerm(context.start_position, context.end_position,
-                    context.symbol, value)
+                    context.symbol, value, context.layout_content)
 
 
 def default_reduce_action(context, nodes):
     return NodeNonTerm(context.start_position, context.end_position,
-                       context.production, nodes)
+                       context.production, nodes, context.layout_content)
 
 
 def first(grammar):

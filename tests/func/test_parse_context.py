@@ -1,5 +1,6 @@
 import pytest  # noqa
 from parglare import Grammar, Parser
+from parglare.parser import NodeNonTerm, Context
 from parglare.actions import pass_single
 
 
@@ -11,6 +12,7 @@ number = /\d+(\.\d+)?/;
 """
 
 called = [False]
+node_exists = [False]
 
 
 def act_sum(context, nodes):
@@ -20,6 +22,10 @@ def act_sum(context, nodes):
     assert context.layout_content is not None
     assert context.start_position == 3
     assert context.end_position == 8
+    if hasattr(context, 'call_actions'):
+        assert type(context.node) is NodeNonTerm \
+            and context.node.symbol.name == 'E'
+        node_exists[0] = True
 
 
 actions = {
@@ -37,3 +43,21 @@ def test_parse_context():
     parser.parse("   1 + 2  ")
 
     assert called[0]
+
+
+def test_parse_context_call_actions():
+    """
+    Test that valid context attributes are available when calling
+    actions using `call_actions`.
+    """
+    called[0] = False
+
+    parser = Parser(g, debug=True)
+
+    tree = parser.parse("   1 + 2  ")
+    context = Context()
+    context.call_actions = True
+    parser.call_actions(tree, actions=actions, context=context)
+
+    assert called[0]
+    assert node_exists[0]
