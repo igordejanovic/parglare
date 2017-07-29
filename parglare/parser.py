@@ -350,6 +350,7 @@ class Parser(object):
                     results.reverse()
 
                     set_context(context, node)
+                    context.production = node.production
                     if type(sem_action) is list:
                         result = \
                             sem_action[

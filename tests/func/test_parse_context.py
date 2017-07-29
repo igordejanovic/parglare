@@ -19,6 +19,8 @@ def act_sum(context, nodes):
     called[0] = True
     assert context.parser
     assert context.symbol.name == 'E'
+    assert context.production.symbol.name == 'E'
+    assert len(context.production.rhs) == 3
     assert context.layout_content == '   '
     assert context.start_position == 3
     assert context.end_position == 8
