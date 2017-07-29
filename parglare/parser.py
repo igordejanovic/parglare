@@ -113,7 +113,8 @@ class Parser(object):
         self.errors = []
         self.current_error = None
 
-        state_stack = [StackNode(self.table.states[0], position, 0, None)]
+        state_stack = [StackNode(self.table.states[0], position, 0, None,
+                                 None)]
         context = Context() if not context else context
 
         default_actions = self.default_actions
@@ -156,6 +157,7 @@ class Parser(object):
             context.parser = self
             context.start_position = position
             context.end_position = position + len(ntok.value)
+            context.layout_content = layout_content
 
             if debug:
                 print("\tContext:", position_context(input_str, position))
@@ -251,6 +253,7 @@ class Parser(object):
                 state_stack.append(StackNode(state,
                                              context.start_position,
                                              context.end_position,
+                                             context.layout_content,
                                              result))
                 position = context.end_position
                 new_token = True
@@ -263,6 +266,7 @@ class Parser(object):
                         act = acts[1]
                 production = act.prod
                 symbol = production.symbol
+                context.symbol = symbol
                 context.production = production
 
                 if debug:
@@ -273,6 +277,8 @@ class Parser(object):
                     context.end_position = state_stack[-1].end_position
                     context.start_position = \
                         state_stack[-r_length].start_position
+                    context.layout_content = \
+                        state_stack[-r_length].layout_content
                     subresults = [x.result for x in state_stack[-r_length:]]
                     del state_stack[-r_length:]
                     cur_state = state_stack[-1].state
@@ -280,6 +286,7 @@ class Parser(object):
                     subresults = []
                     context.end_position = position
                     context.start_position = position
+                    context.layout_content = ''
 
                 # Calling semantic actions
                 result = None
@@ -301,6 +308,7 @@ class Parser(object):
                 state_stack.append(StackNode(cur_state,
                                              context.start_position,
                                              context.end_position,
+                                             context.layout_content,
                                              result))
                 new_token = False
 
@@ -485,12 +493,15 @@ class StackNode:
     __slots__ = ['state',
                  'start_position',
                  'end_position',
+                 'layout_content',
                  'result']
 
-    def __init__(self, state, start_position, end_position, result):
+    def __init__(self, state, start_position, end_position, layout_content,
+                 result):
         self.state = state
         self.start_position = start_position
         self.end_position = end_position
+        self.layout_content = layout_content
         self.result = result
 
 

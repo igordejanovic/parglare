@@ -11,15 +11,15 @@ E = E '+' E  {left}
 number = /\d+(\.\d+)?/;
 """
 
-called = [False]
+called = [False, False, False]
 node_exists = [False]
 
 
 def act_sum(context, nodes):
     called[0] = True
     assert context.parser
-    assert context.symbol
-    assert context.layout_content is not None
+    assert context.symbol.name == 'E'
+    assert context.layout_content == '   '
     assert context.start_position == 3
     assert context.end_position == 8
     if hasattr(context, 'call_actions'):
@@ -28,21 +28,47 @@ def act_sum(context, nodes):
         node_exists[0] = True
 
 
+def act_eof(context, nodes):
+    called[1] = True
+    assert context.symbol.name == 'EOF'
+    # The remaining layout at the end of input
+    assert context.layout_content == '  '
+
+
+def act_number(context, value):
+    called[2] = True
+    value = float(value)
+    assert context.symbol.name == 'number'
+    if value == 1:
+        assert context.start_position == 3
+        assert context.end_position == 4
+        assert context.layout_content == '   '
+    else:
+        assert context.start_position == 7
+        assert context.end_position == 8
+        assert context.layout_content == ' '
+    return value
+
+
 actions = {
     "Result": pass_single,
     "E": [act_sum, pass_single],
-    "number": lambda _, value: float(value),
+    "number": act_number,
+    "EOF": act_eof
 }
 
 g = Grammar.from_string(grammar)
 
 
 def test_parse_context():
+    global called
+    called = [False, False, False]
+
     parser = Parser(g, actions=actions, debug=True)
 
     parser.parse("   1 + 2  ")
 
-    assert called[0]
+    assert all(called)
 
 
 def test_parse_context_call_actions():
@@ -50,7 +76,8 @@ def test_parse_context_call_actions():
     Test that valid context attributes are available when calling
     actions using `call_actions`.
     """
-    called[0] = False
+    global called
+    called = [False, False, False]
 
     parser = Parser(g, debug=True)
 
@@ -59,5 +86,5 @@ def test_parse_context_call_actions():
     context.call_actions = True
     parser.call_actions(tree, actions=actions, context=context)
 
-    assert called[0]
+    assert all(called)
     assert node_exists[0]
