@@ -229,7 +229,7 @@ net. ;)
 The project logo is my take (not very successful) on drawing the Hydra, a
 creature with multiple heads from the Greek mythology. According to the legend,
 the Hydra had a regeneration feature: for every head chopped off, the Hydra
-would regrow a couple of new heads. This reminds me a lot of GLR parsing ;)
+would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)
 
 
 ## License
