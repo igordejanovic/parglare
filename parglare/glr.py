@@ -133,7 +133,7 @@ class GLRParser(Parser):
                 tokens = next_tokens(state, input_str, position)
                 if debug:
                     self._debug_context(
-                        input_str, position, lookahead_token,
+                        input_str, position, tokens,
                         expected_symbols=actions.keys(),
                         layout_content=layout_content)
 
@@ -164,8 +164,8 @@ class GLRParser(Parser):
                     self.add_to_heads_for_shift(reduce_head)
 
                 if debug:
-                    print("\tNo more reductions for lookahead token {}."
-                          .format(token))
+                    print("\tNo more reductions for this head and "
+                          "lookahead token {}.".format(token))
 
     def _do_shifts(self, context):
         """
@@ -453,7 +453,7 @@ class GLRParser(Parser):
         print("Number of trees = {}".format(
             sum([h.number_of_trees for h in heads])))
 
-    def _debug_context(self, input_str, position, lookahead_token,
+    def _debug_context(self, input_str, position, lookahead_tokens,
                        expected_symbols=None,
                        layout_content=''):
         print("\tPosition:", pos_to_line_col(input_str, position))
@@ -465,7 +465,7 @@ class GLRParser(Parser):
         if expected_symbols:
             print("\tSymbols expected: {}".format(
                 [s.name for s in expected_symbols]))
-        print("\tToken ahead: {}".format(lookahead_token))
+        print("\tToken(s) ahead: {}".format(lookahead_tokens))
 
     def _start_trace(self):
         self.dot_trace = ""
