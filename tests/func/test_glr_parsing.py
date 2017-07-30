@@ -53,7 +53,7 @@ def test_expressions():
     E = E "+" E | E "*" E | "(" E ")" | /\d+/;
     """
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, actions=actions)
+    p = GLRParser(g, actions=actions, debug=True)
 
     # Even this simple expression has 2 different interpretations
     # (4 + 2) * 3 and
@@ -171,10 +171,9 @@ def test_non_eof_grammar():
     assert len(results) == 3
 
     p = GLRParser(g_empty, debug=True)
+
     results = p.parse(txt)
-    # TODO: Ivestigate why this returns only one tree. It shouldn't
-    # differentiate from the non-empty version.
-    # assert len(results) == 3
-    assert len(results) == 1
+    assert len(results) == 3
+
     results = p.parse("")
     assert len(results) == 1

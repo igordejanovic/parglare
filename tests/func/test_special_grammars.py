@@ -114,12 +114,11 @@ def test_cyclic_grammar_1():
     p = GLRParser(g)
     results = p.parse('x')
 
-    # TODO: This one returns 2 parses. I would like to see just x -> A -> S
-    # assert len(results) == 1
-    assert len(results) == 2
+    # x -> A -> S
+    assert len(results) == 1
 
 
-def todo_test_cyclic_grammar_2():
+def test_cyclic_grammar_2():
     """
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
 
@@ -141,6 +140,7 @@ def todo_test_cyclic_grammar_2():
     # This grammar has infinite ambiguity but by minimizing empty reductions
     # we shall get only one result xx -> xS -> SS -> S
     assert len(results) == 1
+    print(results[0].tree_str())
 
 
 def test_cyclic_grammar_3():
@@ -153,7 +153,7 @@ def test_cyclic_grammar_3():
 
     Parser(g)
 
-    p = GLRParser(g)
+    p = GLRParser(g, debug=True)
     results = p.parse('aa')
 
     assert len(results) == 1
