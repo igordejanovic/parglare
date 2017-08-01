@@ -6,6 +6,5 @@ ANTLR and PLY performance in parsing molecular formulas.
 An example is modified to compare PLY and parglare. You can see the difference
 in styles of grammar/actions definition and parser construction.
 
-At the time of this writing `parglare/PLY` ratio on my machine is around 1.7
-which is very good considering that `parglare` is a very young project and there
-is a room for performance improvements.
+By running `python run_test.py` you will see the speed difference. PLY is faster
+in this tests.
