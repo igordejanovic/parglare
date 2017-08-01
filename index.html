@@ -99,6 +99,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="getting_started/">Getting started</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="grammar/">Grammar</a>
         
     </li>
@@ -188,16 +195,17 @@ of information on the possiblities and usage patterns.</p>
 The parser will try to reconize token during parsing at the given location.
 This brings more parsing power as there are no lexical ambiguities
 introduced by a separate lexing stage. You want variable names in your
-language to be allowed to be keyword names? No problem.</p>
+language to be allowed to be like some of the keywords? No problem.</p>
 </li>
 <li>
 <p><strong>Generalized parsing - GLR</strong></p>
 <p>parglare gives you powerful tools to see where non-determinism in your
 grammar lies (the notorious shift-reduce and reduce-reduce conflicts) and
 gives detailed info on why that happened. In case your language needs
-non-deterministic parsing, either it needs additional lookahead to decide or
-your language is inherently ambiguous, you can resort to the GLR algorithm
-by a simple change of the parser class. The grammar stays the same.</p>
+non-deterministic parsing — either it needs additional lookahead to decide
+or your language is inherently ambiguous — you can resort to the GLR
+algorithm by a simple change of the parser class. The grammar stays the
+same.</p>
 <p>In the case of non-determinism (unability for a parser to deterministically
 decide what to do) the parser will fork and investigate each possibility.
 Eventualy, parsers that decided wrong will die leaving only the right one.
@@ -383,7 +391,7 @@ net. ;)</p>
 <p>The project logo is my take (not very successful) on drawing the Hydra, a
 creature with multiple heads from the Greek mythology. According to the legend,
 the Hydra had a regeneration feature: for every head chopped off, the Hydra
-would regrow a couple of new heads. This reminds me a lot of GLR parsing ;)</p>
+would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)</p>
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
 <p>MIT</p>
 <h2 id="python-versions">Python versions<a class="headerlink" href="#python-versions" title="Permanent link">&para;</a></h2>
@@ -395,7 +403,7 @@ would regrow a couple of new heads. This reminds me a lot of GLR parsing ;)</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="grammar/" class="btn btn-neutral float-right" title="Grammar">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="getting_started/" class="btn btn-neutral float-right" title="Getting started">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
     </div>
@@ -427,7 +435,7 @@ would regrow a couple of new heads. This reminds me a lot of GLR parsing ;)</p>
       
       
       
-        <span style="margin-left: 15px"><a href="grammar/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="getting_started/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
@@ -438,5 +446,5 @@ would regrow a couple of new heads. This reminds me a lot of GLR parsing ;)</p>
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-07-29 12:30:13
+Build Date UTC : 2017-08-01 13:14:59
 -->
