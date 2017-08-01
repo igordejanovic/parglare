@@ -10,7 +10,8 @@ def main(debug=False):
     parser = Parser(g, debug=debug)
 
     with open(os.path.join(this_folder, 'LightSwitch.rpy'), 'r') as f:
-        parser.parse(f.read())
+        result = parser.parse(f.read())
+        print(result.tree_str())
 
 
 if __name__ == '__main__':
