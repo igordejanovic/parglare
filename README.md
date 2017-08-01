@@ -1,9 +1,9 @@
 [![Build Status](https://travis-ci.org/igordejanovic/parglare.svg?branch=master)](https://travis-ci.org/igordejanovic/parglare)
 [![Coverage Status](https://coveralls.io/repos/github/igordejanovic/parglare/badge.svg?branch=master)](https://coveralls.io/github/igordejanovic/parglare?branch=master)
-![Status](https://img.shields.io/pypi/status/parglare.svg)
-![Python versions](https://img.shields.io/pypi/pyversions/parglare.svg)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docs](https://img.shields.io/badge/docs-latest-green.svg)](http://igordejanovic.net/parglare/)
+![Status](https://img.shields.io/pypi/status/parglare.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Python versions](https://img.shields.io/pypi/pyversions/parglare.svg)
 
 ![parglare logo](https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png)
 
