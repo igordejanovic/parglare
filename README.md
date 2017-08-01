@@ -3,6 +3,7 @@
 ![Status](https://img.shields.io/pypi/status/parglare.svg)
 ![Python versions](https://img.shields.io/pypi/pyversions/parglare.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docs](https://img.shields.io/badge/docs-latest-green.svg)](http://igordejanovic.net/parglare/)
 
 ![parglare logo](https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png)
 
