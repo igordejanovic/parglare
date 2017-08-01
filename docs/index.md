@@ -18,16 +18,17 @@ A pure Python LR/GLR parser with integrated scanner.
     The parser will try to reconize token during parsing at the given location.
     This brings more parsing power as there are no lexical ambiguities
     introduced by a separate lexing stage. You want variable names in your
-    language to be allowed to be keyword names? No problem.
+    language to be allowed to be like some of the keywords? No problem.
 
 * **Generalized parsing - GLR**
 
     parglare gives you powerful tools to see where non-determinism in your
     grammar lies (the notorious shift-reduce and reduce-reduce conflicts) and
     gives detailed info on why that happened. In case your language needs
-    non-deterministic parsing, either it needs additional lookahead to decide or
-    your language is inherently ambiguous, you can resort to the GLR algorithm
-    by a simple change of the parser class. The grammar stays the same.
+    non-deterministic parsing — either it needs additional lookahead to decide
+    or your language is inherently ambiguous — you can resort to the GLR
+    algorithm by a simple change of the parser class. The grammar stays the
+    same.
 
     In the case of non-determinism (unability for a parser to deterministically
     decide what to do) the parser will fork and investigate each possibility.

@@ -6,10 +6,12 @@ site_author: Igor Dejanović
 repo_url: https://github.com/igordejanovic/parglare
 google_analytics: ['UA-68681917-1', 'igordejanovic.net']
 theme: readthedocs
+extra_css: ['style.css']
 
 pages:
 - Home: index.md
 - User Guide:
+    - Getting started: getting_started.md
     - Grammar: grammar.md
     - Actions: actions.md
 - About:
