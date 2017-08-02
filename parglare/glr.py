@@ -111,6 +111,16 @@ class GLRParser(Parser):
             lookahead_token = head.token_ahead
 
             if lookahead_token:
+                layout_content = head.next_layout_content
+                position = head.next_position
+                tokens = [lookahead_token]
+
+                if debug:
+                    self._debug_context(
+                        input_str, position, lookahead_token,
+                        expected_symbols=[lookahead_token.symbol],
+                        layout_content=layout_content)
+
                 # If this head is reduced it can only continue to be reduced by
                 # the same token ahead. Check if the head is final.
                 if lookahead_token.symbol is STOP:
@@ -119,15 +129,11 @@ class GLRParser(Parser):
                         if debug:
                             print("\t*** SUCCESS!!!!")
                             self._trace_link_finish(head)
-                        self.finish_head = head
-                layout_content = head.next_layout_content
-                position = head.next_position
-                tokens = [lookahead_token]
-                if debug:
-                    self._debug_context(
-                        input_str, position, lookahead_token,
-                        expected_symbols=[lookahead_token.symbol],
-                        layout_content=layout_content)
+                        if self.finish_head:
+                            self.finish_head.merge(head)
+                        else:
+                            self.finish_head = head
+                        continue
 
             else:
                 position, layout_content = self._skipws(context, input_str,
@@ -248,7 +254,7 @@ class GLRParser(Parser):
             to_process = [(head, [], prod_len, False, True)]
             if debug:
                 print("\tCalculate reduction paths of length {}, "
-                      "choose only non-epsilon if possible:"
+                      "choose only non-empty if possible:"
                       .format(prod_len))
                 print("\t\tstart node=[{}], symbol={}, empty=[{},{}], "
                       "length={}".format(head, head.state.symbol,
@@ -423,9 +429,10 @@ class GLRParser(Parser):
             result = execute_actions(context, subresults)
             old_head.parents.append((old_head, result, True, True))
 
-        if new_head.all_empty and new_head in self.reducing_heads:
+        if (all_empty or any_empty) and new_head in self.reducing_heads:
             # Detect automata loop. If we are reducing to the head we already
-            # had the new head is empty we have a loop due to EMPTY reductions.
+            # had and the new head is empty we have a loop due to EMPTY
+            # reductions.
             if debug:
                 print("\tAutomata loop detected. "
                       "Rejecting the new head: {}".format(str(new_head)))
@@ -583,7 +590,9 @@ class GSSNode(object):
             if self.parents and other.less_empty(self):
                 if parser.debug:
                     print("\tMerging less empty head to more empty -> "
-                          "droping all parent links.")
+                          "less empty head wins.")
+                self.any_empty = False
+                self.all_empty = True
                 self.parents = []
                 self.number_of_trees = 0
 

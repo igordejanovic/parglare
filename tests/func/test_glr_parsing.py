@@ -131,7 +131,7 @@ def test_epsilon_grammar():
     assert len(results) == 1
 
 
-def test_non_eof_grammar():
+def test_non_eof_grammar_nonempty():
     """
     Grammar that is not anchored by EOF at the end might
     result in multiple trees that are produced by sucessful
@@ -145,16 +145,7 @@ def test_non_eof_grammar():
     ID = /\w+/;
     """
 
-    grammar_empty = """
-    Model = Prods;
-    Prods = Prod | Prods Prod | EMPTY;
-    Prod = ID "=" ProdRefs;
-    ProdRefs = ID | ProdRefs ID;
-    ID = /\w+/;
-    """
-
     g_nonempty = Grammar.from_string(grammar_nonempty)
-    g_empty = Grammar.from_string(grammar_empty)
 
     txt = """
     First = One Two three
@@ -169,6 +160,29 @@ def test_non_eof_grammar():
     # parser could not continue as the next token is '=' but it succeds as
     # we haven't terminated our model with EOF so we allow partial parses.
     assert len(results) == 3
+
+
+def test_non_eof_grammar_empty():
+    """
+    Grammar that is not anchored by EOF at the end might
+    result in multiple trees that are produced by sucessful
+    parses of the incomplete input.
+    """
+    grammar_empty = """
+    Model = Prods;
+    Prods = Prod | Prods Prod | EMPTY;
+    Prod = ID "=" ProdRefs;
+    ProdRefs = ID | ProdRefs ID;
+    ID = /\w+/;
+    """
+
+    g_empty = Grammar.from_string(grammar_empty)
+
+    txt = """
+    First = One Two three
+    Second = Foo Bar
+    Third = Baz
+    """
 
     p = GLRParser(g_empty, debug=True)
 
