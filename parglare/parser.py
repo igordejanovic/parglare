@@ -182,7 +182,7 @@ class Parser(object):
                     # No actions to execute. Try error recovery.
                     if type(self.error_recovery) is bool:
                         # Default recovery
-                        ntok, error, position = self.default_error_recovery(
+                        error, position, ntok = self.default_error_recovery(
                             input_str, position, actions.keys())
                     else:
                         # Custom recovery provided during parser construction
@@ -469,13 +469,13 @@ class Parser(object):
                 expected at the current location in the current state.
 
         Returns:
-            (new Token or None, Error, new position)
+            (Error, new position, new Token or None)
 
         """
         if self.current_error:
             self.current_error.length = position + 1 \
                                          - self.current_error.position
-            return None, None, position + 1
+            return None, position + 1, None
         else:
             line, col = pos_to_line_col(input, position)
             error = Error(position, 1,
@@ -483,7 +483,7 @@ class Parser(object):
                           .format((line, col),
                                   expected_symbols_str(expected_symbols)))
             self.current_error = error
-            return None, error, position + 1
+            return error, position + 1, None
 
 
 class Context:
