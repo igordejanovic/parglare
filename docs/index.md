@@ -87,13 +87,14 @@ A pure Python LR/GLR parser with integrated scanner.
     `LAYOUT` in the grammar this rule is used instead. An additional parser with
     the layout grammar will be built to handle whitespaces.
 
-* **Error recovery (not for GLR at the moment)**
+* **Error recovery**
 
     This is something that often lacks in parsing libraries. More often than not
     you will want your parser to recover from an error, report it, and continue
     parsing. parglare has a built-in error recovery strategy which is currently
     a simplistic one -- it will skip current character and try to continue --
-    but gives you possibility to provide your own.
+    but gives you possibility to provide your own. You will write a strategy
+    that will either skip input or introduce non-existing but expected tokens.
 
 * **Test coverage**
 
