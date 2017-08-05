@@ -1,19 +1,19 @@
-Model=        Header Object;
-Object=       '{' ID Properties '}';
-Properties=   Property | Properties Property;
-Property=     '-' ID '=' Values OptionalSemiColon;
-Property=     '-' ID '=' ';';
-Values=       Value  | Values ';' Value | Values Value;
-Value=        STRING | INT | FLOAT | GUID | Object | ID;
+Model:        Header Object;
+Object:       '{' ID Properties '}';
+Properties:   Property | Properties Property;
+Property:     '-' ID '=' Values OptionalSemiColon;
+Property:     '-' ID '=' ';';
+Values:       Value  | Values ';' Value | Values Value;
+Value:        STRING | INT | FLOAT | GUID | Object | ID;
 
 
-STRING = /("(\\"|[^"])*")|(\'(\\\'|[^\'])*\')/;
+STRING: /("(\\"|[^"])*")|(\'(\\\'|[^\'])*\')/;
 
 // INT and FLOAT are ambiguous. Prefer INT if both match are of same length.
-INT = /[-+]?[0-9]+\b/ {prefer};
-FLOAT = /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
+INT: /[-+]?[0-9]+\b/ {prefer};
+FLOAT: /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
 
-GUID = /[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*/;
-OptionalSemiColon = ';' | EMPTY;
-ID = /[a-zA-Z_][a-zA-Z_0-9]*/;
-Header = /[^\n]*/;
+GUID: /[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*/;
+OptionalSemiColon: ';' | EMPTY;
+ID: /[a-zA-Z_][a-zA-Z_0-9]*/;
+Header: /[^\n]*/;

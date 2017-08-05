@@ -24,8 +24,8 @@ def test_partial_parse():
     of the input string.
     """
     grammar = """
-    S = 'a' B;
-    B = 'b';
+    S: 'a' B;
+    B: 'b';
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)
@@ -37,8 +37,8 @@ def test_partial_parse():
     # thus, the whole string must be parsed in order for parsing to
     # succeed.
     grammar = """
-    S = 'a' B EOF;
-    B = 'b';
+    S: 'a' B EOF;
+    B: 'b';
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)

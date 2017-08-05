@@ -4,17 +4,17 @@ from parglare.actions import pass_inner, pass_nochange, pass_single, \
     collect_sep
 
 grammar = r"""
-CSVFile = OptionalNewLines Records OptionalNewLines;
-Records = Records OptionalNewLines Record| Record;
-Record = Fields NewLine;
-Fields = Fields "," Field | Field;
-Field = QuotedField | FieldContent;
-NewLines = NewLine | NewLines NewLine;
-OptionalNewLines = NewLines | EMPTY;
-QuotedField = "\"" FieldContentQuoted "\"";
-FieldContent = /[^,\n]+/;
-FieldContentQuoted = /(("")|([^"]))+/;
-NewLine = "\n";
+CSVFile: OptionalNewLines Records OptionalNewLines;
+Records: Records OptionalNewLines Record| Record;
+Record: Fields NewLine;
+Fields: Fields "," Field | Field;
+Field: QuotedField | FieldContent;
+NewLines: NewLine | NewLines NewLine;
+OptionalNewLines: NewLines | EMPTY;
+QuotedField: "\"" FieldContentQuoted "\"";
+FieldContent: /[^,\n]+/;
+FieldContentQuoted: /(("")|([^"]))+/;
+NewLine: "\n";
 """
 
 

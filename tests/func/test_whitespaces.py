@@ -36,8 +36,8 @@ def test_whitespace_not_used_if_layout():
     If LAYOUT rule is used, ws definition is ignored.
     """
     grammar = """
-    S = 'a' 'b';
-    LAYOUT = 'k' | EMPTY;
+    S: 'a' 'b';
+    LAYOUT: 'k' | EMPTY;
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)

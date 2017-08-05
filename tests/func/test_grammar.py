@@ -7,9 +7,9 @@ from parglare.exceptions import GrammarError, ParseError
 def test_undefined_grammar_symbol():
     "Tests that undefined grammar symbols raises errors."
     grammar = """
-    S = A B;
-    A = "a" | B;
-    B = id;
+    S: A B;
+    A: "a" | B;
+    B: id;
     """
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
@@ -23,9 +23,9 @@ def test_terminal_nonterminal():
     # Production A is a terminal ("a") and non-terminal at the same time.
     # Thus, it must be recognized as non-terminal.
     grammar = """
-    S = A B;
-    A = "a" | B;
-    B = "b";
+    S: A B;
+    A: "a" | B;
+    B: "b";
     """
     g = Grammar.from_string(grammar)
     assert NonTerminal("A") in g.nonterminals
@@ -35,9 +35,9 @@ def test_terminal_nonterminal():
 
     # Here A should be non-terminal while B should be terminal.
     grammar = """
-    S = A B;
-    A = B;
-    B = "b";
+    S: A B;
+    A: B;
+    B: "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -47,9 +47,9 @@ def test_terminal_nonterminal():
     assert NonTerminal("B") not in g.nonterminals
 
     grammar = """
-    S = A;
-    A = S;
-    A = 'x';
+    S: A;
+    A: S;
+    A: 'x';
     """
     g = Grammar.from_string(grammar)
     assert NonTerminal("S") in g.nonterminals
@@ -58,9 +58,9 @@ def test_terminal_nonterminal():
     assert Terminal("x") in g.terminals
 
     grammar = """
-    S = S S;
-    S = 'x';
-    S = EMPTY;
+    S: S S;
+    S: 'x';
+    S: EMPTY;
     """
     g = Grammar.from_string(grammar)
     assert NonTerminal("S") in g.nonterminals
@@ -74,9 +74,9 @@ def test_multiple_terminal_definition():
     # A is defined multiple times as terminal thus it must be recognized
     # as non-terminal with alternative expansions.
     grammar = """
-    S = A A;
-    A = "a";
-    A = "b";
+    S: A A;
+    A: "a";
+    A: "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -91,11 +91,11 @@ def test_assoc_prior():
     """
 
     grammar = """
-    E = E '+' E {left, 1};
-    E = E '*' E {2, left};
-    E = E '^' E {right};
-    E = id;
-    id = /\d+/;
+    E: E '+' E {left, 1};
+    E: E '*' E {2, left};
+    E: E '^' E {right};
+    E: id;
+    id: /\d+/;
     """
 
     g = Grammar.from_string(grammar)
@@ -112,9 +112,9 @@ def test_terminal_priority():
     "Terminals might define priority which is used for lexical disambiguation."
 
     grammar = """
-    S = A | B;
-    A = 'a' {15};
-    B = 'b';
+    S: A | B;
+    A: 'a' {15};
+    B: 'b';
     """
 
     g = Grammar.from_string(grammar)
@@ -129,12 +129,12 @@ def test_terminal_priority():
 def test_no_terminal_associavitity():
     "Tests that terminals can't have associativity defined."
     grammar = """
-    S = A | B;
-    A = 'a' {15, left};
-    B = 'b';
+    S: A | B;
+    A: 'a' {15, left};
+    B: 'b';
     """
 
     with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Error at position 3,17' in str(e)
+    assert 'Error at position 3,16' in str(e)

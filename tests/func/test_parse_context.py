@@ -5,10 +5,10 @@ from parglare.actions import pass_single
 
 
 grammar = r"""
-Result = E EOF;
-E = E '+' E  {left}
-  | number;
-number = /\d+(\.\d+)?/;
+Result: E EOF;
+E: E '+' E  {left}
+ | number;
+number: /\d+(\.\d+)?/;
 """
 
 called = [False, False, False]

@@ -7,7 +7,7 @@ from parglare.export import grammar_pda_export
 
 
 def test_dot_export():
-    grammar = 'S = S S | S S S | "b";'
+    grammar = 'S: S S | S S S | "b";'
     g = Grammar.from_string(grammar)
 
     table = create_table(g)

@@ -4,15 +4,15 @@ from parglare.grammar import Terminal
 from parglare.actions import pass_single
 
 grammar = r"""
-Result = E EOF;
-E = E '+' E  {left, 1}
-  | E '-' E  {left, 1}
-  | E '*' E  {left, 2}
-  | E '/' E  {left, 2}
-  | E '^' E  {right, 3}
-  | '(' E ')'
-  | number;
-number = /\d+(\.\d+)?/;
+Result: E EOF;
+E: E '+' E  {left, 1}
+ | E '-' E  {left, 1}
+ | E '*' E  {left, 2}
+ | E '/' E  {left, 2}
+ | E '^' E  {right, 3}
+ | '(' E ')'
+ | number;
+number: /\d+(\.\d+)?/;
 """
 
 actions = {

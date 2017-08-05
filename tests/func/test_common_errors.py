@@ -7,18 +7,18 @@ def test_infinite_recursions():
     """
     If rule have no recursion termination alternative as for example:
 
-    Elements = Elements Element;
+    Elements: Elements Element;
 
     instead of:
-    Elements = Elements Element | Element;
+    Elements: Elements Element | Element;
 
     first set of "Elements" will be empty. GrammarError will be produced during
     parser construction.
     """
 
     grammar = """
-    Elements = Elements Element;
-    Element = "a" | "b";
+    Elements: Elements Element;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -37,9 +37,9 @@ def test_terminals_with_different_names():
     # In this grammar we have 'd' terminal in S production and B terminal with
     # the same 'd' recognizer.
     grammar = """
-    S = 'a' A 'd' | 'b' A B;
-    A = 'c' A | 'c';
-    B = 'd';
+    S: 'a' A 'd' | 'b' A B;
+    A: 'c' A | 'c';
+    B: 'd';
     """
 
     with pytest.raises(GrammarError) as e:
@@ -57,9 +57,9 @@ def todo_test_unreachable_accept_state():
     to reach ACCEPT state for any input string.
    """
     grammar = """
-    S = A | B;
-    A = '1' S '1';
-    B = '0' S '0';
+    S: A | B;
+    A: '1' S '1';
+    B: '0' S '0';
     """
 
     g = Grammar.from_string(grammar)

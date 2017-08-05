@@ -6,11 +6,11 @@ from parglare.exceptions import SRConflicts
 def test_lr2_grammar():
 
     grammar = """
-    Model = Prods EOF;
-    Prods = Prod | Prods Prod;
-    Prod = ID "=" ProdRefs;
-    ProdRefs = ID | ProdRefs ID;
-    ID = /\w+/;
+    Model: Prods EOF;
+    Prods: Prod | Prods Prod;
+    Prod: ID "=" ProdRefs;
+    ProdRefs: ID | ProdRefs ID;
+    ID: /\w+/;
     """
 
     g = Grammar.from_string(grammar)
@@ -50,7 +50,7 @@ def test_expressions():
     # This grammar is highly ambiguous if priorities and
     # associativities are not defined to disambiguate.
     grammar = """
-    E = E "+" E | E "*" E | "(" E ")" | /\d+/;
+    E: E "+" E | E "*" E | "(" E ")" | /\d+/;
     """
     g = Grammar.from_string(grammar)
     p = GLRParser(g, actions=actions, debug=True)
@@ -80,7 +80,7 @@ def test_expressions():
     # Default production priority is 10. Here we will raise it to 15 for
     # multiplication.
     grammar = """
-    E = E "+" E | E "*" E {15}| "(" E ")" | /\d+/;
+    E: E "+" E | E "*" E {15}| "(" E ")" | /\d+/;
     """
     g = Grammar.from_string(grammar)
     p = GLRParser(g, actions=actions)
@@ -95,7 +95,7 @@ def test_expressions():
     # If we define associativity for both + and * we have resolved all
     # ambiguities in the grammar.
     grammar = """
-    E = E "+" E {left}| E "*" E {left, 15}| "(" E ")" | /\d+/;
+    E: E "+" E {left}| E "*" E {left, 15}| "(" E ")" | /\d+/;
     """
     g = Grammar.from_string(grammar)
     p = GLRParser(g, actions=actions)
@@ -108,11 +108,11 @@ def test_expressions():
 def test_epsilon_grammar():
 
     grammar = """
-    Model = Prods EOF;
-    Prods = Prod | Prods Prod | EMPTY;
-    Prod = ID "=" ProdRefs;
-    ProdRefs = ID | ProdRefs ID;
-    ID = /\w+/;
+    Model: Prods EOF;
+    Prods: Prod | Prods Prod | EMPTY;
+    Prod: ID "=" ProdRefs;
+    ProdRefs: ID | ProdRefs ID;
+    ID: /\w+/;
     """
 
     g = Grammar.from_string(grammar)
@@ -138,11 +138,11 @@ def test_non_eof_grammar_nonempty():
     parses of the incomplete input.
     """
     grammar_nonempty = """
-    Model = Prods;
-    Prods = Prod | Prods Prod;
-    Prod = ID "=" ProdRefs;
-    ProdRefs = ID | ProdRefs ID;
-    ID = /\w+/;
+    Model: Prods;
+    Prods: Prod | Prods Prod;
+    Prod: ID "=" ProdRefs;
+    ProdRefs: ID | ProdRefs ID;
+    ID: /\w+/;
     """
 
     g_nonempty = Grammar.from_string(grammar_nonempty)
@@ -169,11 +169,11 @@ def test_non_eof_grammar_empty():
     parses of the incomplete input.
     """
     grammar_empty = """
-    Model = Prods;
-    Prods = Prod | Prods Prod | EMPTY;
-    Prod = ID "=" ProdRefs;
-    ProdRefs = ID | ProdRefs ID;
-    ID = /\w+/;
+    Model: Prods;
+    Prods: Prod | Prods Prod | EMPTY;
+    Prod: ID "=" ProdRefs;
+    ProdRefs: ID | ProdRefs ID;
+    ID: /\w+/;
     """
 
     g_empty = Grammar.from_string(grammar_empty)

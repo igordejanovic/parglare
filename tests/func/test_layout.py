@@ -8,12 +8,12 @@ parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 @parsers
 def test_layout_whitespaces(parser_class):
     grammar = r"""
-    S = K EOF;
-    K = A | B;
-    A = 'a' A | 'a';
-    B = 'b' B | 'b';
-    LAYOUT = WS | EMPTY;
-    WS = /\s+/;
+    S: K EOF;
+    K: A | B;
+    A: 'a' A | 'a';
+    B: 'b' B | 'b';
+    LAYOUT: WS | EMPTY;
+    WS: /\s+/;
     """
     g = Grammar.from_string(grammar)
 
@@ -31,14 +31,14 @@ def test_layout_whitespaces(parser_class):
 @parsers
 def test_layout_simple_comments(parser_class):
     grammar = r"""
-    S = K EOF;
-    K = A | B;
-    A = 'a' A | 'a';
-    B = 'b' B | 'b';
-    LAYOUT = LayoutItem | LAYOUT LayoutItem;
-    LayoutItem = WS | Comment | EMPTY;
-    WS = /\s+/;
-    Comment = /\/\/.*/;
+    S: K EOF;
+    K: A | B;
+    A: 'a' A | 'a';
+    B: 'b' B | 'b';
+    LAYOUT: LayoutItem | LAYOUT LayoutItem;
+    LayoutItem: WS | Comment | EMPTY;
+    WS: /\s+/;
+    Comment: /\/\/.*/;
     """
     g = Grammar.from_string(grammar)
 
@@ -55,18 +55,18 @@ def test_layout_simple_comments(parser_class):
 @parsers
 def test_layout_nested_comments(parser_class):
     grammar = """
-    S = K EOF;
-    K = 'a' B | 'a' C;
-    B = 'b' | B 'b';
-    C = 'c' | C 'c';
+    S: K EOF;
+    K: 'a' B | 'a' C;
+    B: 'b' | B 'b';
+    C: 'c' | C 'c';
 
-    LAYOUT = LayoutItem | LAYOUT LayoutItem;
-    LayoutItem = WS | Comment | EMPTY;
-    WS = /\s+/;
-    Comment = '/*' CorNCs '*/' | /\/\/.*/;
-    CorNCs = CorNC | CorNCs CorNC | EMPTY;
-    CorNC = Comment | NotComment | WS;
-    NotComment = /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
+    LAYOUT: LayoutItem | LAYOUT LayoutItem;
+    LayoutItem: WS | Comment | EMPTY;
+    WS: /\s+/;
+    Comment: '/*' CorNCs '*/' | /\/\/.*/;
+    CorNCs: CorNC | CorNCs CorNC | EMPTY;
+    CorNC: Comment | NotComment | WS;
+    NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
     """
     g = Grammar.from_string(grammar)
 
@@ -95,14 +95,14 @@ def test_layout_context(parser_class):
     Test that layout is passed in the action context.
     """
     grammar = r"""
-    S = K EOF;
-    K = A | B;
-    A = 'a' A | 'a';
-    B = 'b' B | 'b';
-    LAYOUT = LayoutItem | LAYOUT LayoutItem;
-    LayoutItem = WS | Comment | EMPTY;
-    WS = /\s+/;
-    Comment = /\/\/.*/;
+    S: K EOF;
+    K: A | B;
+    A: 'a' A | 'a';
+    B: 'b' B | 'b';
+    LAYOUT: LayoutItem | LAYOUT LayoutItem;
+    LayoutItem: WS | Comment | EMPTY;
+    WS: /\s+/;
+    Comment: /\/\/.*/;
     """
     g = Grammar.from_string(grammar)
 
@@ -138,14 +138,14 @@ def test_layout_actions(parser_class):
     """
 
     grammar = r"""
-    S = K EOF;
-    K = A | B;
-    A = 'a' A | 'a';
-    B = 'b' B | 'b';
-    LAYOUT = LayoutItem | LAYOUT LayoutItem;
-    LayoutItem = WS | Comment | EMPTY;
-    WS = /\s+/;
-    Comment = /\/\/.*/;
+    S: K EOF;
+    K: A | B;
+    A: 'a' A | 'a';
+    B: 'b' B | 'b';
+    LAYOUT: LayoutItem | LAYOUT LayoutItem;
+    LayoutItem: WS | Comment | EMPTY;
+    WS: /\s+/;
+    Comment: /\/\/.*/;
     """
     g = Grammar.from_string(grammar)
 

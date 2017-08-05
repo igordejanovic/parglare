@@ -13,8 +13,8 @@ def test_lr_1_grammar():
 
     """
     grammar = """
-    S = 'a' A 'd' | 'b' A 'd';
-    A = 'c' A | 'c';
+    S: 'a' A 'd' | 'b' A 'd';
+    A: 'c' A | 'c';
     """
 
     g = Grammar.from_string(grammar)
@@ -36,9 +36,9 @@ def test_slr_conflict():
     """
 
     grammar = """
-    S = L '=' R | R;
-    L = '*' R | 'id';
-    R = L;
+    S: L '=' R | R;
+    L: '*' R | 'id';
+    R: L;
     """
 
     grammar = Grammar.from_string(grammar)
@@ -55,10 +55,10 @@ def test_lalr_reduce_reduce_conflict():
     """
 
     grammar = """
-    S = 'a' A 'd' | 'b' B 'd' | 'a' B 'e' | 'b' A 'e';
-    A = C;
-    B = C;
-    C = 'c';
+    S: 'a' A 'd' | 'b' B 'd' | 'a' B 'e' | 'b' A 'e';
+    A: C;
+    B: C;
+    C: 'c';
     """
     grammar = Grammar.from_string(grammar)
     Parser(grammar)
@@ -82,9 +82,9 @@ def test_nondeterministic_LR_raise_error():
 
     """
     grammar = """
-    S = A | B | EMPTY;
-    A = '1' S '1';
-    B = '0' S '0';
+    S: A | B | EMPTY;
+    A: '1' S '1';
+    B: '0' S '0';
     """
 
     g = Grammar.from_string(grammar)
@@ -103,9 +103,9 @@ def test_cyclic_grammar_1():
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
     """
     grammar = """
-    S = A;
-    A = S;
-    A = 'x';
+    S: A;
+    A: S;
+    A: 'x';
     """
     g = Grammar.from_string(grammar)
     with pytest.raises(SRConflicts):
@@ -122,12 +122,11 @@ def test_cyclic_grammar_2():
     """
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
 
-    TODO: Leads to infinite loop during reductions.
     """
     grammar = """
-    S = S S;
-    S = 'x';
-    S = EMPTY;
+    S: S S;
+    S: 'x';
+    S: EMPTY;
     """
     g = Grammar.from_string(grammar)
 
@@ -145,8 +144,8 @@ def test_cyclic_grammar_2():
 
 def test_cyclic_grammar_3():
     grammar = """
-    S = S A | A;
-    A = "a" | EMPTY;
+    S: S A | A;
+    A: "a" | EMPTY;
     """
 
     g = Grammar.from_string(grammar)
@@ -166,7 +165,7 @@ def test_highly_ambiguous_grammar():
     Shift/Reduce can be resolved by prefer_shifts strategy.
     """
     grammar = """
-    S = "b" | S S | S S S;
+    S: "b" | S S | S S S;
     """
 
     g = Grammar.from_string(grammar)
@@ -201,8 +200,8 @@ def test_indirect_left_recursive():
     """
 
     grammar = """
-    S = B "a";
-    B = "b" B | EMPTY;
+    S: B "a";
+    B: "b" B | EMPTY;
     """
 
     g = Grammar.from_string(grammar)
@@ -232,9 +231,9 @@ def test_reduce_enough_empty():
 
     """
     grammar = """
-    S = A S "b";
-    S = "x";
-    A = EMPTY;
+    S: A S "b";
+    S: "x";
+    A: EMPTY;
     """
     g = Grammar.from_string(grammar)
 

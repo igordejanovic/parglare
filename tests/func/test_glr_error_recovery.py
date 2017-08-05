@@ -4,15 +4,15 @@ from parglare.parser import Token
 from parglare.actions import pass_single, pass_inner
 
 grammar = r"""
-Result = E EOF;
-E = E '+' E
-  | E '-' E
-  | E '*' E
-  | E '/' E
-  | E '^' E
-  | '(' E ')'
-  | number;
-number = /\d+(\.\d+)?/;
+Result: E EOF;
+E: E '+' E
+ | E '-' E
+ | E '*' E
+ | E '/' E
+ | E '^' E
+ | '(' E ')'
+ | number;
+number: /\d+(\.\d+)?/;
 """
 
 actions = {

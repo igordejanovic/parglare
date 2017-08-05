@@ -3,23 +3,23 @@ from parglare import Grammar, Parser
 from parglare.actions import pass_inner, pass_single, pass_nochange
 
 grammar = """
-Calc = Assignments E;
-Assignments = Assignment | Assignments Assignment | EMPTY;
-Assignment = VariableName "=" Number;
+Calc: Assignments E;
+Assignments: Assignment | Assignments Assignment | EMPTY;
+Assignment: VariableName "=" Number;
 
-E = E "+" E {left, 1}
-  | E "-" E {left, 1}
-  | E "*" E {left, 2}
-  | E "/" E {left, 2}
-  | "(" E ")"
-  | VariableRef
-  | Number
+E: E "+" E {left, 1}
+ | E "-" E {left, 1}
+ | E "*" E {left, 2}
+ | E "/" E {left, 2}
+ | "(" E ")"
+ | VariableRef
+ | Number
 ;
 
-VariableRef = VariableName;
+VariableRef: VariableName;
 
-VariableName = /[a-zA-Z_][_a-zA-Z0-9]*/;
-Number = /\d+(\.\d+)?/;
+VariableName: /[a-zA-Z_][_a-zA-Z0-9]*/;
+Number: /\d+(\.\d+)?/;
 """
 
 

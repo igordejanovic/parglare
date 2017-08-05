@@ -36,10 +36,10 @@ def cf():
 def test_priority(cf):
 
     grammar = """
-    S = First | Second | Third;
-    First = /\d+\.\d+/ {15};
-    Second = '14.75';
-    Third = /\d+\.75/;
+    S: First | Second | Third;
+    First: /\d+\.\d+/ {15};
+    Second: '14.75';
+    Third: /\d+\.75/;
     """
 
     g = Grammar.from_string(grammar)
@@ -53,10 +53,10 @@ def test_priority(cf):
 def test_most_specific(cf):
 
     grammar = """
-    S = First | Second | Third;
-    First = /\d+\.\d+/;
-    Second = '14';
-    Third = /\d+/;
+    S: First | Second | Third;
+    First: /\d+\.\d+/;
+    Second: '14';
+    Third: /\d+/;
     """
 
     g = Grammar.from_string(grammar)
@@ -70,10 +70,10 @@ def test_most_specific(cf):
 def test_most_specific_longest_match(cf):
 
     grammar = """
-    S = First | Second | Third;
-    First = '147';
-    Second = '14';
-    Third = /\d+/;
+    S: First | Second | Third;
+    First: '147';
+    Second: '14';
+    Third: /\d+/;
     """
 
     g = Grammar.from_string(grammar)
@@ -85,13 +85,14 @@ def test_most_specific_longest_match(cf):
     parser.parse('147')
     assert called == [True, False, False]
 
+
 def test_longest_match(cf):
 
     grammar = """
-    S = First | Second | Third;
-    First = /\d+\.\d+/;
-    Second = '13';
-    Third = /\d+/;
+    S: First | Second | Third;
+    First: /\d+\.\d+/;
+    Second: '13';
+    Third: /\d+/;
     """
 
     g = Grammar.from_string(grammar)
@@ -106,10 +107,10 @@ def test_longest_match(cf):
 def test_failed_disambiguation(cf):
 
     grammar = """
-    S = First | Second | Third;
-    First = /\d+\.\d+/ {15};
-    Second = '14.7';
-    Third = /\d+\.75/ {15};
+    S: First | Second | Third;
+    First: /\d+\.\d+/ {15};
+    Second: '14.7';
+    Third: /\d+\.75/ {15};
     """
 
     g = Grammar.from_string(grammar)
@@ -131,10 +132,10 @@ def test_failed_disambiguation(cf):
 def test_longest_match_prefer(cf):
 
     grammar = """
-    S = First | Second | Third;
-    First = /\d+\.\d+/ {15};
-    Second = '14.7';
-    Third = /\d+\.75/ {15, prefer};
+    S: First | Second | Third;
+    First: /\d+\.\d+/ {15};
+    Second: '14.7';
+    Third: /\d+\.75/ {15, prefer};
     """
 
     g = Grammar.from_string(grammar)
@@ -146,4 +147,3 @@ def test_longest_match_prefer(cf):
 
     parser.parse('14.75')
     assert called == [False, False, True]
-

@@ -8,10 +8,10 @@ http://www.dalkescientific.com/writings/diary/archive/2007/11/03/antlr_java.html
 from parglare import Grammar, Parser
 
 grammar = r"""
-mw = EMPTY | formula;
-formula = species | formula species;
-species = ATOM DIGITS | ATOM;
-DIGITS = /\d+/;
+mw: EMPTY | formula;
+formula: species | formula species;
+species: ATOM DIGITS | ATOM;
+DIGITS: /\d+/;
 """
 
 mw_table = {
@@ -30,7 +30,7 @@ atom_names = sorted(
 atom_pattern = "|".join(atom_names)
 
 # Extend grammar definition with the ATOM rule
-grammar += '\nATOM = /{}/;'.format(atom_pattern)
+grammar += '\nATOM: /{}/;'.format(atom_pattern)
 
 actions = {
     'mw': [lambda _, __: 0.0,

@@ -27,10 +27,10 @@ def test_first_empty_in_rhs():
     """
 
     grammar = """
-    S = A C;
-    A = B | EMPTY;
-    B = "b";
-    C = "c";
+    S: A C;
+    A: B | EMPTY;
+    B: "b";
+    C: "c";
     """
 
     g = Grammar.from_string(grammar)

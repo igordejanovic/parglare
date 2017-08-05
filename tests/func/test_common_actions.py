@@ -8,8 +8,8 @@ from parglare import Grammar, Parser
 
 def test_collect_left():
     grammar = """
-    Elements = Elements Element | Element;
-    Element = "a" | "b";
+    Elements: Elements Element | Element;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -28,8 +28,8 @@ def test_collect_left():
 
 def test_collect_left_optional():
     grammar = """
-    Elements = Elements Element | Element | EMPTY;
-    Element = "a" | "b";
+    Elements: Elements Element | Element | EMPTY;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -51,8 +51,8 @@ def test_collect_left_optional():
 
 def test_collect_left_sep():
     grammar = """
-    Elements = Elements "," Element | Element;
-    Element = "a" | "b";
+    Elements: Elements "," Element | Element;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -71,8 +71,8 @@ def test_collect_left_sep():
 
 def test_collect_left_sep_optional():
     grammar = """
-    Elements = Elements "," Element | Element | EMPTY;
-    Element = "a" | "b";
+    Elements: Elements "," Element | Element | EMPTY;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -94,8 +94,8 @@ def test_collect_left_sep_optional():
 
 def test_collect_right():
     grammar = """
-    Elements = Element Elements | Element;
-    Element = "a" | "b";
+    Elements: Element Elements | Element;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -114,8 +114,8 @@ def test_collect_right():
 
 def test_collect_right_optional():
     grammar = """
-    Elements = Element Elements | Element | EMPTY;
-    Element = "a" | "b";
+    Elements: Element Elements | Element | EMPTY;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -137,8 +137,8 @@ def test_collect_right_optional():
 
 def test_collect_right_sep():
     grammar = """
-    Elements = Element "," Elements | Element;
-    Element = "a" | "b";
+    Elements: Element "," Elements | Element;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
@@ -157,8 +157,8 @@ def test_collect_right_sep():
 
 def test_collect_right_sep_optional():
     grammar = """
-    Elements = Element "," Elements | Element | EMPTY;
-    Element = "a" | "b";
+    Elements: Element "," Elements | Element | EMPTY;
+    Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
