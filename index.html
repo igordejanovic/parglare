@@ -263,12 +263,13 @@ set to <code>None</code> no whitespace skipping is provided. If there is a rule
 the layout grammar will be built to handle whitespaces.</p>
 </li>
 <li>
-<p><strong>Error recovery (not for GLR at the moment)</strong></p>
+<p><strong>Error recovery</strong></p>
 <p>This is something that often lacks in parsing libraries. More often than not
 you will want your parser to recover from an error, report it, and continue
 parsing. parglare has a built-in error recovery strategy which is currently
 a simplistic one -- it will skip current character and try to continue --
-but gives you possibility to provide your own.</p>
+but gives you possibility to provide your own. You will write a strategy
+that will either skip input or introduce non-existing but expected tokens.</p>
 </li>
 <li>
 <p><strong>Test coverage</strong></p>
@@ -446,5 +447,5 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-08-01 13:14:59
+Build Date UTC : 2017-08-05 17:36:45
 -->
