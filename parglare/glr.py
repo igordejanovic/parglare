@@ -1,3 +1,4 @@
+from __future__ import print_function, unicode_literals
 import codecs
 from itertools import chain
 from parglare import Parser
@@ -129,7 +130,7 @@ class GLRParser(Parser):
 
             lookahead_token = head.token_ahead
 
-            if lookahead_token:
+            if lookahead_token is not None:
                 layout_content = head.next_layout_content
                 position = head.next_position
                 tokens = [lookahead_token]
@@ -532,8 +533,8 @@ class GLRParser(Parser):
                 # Cache results
                 self.recovery_results[context.start_position] = position, token
 
-            if position or token:
-                assert not(position and token), \
+            if position or token is not None:
+                assert not(position and token is not None), \
                     "Ambiguous recovery! Can't introduce new token and " \
                     "advance position at the same time."
                 if position:
@@ -745,7 +746,7 @@ class GSSNode(object):
                 self.state.state_id, self.state.symbol,
                 self.start_position, self.end_position,
                 ", token ahead={}".format(self.token_ahead)
-                if self.token_ahead else "",
+                if self.token_ahead is not None else "",
                 self.any_empty, self.all_empty, len(self.parents),
                 self.number_of_trees)
 

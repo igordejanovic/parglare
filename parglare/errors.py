@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 class Error(object):
     """
     Instances of this class are used for error reporting in the context
