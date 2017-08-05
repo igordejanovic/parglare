@@ -180,24 +180,24 @@ process like in
 e.g. <a href="https://en.wikipedia.org/wiki/Parsing_expression_grammar">PEGs</a>.
 Ambiguities are dealt with explicitely (see section on conflicts...).</p>
 <p>Grammar consists of a set of derivation rules where each rule is of the form:</p>
-<pre><code>&lt;symbol&gt; = &lt;expression&gt; ;
+<pre><code>&lt;symbol&gt;: &lt;expression&gt; ;
 </code></pre>
 
 <p>where <code>&lt;symbol&gt;</code> is grammar non-terminal and <code>&lt;expression&gt;</code> is a sequence of
 terminals and non-terminals separated by choice operator <code>|</code>.</p>
 <p>For example:</p>
-<pre><code>Fields = Field | Fields &quot;,&quot; Field;
+<pre><code>Fields: Field | Fields &quot;,&quot; Field;
 </code></pre>
 
 <p>Here <code>Fields</code> is a non-terminal grammar symbol and it is defined as either a
 single <code>Field</code> or, recursively, as <code>Fields</code> followed by a string terminal <code>,</code>
 and than by another <code>Field</code>. It is not given here but <code>Field</code> could also be
 defined as a non-terminal. For example:</p>
-<pre><code>Field = QuotedField | FieldContent;
+<pre><code>Field: QuotedField | FieldContent;
 </code></pre>
 
 <p>Or it could be defined as a terminal:</p>
-<pre><code>Field = /[A-Z]*/;
+<pre><code>Field: /[A-Z]*/;
 </code></pre>
 
 <p>This terminal definition uses regular expression recognizer.</p>
@@ -224,15 +224,15 @@ and there are two type of textual recognizers:</p>
 </ul>
 <h3 id="string-recognizer">String recognizer<a class="headerlink" href="#string-recognizer" title="Permanent link">&para;</a></h3>
 <p>String recognizer is defined as a plain string inside of double quotes:</p>
-<pre><code>my_rule = "start" other_rule "end";
+<pre><code>my_rule: "start" other_rule "end";
 </code></pre>
 <p>In this example <code>"start"</code> and <code>"end"</code> will be terminals with string recognizers
 that match exactly the words <code>start</code> and <code>end</code>.</p>
 <p>You can write string recognizing terminal directly in the rule expression or you
 can define terminal separately and reference it by name, like:</p>
-<pre><code>my_rule = start other_rule end;
-start = "start";
-end = "end";
+<pre><code>my_rule: start other_rule end;
+start: "start";
+end: "end";
 </code></pre>
 <p>Either way it will be the same terminal. You will usually write as a separate
 terminal if the terminal is used at multiple places in the grammar.</p>
@@ -240,7 +240,7 @@ terminal if the terminal is used at multiple places in the grammar.</p>
 <p>Or regex recognizer for short is a regex pattern written inside slashes
 (<code>/.../</code>).</p>
 <p>For example:</p>
-<pre><code> number = /\d+/;
+<pre><code> number: /\d+/;
 </code></pre>
 <p>This rule defines terminal symbol <code>number</code> which has a regex recognizer and will
 recognize one or more digits as a number.</p>
@@ -252,9 +252,9 @@ during grammar instantiation from Python.</p>
 <p>Lets say that we have a list of integers (real list of Python ints, not a text
 with numbers) and we have some weird requirement to break those numbers
 according to the following grammar:</p>
-<pre><code>  Numbers = all_less_than_five  ascending  all_less_than_five EOF;
-  all_less_than_five = all_less_than_five  int_less_than_five
-                     | int_less_than_five;
+<pre><code>  Numbers: all_less_than_five  ascending  all_less_than_five EOF;
+  all_less_than_five: all_less_than_five  int_less_than_five
+                    | int_less_than_five;
 </code></pre>
 <p>So, we should first match all numbers less than five and collect those, than we
 should match a list of ascending numbers and than list of less than five again.
@@ -267,8 +267,8 @@ sublist of integers in ascending order.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You can directly write regex or string recognizer at the place of terminal:</p>
-<pre><code>some_rule = "a" aterm "a";
-aterm = "a";
+<pre><code>some_rule: "a" aterm "a";
+aterm: "a";
 </code></pre>
 <p>Writting <code>"a"</code> in <code>some_rule</code> is equivalent to writing terminal reference
 <code>aterm</code>. Rule <code>aterm</code> is terminal definition rule. All occurences of <code>"a"</code>
@@ -276,9 +276,9 @@ as well as <code>aterm</code> will result in the same terminal in the grammar.</
 </div>
 <h2 id="usual-patterns">Usual patterns<a class="headerlink" href="#usual-patterns" title="Permanent link">&para;</a></h2>
 <h3 id="one-or-more">One or more<a class="headerlink" href="#one-or-more" title="Permanent link">&para;</a></h3>
-<pre><code>document = sections;
+<pre><code>document: sections;
 // sections rule bellow will match one or more section.
-sections = sections section | section;
+sections: sections section | section;
 </code></pre>
 <p>In this example <code>sections</code> will match one or more <code>section</code>. Notice the
 recursive definition of the rule. You can read this as <em><code>sections</code> consist of
@@ -286,7 +286,7 @@ sections and a section at the end or <code>sections</code> is just a single sect
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Please note that you could do the same with this rule:</p>
-<pre><code>sections = section sections | section;
+<pre><code>sections: section sections | section;
 </code></pre>
 <p>which will give you similar result but the resulting tree will be different.
 Former example will reduce sections early and than add another section to it,
@@ -298,17 +298,17 @@ so use the first version as it is slightly efficient and parglare provides
 common actions for these common cases.</p>
 </div>
 <h3 id="zero-or-more">Zero or more<a class="headerlink" href="#zero-or-more" title="Permanent link">&para;</a></h3>
-<pre><code>document = sections;
+<pre><code>document: sections;
 // sections rule bellow will match zero or more section.
-sections = sections section | section | EMPTY;
+sections: sections section | section | EMPTY;
 </code></pre>
 <p>In this example <code>sections</code> will match zero or more <code>section</code>. Notice the
 addition of the <code>EMPTY</code> choice at the end. This means that matching nothing is a
 valid <code>sections</code> non-terminal.</p>
 <p>Same note from above applies here to.</p>
 <h3 id="optional">Optional<a class="headerlink" href="#optional" title="Permanent link">&para;</a></h3>
-<pre><code>document = optheader body;
-optheader = header | EMPTY;
+<pre><code>document: optheader body;
+optheader: header | EMPTY;
 </code></pre>
 <p>In this example <code>optheader</code> is either a header or nothing.</p>
 <h2 id="grammar-comments">Grammar comments<a class="headerlink" href="#grammar-comments" title="Permanent link">&para;</a></h2>
@@ -325,10 +325,10 @@ optheader = header | EMPTY;
 <code>ws</code> parameter to the parser which is by default set to <code>'\n\t '</code>.</p>
 <p>If you need more control of the layout, i.e. handling of not only whitespaces by
 comments also, you can use a special rule <code>LAYOUT</code>:</p>
-<pre><code>  LAYOUT = LayoutItem | LAYOUT LayoutItem;
-  LayoutItem = WS | Comment | EMPTY;
-  WS = /\s+/;
-  Comment = /\/\/.*/;
+<pre><code>  LAYOUT: LayoutItem | LAYOUT LayoutItem;
+  LayoutItem: WS | Comment | EMPTY;
+  WS: /\s+/;
+  Comment: /\/\/.*/;
 </code></pre>
 <p>This will form a separate layout parser that will parse in-between each matched
 tokens. In this example spaces and line-comments will get consumed by the layout
@@ -336,13 +336,13 @@ parser.</p>
 <p>If this special rule is found in the grammar <code>ws</code> parser parameter is ignored.</p>
 <p>Another example that gives support for both line comments and block comments
 like the one used in the grammar language itself:</p>
-<pre><code>  LAYOUT = LayoutItem | LAYOUT LayoutItem;
-  LayoutItem = WS | Comment | EMPTY;
-  WS = /\s+/;
-  Comment = '/*' CorNCs '*/' | /\/\/.*/;
-  CorNCs = CorNC | CorNCs CorNC | EMPTY;
-  CorNC = Comment | NotComment | WS;
-  NotComment = /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
+<pre><code>  LAYOUT: LayoutItem | LAYOUT LayoutItem;
+  LayoutItem: WS | Comment | EMPTY;
+  WS: /\s+/;
+  Comment: '/*' CorNCs '*/' | /\/\/.*/;
+  CorNCs: CorNC | CorNCs CorNC | EMPTY;
+  CorNC: Comment | NotComment | WS;
+  NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
 </code></pre>
               
             </div>

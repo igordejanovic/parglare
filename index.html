@@ -295,16 +295,16 @@ boiler-plate in specification of these actions if a syntax is added to provide
 that information in the grammar directly.</p>
 <p>Example:</p>
 <pre><code>@collect
-some_objects = some_objects some_object | some_object;
+some_objects: some_objects some_object | some_object;
 </code></pre>
 </li>
 <li>
 <p><strong>Support for named matches</strong></p>
 <p>At the moment, as a parameter to action you get a list of matched elements. It
 would be useful to reference these element by name rather than by position.</p>
-<pre><code>my_rule = first:first_match_rule second:second_match_rule;
-first_match_rule = ...;
-second_match_rule = ...;
+<pre><code>my_rule: first=first_match_rule second=second_match_rule;
+first_match_rule: ...;
+second_match_rule: ...;
 </code></pre>
 <p>Now in your action for <code>my_rule</code> you will get <code>first</code> and <code>second</code> as a parameters.
 This would make it easy to provide a new common action that will return a Python
@@ -325,14 +325,14 @@ associativity. Evaluation is done using semantic/reduction actions.</p>
 <pre><code class="python">from parglare import Parser, Grammar
 
 grammar = r&quot;&quot;&quot;
-E = E '+' E  {left, 1}
-  | E '-' E  {left, 1}
-  | E '*' E  {left, 2}
-  | E '/' E  {left, 2}
-  | E '^' E  {right, 3}
-  | '(' E ')'
-  | number;
-number = /\d+(\.\d+)?/;
+E: E '+' E  {left, 1}
+ | E '-' E  {left, 1}
+ | E '*' E  {left, 2}
+ | E '/' E  {left, 2}
+ | E '^' E  {right, 3}
+ | '(' E ')'
+ | number;
+number: /\d+(\.\d+)?/;
 &quot;&quot;&quot;
 
 actions = {
@@ -447,5 +447,5 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-08-05 17:36:45
+Build Date UTC : 2017-08-05 17:43:51
 -->
