@@ -23,14 +23,14 @@ the rule has more than one production/choice.
 Lets take a closer look at the quick intro example:
 
     grammar = r"""
-    E = E '+' E  {left, 1}
-      | E '-' E  {left, 1}
-      | E '*' E  {left, 2}
-      | E '/' E  {left, 2}
-      | E '^' E  {right, 3}
-      | '(' E ')'
-      | number;
-    number = /\d+(\.\d+)?/;
+    E: E '+' E  {left, 1}
+     | E '-' E  {left, 1}
+     | E '*' E  {left, 2}
+     | E '/' E  {left, 2}
+     | E '^' E  {right, 3}
+     | '(' E ')'
+     | number;
+    number: /\d+(\.\d+)?/;
     """
 
     actions = {

@@ -122,16 +122,16 @@ A pure Python LR/GLR parser with integrated scanner.
     Example:
 
         @collect
-        some_objects = some_objects some_object | some_object;
+        some_objects: some_objects some_object | some_object;
 
 * **Support for named matches**
 
     At the moment, as a parameter to action you get a list of matched elements. It
     would be useful to reference these element by name rather than by position.
 
-        my_rule = first:first_match_rule second:second_match_rule;
-        first_match_rule = ...;
-        second_match_rule = ...;
+        my_rule: first=first_match_rule second=second_match_rule;
+        first_match_rule: ...;
+        second_match_rule: ...;
 
     Now in your action for `my_rule` you will get `first` and `second` as a parameters.
     This would make it easy to provide a new common action that will return a Python
@@ -156,14 +156,14 @@ The whole expression evaluator is done in under 30 lines of code!
 from parglare import Parser, Grammar
 
 grammar = r"""
-E = E '+' E  {left, 1}
-  | E '-' E  {left, 1}
-  | E '*' E  {left, 2}
-  | E '/' E  {left, 2}
-  | E '^' E  {right, 3}
-  | '(' E ')'
-  | number;
-number = /\d+(\.\d+)?/;
+E: E '+' E  {left, 1}
+ | E '-' E  {left, 1}
+ | E '*' E  {left, 2}
+ | E '/' E  {left, 2}
+ | E '^' E  {right, 3}
+ | '(' E ')'
+ | number;
+number: /\d+(\.\d+)?/;
 """
 
 actions = {

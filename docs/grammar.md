@@ -13,7 +13,7 @@ Ambiguities are dealt with explicitely (see section on conflicts...).
 Grammar consists of a set of derivation rules where each rule is of the form:
 
 ```
-<symbol> = <expression> ;
+<symbol>: <expression> ;
 ```
 
 where `<symbol>` is grammar non-terminal and `<expression>` is a sequence of
@@ -22,7 +22,7 @@ terminals and non-terminals separated by choice operator `|`.
 For example:
 
 ```
-Fields = Field | Fields "," Field;
+Fields: Field | Fields "," Field;
 ```
 
 Here `Fields` is a non-terminal grammar symbol and it is defined as either a
@@ -31,13 +31,13 @@ and than by another `Field`. It is not given here but `Field` could also be
 defined as a non-terminal. For example:
 
 ```
-Field = QuotedField | FieldContent;
+Field: QuotedField | FieldContent;
 ```
 
 Or it could be defined as a terminal:
 
 ```
-Field = /[A-Z]*/;
+Field: /[A-Z]*/;
 ```
 
 This terminal definition uses regular expression recognizer.
@@ -68,7 +68,7 @@ and there are two type of textual recognizers:
 
 String recognizer is defined as a plain string inside of double quotes:
 
-    my_rule = "start" other_rule "end";
+    my_rule: "start" other_rule "end";
 
 In this example `"start"` and `"end"` will be terminals with string recognizers
 that match exactly the words `start` and `end`.
@@ -76,9 +76,9 @@ that match exactly the words `start` and `end`.
 You can write string recognizing terminal directly in the rule expression or you
 can define terminal separately and reference it by name, like:
 
-    my_rule = start other_rule end;
-    start = "start";
-    end = "end";
+    my_rule: start other_rule end;
+    start: "start";
+    end: "end";
 
 Either way it will be the same terminal. You will usually write as a separate
 terminal if the terminal is used at multiple places in the grammar.
@@ -91,7 +91,7 @@ Or regex recognizer for short is a regex pattern written inside slashes
 
 For example:
 
-     number = /\d+/;
+     number: /\d+/;
 
 This rule defines terminal symbol `number` which has a regex recognizer and will
 recognize one or more digits as a number.
@@ -108,9 +108,9 @@ Lets say that we have a list of integers (real list of Python ints, not a text
 with numbers) and we have some weird requirement to break those numbers
 according to the following grammar:
 
-      Numbers = all_less_than_five  ascending  all_less_than_five EOF;
-      all_less_than_five = all_less_than_five  int_less_than_five
-                         | int_less_than_five;
+      Numbers: all_less_than_five  ascending  all_less_than_five EOF;
+      all_less_than_five: all_less_than_five  int_less_than_five
+                        | int_less_than_five;
 
 
 So, we should first match all numbers less than five and collect those, than we
@@ -127,8 +127,8 @@ More on this topic will be written in a separate section.
 !!! note
     You can directly write regex or string recognizer at the place of terminal:
 
-        some_rule = "a" aterm "a";
-        aterm = "a";
+        some_rule: "a" aterm "a";
+        aterm: "a";
 
     Writting `"a"` in `some_rule` is equivalent to writing terminal reference
     `aterm`. Rule `aterm` is terminal definition rule. All occurences of `"a"`
@@ -139,9 +139,9 @@ More on this topic will be written in a separate section.
 
 ### One or more
 
-    document = sections;
+    document: sections;
     // sections rule bellow will match one or more section.
-    sections = sections section | section;
+    sections: sections section | section;
 
 In this example `sections` will match one or more `section`. Notice the
 recursive definition of the rule. You can read this as _`sections` consist of
@@ -151,7 +151,7 @@ sections and a section at the end or `sections` is just a single section_.
 
     Please note that you could do the same with this rule:
 
-        sections = section sections | section;
+        sections: section sections | section;
 
     which will give you similar result but the resulting tree will be different.
     Former example will reduce sections early and than add another section to it,
@@ -164,9 +164,9 @@ sections and a section at the end or `sections` is just a single section_.
 
 ### Zero or more
 
-    document = sections;
+    document: sections;
     // sections rule bellow will match zero or more section.
-    sections = sections section | section | EMPTY;
+    sections: sections section | section | EMPTY;
 
 In this example `sections` will match zero or more `section`. Notice the
 addition of the `EMPTY` choice at the end. This means that matching nothing is a
@@ -176,8 +176,8 @@ Same note from above applies here to.
 
 ### Optional
 
-    document = optheader body;
-    optheader = header | EMPTY;
+    document: optheader body;
+    optheader: header | EMPTY;
 
 In this example `optheader` is either a header or nothing.
 
@@ -203,10 +203,10 @@ If you need more control of the layout, i.e. handling of not only whitespaces by
 comments also, you can use a special rule `LAYOUT`:
 
 
-      LAYOUT = LayoutItem | LAYOUT LayoutItem;
-      LayoutItem = WS | Comment | EMPTY;
-      WS = /\s+/;
-      Comment = /\/\/.*/;
+      LAYOUT: LayoutItem | LAYOUT LayoutItem;
+      LayoutItem: WS | Comment | EMPTY;
+      WS: /\s+/;
+      Comment: /\/\/.*/;
 
 This will form a separate layout parser that will parse in-between each matched
 tokens. In this example spaces and line-comments will get consumed by the layout
@@ -217,10 +217,10 @@ If this special rule is found in the grammar `ws` parser parameter is ignored.
 Another example that gives support for both line comments and block comments
 like the one used in the grammar language itself:
 
-      LAYOUT = LayoutItem | LAYOUT LayoutItem;
-      LayoutItem = WS | Comment | EMPTY;
-      WS = /\s+/;
-      Comment = '/*' CorNCs '*/' | /\/\/.*/;
-      CorNCs = CorNC | CorNCs CorNC | EMPTY;
-      CorNC = Comment | NotComment | WS;
-      NotComment = /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
+      LAYOUT: LayoutItem | LAYOUT LayoutItem;
+      LayoutItem: WS | Comment | EMPTY;
+      WS: /\s+/;
+      Comment: '/*' CorNCs '*/' | /\/\/.*/;
+      CorNCs: CorNC | CorNCs CorNC | EMPTY;
+      CorNC: Comment | NotComment | WS;
+      NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
