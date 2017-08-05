@@ -65,7 +65,8 @@ class GLRParser(Parser):
                 self._do_shifts(context)
             # If after shifting we don't have any heads for reduce
             # and we haven't found any final parse, do recovery.
-            if not self.heads_for_reduce and not self.finish_head:
+            if self.error_recovery and not self.heads_for_reduce \
+               and not self.finish_head:
                 self._do_recovery(context)
             else:
                 # If in error recovery mode, get out.
