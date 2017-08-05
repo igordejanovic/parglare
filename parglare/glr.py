@@ -1,6 +1,6 @@
-from parglare import Parser
 import codecs
 from itertools import chain
+from parglare import Parser
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
     default_reduce_action, default_shift_action, pos_to_line_col, STOP, \
@@ -33,6 +33,9 @@ class GLRParser(Parser):
             print("\n*** PARSING STARTED\n")
             self._start_trace()
 
+        self.errors = []
+        self.current_error = None
+
         self.last_position = 0
         self.expected = set()
         self.empty_reductions_results = {}
@@ -60,6 +63,13 @@ class GLRParser(Parser):
             self._do_reductions(context)
             if self.heads_for_shift:
                 self._do_shifts(context)
+            # If after shifting we don't have any heads for reduce
+            # and we haven't found any final parse, do recovery.
+            if not self.heads_for_reduce and not self.finish_head:
+                self._do_recovery(context)
+            else:
+                # If in error recovery mode, get out.
+                self.current_error = None
 
         if not self.finish_head:
             if self.debug:
@@ -91,7 +101,15 @@ class GLRParser(Parser):
         # Reductions
         heads_for_reduce = self.heads_for_reduce
         self.heads_for_shift = []
+
+        # For automata loop detection
         self.reducing_heads = []
+
+        if self.error_recovery:
+            # Pairs of (new_position, token) keyed by (position, symbols)
+            self.recovery_results = {}
+            # Pairs of (head, symbols)
+            self.heads_for_recovery = []
 
         while heads_for_reduce:
             head = heads_for_reduce.pop()
@@ -170,14 +188,21 @@ class GLRParser(Parser):
                 symbol_act = actions.get(token.symbol, [None])[0]
                 if symbol_act and symbol_act.action is SHIFT:
                     self.add_to_heads_for_shift(reduce_head)
+                elif self.error_recovery:
+                    self.heads_for_recovery.append((head,
+                                                    frozenset(actions.keys())))
 
                 if debug:
                     print("\n\tNo more reductions for this head and "
                           "lookahead token {}.".format(token))
 
     def _do_shifts(self, context):
-        """
-        Perform all shifts.
+        """Perform all shifts.
+
+        Heads that are shifted successfully will be new candidates for
+        reducing. If head is not shifted we have a dying head. They will be
+        collected for error recovery if enabled.
+
         """
         debug = self.debug
         if self.debug:
@@ -213,15 +238,13 @@ class GLRParser(Parser):
             # First action should be SHIFT if it is possible to shift by this
             # token.
             action = actions.get(symbol, [None])[0]
-            if action:
-                if action.action is SHIFT:
-                    self.shift(head, token, action.state, context)
-                elif action.action is REDUCE:
-                    if debug:
-                        # This head is dying
-                        print("\t***Killing this head.")
-                        self._trace_link_kill(
-                            head, "can't shift {}".format(symbol))
+            if action and action.action is SHIFT:
+                self.shift(head, token, action.state, context)
+            else:
+                # This should never happen as the shift possibility is checked
+                # during reducing and only those heads that can be shifted are
+                # appended to heads_for_shift
+                assert False, "No shift operation possible."
 
     def reduce(self, head, production, token_ahead, context):
         """Executes reduce operation for the given head and production.
@@ -467,6 +490,62 @@ class GLRParser(Parser):
             tokens = e.tokens
 
         return tokens
+
+    def _do_recovery(self, context):
+        """If recovery is enabled, does error recovery for the heads in
+        heads_for_recovery.
+
+        """
+        debug = self.debug
+        input_str = self.input_str
+        for head, symbols in self.heads_for_recovery:
+            if debug:
+                print("\n\t**Error found. Recovery initiated for head {}."
+                      .format(head))
+            if (head.start_position, symbols) in self.recovery_results:
+                position, token = self.recovery_results[
+                    (context.start_position, symbols)]
+                if debug:
+                    print("\tReusing cached recovery results.")
+            else:
+                if type(self.error_recovery) is bool:
+                    # Default recovery
+                    if debug:
+                        print("\tDoing default error recovery.")
+                    error, position, token = self.default_error_recovery(
+                        input_str, context.start_position, symbols)
+                else:
+                    # Custom recovery provided during parser construction
+                    if debug:
+                        print("\tDoing custom error recovery.")
+                    error, position, token = self.error_recovery(
+                        self, input_str, context.start_position, symbols)
+
+                if error:
+                    self.errors.append(error)
+                    if debug:
+                        print("\tError: {}".format(str(error)))
+
+                # Cache results
+                self.recovery_results[
+                    (context.start_position, symbols)] = position, token
+
+            if position or token:
+                assert not(position and token), \
+                    "Ambiguous recovery! Can't introduce new token and " \
+                    "advance position at the same time."
+                if position:
+                    head.next_position = position
+                    if debug:
+                        print("\tAdvancing position to {}."
+                              .format(pos_to_line_col(input_str, position)))
+                elif debug:
+                    print("\tIntroducing token {}.".format(repr(token)))
+
+                head.token_ahead = token
+                self.heads_for_reduce.append(head)
+            else:
+                print("\t**Recovery not successful.")
 
     def _debug_active_heads(self, heads):
         print("Active heads {}: {}".format(len(heads), heads))
