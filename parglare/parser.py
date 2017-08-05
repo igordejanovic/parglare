@@ -747,14 +747,21 @@ class Token(object):
     """
     Token or lexeme matched from the input.
     """
-    __slots__ = ['symbol', 'value']
+    __slots__ = ['symbol', 'value', 'length']
 
-    def __init__(self, symbol=None, value=''):
+    def __init__(self, symbol=None, value='', length=None):
         self.symbol = symbol
         self.value = value
+        self.length = length if length is not None else len(value)
 
     def __repr__(self):
         return "<{}({})>".format(text(self.symbol), text(self.value))
+
+    def __len__(self):
+        return self.length
+
+    def __bool__(self):
+        return True
 
 
 STOP_token = Token(STOP)

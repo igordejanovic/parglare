@@ -181,17 +181,19 @@ class GLRParser(Parser):
                 reduce_head = head.for_token(token)
                 reduce_head.next_position = position
                 reduce_head.next_layout_content = layout_content
-                reduce_actions = (a for a in actions.get(symbol, [])
-                                  if a.action is REDUCE)
+                reduce_actions = [a for a in actions.get(symbol, [])
+                                  if a.action is REDUCE]
                 for action in reduce_actions:
                     reduce(reduce_head, action.prod, token, context)
 
                 symbol_act = actions.get(token.symbol, [None])[0]
                 if symbol_act and symbol_act.action is SHIFT:
                     self.add_to_heads_for_shift(reduce_head)
-                elif self.error_recovery:
-                    self.heads_for_recovery.append((head,
-                                                    frozenset(actions.keys())))
+                elif self.error_recovery and not reduce_actions:
+                    # If this head is not reduced and no shift is possible
+                    # collect if for possible recovery.
+                    self.heads_for_recovery.append(
+                        (reduce_head, frozenset(actions.keys())))
 
                 if debug:
                     print("\n\tNo more reductions for this head and "
@@ -372,7 +374,7 @@ class GLRParser(Parser):
                       "at position",
                       pos_to_line_col(self.input_str, context.start_position))
 
-            context.end_position = context.start_position + len(token.value)
+            context.end_position = context.start_position + len(token)
             result = None
             if state.symbol.name in self.sem_actions:
                 result = self.sem_actions[state.symbol.name](context,
@@ -503,9 +505,9 @@ class GLRParser(Parser):
             if debug:
                 print("\n\t**Error found. Recovery initiated for head {}."
                       .format(head))
-            if (head.start_position, symbols) in self.recovery_results:
-                position, token = self.recovery_results[
-                    (context.start_position, symbols)]
+                print("\tSymbols expected: {}".format(symbols))
+            if context.start_position in self.recovery_results:
+                position, token = self.recovery_results[context.start_position]
                 if debug:
                     print("\tReusing cached recovery results.")
             else:
@@ -528,8 +530,7 @@ class GLRParser(Parser):
                         print("\tError: {}".format(str(error)))
 
                 # Cache results
-                self.recovery_results[
-                    (context.start_position, symbols)] = position, token
+                self.recovery_results[context.start_position] = position, token
 
             if position or token:
                 assert not(position and token), \
