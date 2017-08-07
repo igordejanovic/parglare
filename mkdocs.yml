@@ -14,6 +14,7 @@ pages:
     - Getting started: getting_started.md
     - Grammar: grammar.md
     - Actions: actions.md
+    - pglr command: pglr.md
 - About:
     - Contributing: about/CONTRIBUTING.md
     - License: about/LICENSE.md
