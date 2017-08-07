@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Igor Dejanović">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>pglr command - parglare</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  <link href="../style.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "pglr command";
+    var mkdocs_page_input_path = "pglr.md";
+    var mkdocs_page_url = "/pglr/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-68681917-1', 'igordejanovic.net');
+      ga('send', 'pageview');
+  </script>
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> parglare</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="..">Home</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>User Guide</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../getting_started/">Getting started</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../grammar/">Grammar</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../actions/">Actions</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">pglr command</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#the-pglr-command">The pglr command</a></li>
+                
+                    <li><a class="toctree-l4" href="#checking-the-grammar">Checking the grammar</a></li>
+                
+                    <li><a class="toctree-l4" href="#getting-detailed-information">Getting detailed information</a></li>
+                
+                    <li><a class="toctree-l4" href="#visualizing-lr-automata">Visualizing LR automata</a></li>
+                
+                    <li><a class="toctree-l4" href="#tracing-glr-parsing">Tracing GLR parsing</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>About</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../about/CONTRIBUTING/">Contributing</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../about/LICENSE/">License</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">parglare</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>User Guide &raquo;</li>
+        
+      
+    
+    <li>pglr command</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/pglr.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="the-pglr-command">The <code>pglr</code> command<a class="headerlink" href="#the-pglr-command" title="Permanent link">&para;</a></h1>
+<p><code>pglr</code> command is available after parglare is installed. This command is used to
+debug the grammar, visualize the LR automata and make a visual trace of the GLR
+parsing.</p>
+<p>To get the help on the command run:</p>
+<pre><code>$ pglr --help
+
+usage: pglr [-h] [-d] [-i] cmd grammar [input_file]
+
+parglare checker and visualizer
+
+positional arguments:
+  cmd         Command - 'viz' or 'check' or 'trace'
+  grammar     parglare grammar file
+  input_file  input file for GLR trace subcommand.
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -d          run in debug mode
+  -i          input_file for trace is input string, not file.
+</code></pre>
+<h2 id="checking-the-grammar">Checking the grammar<a class="headerlink" href="#checking-the-grammar" title="Permanent link">&para;</a></h2>
+<p>To check your grammar run:</p>
+<pre><code>$ pglr check &lt;grammar_file&gt;
+</code></pre>
+<p>where <code>&lt;grammar_file&gt;</code> is the path to your grammar file.</p>
+<p>If there is no error in the grammar you will get <code>Grammar OK.</code> message. In case
+of error you will get error message with the information what is the error and
+where it is in the grammar.</p>
+<p>For example:</p>
+<pre><code>$ pglr check calc.pg
+Error in the grammar file.
+Error in file "calc.pg" at position 4,16 =&gt; "/' E  left*, 2}\n | E ".
+Expected: { or | or ; or Name or RegExTerm or StrTerm
+</code></pre>
+<h2 id="getting-detailed-information">Getting detailed information<a class="headerlink" href="#getting-detailed-information" title="Permanent link">&para;</a></h2>
+<p>To get the detailed information on the grammar run <code>pglr</code> command in the debug mode.</p>
+<p>$ pglr -d check calc.pg</p>
+<pre><code>*** GRAMMAR ***
+Terminals:
+number STOP + - ^ EMPTY ) \d+(\.\d+)? ( EOF / *
+NonTerminals:
+S' E
+Productions:
+0: S' = E STOP
+1: E = E + E
+2: E = E - E
+3: E = E * E
+4: E = E / E
+5: E = E ^ E
+6: E = ( E )
+7: E = number
+
+
+*** STATES ***
+
+State 0
+        0: S' = . E STOP   {}
+        1: E = . E + E   {STOP, -, +, ^, ), /, *}
+        2: E = . E - E   {STOP, -, +, ^, ), /, *}
+        3: E = . E * E   {STOP, -, +, ^, ), /, *}
+        4: E = . E / E   {STOP, -, +, ^, ), /, *}
+        5: E = . E ^ E   {STOP, -, +, ^, ), /, *}
+        6: E = . ( E )   {STOP, -, +, ^, ), /, *}
+        7: E = . number   {STOP, -, +, ^, ), /, *}
+
+
+
+    GOTO:
+     E-&gt;1
+
+    ACTIONS:
+     (-&gt;SHIFT:2, number-&gt;SHIFT:3
+
+...
+</code></pre>
+<p>This will give enumerated all the productions of your grammars and all the
+states. For each state you get the LR items with lookahead, elements of GOTO
+table and elements of ACTIONS table. In the previous example state 0 will have a
+transition to state 1 when <code>E</code> is reduced, transition to state 2 if <code>(</code> can
+be shifted and transition to state 3 if <code>number</code> can be shifted.</p>
+<p>In addition you will get a detailed information on all Shift/Reduce and
+Reduce/Reduce conflicts which makes much easier to see the exact cause of
+ambiguity and to use <a href="">todo:disambiuation rules</a> to resolve the conflicts or to
+go with GLR if the grammar is not LR(1).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can use <code>-d</code> option with any <code>pglr</code> command to put the parser in the debug
+mode and get a detailed output.</p>
+</div>
+<h2 id="visualizing-lr-automata">Visualizing LR automata<a class="headerlink" href="#visualizing-lr-automata" title="Permanent link">&para;</a></h2>
+<p>To visualize your automata with all the states and possible transitions run the
+command:</p>
+<pre><code>$ pglr viz calc.pg
+Grammar OK.
+Generating 'calc.pg.dot' file for the grammar PDA.
+Use dot viewer (e.g. xdot) or convert to pdf by running 'dot -Tpdf -O calc.pg.dot'
+</code></pre>
+<p>As given in the output you will get a <code>dot</code> file which represents LR automata
+visualization. You can see this diagram using dot viewers or you can transform
+it to other file formats using the <code>dot</code> tool (you have to install Graphviz
+software for that).</p>
+<p>This is an example of LR automata visualization for the <code>calc</code> grammar from the
+quick intro (click on the image to enlarge):</p>
+<p><a href="../images/calc.pg.dot.png"><img alt="Calc LR automata" src="../images/calc.pg.dot.png" /></a></p>
+<h2 id="tracing-glr-parsing">Tracing GLR parsing<a class="headerlink" href="#tracing-glr-parsing" title="Permanent link">&para;</a></h2>
+<p>GLR parser uses a graph-like stack (<em>Graph-Structured Stack - GSS</em>) and to
+understand what's going on during GLR operation GLR parser and <code>pglr</code> command
+provide a way to trace the GSS.</p>
+<p>To run the GLR trace:</p>
+<pre><code>$ pglr -i trace calc.pg "2 + 3 * 5"
+</code></pre>
+<p>The <code>-i</code> switch tells the command to treat the last parameter as the input
+string to parse and not as a file name of the input.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since the GSS can be quite large and complex for larger inputs the advice is
+to use a minimal input that will exibit the intended behaviour for a
+visualization to be usable.</p>
+</div>
+<p>The <code>trace</code> subcommand implies <code>-d</code> switch so the parser will run in debug mode
+and produce the detailed output on the grammar, LR automata and the parsing
+process.</p>
+<p>Additionally, a <code>dot</code> file will be created, with the name <code>parglare_trace</code> if
+input is given on command line or <code>&lt;input_file_name&gt;_trace.dot</code> if input is
+given as a file. The <code>dot</code> file can be visualized using dot viewers or
+transformed to other file formats using the <code>dot</code> tool.</p>
+<p>For the command above, GLR trace visualization will be (click on the image to
+enlarge):</p>
+<p><a href="../images/calc_trace.dot.png"><img alt="Calc GLR trace" src="../images/calc_trace.dot.png" /></a></p>
+<p>Dotted red arrows represent each step in the parsing process. They are numbered
+consecutively. After the ordinal number is the action (either S-Shift or
+R-reduce). For shift action a grammar symbol and the shifted value is given. For
+reduction a production is given and the resulting head will have a parent node
+closer to the beginning.</p>
+<p>Black solid arrows are the links to the parent node in the GSS.</p>
+<p>There are also dotted orange arrows (not shown in this example) that shows dropped
+empty reductions. Dropping happens when parser has found a better solution (i.e. a
+solution with less empty reductions).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Putting the GLR parser in debug mode from code (setting <code>debug</code> constructor
+parameter to <code>True</code>) will give the debug/trace output as well as generate the
+trace visualization.</p>
+</div>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../about/CONTRIBUTING/" class="btn btn-neutral float-right" title="Contributing">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../actions/" class="btn btn-neutral" title="Actions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>Copyright &copy; 2017 <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/igordejanovic/parglare" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../actions/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../about/CONTRIBUTING/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script src="../js/theme.js"></script>
+
+</body>
+</html>

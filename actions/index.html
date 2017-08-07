@@ -103,6 +103,13 @@
     </li>
 
         
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../pglr/">pglr command</a>
+        
+    </li>
+
+        
     </ul>
 <li>
           
@@ -220,9 +227,9 @@ production. Actually, <code>number</code> is a terminal definition and thus the 
 parameter in action call will not be a list but a matched value itself. At the
 end we instantiate the parser and pass in our <code>actions</code> using the parameter.</p>
 <p>Each action callable receive two parameters. The first is the context object
-which gives parsing context information (like the start end end position where
-the match occured, the parser instance etc.). The second parameters <code>nodes</code> is
-the actual results of subexpressions given in the order defined in the grammar.</p>
+which gives parsing context information (like the start and end position where
+the match occured, the parser instance etc.). The second parameters <code>nodes</code> is a
+list of actual results of subexpressions given in the order defined in the grammar.</p>
 <p>For example:</p>
 <pre><code>lambda _, nodes: nodes[0] * nodes[2],
 </code></pre>
@@ -233,8 +240,14 @@ check that as the parser already did that for us.</p>
 <p>The result of the parsing will be the evaluated expression as the actions will
 get called along the way and the result of each actions will be used as an
 element of the <code>nodes</code> parameter in calling actions higher in the hierarchy.</p>
-<p>If we don't provide <code>actions</code> the default will be used and we end up with the
-parse tree as the result of the parsing.</p>
+<p>If we don't provide <code>actions</code> the default will be used. The default parglare
+actions build a <a href="./parse_trees.md">todo: parse tree</a> whose elements are
+instances of <code>NodeNonTerm</code> and <code>NodeTerm</code> classes representing a non-terminals
+and terminals respectively.</p>
+<p>If we set <code>default_actions</code> parser parameter to <code>False</code> and don't provide
+actions, no actions will be called making the parser a mere recognizer, i.e.
+parser will parse the input and return nothing if parse is successful or raise
+<code>ParseError</code> if there is an error in the input.</p>
 <h2 id="time-of-actions-call">Time of actions call<a class="headerlink" href="#time-of-actions-call" title="Permanent link">&para;</a></h2>
 <p>In parglare actions can be called during parsing (i.e. on the fly) which you
 could use if you want to transform input imediately without building the parse
@@ -244,9 +257,10 @@ transformation of the tree. Or, another very good reason is, you are using GLR
 and you want to be sure that actions are called only on the final tree.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If you are using GLR be sure to call actions after the tree has been built.
-First, there are a number of things you would have to take care otherwise,
-like common subtree sharing, actions side-effects etc.</p>
+<p>If you are using GLR be sure that your actions has no side-effects, as the
+dying parsers will left those side-effects behind leading to unpredictable
+behaviour. In case of doubt create trees first, choose the right one and
+call actions afterwards with the <code>call_actions</code> parser method.</p>
 </div>
 <p>To get the tree and call actions afterwards you don't supply <code>actions</code> parameter
 to the parser. That way you get the parse tree as a result (or a list of parse
@@ -264,14 +278,16 @@ object provides us with the parsing context of where the match occured.</p>
 <li>
 <p><code>start_position</code>/<code>end_position</code> - the beginning and the end in the input
   stream where the match occured. <code>start_position</code> is the location of the first
-  element in the input while the <code>end_position</code> is one past the last element of
-  the match. Thus <code>end_position - start_position</code> will give the lenght of the
-  match including the layout. You can use <code>parglare.pos_to_line_col(input,
-  position)</code> function to get line, column of the position.</p>
+  element/character in the input while the <code>end_position</code> is one past the last
+  element/character of the match. Thus <code>end_position - start_position</code> will give
+  the lenght of the match including the layout. You can use
+  <code>parglare.pos_to_line_col(input, position)</code> function to get line and column of
+  the position. This function returns a tuple <code>(line, column)</code>.</p>
 </li>
 <li>
 <p><code>layout_content</code> - is the layout (whitespaces, comments etc.) that are
-  collected from the previous non-layout match.</p>
+  collected from the previous non-layout match. Default actions will attach this
+  layout to the tree node.</p>
 </li>
 <li>
 <p><code>symbol</code> - the grammar symbol this match is for.</p>
@@ -292,7 +308,8 @@ object provides us with the parsing context of where the match occured.</p>
 </ul>
 <p>You can also use context object to pass information between lower level and
 upper level actions. You can attach any attribute you like, the context object
-is shared between action calls.</p>
+is shared between action calls. It is shared with the internal layout parser
+too.</p>
               
             </div>
           </div>
@@ -300,7 +317,7 @@ is shared between action calls.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../about/CONTRIBUTING/" class="btn btn-neutral float-right" title="Contributing">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../pglr/" class="btn btn-neutral float-right" title="pglr command">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../grammar/" class="btn btn-neutral" title="Grammar"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -336,7 +353,7 @@ is shared between action calls.</p>
         <span><a href="../grammar/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../about/CONTRIBUTING/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../pglr/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

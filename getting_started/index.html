@@ -97,6 +97,13 @@
     </li>
 
         
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../pglr/">pglr command</a>
+        
+    </li>
+
+        
     </ul>
 <li>
           
@@ -166,10 +173,10 @@
 the <a href="../grammar/">parglare grammar language</a>. You write the grammar either as a
 Python string in your source code or as a separate file. In case you are writing
 a grammar of a complex language I would suggest the separate file approach.</p>
-<p>The next step is to create the instance of the <code>Grammar</code> class. This is
-achieved by importing the <code>Grammar</code> class and calling either <code>from_file</code> or
-<code>from_str</code> methods supplying the file name for the former and the Python string
-for the later call.</p>
+<p>The next step is to create the instance of the <code>Grammar</code> class. This is achieved
+by importing the <code>Grammar</code> class and calling either <code>from_file</code> or <code>from_str</code>
+methods supplying the file name for the former and the Python string for the
+later call.</p>
 <pre><code class="python">from parglare import Grammar
 
 file_name = .....
@@ -179,8 +186,8 @@ grammar = Grammar.from_file(file_name)
 <p>If there is no errors in the grammar you now have the grammar instance.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>There is also a handy <a href="./pglr.md">TODO:pglr command line tool</a> that can be used for grammar
-checking, visualization and debugging.</p>
+<p>There is also a handy <a href="../pglr/">TODO:pglr command line tool</a> that can be
+used for grammar checking, visualization and debugging.</p>
 </div>
 <p>The next step is to create an instance of the parser. There are two options. If
 you want to use LR parser instantiate <code>Parser</code> class. For GLR instantiate
@@ -197,13 +204,13 @@ parser = GLRParser(grammar)
 <p>You can provide additional <a href="">TODO:parser parameters</a> during instantiation.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>LR parser is faster as the GLR machinery brings a significant
-overhead. So, the general advice is to stick to the LR parsing until you are
-sure that you need additional power of GLR, i.e. either you need more than one
-token of lookahead or your language is inherently ambiguous. pglr tool will
-help you in investigating why you have LR conflicts in your grammar and
-there are some nice <a href="">TODO:disambiguation features</a> in parglare that will help you
-resolve some of those conflicts.</p>
+<p>LR parser is faster as the GLR machinery brings a significant overhead. So,
+the general advice is to stick to the LR parsing until you are sure that you
+need additional power of GLR, i.e. either you need more than one token of
+lookahead or your language is inherently ambiguous. pglr tool will help you in
+investigating why you have LR conflicts in your grammar and there are some
+nice <a href="">TODO:disambiguation features</a> in parglare that will help you resolve
+some of those conflicts.</p>
 </div>
 <p>Now parse your input calling <code>parse</code> method on the parser instance.</p>
 <pre><code class="python">result = parser.parse(input_str)
@@ -211,7 +218,7 @@ resolve some of those conflicts.</p>
 
 <p>Depending on whether you have configured <a href="../actions/">actions</a> or not you will
 get a parse tree or some other representation of your input. In case of the GLR
-parser you will get the list of all possible results (a.k.a. <em>the parser
+parser you will get the list of all possible results (a.k.a. <em>the parse
 forest</em>).</p>
               
             </div>
