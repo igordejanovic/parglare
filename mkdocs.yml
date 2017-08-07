@@ -14,6 +14,7 @@ pages:
     - Getting started: getting_started.md
     - Grammar: grammar.md
     - Actions: actions.md
+    - Recognizers: recognizers.md
     - Parse trees: parse_trees.md
     - pglr command: pglr.md
 - About:
