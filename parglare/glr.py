@@ -66,12 +66,17 @@ class GLRParser(Parser):
                 self._do_shifts(context)
             # If after shifting we don't have any heads for reduce
             # and we haven't found any final parse, do recovery.
-            if self.error_recovery and not self.heads_for_reduce \
-               and not self.finish_head:
-                self._do_recovery(context)
-            else:
-                # If in error recovery mode, get out.
-                self.current_error = None
+            if self.error_recovery:
+                if not self.heads_for_reduce and not self.finish_head:
+                    self._do_recovery(context)
+                else:
+                    # Get out from error recovery mode.
+                    self.current_error = None
+                    # Report dying heads
+                    if self.debug:
+                        for h in self.heads_for_recovery:
+                            print("\t** Killing head: {}".format(h))
+                            self._trace_step_kill(h)
 
         if not self.finish_head:
             if self.debug:
@@ -190,11 +195,15 @@ class GLRParser(Parser):
                 symbol_act = actions.get(token.symbol, [None])[0]
                 if symbol_act and symbol_act.action is SHIFT:
                     self.add_to_heads_for_shift(reduce_head)
-                elif self.error_recovery and not reduce_actions:
-                    # If this head is not reduced and no shift is possible
-                    # collect if for possible recovery.
-                    self.heads_for_recovery.append(
-                        (reduce_head, frozenset(actions.keys())))
+                elif not reduce_actions:
+                    if self.error_recovery:
+                        # If this head is not reduced and no shift is possible
+                        # collect if for possible recovery.
+                        self.heads_for_recovery.append(
+                            (reduce_head, frozenset(actions.keys())))
+                    elif debug:
+                        print("\t** Killing head: {}".format(reduce_head))
+                        self._trace_step_kill(reduce_head)
 
                 if debug:
                     print("\n\tNo more reductions for this head and "
@@ -405,7 +414,9 @@ class GLRParser(Parser):
                                  "{}:{}".format(state.state_id,
                                                 dot_escape(state.symbol.name)))
                 self._trace_step(head, new_head, head,
-                                 "S:{}".format(dot_escape(token.symbol.name)))
+                                 "S:{}({})".format(
+                                     dot_escape(token.symbol.name),
+                                     dot_escape(token.value)))
 
             new_head.create_link(head, result, False, False, self)
 
@@ -594,7 +605,11 @@ class GLRParser(Parser):
         self._trace_step(from_head, "success", from_head)
 
     def _trace_step_kill(self, from_head):
-        self._trace_step(from_head, "killed", from_head, "no actions")
+        self.dot_trace += '{}_killed [shape="diamond" label="killed"];\n'\
+            .format(from_head.key)
+        self.dot_trace += '{} -> {}_killed;\n'\
+            .format(from_head.key, from_head.key)
+        self.trace_step += 1
 
     def _trace_step_drop(self, from_head, to_head):
         self.dot_trace += '{} -> {} [label="drop empty" {}];\n'\
