@@ -67,7 +67,7 @@ def pglr():
             print("Run in debug mode to print all the states.")
 
     except (GrammarError, ParseError) as e:
-        print("Error in grammar file.")
+        print("Error in the grammar file.")
         print(e)
         sys.exit(1)
 

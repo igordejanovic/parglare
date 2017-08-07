@@ -148,7 +148,7 @@ class GLRParser(Parser):
                     if symbol_action and symbol_action[0].action is ACCEPT:
                         if debug:
                             print("\t*** SUCCESS!!!!")
-                            self._trace_link_finish(head)
+                            self._trace_step_finish(head)
                         if self.finish_head:
                             self.finish_head.merge(head)
                         else:
@@ -172,7 +172,7 @@ class GLRParser(Parser):
                 if debug:
                     # This head is dying
                     print("\t***Killing this head.")
-                    self._trace_link_kill(head, "no actions")
+                    self._trace_step_kill(head)
 
             for token in tokens:
                 symbol = token.symbol
@@ -404,9 +404,8 @@ class GLRParser(Parser):
                 self._trace_head(new_head,
                                  "{}:{}".format(state.state_id,
                                                 dot_escape(state.symbol.name)))
-                self._trace_link(head, new_head,
-                                 "S:{}".format(
-                                     dot_escape(token.symbol.name)))
+                self._trace_step(head, new_head, head,
+                                 "S:{}".format(dot_escape(token.symbol.name)))
 
             new_head.create_link(head, result, False, False, self)
 
@@ -471,7 +470,11 @@ class GLRParser(Parser):
             if head == new_head:
                 new_head.create_link(root_head, result, any_empty, all_empty,
                                      self)
-                head.merge_head(new_head, self)
+                if head.merge_head(new_head, self):
+                    if self.debug:
+                        self._trace_step(old_head, head, root_head,
+                                         "R:{}".format(
+                                             dot_escape(str(production))))
                 break
         else:
             self.heads_for_reduce.append(new_head)
@@ -480,9 +483,11 @@ class GLRParser(Parser):
                 self._trace_head(new_head, "{}:{}".format(
                         new_head.state.state_id,
                         dot_escape(new_head.state.symbol.name)))
-                self._trace_link(old_head, new_head,
-                                 "R:{}".format(dot_escape(str(production))))
             new_head.create_link(root_head, result, any_empty, all_empty, self)
+
+            if self.debug:
+                self._trace_step(old_head, new_head, root_head,
+                                 "R:{}".format(dot_escape(str(production))))
 
     def _next_tokens(self, state, input_str, position):
         try:
@@ -576,20 +581,24 @@ class GLRParser(Parser):
     def _trace_head(self, new_head, label):
         self.dot_trace += '{} [label="{}"];\n'.format(new_head.key, label)
 
-    def _trace_link(self, from_head, to_head, label):
-        self.dot_trace += '{} -> {} [label="{} {}"];\n'.format(
-            from_head.key, to_head.key, self.trace_step, label)
+    def _trace_step(self, old_head, new_head, root_head, label=''):
+        new_head_key = new_head.key if isinstance(new_head, GSSNode) \
+                       else new_head
+        self.dot_trace += '{} -> {} [label="{}. {}" {}];\n'.format(
+            old_head.key, new_head_key, self.trace_step, label,
+            TRACE_DOT_STEP_STYLE)
+        self.dot_trace += '{} -> {};\n'.format(new_head_key, root_head.key)
         self.trace_step += 1
 
-    def _trace_link_finish(self, from_head):
-        self.dot_trace += '{} -> success [label="{}"];\n'.format(
-            from_head.key, self.trace_step)
-        self.trace_step += 1
+    def _trace_step_finish(self, from_head):
+        self._trace_step(from_head, "success", from_head)
 
-    def _trace_link_kill(self, from_head, label):
-        self.dot_trace += '{} -> killed [label="{} {}"];\n'.format(
-            from_head.key, self.trace_step, label)
-        self.trace_step += 1
+    def _trace_step_kill(self, from_head):
+        self._trace_step(from_head, "killed", from_head, "no actions")
+
+    def _trace_step_drop(self, from_head, to_head):
+        self.dot_trace += '{} -> {} [label="drop empty" {}];\n'\
+            .format(from_head.key, to_head.key, TRACE_DOT_DROP_STYLE)
 
     def _export_dot_trace(self):
         file_name = "{}_trace.dot".format(self.file_name) \
@@ -614,7 +623,8 @@ class GSSNode(object):
         layout_content(str):
         any_empty(bool): If some of this node parent links results are empty.
         all_empty(bool): If all of this node parent link results are empty.
-        parents(list): list of (result, parent GLRStackNode, epsilon)
+        parents(list): list of (parent GLRStackNode, result, any_empty,
+             all_empty)
              Each stack node might have multiple parents which represent
              multiple path parse took to reach the current state. Each
              parent link keeps a result of semantic action executed during
@@ -673,6 +683,8 @@ class GSSNode(object):
                 if parser.debug:
                     print("\tMerging less empty head to more empty -> "
                           "less empty head wins.")
+                    for p in self.parents:
+                        parser._trace_step_drop(self, p[0])
                 self.any_empty = False
                 self.all_empty = True
                 self.parents = []
@@ -686,9 +698,6 @@ class GSSNode(object):
             if parser.debug:
                 print("\tMerging head {} \n\t\tto head {}.".format(
                     str(other), str(self)))
-                parser._trace_link(other, self,
-                                   "R-merge:{}".format(
-                                     dot_escape(self.state.symbol.name)))
             return True
 
     def create_link(self, parent, result, any_empty, all_empty, parser):
@@ -699,9 +708,6 @@ class GSSNode(object):
         if parser.debug:
             print("\tCreating link \tfrom head {}\n\t\t\tto head   {}"
                   .format(self, parent))
-            parser._trace_link(parent, self,
-                               "S-reuse:{}".format(
-                                   dot_escape(self.state.symbol.name)))
 
     def for_token(self, token):
         """Create head for the given token either by returning this head if the
@@ -759,7 +765,8 @@ class GSSNode(object):
     @property
     def key(self):
         """Head unique idenfier used for dot trace."""
-        return "head_{}_{}".format(self.state.state_id, self.start_position)
+        return "head_{}_{}_{}".format(self.state.state_id, self.start_position,
+                                      self.end_position)
 
 
 DOT_HEADER = """
@@ -775,3 +782,6 @@ DOT_HEADER = """
     edge[dir=black,arrowtail=empty]
 
 """
+
+TRACE_DOT_STEP_STYLE = 'color="red" style="dashed"'
+TRACE_DOT_DROP_STYLE = 'color="orange" style="dotted"'
