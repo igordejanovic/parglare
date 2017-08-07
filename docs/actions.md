@@ -58,9 +58,9 @@ parameter in action call will not be a list but a matched value itself. At the
 end we instantiate the parser and pass in our `actions` using the parameter.
 
 Each action callable receive two parameters. The first is the context object
-which gives parsing context information (like the start end end position where
-the match occured, the parser instance etc.). The second parameters `nodes` is
-the actual results of subexpressions given in the order defined in the grammar.
+which gives parsing context information (like the start and end position where
+the match occured, the parser instance etc.). The second parameters `nodes` is a
+list of actual results of subexpressions given in the order defined in the grammar.
 
 For example:
 
@@ -75,8 +75,15 @@ The result of the parsing will be the evaluated expression as the actions will
 get called along the way and the result of each actions will be used as an
 element of the `nodes` parameter in calling actions higher in the hierarchy.
 
-If we don't provide `actions` the default will be used and we end up with the
-parse tree as the result of the parsing.
+If we don't provide `actions` the default will be used. The default parglare
+actions build a [todo: parse tree](./parse_trees.md) whose elements are
+instances of `NodeNonTerm` and `NodeTerm` classes representing a non-terminals
+and terminals respectively.
+
+If we set `default_actions` parser parameter to `False` and don't provide
+actions, no actions will be called making the parser a mere recognizer, i.e.
+parser will parse the input and return nothing if parse is successful or raise
+`ParseError` if there is an error in the input.
 
 
 ## Time of actions call
@@ -89,9 +96,10 @@ transformation of the tree. Or, another very good reason is, you are using GLR
 and you want to be sure that actions are called only on the final tree.
 
 !!! note
-    If you are using GLR be sure to call actions after the tree has been built.
-    First, there are a number of things you would have to take care otherwise,
-    like common subtree sharing, actions side-effects etc.
+    If you are using GLR be sure that your actions has no side-effects, as the
+    dying parsers will left those side-effects behind leading to unpredictable
+    behaviour. In case of doubt create trees first, choose the right one and
+    call actions afterwards with the `call_actions` parser method.
 
 To get the tree and call actions afterwards you don't supply `actions` parameter
 to the parser. That way you get the parse tree as a result (or a list of parse
@@ -112,13 +120,15 @@ These attributes are available on the context object:
 
 - `start_position`/`end_position` - the beginning and the end in the input
   stream where the match occured. `start_position` is the location of the first
-  element in the input while the `end_position` is one past the last element of
-  the match. Thus `end_position - start_position` will give the lenght of the
-  match including the layout. You can use `parglare.pos_to_line_col(input,
-  position)` function to get line, column of the position.
+  element/character in the input while the `end_position` is one past the last
+  element/character of the match. Thus `end_position - start_position` will give
+  the lenght of the match including the layout. You can use
+  `parglare.pos_to_line_col(input, position)` function to get line and column of
+  the position. This function returns a tuple `(line, column)`.
 
 - `layout_content` - is the layout (whitespaces, comments etc.) that are
-  collected from the previous non-layout match.
+  collected from the previous non-layout match. Default actions will attach this
+  layout to the tree node.
 
 - `symbol` - the grammar symbol this match is for.
 
@@ -134,4 +144,5 @@ These attributes are available on the context object:
 
 You can also use context object to pass information between lower level and
 upper level actions. You can attach any attribute you like, the context object
-is shared between action calls.
+is shared between action calls. It is shared with the internal layout parser
+too.
