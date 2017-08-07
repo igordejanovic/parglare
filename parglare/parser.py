@@ -684,21 +684,21 @@ class Node(object):
 
 
 class NodeNonTerm(Node):
-    __slots__ = ['start_position', 'end_position', 'production', 'nodes']
+    __slots__ = ['start_position', 'end_position', 'production', 'children']
 
-    def __init__(self, start_position, end_position, production, nodes,
+    def __init__(self, start_position, end_position, production, children,
                  layout_content=None):
         super(NodeNonTerm, self).__init__(start_position,
                                           end_position,
                                           layout_content=layout_content)
         self.production = production
-        self.nodes = nodes
+        self.children = children
 
     def tree_str(self, depth=0):
         indent = '  ' * depth
         s = '{}[{}]'.format(self.production.symbol, self.start_position)
-        if self.nodes:
-            for n in self.nodes:
+        if self.children:
+            for n in self.children:
                 if hasattr(n, 'tree_str'):
                     s += '\n' + indent + n.tree_str(depth+1)
                 else:
@@ -716,10 +716,10 @@ class NodeNonTerm(Node):
                     self.production.symbol)
 
     def __iter__(self):
-        return iter(self.nodes)
+        return iter(self.children)
 
     def __reversed__(self):
-        return reversed(self.nodes)
+        return reversed(self.children)
 
 
 class NodeTerm(Node):
