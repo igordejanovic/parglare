@@ -30,6 +30,18 @@
     </url>
         
     <url>
+     <loc>/recognizers/</loc>
+     <lastmod>2017-08-07</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/parse_trees/</loc>
+     <lastmod>2017-08-07</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
      <loc>/pglr/</loc>
      <lastmod>2017-08-07</lastmod>
      <changefreq>daily</changefreq>
