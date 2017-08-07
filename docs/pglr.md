@@ -122,11 +122,14 @@ visualization. You can see this diagram using dot viewers or you can transform
 it to other file formats using the `dot` tool (you have to install Graphviz
 software for that).
 
-![Calc LR automata](./images/calc.pg.dot.png)
+This is an example of LR automata visualization for the `calc` grammar from the
+quick intro (click on the image to enlarge):
+
+[![Calc LR automata](./images/calc.pg.dot.png)](./images/calc.pg.dot.png)
 
 
 
-## Tracing the GLR parsing
+## Tracing GLR parsing
 
 GLR parser uses a graph-like stack (_Graph-Structured Stack - GSS_) and to
 understand what's going on during GLR operation GLR parser and `pglr` command
@@ -134,7 +137,7 @@ provide a way to trace the GSS.
 
 To run the GLR trace:
 
-    pglr -i trace calc.pg "2 + 3 * 5"
+    $ pglr -i trace calc.pg "2 + 3 * 5"
 
 The `-i` switch tells the command to treat the last parameter as the input
 string to parse and not as a file name of the input.
@@ -146,12 +149,32 @@ string to parse and not as a file name of the input.
     visualization to be usable.
 
 The `trace` subcommand implies `-d` switch so the parser will run in debug mode
-and produce the detailed output on the grammar, LR automata and the parsing process.
-Additionally a `parglare_trace.dot` file will be provided which can be
-visualized using dot viewers or tranformed to other file formats using the `dot`
-tool tool.
+and produce the detailed output on the grammar, LR automata and the parsing
+process.
+
+Additionally, a `dot` file will be created, with the name `parglare_trace` if
+input is given on command line or `<input_file_name>_trace.dot` if input is
+given as a file. The `dot` file can be visualized using dot viewers or
+transformed to other file formats using the `dot` tool.
+
+For the command above, GLR trace visualization will be (click on the image to
+enlarge):
+
+[![Calc GLR trace](./images/calc_trace.dot.png)](./images/calc_trace.dot.png)
+
+Dotted red arrows represent each step in the parsing process. They are numbered
+consecutively. After the ordinal number is the action (either S-Shift or
+R-reduce). For shift action a grammar symbol and the shifted value is given. For
+reduction a production is given and the resulting head will have a parent node
+closer to the beginning.
+
+Black solid arrows are the links to the parent node in the GSS.
+
+There are also dotted orange arrows (not shown in this example) that shows dropped
+empty reductions. Dropping happens when parser has found a better solution (i.e. a
+solution with less empty reductions).
 
 !!! note
-    Putting the GLR parser in debug mode (setting `debug` constructor parameter
-    to `True`) will give the debug/trace output as well as generate the trace
-    visualization.
+    Putting the GLR parser in debug mode from code (setting `debug` constructor
+    parameter to `True`) will give the debug/trace output as well as generate the
+    trace visualization.
