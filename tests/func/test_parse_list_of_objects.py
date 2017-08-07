@@ -51,23 +51,18 @@ def test_parse_list_of_integers_lexical_disambiguation():
 
     def ascending(input, pos):
         "Match sublist of ascending elements. Matches at least one."
-        last = pos
-        while True:
-            cint = input[last]
+        last = pos + 1
+        while last < len(input) and input[last] > input[last-1]:
             last += 1
-            if input[last] <= cint:
-                break
-        return input[pos:last]
+        if last > pos:
+            return input[pos:last]
 
     def ascending_nosingle(input, pos):
         "Match sublist of ascending elements. Matches at least two."
-        last = pos
-        while True:
-            cint = input[last]
+        last = pos + 1
+        while last < len(input) and input[last] > input[last-1]:
             last += 1
-            if input[last] <= cint:
-                break
-        if last-pos > 2:
+        if last - pos >= 2:
             return input[pos:last]
 
     grammar = """
