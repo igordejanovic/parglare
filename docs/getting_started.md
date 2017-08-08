@@ -4,6 +4,8 @@ The first thing to do is to write your language grammar using
 the [parglare grammar language](./grammar.md). You write the grammar either as a
 Python string in your source code or as a separate file. In case you are writing
 a grammar of a complex language I would suggest the separate file approach.
+Although not mandatory, the convention is that parglare grammar files have `.pg`
+extension.
 
 The next step is to create the instance of the `Grammar` class. This is achieved
 by importing the `Grammar` class and calling either `from_file` or `from_str`
@@ -42,7 +44,7 @@ from parglare import GLRParser
 parser = GLRParser(grammar)
 ```
 
-You can provide additional [TODO:parser parameters]() during instantiation.
+You can provide additional [parser parameters](./parser.md) during instantiation.
 
 !!! note
 
@@ -64,3 +66,11 @@ Depending on whether you have configured [actions](./actions.md) or not you will
 get a parse tree or some other representation of your input. In case of the GLR
 parser you will get the list of all possible results (a.k.a. _the parse
 forest_).
+
+## Where to go next?
+
+You can investigate various topics in the docs.
+The [examples](https://github.com/igordejanovic/parglare/tree/master/examples)
+and
+the [tests](https://github.com/igordejanovic/parglare/tree/master/tests/func)
+are also a good source of informations.

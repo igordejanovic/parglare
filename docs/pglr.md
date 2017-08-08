@@ -127,6 +127,23 @@ quick intro (click on the image to enlarge):
 [![Calc LR automata](./images/calc.pg.dot.png)](./images/calc.pg.dot.png)
 
 
+!!! note
+
+    If you are parsing non-textual input and you are
+    using [custom recognizers](./recognizers.md) then the grammar will not be
+    valid from the point of view of pglr command as the referenced custom
+    recognizers are missing (they are supplied during `Grammar` instantiation). To
+    visualize PDA automata in this case you can make a set of dummy recognizers in
+    the grammar and comment them out during normal operation but remove the
+    comment when running `pglr viz` command.
+
+        /*  <--- commented out during normal operation. Remove block comment for
+                 visualization
+        my_recognizer1 = "dummy";
+        my_recognizer2 = "dummy";
+        */
+
+
 
 ## Tracing GLR parsing
 
@@ -171,9 +188,10 @@ Black solid arrows are the links to the parent node in the GSS.
 
 There are also dotted orange arrows (not shown in this example) that shows dropped
 empty reductions. Dropping happens when parser has found a better solution (i.e. a
-solution with less empty reductions).
+solution with fewer empty reductions).
 
 !!! note
-    Putting the GLR parser in debug mode from code (setting `debug` constructor
-    parameter to `True`) will give the debug/trace output as well as generate the
-    trace visualization.
+
+    Putting the [GLR parser in debug mode](./debugging.md) from code (setting
+    `debug` constructor parameter to `True`) will give the debug/trace output as
+    well as generate the trace visualization.

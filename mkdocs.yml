@@ -13,12 +13,14 @@ pages:
 - User Guide:
     - Getting started: getting_started.md
     - Grammar: grammar.md
+    - Parser parameters: parser.md
     - Actions: actions.md
     - Recognizers: recognizers.md
-    - Conflict resolving: conflicts.md
+    - Conflicts resolving: conflicts.md
     - Parse trees: parse_trees.md
     - Error recovery: recovery.md
     - pglr command: pglr.md
+    - Debugging: debugging.md
 - About:
     - Contributing: about/CONTRIBUTING.md
     - License: about/LICENSE.md

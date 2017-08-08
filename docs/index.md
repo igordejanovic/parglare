@@ -4,11 +4,6 @@
 
 A pure Python LR/GLR parser with integrated scanner.
 
-!!! note
-    The docs is work in progress. Stay tuned. :)
-
-    Until the docs is completed you can use [tests](https://github.com/igordejanovic/parglare/tree/master/tests/func) and [examples](https://github.com/igordejanovic/parglare/tree/master/examples) as a good source
-    of information on the possiblities and usage patterns.
 
 ## Feature highlights
 
@@ -36,7 +31,7 @@ A pure Python LR/GLR parser with integrated scanner.
     In case there are multiple interpretation of your input you will get all the
     trees (a.k.a. "the parse forest").
 
-* **Declarative associativity and priority rules**
+* [**Declarative associativity and priority rules**](./conflicts.md#resolving-conflicts)
 
     These problems arise a lot when building expression languages. Even a little
     arithmetic expression as `3 + 4 * 5 * 2` have multiple interpretation
@@ -45,7 +40,7 @@ A pure Python LR/GLR parser with integrated scanner.
     or
     [the calc example](https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py)).
 
-* **Tracing/debuging, visualization and error reporting**
+* [**Tracing/debuging, visualization and error reporting**](./debugging.md)
 
     There is an extensive support for grammar checking, debugging, automata
     visualization, and parse tracing. Check out [pglr command](./pglr.md).
@@ -60,11 +55,12 @@ A pure Python LR/GLR parser with integrated scanner.
     inputs. See `recognizers` parameter to grammar construction in
     the [test_parse_list_of_objects.py test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_parse_list_of_objects.py).
 
-* **Flexible actions calling strategies**
+* [**Flexible actions calling strategies**](./actions.md)
 
     During parsing you will want to do something when the grammar rule matches.
     The whole point of parsing is that you want to transform your input to some
     output. There are several options:
+
     - do nothing - this way your parser is a mere recognizer, it produces
       nothing but just verifies that your input adhere to the grammar;
     - call default actions - the default actions will build a parse tree.
@@ -78,7 +74,7 @@ A pure Python LR/GLR parser with integrated scanner.
     are using GLR and want to be sure that actions are called only for the
     surviving tree.
 
-* **Support for whitespaces/comments**
+* [**Support for whitespaces/comments**](./grammar.md#)
 
     Support for language comments/whitespaces is done using the special rule
     `LAYOUT`. By default whitespaces are skipped. This is controlled by `ws`
@@ -87,7 +83,7 @@ A pure Python LR/GLR parser with integrated scanner.
     `LAYOUT` in the grammar this rule is used instead. An additional parser with
     the layout grammar will be built to handle whitespaces.
 
-* **Error recovery**
+* [**Error recovery**](./recovery.md)
 
     This is something that often lacks in parsing libraries. More often than not
     you will want your parser to recover from an error, report it, and continue
@@ -102,10 +98,6 @@ A pure Python LR/GLR parser with integrated scanner.
 
 
 ## TODO/Planed
-
-* **Docs**
-
-    This docs is currently work in progress. It should be done soon. Stay tuned.
 
 * **Table caching**
 
@@ -191,31 +183,15 @@ print("Result = ", result)
 # Result = 700.8
 ```
 
-## Note on LR tables calculation
+!!! note
 
-parglare provides both SLR and LALR tables calculation (LALR is the default).
-LALR is modified to avoid REDUCE/REDUCE conflicts on state merging. Although
-not proven, this should enable handling of all LR(1) grammars with reduced set
-of states and without conflicts. For grammars that are not LR(1) a GLR parsing
-is provided.
+    **LR tables calculation**
 
-## Note on lexical disambiguation
-
-Lexical ambiguity arise if multiple recognizers match at the same location.
-Lexical disambiguation is done in the following order:
-
-- Priorities are used first.
-- String recognizers are preferred over regexes (i.e. the most specific match).
-- The longest-match strategy is used if multiple regexes matches with the same
-  priority. For further disambiguation if longest-match fails `prefer` rule
-  may be given in terminal definition.
-
-Notice that, since the scanning is integrated into parser, the lexical ambiguity
-may arise only if there is a real ambiguity in the language definition, i.e. you
-might have two or more tokens recognized at some place during parsing. For
-approaches where scanning is separate, lexical ambiguities arise whenever you
-have token recognition overlap no matter what the context is, which is a real
-PITA.
+    parglare provides both SLR and LALR tables calculation (LALR is the default).
+    LALR is modified to avoid REDUCE/REDUCE conflicts on state merging. Although
+    not proven, this should enable handling of all LR(1) grammars with reduced set
+    of states and without conflicts. For grammars that are not LR(1) a GLR parsing
+    is provided.
 
 
 ## What does `parglare` mean?

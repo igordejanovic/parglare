@@ -38,3 +38,21 @@ Additionally, each `NodeNonTerm` has:
 Each node has a `tree_str()` method which will return a string representation of
 the subtree starting from the given node. If called on root node it will return
 the string representation of the whole tree.
+
+For example, parsing the input `1 + 2 * 3 -1` using default actions (thus,
+producing the parse tree) will look like this if printed with `tree_str()`:
+
+    E[0]
+    E[0]
+      E[0]
+        number[0, 1]
+      +[2, +]
+      E[4]
+        E[4]
+          number[4, 2]
+        *[6, *]
+        E[8]
+          number[8, 3]
+    -[10, -]
+    E[11]
+      number[11, 1]

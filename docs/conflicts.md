@@ -1,4 +1,4 @@
-# LR parsing
+# LR parsing and conflicts resolving
 
 LR parser operates as a deterministic PDA (Push-down automata). It is a state
 machine which is always in some state during parsing. The state machine must
@@ -74,28 +74,29 @@ following result:
      (1 + 2) * 3
 
 If the shift of `*` and `3` is done instead of reducing, the reduction would
-first reduce multiplication and than sum (reduction is always done on the top of
+first reduce multiplication and then sum (reduction is always done on the top of
 the stack). We will have the following result:
 
     1 + (2 * 3)
 
-From the point of arithmetic priorities, preffered solution is the last one but
-the parser don't know arithmentic rules.
+From the point of view arithmetic priorities, preffered solution is the last one
+but the parser don't know arithmetic rules.
 
 If you analyze this grammar using [pglr command](./pglr.md) you will see that
 the LR tables have Shift/Reduce conflicts as there is a state in which parser
-can't decide wether to shift or to reduce (we just saw that situation).
+can't decide whether to shift or to reduce (we just saw that situation).
 
 parglare gives you various tools to be more explicit with your grammar and to
-resolve those conflicts.
+resolve these conflicts.
 
 There are two situations when conflicts can't be resolved:
 
-- you need more than one lookahead to disambiguate
-- your language is inherently ambiguous
+- you need more than one lookahead to disambiguate,
+- your language is inherently ambiguous.
 
 If you end up in one of these situations you should use GLR parsing, which will
-fork the parser in state which has multiple path, and explore all possibilities.
+fork the parser at each state which has multiple paths, and explore all
+possibilities.
 
 
 ## Resolving conflicts
