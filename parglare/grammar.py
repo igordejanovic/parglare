@@ -422,16 +422,17 @@ class Grammar(object):
                        start_symbol, recognizers=recognizers)
 
     @staticmethod
-    def from_string(grammar_str, recognizers=None, debug=False):
-        g = Grammar(get_grammar_parser(debug).parse(grammar_str),
+    def from_string(grammar_str, recognizers=None, debug=False,
+                    parse_debug=False):
+        g = Grammar(get_grammar_parser(parse_debug).parse(grammar_str),
                     recognizers=recognizers)
         if debug:
             g.print_debug()
         return g
 
     @staticmethod
-    def from_file(file_name, recognizers=None, debug=False):
-        g = Grammar(get_grammar_parser(debug).parse_file(file_name),
+    def from_file(file_name, recognizers=None, debug=False, parse_debug=False):
+        g = Grammar(get_grammar_parser(parse_debug).parse_file(file_name),
                     recognizers=recognizers)
         if debug:
             g.print_debug()
