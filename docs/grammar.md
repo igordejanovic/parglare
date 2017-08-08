@@ -1,11 +1,11 @@
 # The parglare grammar language
 
-parglare grammar specification language is based
+The parglare grammar specification language is based
 on [BNF](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form). parglare is
 based
 on
 [Context-Free Grammars (CFGs)](https://en.wikipedia.org/wiki/Context-free_grammar) and
-grammar is given declaratively. You don't have to think about the parsing
+a grammar is written declaratively. You don't have to think about the parsing
 process like in
 e.g. [PEGs](https://en.wikipedia.org/wiki/Parsing_expression_grammar).
 Ambiguities are dealt with explicitely (see section on conflicts...).

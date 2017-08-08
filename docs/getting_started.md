@@ -22,7 +22,7 @@ If there is no errors in the grammar you now have the grammar instance.
 
 !!! note
 
-    There is also a handy [TODO:pglr command line tool](./pglr.md) that can be
+    There is also a handy [pglr command line tool](./pglr.md) that can be
     used for grammar checking, visualization and debugging.
 
 The next step is to create an instance of the parser. There are two options. If
@@ -51,8 +51,8 @@ You can provide additional [TODO:parser parameters]() during instantiation.
     need additional power of GLR, i.e. either you need more than one token of
     lookahead or your language is inherently ambiguous. pglr tool will help you in
     investigating why you have LR conflicts in your grammar and there are some
-    nice [TODO:disambiguation features]() in parglare that will help you resolve
-    some of those conflicts.
+    nice [disambiguation features](./conflicts.md#resolving-conflicts) in parglare
+    that will help you resolve some of those conflicts.
 
 Now parse your input calling `parse` method on the parser instance.
 

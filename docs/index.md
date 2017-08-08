@@ -48,17 +48,17 @@ A pure Python LR/GLR parser with integrated scanner.
 * **Tracing/debuging, visualization and error reporting**
 
     There is an extensive support for grammar checking, debugging, automata
-    visualization, and parse tracing. Check out [todo: pglr command]().
+    visualization, and parse tracing. Check out [pglr command](./pglr.md).
 
 * **Parsing arbitrary list of object**
 
     parglare is not used only to parse the textual content. It can parse (create
     a tree) of an arbitrary list of objects (numbers, bytes, whatever) based on
     the common parglare grammar. For this you have to
-    define [todo: token recognizers]() for your input stream. The built-in
-    recognizers are string and regex recognizers for parsing textual inputs.
-    See `recognizers` parameter to grammar construction in
-    the [test_parse_list_of_objects.py test]().
+    define [token recognizers](./recognizers.md) for your input stream. The
+    built-in recognizers are string and regex recognizers for parsing textual
+    inputs. See `recognizers` parameter to grammar construction in
+    the [test_parse_list_of_objects.py test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_parse_list_of_objects.py).
 
 * **Flexible actions calling strategies**
 

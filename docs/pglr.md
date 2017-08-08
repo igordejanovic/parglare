@@ -98,9 +98,8 @@ be shifted and transition to state 3 if `number` can be shifted.
 
 In addition you will get a detailed information on all Shift/Reduce and
 Reduce/Reduce conflicts which makes much easier to see the exact cause of
-ambiguity and to use [todo:disambiuation rules]() to resolve the conflicts or to
-go with GLR if the grammar is not LR(1).
-
+ambiguity and to use [disambiguation rules](./conflicts.md#resolving-conflicts)
+to resolve the conflicts or to go with GLR if the grammar is not LR(1).
 
 !!! note
     You can use `-d` option with any `pglr` command to put the parser in the debug

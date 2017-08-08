@@ -76,9 +76,9 @@ get called along the way and the result of each actions will be used as an
 element of the `nodes` parameter in calling actions higher in the hierarchy.
 
 If we don't provide `actions` the default will be used. The default parglare
-actions build a [todo: parse tree](./parse_trees.md) whose elements are
-instances of `NodeNonTerm` and `NodeTerm` classes representing a non-terminals
-and terminals respectively.
+actions build a [parse tree](./parse_trees.md) whose elements are instances of
+`NodeNonTerm` and `NodeTerm` classes representing a non-terminals and terminals
+respectively.
 
 If we set `default_actions` parser parameter to `False` and don't provide
 actions, no actions will be called making the parser a mere recognizer, i.e.

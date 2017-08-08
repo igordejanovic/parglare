@@ -15,6 +15,7 @@ pages:
     - Grammar: grammar.md
     - Actions: actions.md
     - Recognizers: recognizers.md
+    - Conflict resolving: conflicts.md
     - Parse trees: parse_trees.md
     - pglr command: pglr.md
 - About:
