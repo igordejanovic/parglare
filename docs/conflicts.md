@@ -252,4 +252,5 @@ Example:
       number = /\d+/ {15};
 
 or:
+
       number = /\d+/ {prefer};
