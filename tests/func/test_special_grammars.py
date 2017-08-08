@@ -52,6 +52,8 @@ def test_lalr_reduce_reduce_conflict():
     """
     Naive merging of states can lead to R/R conflict as shown in this grammar
     from the Dragon Book.
+    But the extended LALR state compression algorithm used in parglare doesn't
+    exibit this problem.
     """
 
     grammar = """
@@ -74,7 +76,7 @@ def test_nondeterministic_LR_raise_error():
 
     LR parsing is deterministic so this grammar can't parse the input as the
     EMPTY reduction will be tried only after consuming all the input by
-    implicit disambiguation strategy of favouring shift over empty productions.
+    implicit disambiguation strategy of favouring shifts over empty reductions.
 
     OTOH, GLR parser can handle this by forking parser at each step and trying
     both empty reductions and shifts. Only the parser that has reduced empty at
@@ -193,9 +195,10 @@ def test_highly_ambiguous_grammar():
 def test_indirect_left_recursive():
     """Grammar with indirect/hidden left recursion.
 
-    parglare will handle this using implicit disambiguation by prefering shifts
-    over empty reductions. It will greadily match "b" tokens and than reduce
-    EMPTY before "a" and start to reduce by 'B="b" B' production.
+    parglare LR parser will handle this using implicit disambiguation by
+    prefering shifts over empty reductions. It will greadily match "b" tokens
+    and than reduce EMPTY before "a" and start to reduce by 'B="b" B'
+    production.
 
     """
 
