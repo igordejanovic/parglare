@@ -85,6 +85,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser parameters</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="../actions/">Actions</a>
         
     </li>
@@ -99,7 +106,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../conflicts/">Conflict resolving</a>
+        <a class="" href="../conflicts/">Conflicts resolving</a>
         
     </li>
 
@@ -136,6 +143,13 @@
                 
             
             </ul>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../debugging/">Debugging</a>
         
     </li>
 
@@ -309,6 +323,22 @@ software for that).</p>
 <p>This is an example of LR automata visualization for the <code>calc</code> grammar from the
 quick intro (click on the image to enlarge):</p>
 <p><a href="../images/calc.pg.dot.png"><img alt="Calc LR automata" src="../images/calc.pg.dot.png" /></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are parsing non-textual input and you are
+using <a href="../recognizers/">custom recognizers</a> then the grammar will not be
+valid from the point of view of pglr command as the referenced custom
+recognizers are missing (they are supplied during <code>Grammar</code> instantiation). To
+visualize PDA automata in this case you can make a set of dummy recognizers in
+the grammar and comment them out during normal operation but remove the
+comment when running <code>pglr viz</code> command.</p>
+<pre><code>/*  &lt;--- commented out during normal operation. Remove block comment for
+         visualization
+my_recognizer1 = "dummy";
+my_recognizer2 = "dummy";
+*/
+</code></pre>
+</div>
 <h2 id="tracing-glr-parsing">Tracing GLR parsing<a class="headerlink" href="#tracing-glr-parsing" title="Permanent link">&para;</a></h2>
 <p>GLR parser uses a graph-like stack (<em>Graph-Structured Stack - GSS</em>) and to
 understand what's going on during GLR operation GLR parser and <code>pglr</code> command
@@ -342,12 +372,12 @@ closer to the beginning.</p>
 <p>Black solid arrows are the links to the parent node in the GSS.</p>
 <p>There are also dotted orange arrows (not shown in this example) that shows dropped
 empty reductions. Dropping happens when parser has found a better solution (i.e. a
-solution with less empty reductions).</p>
+solution with fewer empty reductions).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Putting the GLR parser in debug mode from code (setting <code>debug</code> constructor
-parameter to <code>True</code>) will give the debug/trace output as well as generate the
-trace visualization.</p>
+<p>Putting the <a href="../debugging/">GLR parser in debug mode</a> from code (setting
+<code>debug</code> constructor parameter to <code>True</code>) will give the debug/trace output as
+well as generate the trace visualization.</p>
 </div>
               
             </div>
@@ -356,7 +386,7 @@ trace visualization.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../about/CONTRIBUTING/" class="btn btn-neutral float-right" title="Contributing">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../debugging/" class="btn btn-neutral float-right" title="Debugging">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../recovery/" class="btn btn-neutral" title="Error recovery"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -392,7 +422,7 @@ trace visualization.</p>
         <span><a href="../recovery/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../about/CONTRIBUTING/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../debugging/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

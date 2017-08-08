@@ -77,6 +77,8 @@
             
                 <li class="toctree-l3"><a href="#getting-started">Getting started</a></li>
                 
+                    <li><a class="toctree-l4" href="#where-to-go-next">Where to go next?</a></li>
+                
             
             </ul>
         
@@ -86,6 +88,13 @@
             
     <li class="toctree-l1 ">
         <a class="" href="../grammar/">Grammar</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser parameters</a>
         
     </li>
 
@@ -106,7 +115,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../conflicts/">Conflict resolving</a>
+        <a class="" href="../conflicts/">Conflicts resolving</a>
         
     </li>
 
@@ -128,6 +137,13 @@
             
     <li class="toctree-l1 ">
         <a class="" href="../pglr/">pglr command</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../debugging/">Debugging</a>
         
     </li>
 
@@ -200,7 +216,9 @@
 <p>The first thing to do is to write your language grammar using
 the <a href="../grammar/">parglare grammar language</a>. You write the grammar either as a
 Python string in your source code or as a separate file. In case you are writing
-a grammar of a complex language I would suggest the separate file approach.</p>
+a grammar of a complex language I would suggest the separate file approach.
+Although not mandatory, the convention is that parglare grammar files have <code>.pg</code>
+extension.</p>
 <p>The next step is to create the instance of the <code>Grammar</code> class. This is achieved
 by importing the <code>Grammar</code> class and calling either <code>from_file</code> or <code>from_str</code>
 methods supplying the file name for the former and the Python string for the
@@ -229,7 +247,7 @@ parser = Parser(grammar)
 parser = GLRParser(grammar)
 </code></pre>
 
-<p>You can provide additional <a href="">TODO:parser parameters</a> during instantiation.</p>
+<p>You can provide additional <a href="../parser/">parser parameters</a> during instantiation.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>LR parser is faster as the GLR machinery brings a significant overhead. So,
@@ -248,6 +266,12 @@ that will help you resolve some of those conflicts.</p>
 get a parse tree or some other representation of your input. In case of the GLR
 parser you will get the list of all possible results (a.k.a. <em>the parse
 forest</em>).</p>
+<h2 id="where-to-go-next">Where to go next?<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
+<p>You can investigate various topics in the docs.
+The <a href="https://github.com/igordejanovic/parglare/tree/master/examples">examples</a>
+and
+the <a href="https://github.com/igordejanovic/parglare/tree/master/tests/func">tests</a>
+are also a good source of informations.</p>
               
             </div>
           </div>

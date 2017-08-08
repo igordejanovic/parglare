@@ -72,12 +72,6 @@
                 <li class="toctree-l3"><a href="#quick-intro">Quick intro</a></li>
                 
             
-                <li class="toctree-l3"><a href="#note-on-lr-tables-calculation">Note on LR tables calculation</a></li>
-                
-            
-                <li class="toctree-l3"><a href="#note-on-lexical-disambiguation">Note on lexical disambiguation</a></li>
-                
-            
                 <li class="toctree-l3"><a href="#what-does-parglare-mean">What does parglare mean?</a></li>
                 
             
@@ -113,6 +107,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="parser/">Parser parameters</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="actions/">Actions</a>
         
     </li>
@@ -127,7 +128,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="conflicts/">Conflict resolving</a>
+        <a class="" href="conflicts/">Conflicts resolving</a>
         
     </li>
 
@@ -149,6 +150,13 @@
             
     <li class="toctree-l1 ">
         <a class="" href="pglr/">pglr command</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="debugging/">Debugging</a>
         
     </li>
 
@@ -216,12 +224,6 @@
                 <p><img alt="parglare logo" src="./images/parglare-logo.svg" /></p>
 <hr />
 <p>A pure Python LR/GLR parser with integrated scanner.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The docs is work in progress. Stay tuned. :)</p>
-<p>Until the docs is completed you can use <a href="https://github.com/igordejanovic/parglare/tree/master/tests/func">tests</a> and <a href="https://github.com/igordejanovic/parglare/tree/master/examples">examples</a> as a good source
-of information on the possiblities and usage patterns.</p>
-</div>
 <h2 id="feature-highlights">Feature highlights<a class="headerlink" href="#feature-highlights" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -248,7 +250,7 @@ In case there are multiple interpretation of your input you will get all the
 trees (a.k.a. "the parse forest").</p>
 </li>
 <li>
-<p><strong>Declarative associativity and priority rules</strong></p>
+<p><a href="conflicts/#resolving-conflicts"><strong>Declarative associativity and priority rules</strong></a></p>
 <p>These problems arise a lot when building expression languages. Even a little
 arithmetic expression as <code>3 + 4 * 5 * 2</code> have multiple interpretation
 depending on the associativity and priority of operations. In parglare it is
@@ -257,7 +259,7 @@ or
 <a href="https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py">the calc example</a>).</p>
 </li>
 <li>
-<p><strong>Tracing/debuging, visualization and error reporting</strong></p>
+<p><a href="debugging/"><strong>Tracing/debuging, visualization and error reporting</strong></a></p>
 <p>There is an extensive support for grammar checking, debugging, automata
 visualization, and parse tracing. Check out <a href="pglr/">pglr command</a>.</p>
 </li>
@@ -272,16 +274,18 @@ inputs. See <code>recognizers</code> parameter to grammar construction in
 the <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_parse_list_of_objects.py">test_parse_list_of_objects.py test</a>.</p>
 </li>
 <li>
-<p><strong>Flexible actions calling strategies</strong></p>
+<p><a href="actions/"><strong>Flexible actions calling strategies</strong></a></p>
 <p>During parsing you will want to do something when the grammar rule matches.
 The whole point of parsing is that you want to transform your input to some
-output. There are several options:
-- do nothing - this way your parser is a mere recognizer, it produces
-  nothing but just verifies that your input adhere to the grammar;
-- call default actions - the default actions will build a parse tree.
-- call user supplied actions - you write a Python function that is called
+output. There are several options:</p>
+<ul>
+<li>do nothing - this way your parser is a mere recognizer, it produces
+  nothing but just verifies that your input adhere to the grammar;</li>
+<li>call default actions - the default actions will build a parse tree.</li>
+<li>call user supplied actions - you write a Python function that is called
   when the rule matches. You can do whatever you want at this place and the
-  result returned is used in parent rules/actions.</p>
+  result returned is used in parent rules/actions.</li>
+</ul>
 <p>Besides calling your actions in-line - during the parsing process - you can
 decide to build the tree first and call custom actions afterwards. This is a
 good option if you want to evaluate your tree in a multiple ways or if you
@@ -289,7 +293,7 @@ are using GLR and want to be sure that actions are called only for the
 surviving tree.</p>
 </li>
 <li>
-<p><strong>Support for whitespaces/comments</strong></p>
+<p><a href="grammar/"><strong>Support for whitespaces/comments</strong></a></p>
 <p>Support for language comments/whitespaces is done using the special rule
 <code>LAYOUT</code>. By default whitespaces are skipped. This is controlled by <code>ws</code>
 parameter to the parser constructor which is by default set to <code>\t\n</code>. If
@@ -298,7 +302,7 @@ set to <code>None</code> no whitespace skipping is provided. If there is a rule
 the layout grammar will be built to handle whitespaces.</p>
 </li>
 <li>
-<p><strong>Error recovery</strong></p>
+<p><a href="recovery/"><strong>Error recovery</strong></a></p>
 <p>This is something that often lacks in parsing libraries. More often than not
 you will want your parser to recover from an error, report it, and continue
 parsing. parglare has a built-in error recovery strategy which is currently
@@ -313,10 +317,6 @@ that will either skip input or introduce non-existing but expected tokens.</p>
 </ul>
 <h2 id="todoplaned">TODO/Planed<a class="headerlink" href="#todoplaned" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p><strong>Docs</strong></p>
-<p>This docs is currently work in progress. It should be done soon. Stay tuned.</p>
-</li>
 <li>
 <p><strong>Table caching</strong></p>
 <p>At the moment parser tables are constructed on-the-fly which might be slow
@@ -395,28 +395,15 @@ print(&quot;Result = &quot;, result)
 # Result = 700.8
 </code></pre>
 
-<h2 id="note-on-lr-tables-calculation">Note on LR tables calculation<a class="headerlink" href="#note-on-lr-tables-calculation" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>LR tables calculation</strong></p>
 <p>parglare provides both SLR and LALR tables calculation (LALR is the default).
 LALR is modified to avoid REDUCE/REDUCE conflicts on state merging. Although
 not proven, this should enable handling of all LR(1) grammars with reduced set
 of states and without conflicts. For grammars that are not LR(1) a GLR parsing
 is provided.</p>
-<h2 id="note-on-lexical-disambiguation">Note on lexical disambiguation<a class="headerlink" href="#note-on-lexical-disambiguation" title="Permanent link">&para;</a></h2>
-<p>Lexical ambiguity arise if multiple recognizers match at the same location.
-Lexical disambiguation is done in the following order:</p>
-<ul>
-<li>Priorities are used first.</li>
-<li>String recognizers are preferred over regexes (i.e. the most specific match).</li>
-<li>The longest-match strategy is used if multiple regexes matches with the same
-  priority. For further disambiguation if longest-match fails <code>prefer</code> rule
-  may be given in terminal definition.</li>
-</ul>
-<p>Notice that, since the scanning is integrated into parser, the lexical ambiguity
-may arise only if there is a real ambiguity in the language definition, i.e. you
-might have two or more tokens recognized at some place during parsing. For
-approaches where scanning is separate, lexical ambiguities arise whenever you
-have token recognition overlap no matter what the context is, which is a real
-PITA.</p>
+</div>
 <h2 id="what-does-parglare-mean">What does <code>parglare</code> mean?<a class="headerlink" href="#what-does-parglare-mean" title="Permanent link">&para;</a></h2>
 <p>It is an amalgam of the words <code>parser</code> and <code>glare</code> where the second word is
 chosen to contain letters GLR and to be easy for pronunciation. I also like one
@@ -482,5 +469,5 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-08-08 11:38:15
+Build Date UTC : 2017-08-08 20:15:50
 -->

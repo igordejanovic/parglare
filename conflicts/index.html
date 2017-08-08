@@ -8,7 +8,7 @@
   
   <meta name="author" content="Igor Dejanović">
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Conflict resolving - parglare</title>
+  <title>Conflicts resolving - parglare</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -18,7 +18,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Conflict resolving";
+    var mkdocs_page_name = "Conflicts resolving";
     var mkdocs_page_input_path = "conflicts.md";
     var mkdocs_page_url = "/conflicts/";
   </script>
@@ -85,6 +85,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser parameters</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="../actions/">Actions</a>
         
     </li>
@@ -99,11 +106,11 @@
         
             
     <li class="toctree-l1 current">
-        <a class="current" href="./">Conflict resolving</a>
+        <a class="current" href="./">Conflicts resolving</a>
         
             <ul>
             
-                <li class="toctree-l3"><a href="#lr-parsing">LR parsing</a></li>
+                <li class="toctree-l3"><a href="#lr-parsing-and-conflicts-resolving">LR parsing and conflicts resolving</a></li>
                 
                     <li><a class="toctree-l4" href="#resolving-conflicts">Resolving conflicts</a></li>
                 
@@ -132,6 +139,13 @@
             
     <li class="toctree-l1 ">
         <a class="" href="../pglr/">pglr command</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../debugging/">Debugging</a>
         
     </li>
 
@@ -187,7 +201,7 @@
         
       
     
-    <li>Conflict resolving</li>
+    <li>Conflicts resolving</li>
     <li class="wy-breadcrumbs-aside">
       
         <a href="https://github.com/igordejanovic/parglare/edit/master/docs/conflicts.md"
@@ -200,7 +214,7 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="lr-parsing">LR parsing<a class="headerlink" href="#lr-parsing" title="Permanent link">&para;</a></h1>
+                <h1 id="lr-parsing-and-conflicts-resolving">LR parsing and conflicts resolving<a class="headerlink" href="#lr-parsing-and-conflicts-resolving" title="Permanent link">&para;</a></h1>
 <p>LR parser operates as a deterministic PDA (Push-down automata). It is a state
 machine which is always in some state during parsing. The state machine must
 deterministically decide what is the next state just based on its current state
@@ -260,24 +274,25 @@ following result:</p>
 <pre><code> (1 + 2) * 3
 </code></pre>
 <p>If the shift of <code>*</code> and <code>3</code> is done instead of reducing, the reduction would
-first reduce multiplication and than sum (reduction is always done on the top of
+first reduce multiplication and then sum (reduction is always done on the top of
 the stack). We will have the following result:</p>
 <pre><code>1 + (2 * 3)
 </code></pre>
-<p>From the point of arithmetic priorities, preffered solution is the last one but
-the parser don't know arithmentic rules.</p>
+<p>From the point of view arithmetic priorities, preffered solution is the last one
+but the parser don't know arithmetic rules.</p>
 <p>If you analyze this grammar using <a href="../pglr/">pglr command</a> you will see that
 the LR tables have Shift/Reduce conflicts as there is a state in which parser
-can't decide wether to shift or to reduce (we just saw that situation).</p>
+can't decide whether to shift or to reduce (we just saw that situation).</p>
 <p>parglare gives you various tools to be more explicit with your grammar and to
-resolve those conflicts.</p>
+resolve these conflicts.</p>
 <p>There are two situations when conflicts can't be resolved:</p>
 <ul>
-<li>you need more than one lookahead to disambiguate</li>
-<li>your language is inherently ambiguous</li>
+<li>you need more than one lookahead to disambiguate,</li>
+<li>your language is inherently ambiguous.</li>
 </ul>
 <p>If you end up in one of these situations you should use GLR parsing, which will
-fork the parser in state which has multiple path, and explore all possibilities.</p>
+fork the parser at each state which has multiple paths, and explore all
+possibilities.</p>
 <h2 id="resolving-conflicts">Resolving conflicts<a class="headerlink" href="#resolving-conflicts" title="Permanent link">&para;</a></h2>
 <p>When we run:</p>
 <pre><code>$ pglr -d check expr.pg

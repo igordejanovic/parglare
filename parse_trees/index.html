@@ -85,6 +85,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser parameters</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="../actions/">Actions</a>
         
     </li>
@@ -99,7 +106,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../conflicts/">Conflict resolving</a>
+        <a class="" href="../conflicts/">Conflicts resolving</a>
         
     </li>
 
@@ -128,6 +135,13 @@
             
     <li class="toctree-l1 ">
         <a class="" href="../pglr/">pglr command</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../debugging/">Debugging</a>
         
     </li>
 
@@ -231,6 +245,23 @@ nodes).</p>
 <p>Each node has a <code>tree_str()</code> method which will return a string representation of
 the subtree starting from the given node. If called on root node it will return
 the string representation of the whole tree.</p>
+<p>For example, parsing the input <code>1 + 2 * 3 -1</code> using default actions (thus,
+producing the parse tree) will look like this if printed with <code>tree_str()</code>:</p>
+<pre><code>E[0]
+E[0]
+  E[0]
+    number[0, 1]
+  +[2, +]
+  E[4]
+    E[4]
+      number[4, 2]
+    *[6, *]
+    E[8]
+      number[8, 3]
+-[10, -]
+E[11]
+  number[11, 1]
+</code></pre>
               
             </div>
           </div>
@@ -241,7 +272,7 @@ the string representation of the whole tree.</p>
         <a href="../recovery/" class="btn btn-neutral float-right" title="Error recovery">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../conflicts/" class="btn btn-neutral" title="Conflict resolving"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../conflicts/" class="btn btn-neutral" title="Conflicts resolving"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
