@@ -48,6 +48,12 @@
     </url>
         
     <url>
+     <loc>/recovery/</loc>
+     <lastmod>2017-08-08</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
      <loc>/pglr/</loc>
      <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
