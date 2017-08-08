@@ -127,6 +127,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="conflicts/">Conflict resolving</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="parse_trees/">Parse trees</a>
         
     </li>
@@ -245,17 +252,17 @@ or
 <li>
 <p><strong>Tracing/debuging, visualization and error reporting</strong></p>
 <p>There is an extensive support for grammar checking, debugging, automata
-visualization, and parse tracing. Check out <a href="">todo: pglr command</a>.</p>
+visualization, and parse tracing. Check out <a href="pglr/">pglr command</a>.</p>
 </li>
 <li>
 <p><strong>Parsing arbitrary list of object</strong></p>
 <p>parglare is not used only to parse the textual content. It can parse (create
 a tree) of an arbitrary list of objects (numbers, bytes, whatever) based on
 the common parglare grammar. For this you have to
-define <a href="">todo: token recognizers</a> for your input stream. The built-in
-recognizers are string and regex recognizers for parsing textual inputs.
-See <code>recognizers</code> parameter to grammar construction in
-the <a href="">test_parse_list_of_objects.py test</a>.</p>
+define <a href="recognizers/">token recognizers</a> for your input stream. The
+built-in recognizers are string and regex recognizers for parsing textual
+inputs. See <code>recognizers</code> parameter to grammar construction in
+the <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_parse_list_of_objects.py">test_parse_list_of_objects.py test</a>.</p>
 </li>
 <li>
 <p><strong>Flexible actions calling strategies</strong></p>
@@ -468,5 +475,5 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-08-07 19:15:20
+Build Date UTC : 2017-08-08 10:54:44
 -->

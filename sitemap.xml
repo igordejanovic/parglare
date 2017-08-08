@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -13,37 +13,43 @@
         
     <url>
      <loc>/getting_started/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/grammar/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/actions/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/recognizers/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/conflicts/</loc>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/parse_trees/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/pglr/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -53,13 +59,13 @@
         
     <url>
      <loc>/about/CONTRIBUTING/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/about/LICENSE/</loc>
-     <lastmod>2017-08-07</lastmod>
+     <lastmod>2017-08-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         

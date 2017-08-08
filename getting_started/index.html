@@ -106,6 +106,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="../conflicts/">Conflict resolving</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="../parse_trees/">Parse trees</a>
         
     </li>
@@ -200,7 +207,7 @@ grammar = Grammar.from_file(file_name)
 <p>If there is no errors in the grammar you now have the grammar instance.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>There is also a handy <a href="../pglr/">TODO:pglr command line tool</a> that can be
+<p>There is also a handy <a href="../pglr/">pglr command line tool</a> that can be
 used for grammar checking, visualization and debugging.</p>
 </div>
 <p>The next step is to create an instance of the parser. There are two options. If
@@ -223,8 +230,8 @@ the general advice is to stick to the LR parsing until you are sure that you
 need additional power of GLR, i.e. either you need more than one token of
 lookahead or your language is inherently ambiguous. pglr tool will help you in
 investigating why you have LR conflicts in your grammar and there are some
-nice <a href="">TODO:disambiguation features</a> in parglare that will help you resolve
-some of those conflicts.</p>
+nice <a href="../conflicts/#resolving-conflicts">disambiguation features</a> in parglare
+that will help you resolve some of those conflicts.</p>
 </div>
 <p>Now parse your input calling <code>parse</code> method on the parser instance.</p>
 <pre><code class="python">result = parser.parse(input_str)

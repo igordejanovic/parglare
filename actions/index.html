@@ -112,6 +112,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="../conflicts/">Conflict resolving</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="../parse_trees/">Parse trees</a>
         
     </li>
@@ -255,9 +262,9 @@ check that as the parser already did that for us.</p>
 get called along the way and the result of each actions will be used as an
 element of the <code>nodes</code> parameter in calling actions higher in the hierarchy.</p>
 <p>If we don't provide <code>actions</code> the default will be used. The default parglare
-actions build a <a href="../parse_trees/">todo: parse tree</a> whose elements are
-instances of <code>NodeNonTerm</code> and <code>NodeTerm</code> classes representing a non-terminals
-and terminals respectively.</p>
+actions build a <a href="../parse_trees/">parse tree</a> whose elements are instances of
+<code>NodeNonTerm</code> and <code>NodeTerm</code> classes representing a non-terminals and terminals
+respectively.</p>
 <p>If we set <code>default_actions</code> parser parameter to <code>False</code> and don't provide
 actions, no actions will be called making the parser a mere recognizer, i.e.
 parser will parse the input and return nothing if parse is successful or raise
