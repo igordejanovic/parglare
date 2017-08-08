@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # flake8: NOQA
-from parglare.parser import Parser, LALR, SLR, pos_to_line_col
+from parglare.parser import Parser, Token, LALR, SLR, pos_to_line_col
 from parglare.glr import GLRParser
 from parglare.grammar import Grammar, NonTerminal, Terminal, \
     RegExRecognizer, EMPTY, EOF
