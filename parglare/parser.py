@@ -87,7 +87,7 @@ class Parser(object):
             print('\n\n*** LAYOUT parser ***\n')
         self.table.print_debug()
 
-    def parse_file(self, file_name):
+    def parse_file(self, file_name, **kwargs):
         """
         Parses content from the given file.
         Args:
@@ -95,7 +95,7 @@ class Parser(object):
         """
         with codecs.open(file_name, 'r', 'utf-8') as f:
             content = f.read()
-        return self.parse(content, file_name=file_name)
+        return self.parse(content, file_name=file_name, **kwargs)
 
     def parse(self, input_str, position=0, file_name=None, context=None):
         """
