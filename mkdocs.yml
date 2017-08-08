@@ -17,6 +17,7 @@ pages:
     - Recognizers: recognizers.md
     - Conflict resolving: conflicts.md
     - Parse trees: parse_trees.md
+    - Error recovery: recovery.md
     - pglr command: pglr.md
 - About:
     - Contributing: about/CONTRIBUTING.md
