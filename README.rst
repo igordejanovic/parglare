@@ -51,15 +51,15 @@ The whole expression evaluator is done in under 30 lines of code!
 
     print("Result = ", result)
 
-# Output
-# -- Debuging/tracing output with detailed info about grammar, productions,
-# -- terminals and nonterminals, DFA states, parsing progress,
-# -- and at the end of the output:
-# Result = 700.8
-```
+    # Output
+    # -- Debuging/tracing output with detailed info about grammar, productions,
+    # -- terminals and nonterminals, DFA states, parsing progress,
+    # -- and at the end of the output:
+    # Result = 700.8
 
-Install
--------
+
+Installation
+------------
 
 - Stable version:
 
@@ -89,7 +89,7 @@ Credits
 -------
 
 Initial layout/content of this package was created with `Cookiecutter
-<https://github.com/audreyr/cookiecutter>` and the
+<https://github.com/audreyr/cookiecutter>`_ and the
 `audreyr/cookiecutter-pypackage <https://github.com/audreyr/cookiecutter-pypackage>`_ project template.
 
 
