@@ -1,15 +1,22 @@
 # History
 
-- Development version
+- 2017-08-09 Version 0.2
 
-  - First implementation of GLR parsing.
+  - GLR parsing. Support for epsilon grammars, cyclic grammars and grammars with
+    infinite ambiguity.
   - Lexical recognizers. Parsing the stream of arbitrary objects.
   - Error recovery. Builtin default recovery, custom user defined.
   - Common semantic actions.
+  - Documentation.
+  - pglr CLI command.
+  - Automata visualization, GLR visual tracing.
   - Lexical disambiguation improvements.
+  - Support for epsilon grammar (empty productions).
   - Support for comments in grammars.
+  - `finish` and `prefer` terminal rules.
+  - Change in the grammar language `=` - > `:`
   - Additions to examples and tests.
-  - Various bug fixes.
+  - Various optimizations and bug fixes.
 
 - 2017-02-02 - Version 0.1
 

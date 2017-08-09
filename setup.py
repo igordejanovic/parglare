@@ -12,7 +12,7 @@ except(IOError, ImportError):
     history = open('HISTORY.md').read()
 
 
-VERSION = '0.1'
+VERSION = '0.2'
 
 if sys.argv[-1].startswith('publish'):
     if os.system("pip list | grep wheel"):
