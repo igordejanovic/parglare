@@ -2,15 +2,11 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import codecs
 from setuptools import setup
-try:
-    import pypandoc
-    readme = pypandoc.convert('README.md', 'rst')
-    history = pypandoc.convert('HISTORY.md', 'rst')
-except(IOError, ImportError):
-    readme = open('README.md').read()
-    history = open('HISTORY.md').read()
 
+README = codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
+                     'r', encoding='utf-8').read()
 
 VERSION = '0.2'
 
@@ -43,7 +39,7 @@ setup(
     name='parglare',
     version=VERSION,
     description="A pure Python Scannerless LR/GLR parser ",
-    long_description=readme + '\n\n' + history,
+    long_description=README,
     author="Igor R. Dejanovic",
     author_email='igorREPLACEWITHDOTdejanovic@gmail.com',
     url='https://github.com/igordejanovic/parglare',

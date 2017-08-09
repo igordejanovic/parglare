@@ -1,4 +1,5 @@
-# History
+History
+-------
 
 - 2017-08-09 Version 0.2
 
