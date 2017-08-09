@@ -165,13 +165,13 @@ The first conflict:
     reduce by production(s) '1: E = E + E'.
 
 Tell us that when the parser saw addition — the dot in the above productions
-represents all possible positions of the parser in the input stream — and there
-is `+` ahead, it doesn't know shoud it reduce the addition or shift the `+`
-token.
+represents all possible positions of the parser in the input stream in this
+state — and there is `+` ahead, it doesn't know should it reduce the addition or
+shift the `+` token.
 
 This means that if we have an expression: `1 + 2 + 3` should we calculate it as
 `(1 + 2) + 3` or as `1 + (2 + 3)`. Of course, the result in this case would be
-the same, but imagine what would happen if we had substration operation instead
+the same, but imagine what would happen if we had subtraction operation instead
 of addition. In arithmetic, this is defined by association which says that
 addition if left associative, thus the operation is executed from left to right.
 
@@ -244,11 +244,11 @@ parglare has implicit lexical disambiguation strategy that will:
    handled by parser forking, i.e. you will end up with all solutions/trees.
 
 
-Thus, when terminals are defined you can use priorities to favor some of the
+Thus, in terminal definition rules we can use priorities to favor some of the
 recognizers, or we can use `prefer` to favor recognizer if there are multiple
 matches of the same length.
 
-Example:
+For example:
 
       number = /\d+/ {15};
 
