@@ -60,6 +60,22 @@ print("Result = ", result)
 # Result = 700.8
 ```
 
+## Install
+
+- Stable version:
+
+    ```
+    $ pip install parglare
+    ```
+
+- Development version:
+
+    ```
+    $ git clone git@github.com:igordejanovic/parglare.git
+    $ pip install -e parglare
+    ```
+
+
 ## License
 
 MIT

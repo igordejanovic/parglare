@@ -136,6 +136,22 @@ A pure Python LR/GLR parser with integrated scanner.
     speed.
 
 
+## Install
+
+- Stable version:
+
+    ```
+    $ pip install parglare
+    ```
+
+- Development version:
+
+    ```
+    $ git clone git@github.com:igordejanovic/parglare.git
+    $ pip install -e parglare
+    ```
+
+
 ## Quick intro
 
 This is just a small example to get the general idea. This example shows how to
