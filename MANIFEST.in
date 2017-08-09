@@ -1,4 +1,3 @@
-
 include AUTHORS.md
 
 include CONTRIBUTING.md
@@ -9,5 +8,11 @@ include README.md
 recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-exclude * *.log
+recursive-exclude * *.dot
+recursive-exclude * *.pdf
+recursive-exclude * *.pstats
+recursive-exclude * *.report
+recursive-exclude * *.txt
 
-recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
+recursive-include docs *.md *.png
