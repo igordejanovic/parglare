@@ -71,7 +71,10 @@ Ready to contribute? Here's how to set up `parglare` for local development.
    tests, including testing other Python versions with tox:
 
         $ flake8 parglare tests
-        $ python setup.py test or py.test
+        $ py.test tests/func/
+
+    To run tests for all environments:
+
         $ tox
 
    To get flake8 and tox, just pip install them into your virtualenv.
