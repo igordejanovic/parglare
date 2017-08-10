@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #######################################################################
 # Testing parsing speed. This is used for the purpose of testing
 #   of performance gains/loses for various approaches.
