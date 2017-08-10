@@ -104,5 +104,11 @@ Before you submit a pull request, check that it meets these guidelines:
 To run a subset of tests:
 
 ```
-$ py.test tests.test_parglare
+$ py.test tests/func/mytest.py
+```
+
+or a single test:
+
+```
+$ py.test tests/func/mytest.py::some_test
 ```
