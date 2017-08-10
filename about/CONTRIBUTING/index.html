@@ -313,7 +313,11 @@ $ git push origin name-of-your-bugfix-or-feature
 </ol>
 <h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h2>
 <p>To run a subset of tests:</p>
-<pre><code>$ py.test tests.test_parglare
+<pre><code>$ py.test tests/func/mytest.py
+</code></pre>
+
+<p>or a single test:</p>
+<pre><code>$ py.test tests/func/mytest.py::some_test
 </code></pre>
               
             </div>
