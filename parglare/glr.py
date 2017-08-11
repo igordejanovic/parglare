@@ -376,6 +376,11 @@ class GLRParser(Parser):
             # shifted head to this head.
             result = shifted_head.parents[0][1]
             shifted_head.create_link(head, result, False, False, self)
+            if debug:
+                self._trace_step(head, shifted_head, head,
+                                 "S:{}({})".format(
+                                     dot_escape(token.symbol.name),
+                                     dot_escape(token.value)))
         else:
 
             if self.debug:
