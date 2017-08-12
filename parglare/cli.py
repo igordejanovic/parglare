@@ -82,7 +82,7 @@ def pglr():
         if not args.input_file:
             print("input_file is mandatory for trace command.")
             sys.exit(1)
-        parser = GLRParser(g, debug=True)
+        parser = GLRParser(g, debug=True, debug_trace=True)
         if args.i:
             parser.parse(args.input_file)
         else:

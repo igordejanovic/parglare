@@ -32,7 +32,8 @@ class GLRParser(Parser):
 
         if self.debug:
             print("\n*** PARSING STARTED\n")
-            self._start_trace()
+            if self.debug_trace:
+                self._start_trace()
 
         self.errors = []
         self.current_error = None
@@ -56,7 +57,7 @@ class GLRParser(Parser):
         self.file_name = file_name
         self.finish_head = None
 
-        if self.debug:
+        if self.debug and self.debug_trace:
             self._trace_head(start_head, str(start_head.state.state_id))
 
         # The main loop
@@ -76,10 +77,11 @@ class GLRParser(Parser):
                     if self.debug:
                         for h in self.heads_for_recovery:
                             print("\t** Killing head: {}".format(h))
-                            self._trace_step_kill(h)
+                            if self.debug_trace:
+                                self._trace_step_kill(h)
 
         if not self.finish_head:
-            if self.debug:
+            if self.debug and self.debug_trace:
                 self._export_dot_trace()
             raise ParseError(
                 file_name, input_str, self.last_position,
@@ -88,7 +90,8 @@ class GLRParser(Parser):
         results = [x[1] for x in self.finish_head.parents]
         if self.debug:
             print("*** {} sucessful parse(s).".format(len(results)))
-            self._export_dot_trace()
+            if self.debug_trace:
+                self._export_dot_trace()
 
         return results
 
@@ -153,7 +156,8 @@ class GLRParser(Parser):
                     if symbol_action and symbol_action[0].action is ACCEPT:
                         if debug:
                             print("\t*** SUCCESS!!!!")
-                            self._trace_step_finish(head)
+                            if self.debug_trace:
+                                self._trace_step_finish(head)
                         if self.finish_head:
                             self.finish_head.merge(head)
                         else:
@@ -177,7 +181,8 @@ class GLRParser(Parser):
                 if debug:
                     # This head is dying
                     print("\t***Killing this head.")
-                    self._trace_step_kill(head)
+                    if self.debug_trace:
+                        self._trace_step_kill(head)
 
             for token in tokens:
                 symbol = token.symbol
@@ -203,7 +208,8 @@ class GLRParser(Parser):
                             (reduce_head, frozenset(actions.keys())))
                     elif debug:
                         print("\t** Killing head: {}".format(reduce_head))
-                        self._trace_step_kill(reduce_head)
+                        if self.debug_trace:
+                            self._trace_step_kill(reduce_head)
 
                 if debug:
                     print("\n\tNo more reductions for this head and "
@@ -376,7 +382,7 @@ class GLRParser(Parser):
             # shifted head to this head.
             result = shifted_head.parents[0][1]
             shifted_head.create_link(head, result, False, False, self)
-            if debug:
+            if debug and self.debug_trace:
                 self._trace_step(head, shifted_head, head,
                                  "S:{}({})".format(
                                      dot_escape(token.symbol.name),
@@ -415,13 +421,15 @@ class GLRParser(Parser):
             self.heads_for_reduce.append(new_head)
             if debug:
                 print("\tNew shifted head {}.".format(str(new_head)))
-                self._trace_head(new_head,
-                                 "{}:{}".format(state.state_id,
-                                                dot_escape(state.symbol.name)))
-                self._trace_step(head, new_head, head,
-                                 "S:{}({})".format(
-                                     dot_escape(token.symbol.name),
-                                     dot_escape(token.value)))
+                if self.debug_trace:
+                    self._trace_head(new_head,
+                                     "{}:{}".format(
+                                         state.state_id,
+                                         dot_escape(state.symbol.name)))
+                    self._trace_step(head, new_head, head,
+                                     "S:{}({})".format(
+                                         dot_escape(token.symbol.name),
+                                         dot_escape(token.value)))
 
             new_head.create_link(head, result, False, False, self)
 
@@ -487,7 +495,7 @@ class GLRParser(Parser):
                 new_head.create_link(root_head, result, any_empty, all_empty,
                                      self)
                 if head.merge_head(new_head, self):
-                    if self.debug:
+                    if self.debug and self.debug_trace:
                         self._trace_step(old_head, head, root_head,
                                          "R:{}".format(
                                              dot_escape(str(production))))
@@ -496,12 +504,13 @@ class GLRParser(Parser):
             self.heads_for_reduce.append(new_head)
             if self.debug:
                 print("\tNew reduced head {}.".format(str(new_head)))
-                self._trace_head(new_head, "{}:{}".format(
+                if self.debug_trace:
+                    self._trace_head(new_head, "{}:{}".format(
                         new_head.state.state_id,
                         dot_escape(new_head.state.symbol.name)))
             new_head.create_link(root_head, result, any_empty, all_empty, self)
 
-            if self.debug:
+            if self.debug and self.debug_trace:
                 self._trace_step(old_head, new_head, root_head,
                                  "R:{}".format(dot_escape(str(production))))
 
@@ -703,8 +712,9 @@ class GSSNode(object):
                 if parser.debug:
                     print("\tMerging less empty head to more empty -> "
                           "less empty head wins.")
-                    for p in self.parents:
-                        parser._trace_step_drop(self, p[0])
+                    if parser.debug_trace:
+                        for p in self.parents:
+                            parser._trace_step_drop(self, p[0])
                 self.any_empty = False
                 self.all_empty = True
                 self.parents = []
