@@ -28,7 +28,7 @@ class Parser(object):
     """
     def __init__(self, grammar, start_production=1, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
-                 layout_debug=False, ws='\n\t ', default_actions=True,
+                 debug_layout=False, ws='\n\t ', default_actions=True,
                  tables=LALR, layout=False, position=False,
                  prefer_shifts=False, error_recovery=False):
         self.grammar = grammar
@@ -45,7 +45,7 @@ class Parser(object):
                                             default_actions=False,
                                             ws=None, layout=True,
                                             position=True,
-                                            debug=layout_debug)
+                                            debug=debug_layout)
 
         self.layout = layout
         # If user recognizers are registered disable white-space skipping
@@ -53,7 +53,7 @@ class Parser(object):
         self.position = position
         self.debug = debug
         self.debug_trace = debug_trace
-        self.layout_debug = layout_debug
+        self.debug_layout = debug_layout
 
         self.default_actions = default_actions
 
@@ -85,7 +85,7 @@ class Parser(object):
             raise RRConflicts(self.table.rr_conflicts)
 
     def print_debug(self):
-        if self.layout and self.layout_debug:
+        if self.layout and self.debug_layout:
             print('\n\n*** LAYOUT parser ***\n')
         self.table.print_debug()
 

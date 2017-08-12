@@ -67,11 +67,11 @@ parameter. The parameter accepts the `id` of the grammar production. To get the
 grammar.
 
 
-## debug/layout_debug
+## debug/debug_layout
 
 This parameter if set to `True` will put the parser in debug mode. In this mode
 parser will print a detailed information of its actions to the standard output.
-To put layout subparser in the debug mode use the `layout_debug` parameter. Both
+To put layout subparser in the debug mode use the `debug_layout` parameter. Both
 parameters are set to `False` by default.
 
 For more information see [Debugging](./debugging.md)

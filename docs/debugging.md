@@ -48,7 +48,7 @@ To put the parser in the debug mode do:
 
 To debug [layout grammar](./grammar.md#handling-whitespaces-and-comments) do:
 
-    parser = Parser(grammar, layout_debug=True)
+    parser = Parser(grammar, debug_layout=True)
 
 
 `GLRParser` can produce visual trace. To enable visual tracing set `debug` and

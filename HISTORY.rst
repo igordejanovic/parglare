@@ -41,7 +41,7 @@ History
       called and the only output of the parser is whether the input was
       recognized or not.
   - Support for language comments/whitespaces using special rule `LAYOUT`.
-  - Debug print/tracing (set `debug=True` and/or `layout_debug=True`to the
+  - Debug print/tracing (set `debug=True` and/or `debug_layout=True`to the
     `Parser` instantiation).
   - Tests
   - Few examples (see `examples` folder)
