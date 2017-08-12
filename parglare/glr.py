@@ -563,7 +563,7 @@ class GLRParser(Parser):
                 # Cache results
                 self.recovery_results[context.start_position] = position, token
 
-            if position or token is not None:
+            if (position and position <= len(input_str)) or token is not None:
                 assert not(position and token is not None), \
                     "Ambiguous recovery! Can't introduce new token and " \
                     "advance position at the same time."
@@ -578,7 +578,10 @@ class GLRParser(Parser):
                 head.token_ahead = token
                 self.heads_for_reduce.append(head)
             else:
-                print("\t**Recovery not successful.")
+                if debug:
+                    print("\tKilling head: {}".format(head))
+                    if self.debug_trace:
+                        self._trace_step_kill(head)
 
     def _debug_active_heads(self, heads):
         print("Active heads {}: {}".format(len(heads), heads))
