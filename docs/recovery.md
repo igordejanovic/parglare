@@ -15,8 +15,13 @@ following attributes:
 - `position` - absolute position of the error,
 - `length` - the length of erroneous part of input,
 - `message` - error message.
+- `input_str` - The input string/list of objects.
+- `expected_symbol` - A set of grammar symbols expected at the location.
 
-which are supplied to the `Error` constructor to build a new instance.
+which are supplied to the `Error` constructor to build a new instance. Either a
+`message` or `input_str` with `expected_symbols` should be provided. If
+`message` is given it is used as a string representation of the error, otherwise
+the message is constructed based on other parameters.
 
 `position` can be converted to `line, column` by calling
 `parglare.pos_to_line_col(input, position)`.
@@ -35,8 +40,8 @@ function. This function should have the following signature:
    configuration, not for altering the state,
 - `input` - the input string/list,
 - `position` - the position in the input where the error has been found,
-- `expected_symbols` - a dict of grammar symbols that are expected at this
-   position keyed by symbol names.
+- `expected_symbols` - a set grammar symbols that are expected at this
+   position.
 
 The recovery function should return the tuple `(error, position, token)`.
 `error` should be an instance of `parglare.Error` class or `None` if no error

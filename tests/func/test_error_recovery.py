@@ -114,6 +114,7 @@ def test_custom_error_recovery():
         assert isinstance(parser, Parser)
         assert input == '1 + 2 + * 3 - 5'
         assert position == 8
+        assert type(expected_symbols) is set
         assert Terminal('(') in expected_symbols
         assert Terminal('number') in expected_symbols
         return None, None, position + 1

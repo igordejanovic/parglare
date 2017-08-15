@@ -185,11 +185,11 @@ class Parser(object):
                     if type(self.error_recovery) is bool:
                         # Default recovery
                         error, position, ntok = self.default_error_recovery(
-                            input_str, position, actions.keys())
+                            input_str, position, set(actions.keys()))
                     else:
                         # Custom recovery provided during parser construction
                         ntok, error, position = self.error_recovery(
-                            self, input_str, position, actions.keys())
+                            self, input_str, position, set(actions.keys()))
 
                     # The recovery may either decide to skip erroneous part
                     # of the input and resume at the place that can

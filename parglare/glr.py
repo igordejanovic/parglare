@@ -547,13 +547,13 @@ class GLRParser(Parser):
                     if debug:
                         print("\tDoing default error recovery.")
                     error, position, token = self.default_error_recovery(
-                        input_str, context.start_position, symbols)
+                        input_str, context.start_position, set(symbols))
                 else:
                     # Custom recovery provided during parser construction
                     if debug:
                         print("\tDoing custom error recovery.")
                     error, position, token = self.error_recovery(
-                        self, input_str, context.start_position, symbols)
+                        self, input_str, context.start_position, set(symbols))
 
                 if error:
                     self.errors.append(error)
