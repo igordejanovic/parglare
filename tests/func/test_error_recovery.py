@@ -55,7 +55,7 @@ def test_error_recovery_uncomplete():
 
     assert e.position == 8
     assert e.length == 1
-    assert 'Unexpected input at position (1, 8). Expected' in e.message
+    assert 'Unexpected input at position (1, 8). Expected' in str(e)
 
 
 def test_error_recovery_complete():
@@ -82,7 +82,7 @@ def test_error_recovery_complete():
     # spanning the whole erroneous region. Whitespaces should be included too.
     assert e2.position == 12
     assert e2.length == 4
-    assert 'Unexpected input at position (1, 12)' in e2.message
+    assert 'Unexpected input at position (1, 12)' in str(e2)
 
 
 def test_error_recovery_parse_error():

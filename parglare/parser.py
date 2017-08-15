@@ -4,7 +4,7 @@ import codecs
 import sys
 from collections import OrderedDict
 from .grammar import Grammar, EMPTY, AUGSYMBOL, EOF, STOP
-from .errors import Error
+from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, DisambiguationError, \
     disambiguation_error, nomatch_error, SRConflicts, RRConflicts
 
@@ -479,11 +479,9 @@ class Parser(object):
                                          - self.current_error.position
             return None, position + 1, None
         else:
-            line, col = pos_to_line_col(input, position)
             error = Error(position, 1,
-                          "Unexpected input at position {}. Expected: {}"
-                          .format((line, col),
-                                  expected_symbols_str(expected_symbols)))
+                          input_str=input,
+                          expected_symbols=expected_symbols)
             self.current_error = error
             return error, position + 1, None
 
@@ -892,7 +890,3 @@ def position_context(input_str, position):
         + text(input_str[position:position+10])
     c = c.replace("\n", "\\n")
     return c
-
-
-def expected_symbols_str(symbols):
-    return " or ".join([s.name for s in symbols])

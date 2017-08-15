@@ -559,6 +559,16 @@ class GLRParser(Parser):
                     self.errors.append(error)
                     if debug:
                         print("\tError: {}".format(str(error)))
+                else:
+                    # In GLR multiple heads may initiate recovery at the same
+                    # position. If there is already error created at current
+                    # position update expected symbols.
+                    try:
+                        last_error = self.errors[-1]
+                        if last_error.expected_symbols and symbols:
+                            last_error.expected_symbols.update(symbols)
+                    except IndexError:
+                        pass
 
                 # Cache results
                 self.recovery_results[context.start_position] = position, token
