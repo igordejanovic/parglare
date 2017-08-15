@@ -19,7 +19,7 @@ following attributes:
 which are supplied to the `Error` constructor to build a new instance.
 
 `position` can be converted to `line, column` by calling
-`parglare.pos_to_linecol(input, position)`.
+`parglare.pos_to_line_col(input, position)`.
 
 
 ## Custom recovery strategy

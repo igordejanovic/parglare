@@ -16,7 +16,7 @@ Each node of the tree has following attributes:
 - `start_position`/`end_position` - the start and end position in the input
   stream where the node starts/ends. It is given in absolute 0-based offset. To
   convert to line/column format for textual inputs you can use
-  `parglare.pos_to_linecol(input_str, position)` function which returns tuple
+  `parglare.pos_to_line_col(input_str, position)` function which returns tuple
   `(line, column)`. Of course, this call doesn't make any sense if you are
   parsing a non-textual content.
 - `layout_content` - the layout that preceeds the given tree node. The layout
