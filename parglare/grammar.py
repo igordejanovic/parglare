@@ -151,12 +151,14 @@ class Production(object):
     rhs (ProductionRHS):
     assoc (int): Associativity. Used for ambiguity (shift/reduce) resolution.
     prior (int): Priority. Used for ambiguity (shift/reduce) resolution.
+    dynamic (bool): Is dynamic disambiguation used for this production.
     prod_id (int): Ordinal number of the production.
     prod_symbol_id (int): A zero-based ordinal of alternative choice for this
         production grammar symbol.
     """
 
-    def __init__(self, symbol, rhs, assoc=ASSOC_NONE, prior=DEFAULT_PRIORITY):
+    def __init__(self, symbol, rhs, assoc=ASSOC_NONE, prior=DEFAULT_PRIORITY,
+                 dynamic=False):
         """
         Args:
         symbol (GrammarSymbol): A grammar symbol on the LHS of the production.
@@ -453,38 +455,38 @@ class Grammar(object):
 # Grammar for grammars
 
 (GRAMMAR,
- PRODUCTION_SET,
+ RULES,
+ RULE,
+ PRODUCTION_RULE,
+ PRODUCTION_RULE_RHS,
  PRODUCTION,
- TERM_PRODUCTION,
- PRODUCTION_RHSS,
- PRODUCTION_RHS,
+ TERMINAL_RULE,
+ PROD_DIS_RULE,
+ PROD_DIS_RULES,
+ TERM_DIS_RULE,
+ TERM_DIS_RULES,
  GSYMBOL,
- NONTERM_REF,
+ GSYMBOLS,
  RECOGNIZER,
- ASSOC,
- ASSOC_PRIOR,
- TERM_RULE,
- TERM_RULES,
- SEQUENCE,
  LAYOUT,
  LAYOUT_ITEM,
  COMMENT,
  CORNC,
  CORNCS) = [NonTerminal(name) for name in [
      'Grammar',
-     'ProductionSet',
+     'Rules',
+     'Rule',
+     'ProductionRule',
+     'ProductionRuleRHS',
      'Production',
-     'TermProduction',
-     'ProductionRHSs',
-     'ProductionRHS',
-     'GSymbol',
-     'NonTermRef',
+     'TerminalRule',
+     'ProductionDisambiguationRule',
+     'ProductionDisambiguationRules',
+     'TerminalDisambiguationRule',
+     'TerminalDisambiguationRules',
+     'GrammarSymbol',
+     'GrammarSymbols',
      'Recognizer',
-     'Assoc',
-     'AssocPrior',
-     'TermRule',
-     'TermRules',
-     'Sequence',
      'LAYOUT',
      'LAYOUT_ITEM',
      'Comment',
@@ -510,33 +512,41 @@ class Grammar(object):
                 ]]
 
 pg_productions = [
-    [GRAMMAR, [PRODUCTION_SET, EOF]],
-    [PRODUCTION_SET, [PRODUCTION_SET, PRODUCTION]],
-    [PRODUCTION_SET, [PRODUCTION_SET, TERM_PRODUCTION]],
-    [PRODUCTION_SET, [PRODUCTION]],
-    [PRODUCTION_SET, [TERM_PRODUCTION]],
-    [PRODUCTION, [NAME, ':', PRODUCTION_RHSS, ';']],
-    [TERM_PRODUCTION, [NAME, ':', RECOGNIZER, ';'], ASSOC_LEFT, 15],
-    [TERM_PRODUCTION, [NAME, ':', RECOGNIZER, '{', TERM_RULES, '}', ';'],
+    [GRAMMAR, [RULES, EOF]],
+    [RULES, [RULES, RULE]],
+    [RULES, [RULE]],
+    [RULE, [PRODUCTION_RULE]],
+    [RULE, [TERMINAL_RULE]],
+
+    [PRODUCTION_RULE, [NAME, ':', PRODUCTION_RULE_RHS, ';']],
+    [PRODUCTION_RULE_RHS, [PRODUCTION_RULE_RHS, '|', PRODUCTION],
+     ASSOC_LEFT, 5],
+    [PRODUCTION_RULE_RHS, [PRODUCTION], ASSOC_LEFT, 5],
+    [PRODUCTION, [GSYMBOLS]],
+    [PRODUCTION, [GSYMBOLS, '{', PROD_DIS_RULES, '}']],
+
+    [TERMINAL_RULE, [NAME, ':', RECOGNIZER, ';'], ASSOC_LEFT, 15],
+    [TERMINAL_RULE, [NAME, ':', RECOGNIZER, '{', TERM_DIS_RULES, '}', ';'],
      ASSOC_LEFT, 15],
-    [PRODUCTION_RHS, [SEQUENCE]],
-    [PRODUCTION_RHS, [SEQUENCE, '{', ASSOC_PRIOR, '}']],
-    [PRODUCTION_RHSS, [PRODUCTION_RHSS, '|', PRODUCTION_RHS], ASSOC_LEFT, 5],
-    [PRODUCTION_RHSS, [PRODUCTION_RHS], ASSOC_LEFT, 5],
-    [ASSOC_PRIOR, [ASSOC]],
-    [ASSOC_PRIOR, [PRIOR]],
-    [ASSOC_PRIOR, [ASSOC_PRIOR, ',', ASSOC_PRIOR], ASSOC_LEFT],
-    [ASSOC, ['left']],
-    [ASSOC, ['right']],
-    [TERM_RULE, ['prefer']],
-    [TERM_RULE, ['finish']],
-    [TERM_RULE, [PRIOR]],
-    [TERM_RULES, [TERM_RULE]],
-    [TERM_RULES, [TERM_RULES, ',', TERM_RULE]],
-    [SEQUENCE, [SEQUENCE, GSYMBOL]],
-    [SEQUENCE, [GSYMBOL]],
+
+    [PROD_DIS_RULE, ['left']],
+    [PROD_DIS_RULE, ['right']],
+    [PROD_DIS_RULE, ['dynamic']],
+    [PROD_DIS_RULE, [PRIOR]],
+    [PROD_DIS_RULES, [PROD_DIS_RULES, ',', PROD_DIS_RULE], ASSOC_LEFT],
+    [PROD_DIS_RULES, [PROD_DIS_RULE]],
+
+    [TERM_DIS_RULE, ['prefer']],
+    [TERM_DIS_RULE, ['finish']],
+    [TERM_DIS_RULE, ['dynamic']],
+    [TERM_DIS_RULE, [PRIOR]],
+    [TERM_DIS_RULES, [TERM_DIS_RULES, ',', TERM_DIS_RULE]],
+    [TERM_DIS_RULES, [TERM_DIS_RULE]],
+
     [GSYMBOL, [NAME]],
     [GSYMBOL, [RECOGNIZER]],
+    [GSYMBOLS, [GSYMBOLS, GSYMBOL]],
+    [GSYMBOLS, [GSYMBOL]],
     [RECOGNIZER, [STR_TERM]],
     [RECOGNIZER, [REGEX_TERM]],
 
@@ -569,6 +579,102 @@ def get_grammar_parser(debug):
     return grammar_parser
 
 
+def act_rules(_, nodes):
+    e1, e2 = nodes
+    e1.extend(e2)
+    return e1
+
+
+def act_production_rule(_, nodes):
+    name, _, rhs_prods, __ = nodes
+
+    symbol = NonTerminal(name)
+
+    # Collect all productions for this rule
+    prods = []
+    for prod in rhs_prods:
+        gsymbols, disrules = prod
+        assoc = disrules.get('assoc', ASSOC_NONE)
+        prior = disrules.get('priority', DEFAULT_PRIORITY)
+        dynamic = disrules.get('dynamic', False)
+        prods.append(Production(symbol,
+                                ProductionRHS(gsymbols),
+                                assoc=assoc,
+                                prior=prior,
+                                dynamic=dynamic))
+
+    return prods
+
+
+def act_production(_, nodes):
+    gsymbols = nodes[0]
+    disrules = {}
+    if len(nodes) > 1:
+        rules = nodes[2]
+        for rule in rules:
+            if rule == 'left':
+                disrules['assoc'] = ASSOC_LEFT
+            elif rule == 'right':
+                disrules['assoc'] = ASSOC_RIGHT
+            elif rule == 'dynamic':
+                disrules['dynamic'] = True
+            elif type(rule) is int:
+                disrules['priority'] = rule
+
+    return (gsymbols, disrules)
+
+
+def act_term_rule(_, nodes):
+
+    name = nodes[0]
+    rhs_term = nodes[2]
+
+    term = Terminal(name, rhs_term.recognizer)
+    if len(nodes) > 4:
+        for t in nodes[4]:
+            if type(t) is int:
+                term.prior = t
+            elif t == 'finish':
+                term.finish = True
+            elif t == 'prefer':
+                term.prefer = True
+            else:
+                print(t)
+                assert False
+    return [Production(term, ProductionRHS([rhs_term]), prior=term.prior)]
+
+
+# def act_assoc_prior(_, nodes):
+#     res = []
+#     res.extend(nodes[0])
+#     res.extend(nodes[2])
+#     return res
+
+
+# def act_term_rules(_, nodes):
+#     res = nodes[0]
+#     res.append(nodes[2])
+#     return res
+
+
+# def act_production_rhs_simple(_, nodes):
+#     return (ProductionRHS(nodes[0]),)
+
+
+# def act_production_rhs(_, nodes):
+#     assoc = ASSOC_NONE
+#     prior = DEFAULT_PRIORITY
+#     for ap in nodes[2]:
+#         if type(ap) is int:
+#             prior = ap
+#         else:
+#             if ap == 'left':
+#                 assoc = ASSOC_LEFT
+#             elif ap == 'right':
+#                 assoc = ASSOC_RIGHT
+#     return (ProductionRHS(nodes[0]), assoc, prior)
+
+
 def act_recognizer_str(_, nodes):
     value = nodes[0].value[1:-1]
     value = value.replace(r'\"', '"')\
@@ -584,98 +690,36 @@ def act_recognizer_regex(_, nodes):
     return Terminal(value, RegExRecognizer(value))
 
 
-def act_production(_, nodes):
-
-    symbol = NonTerminal(nodes[0])
-
-    # Collect all productions for this non-terminal
-    prods = []
-    for p_rhs in nodes[2]:
-        asoc = ASSOC_NONE
-        prior = DEFAULT_PRIORITY
-        if len(p_rhs) > 1:
-            asoc = p_rhs[1]
-        if len(p_rhs) > 2:
-            prior = p_rhs[2]
-        prods.append(Production(symbol, p_rhs[0], asoc, prior))
-
-    return prods
-
-
-def act_term_production(_, nodes):
-
-    rhs_term = nodes[2]
-    term = Terminal(nodes[0], rhs_term.recognizer)
-    if len(nodes) > 4:
-        for t in nodes[4]:
-            if type(t) is int:
-                term.prior = t
-            elif t == 'finish':
-                term.finish = True
-            elif t == 'prefer':
-                term.prefer = True
-            else:
-                print(t)
-                assert False
-    return [Production(term, ProductionRHS([rhs_term]), prior=term.prior)]
-
-
-def act_assoc_prior(_, nodes):
-    res = []
-    res.extend(nodes[0])
-    res.extend(nodes[2])
-    return res
-
-
-def act_term_rules(_, nodes):
-    res = nodes[0]
-    res.append(nodes[2])
-    return res
-
-
-def act_production_rhs_simple(_, nodes):
-    return (ProductionRHS(nodes[0]),)
-
-
-def act_production_rhs(_, nodes):
-    assoc = ASSOC_NONE
-    prior = DEFAULT_PRIORITY
-    for ap in nodes[2]:
-        if type(ap) is int:
-            prior = ap
-        else:
-            if ap == 'left':
-                assoc = ASSOC_LEFT
-            elif ap == 'right':
-                assoc = ASSOC_RIGHT
-    return (ProductionRHS(nodes[0]), assoc, prior)
-
-
-def act_production_set(_, nodes):
-    e1, e2 = nodes
-    e1.extend(e2)
-    return e1
-
-
 pg_actions = {
-    "Assoc": pass_value,
-    "AssocPrior": [pass_nochange, pass_nochange, act_assoc_prior],
-    "Prior": lambda _, value: int(value),
-    "Recognizer": [act_recognizer_str, act_recognizer_regex],
-    "Name": pass_nochange,
-    "GSymbol": [lambda _, nodes: Reference(nodes[0]),
-                pass_single],
-    "Sequence": collect,
-    "ProductionRHS": [act_production_rhs_simple,
-                      act_production_rhs,
-                      act_production_rhs_simple,
-                      act_production_rhs],
-    "ProductionRHSs": collect_sep,
+    "Grammar": pass_single,
+    "Rules": [act_rules, pass_single],
+    "Rule": pass_single,
+
+    "ProductionRule": act_production_rule,
+    "ProductionRuleRHS": collect_sep,
     "Production": act_production,
-    "TermProduction": act_term_production,
-    "TermRule": [pass_value, pass_value, pass_single],
-    "TermRules": [pass_nochange, act_term_rules],
-    "ProductionSet": [act_production_set, act_production_set,
-                      pass_single, pass_single],
-    "Grammar": pass_single
+
+    "TerminalRule": act_term_rule,
+
+    "ProductionDisambiguationRule": pass_single,
+    "ProductionDisambiguationRules": collect_sep,
+
+    "TerminalDisambiguationRule": pass_single,
+    "TerminalDisambiguationRules": collect_sep,
+
+    "GrammarSymbols": collect,
+    "GrammarSymbol": [lambda _, nodes: Reference(nodes[0]),
+                      pass_single],
+
+    "Recognizer": [act_recognizer_str, act_recognizer_regex],
+
+    # Terminals
+    "Name": pass_nochange,
+    "Prior": lambda _, value: int(value),
+    "left": pass_nochange,
+    "right": pass_nochange,
+    "dynamic": pass_nochange,
+    "prefer": pass_nochange,
+    "finish": pass_nochange
+
 }
