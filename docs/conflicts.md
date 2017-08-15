@@ -220,6 +220,103 @@ This change in the grammar resolves all ambiguities and our grammar is now
 LR(1).
 
 
+## Dynamic disambiguation / conflict resolution
+
+Priority and associativity based conflict resolution is of static nature, i.e.
+it is compiled during LR table calculation and doesn't depend on the parsed
+input.
+
+There are sometimes situations when parsing decision depends on the input.
+
+For example, lets say that we should parse arithmetic expression but our
+operation priority increase for operations that are introduced later in the
+input.
+
+```
+1 + 2 * 3 - 4 + 5
+```
+Should be parsed as:
+
+```
+((1 + (2 * (3 - 4))) + 5)
+```
+
+While
+
+```
+1 - 2 + 3 * 4 + 5
+```
+
+should be parsed as:
+
+```
+(1 - ((2 + (3 * 4)) + 5))
+```
+
+As you can see, operations that appears later in the input are of higher priority.
+
+In parglare you can implement this dynamic behavior in two steps:
+
+First, mark productions in your grammar by `dynamic` rule:
+
+```
+E: E '+' E {dynamic}
+ | E '-' E {dynamic}
+ | E '*' E {dynamic}
+ | /\d+/;
+```
+
+This tells parglare that those production are candidates for dynamic ambiguity
+resolution.
+
+Second step is to register function that will be used for resolution during
+parser construction. This function operates as a filter for actions in a given
+state and lookahead token. It receives a list of actions and a token ahead and
+returns a reduced list of actions. Usually, this function will maintain some
+kind of state. To initialize its state at the beginning it is called with (None,
+None) as parameters.
+
+```
+parser = Parser(grammar, dynamic_disambiguation=custom_disambiguation)
+```
+
+Where resolution function is of the following form:
+
+```
+def custom_disambiguation(actions, token_ahead):
+    """Make first operation that appears in the input as lower priority.
+    This demonstrates how priority rule can change dynamically depending
+    on the input.
+    """
+    global operations
+
+    # At the start of parsing this function is called with actions set to
+    # None to give a change for the strategy to initialize.
+    if actions is None:
+        operations = []
+        return
+
+    # Find symbol of operation in reduction production (operation to the left)
+    redop = [a for a in actions if a.action == REDUCE][0]
+    redop_symbol = redop.prod.rhs[1]
+
+    if not operations:
+        # At the beginning
+        # Add the first operation from reduction
+        operations.append(redop_symbol)
+
+    if token_ahead.symbol not in operations:
+        operations.append(token_ahead.symbol)
+
+    if operations.index(token_ahead.symbol) > operations.index(redop_symbol):
+        return [actions[0]]
+    else:
+        return [redop]
+```
+
+For details see [test_dynamic_disambiguation.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation.py).
+
+
 ## Lexical ambiguities
 
 There is another source of ambiguities.

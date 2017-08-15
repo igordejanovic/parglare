@@ -43,7 +43,7 @@ def custom_disambiguation(actions, token_ahead):
     redop_symbol = redop.prod.rhs[1]
 
     if not operations:
-        # At the beggining
+        # At the beginning
         # Add the first operation from reduction
         operations.append(redop_symbol)
 
