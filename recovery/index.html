@@ -226,10 +226,15 @@ following attributes:</p>
 <li><code>position</code> - absolute position of the error,</li>
 <li><code>length</code> - the length of erroneous part of input,</li>
 <li><code>message</code> - error message.</li>
+<li><code>input_str</code> - The input string/list of objects.</li>
+<li><code>expected_symbol</code> - A set of grammar symbols expected at the location.</li>
 </ul>
-<p>which are supplied to the <code>Error</code> constructor to build a new instance.</p>
+<p>which are supplied to the <code>Error</code> constructor to build a new instance. Either a
+<code>message</code> or <code>input_str</code> with <code>expected_symbols</code> should be provided. If
+<code>message</code> is given it is used as a string representation of the error, otherwise
+the message is constructed based on other parameters.</p>
 <p><code>position</code> can be converted to <code>line, column</code> by calling
-<code>parglare.pos_to_linecol(input, position)</code>.</p>
+<code>parglare.pos_to_line_col(input, position)</code>.</p>
 <h2 id="custom-recovery-strategy">Custom recovery strategy<a class="headerlink" href="#custom-recovery-strategy" title="Permanent link">&para;</a></h2>
 <p>To provide a custom strategy for error recovery set <code>error_recovery</code> to a Python
 function. This function should have the following signature:</p>
@@ -241,8 +246,8 @@ function. This function should have the following signature:</p>
    configuration, not for altering the state,</li>
 <li><code>input</code> - the input string/list,</li>
 <li><code>position</code> - the position in the input where the error has been found,</li>
-<li><code>expected_symbols</code> - a dict of grammar symbols that are expected at this
-   position keyed by symbol names.</li>
+<li><code>expected_symbols</code> - a set grammar symbols that are expected at this
+   position.</li>
 </ul>
 <p>The recovery function should return the tuple <code>(error, position, token)</code>.
 <code>error</code> should be an instance of <code>parglare.Error</code> class or <code>None</code> if no error

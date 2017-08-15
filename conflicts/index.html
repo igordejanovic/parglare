@@ -114,6 +114,8 @@
                 
                     <li><a class="toctree-l4" href="#resolving-conflicts">Resolving conflicts</a></li>
                 
+                    <li><a class="toctree-l4" href="#dynamic-disambiguation-conflict-resolution">Dynamic disambiguation / conflict resolution</a></li>
+                
                     <li><a class="toctree-l4" href="#lexical-ambiguities">Lexical ambiguities</a></li>
                 
             
@@ -395,6 +397,82 @@ reduced/calculated first.</p>
 </div>
 <p>This change in the grammar resolves all ambiguities and our grammar is now
 LR(1).</p>
+<h2 id="dynamic-disambiguation-conflict-resolution">Dynamic disambiguation / conflict resolution<a class="headerlink" href="#dynamic-disambiguation-conflict-resolution" title="Permanent link">&para;</a></h2>
+<p>Priority and associativity based conflict resolution is of static nature, i.e.
+it is compiled during LR table calculation and doesn't depend on the parsed
+input.</p>
+<p>There are sometimes situations when parsing decision depends on the input.</p>
+<p>For example, lets say that we should parse arithmetic expression but our
+operation priority increase for operations that are introduced later in the
+input.</p>
+<pre><code>1 + 2 * 3 - 4 + 5
+</code></pre>
+
+<p>Should be parsed as:</p>
+<pre><code>((1 + (2 * (3 - 4))) + 5)
+</code></pre>
+
+<p>While</p>
+<pre><code>1 - 2 + 3 * 4 + 5
+</code></pre>
+
+<p>should be parsed as:</p>
+<pre><code>(1 - ((2 + (3 * 4)) + 5))
+</code></pre>
+
+<p>As you can see, operations that appears later in the input are of higher priority.</p>
+<p>In parglare you can implement this dynamic behavior in two steps:</p>
+<p>First, mark productions in your grammar by <code>dynamic</code> rule:</p>
+<pre><code>E: E '+' E {dynamic}
+ | E '-' E {dynamic}
+ | E '*' E {dynamic}
+ | /\d+/;
+</code></pre>
+
+<p>This tells parglare that those production are candidates for dynamic ambiguity
+resolution.</p>
+<p>Second step is to register function that will be used for resolution during
+parser construction. This function operates as a filter for actions in a given
+state and lookahead token. It receives a list of actions and a token ahead and
+returns a reduced list of actions. Usually, this function will maintain some
+kind of state. To initialize its state at the beginning it is called with (None,
+None) as parameters.</p>
+<pre><code>parser = Parser(grammar, dynamic_disambiguation=custom_disambiguation)
+</code></pre>
+
+<p>Where resolution function is of the following form:</p>
+<pre><code>def custom_disambiguation(actions, token_ahead):
+    &quot;&quot;&quot;Make first operation that appears in the input as lower priority.
+    This demonstrates how priority rule can change dynamically depending
+    on the input.
+    &quot;&quot;&quot;
+    global operations
+
+    # At the start of parsing this function is called with actions set to
+    # None to give a change for the strategy to initialize.
+    if actions is None:
+        operations = []
+        return
+
+    # Find symbol of operation in reduction production (operation to the left)
+    redop = [a for a in actions if a.action == REDUCE][0]
+    redop_symbol = redop.prod.rhs[1]
+
+    if not operations:
+        # At the beginning
+        # Add the first operation from reduction
+        operations.append(redop_symbol)
+
+    if token_ahead.symbol not in operations:
+        operations.append(token_ahead.symbol)
+
+    if operations.index(token_ahead.symbol) &gt; operations.index(redop_symbol):
+        return [actions[0]]
+    else:
+        return [redop]
+</code></pre>
+
+<p>For details see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation.py">test_dynamic_disambiguation.py</a>.</p>
 <h2 id="lexical-ambiguities">Lexical ambiguities<a class="headerlink" href="#lexical-ambiguities" title="Permanent link">&para;</a></h2>
 <p>There is another source of ambiguities.</p>
 <p>Parglare uses integrated scanner, thus tokens are determined on the fly. This
