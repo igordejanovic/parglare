@@ -6,7 +6,8 @@ from collections import OrderedDict
 from .grammar import Grammar, EMPTY, AUGSYMBOL, EOF, STOP
 from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, DisambiguationError, \
-    disambiguation_error, nomatch_error, SRConflicts, RRConflicts
+    DynamicDisambiguationConflict, disambiguation_error, \
+    nomatch_error, SRConflicts, RRConflicts
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -30,7 +31,8 @@ class Parser(object):
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_layout=False, ws='\n\t ', default_actions=True,
                  tables=LALR, layout=False, position=False,
-                 prefer_shifts=False, error_recovery=False):
+                 prefer_shifts=False, error_recovery=False,
+                 dynamic_disambiguation=None):
         self.grammar = grammar
         self.start_production = start_production
         self.sem_actions = actions if actions else {}
@@ -60,6 +62,7 @@ class Parser(object):
         self.prefer_shifts = prefer_shifts
 
         self.error_recovery = error_recovery
+        self.dynamic_disambiguation = dynamic_disambiguation
 
         from .closure import LR_0, LR_1
         from .tables import create_table
@@ -77,12 +80,30 @@ class Parser(object):
     def _check_parser(self):
         if self.table.sr_conflicts and not self.prefer_shifts:
             self.print_debug()
-            raise SRConflicts(self.table.sr_conflicts)
+            if self.dynamic_disambiguation:
+                unhandled_conflicts = []
+                for src in self.table.sr_conflicts:
+                    if not src.dynamic:
+                        unhandled_conflicts.append(src)
+            else:
+                unhandled_conflicts = self.table.sr_conflicts
+
+            if unhandled_conflicts:
+                raise SRConflicts(unhandled_conflicts)
 
         # Reduce/Reduce conflicts are fatal for LR parsing
         if self.table.rr_conflicts:
             self.print_debug()
-            raise RRConflicts(self.table.rr_conflicts)
+            if self.dynamic_disambiguation:
+                unhandled_conflicts = []
+                for rrc in self.table.rr_conflicts:
+                    if not rrc.dynamic:
+                        unhandled_conflicts.append(rrc)
+            else:
+                unhandled_conflicts = self.table.rr_conflicts
+
+            if unhandled_conflicts:
+                raise RRConflicts(unhandled_conflicts)
 
     def print_debug(self):
         if self.layout and self.debug_layout:
@@ -114,6 +135,9 @@ class Parser(object):
 
         self.errors = []
         self.current_error = None
+
+        if self.dynamic_disambiguation:
+            self.dynamic_disambiguation(None, None)
 
         state_stack = [StackNode(self.table.states[0], position, 0, None,
                                  None)]
@@ -218,11 +242,25 @@ class Parser(object):
                 raise ParseError(file_name, input_str, position,
                                  nomatch_error(actions.keys()))
 
-            # Use the first action -- SHIFT if SHIFT is available or the only
-            # REDUCE otherwise. This parser would raise exception during
-            # contstruction if there are R/R conflicts or if there are S/R
-            # conflicts and prefer_shifts strategy is not selected. Thus, we
-            # are safe to get the first action.
+            # Dynamic disambiguation
+            if self.dynamic_disambiguation and \
+               len(acts) > 1 and ntok.symbol in cur_state.dynamic:
+                acts = self.dynamic_disambiguation(acts, ntok)
+
+                # If after dynamic disambiguation we still have at least one
+                # shift and non-empty reduction or multiple non-empty
+                # reductions raise exception.
+                if len([a for a in acts
+                        if (a.action is SHIFT)
+                        or ((a.action is REDUCE) and len(a.prod.rhs))]) > 1:
+                    raise DynamicDisambiguationConflict(cur_state, ntok, acts)
+
+            # If dynamic disambiguation is disabled either globaly by not
+            # giving disambiguation function or localy by not marking
+            # any poduction dynamic for this state take the first action.
+            # First action is either SHIFT while there might be empty
+            # reductions, or it is the only reduction.
+            # Otherwise, parser construction should raise an error.
             act = acts[0]
 
             if act.action is SHIFT:
@@ -605,9 +643,23 @@ class LRState(object):
     """LR State is a set of LR items and a dict of LR automata actions and
     gotos.
 
+    Attributes:
+    grammar(Grammar):
+    state_id(int):
+    symbol(GrammarSymbol):
+    items(list of LRItem):
+    actions(OrderedDict): Keys are grammar terminal symbols, values are
+        lists of Action instances.
+    goto(OrderedDict): Keys are grammar non-terminal symbols, values are
+        instances of LRState.
+    dynamic(set of terminal symbols): If terminal symbol is in set dynamic
+        ambiguity strategy callable is called for the terminal symbol
+        lookahead.
+    finish_flags:
+
     """
     __slots__ = ['grammar', 'state_id', 'symbol', 'items',
-                 'actions', 'gotos', 'finish_flags',
+                 'actions', 'gotos', 'dynamic', 'finish_flags',
                  '_per_next_symbol', '_max_prior_per_symbol']
 
     def __init__(self, grammar, state_id, symbol, items):
@@ -618,6 +670,7 @@ class LRState(object):
 
         self.actions = OrderedDict()
         self.gotos = OrderedDict()
+        self.dynamic = set()
 
     def __eq__(self, other):
         """Two states are equal if their kernel items are equal."""

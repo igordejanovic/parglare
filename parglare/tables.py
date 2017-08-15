@@ -318,7 +318,13 @@ class LRTable(object):
         self.sr_conflicts = []
         self.rr_conflicts = []
         for state in self.states:
+
             for term, actions in state.actions.items():
+
+                # Mark state for dynamic disambiguation
+                if term.dynamic:
+                    state.dynamic.add(term)
+
                 if len(actions) > 1:
                     if actions[0].action in [SHIFT, ACCEPT]:
                         # Create SR conflicts for each S-R pair of actions
@@ -327,12 +333,22 @@ class LRTable(object):
                         # handling of EMPTY reduce in order to avoid infinite
                         # looping.
                         for r_act in actions[1:]:
+
+                            # Mark state for dynamic disambiguation
+                            if r_act.prod.dynamic:
+                                state.dynamic.add(term)
+
                             if len(r_act.prod.rhs):
                                 self.sr_conflicts.append(
                                     SRConflict(state, term,
                                                [x.prod for x in actions[1:]]))
                     else:
                         prods = [x.prod for x in actions if len(x.prod.rhs)]
+
+                        # Mark state for dynamic disambiguation
+                        if any([p.dynamic for p in prods]):
+                            state.dynamic.add(term)
+
                         empty_prods = [x.prod for x in actions
                                        if not len(x.prod.rhs)]
                         if len(empty_prods) > 1 or len(prods) > 1:

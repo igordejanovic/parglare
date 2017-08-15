@@ -3,8 +3,8 @@ from __future__ import unicode_literals, print_function
 import sys
 import re
 from parglare.exceptions import GrammarError
-from parglare.actions import pass_single, pass_value, pass_nochange, \
-    collect, collect_sep
+from parglare.actions import pass_single, pass_nochange, collect, \
+    collect_sep
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -63,6 +63,12 @@ class Terminal(GrammarSymbol):
 
     Attributes:
     prior(int): Priority used for lexical disambiguation.
+    dynamic(bool): Should dynamic disambiguation be called to resolve conflict
+        involving this terminal.
+    finish(bool): Used for optimization. If this terminal is `finish` no other
+        recognizers will be checked if this succeeds.
+    prefer(bool): Prefer this recognizer in case of multiple recognizers match
+        at the same place and implicit disambiguation doesn't resolve.
 
     recognizer(callable): Called with input list of objects and position in the
         stream. Should return a sublist of recognized objects. The sublist
@@ -73,6 +79,7 @@ class Terminal(GrammarSymbol):
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
         self.finish = False
         self.prefer = False
+        self.dynamic = False
         super(Terminal, self).__init__(name)
 
 
@@ -168,6 +175,7 @@ class Production(object):
         self.rhs = rhs if rhs else ProductionRHS()
         self.assoc = assoc
         self.prior = prior
+        self.dynamic = dynamic
 
     def __str__(self):
         if hasattr(self, 'prod_id'):
@@ -638,10 +646,13 @@ def act_term_rule(_, nodes):
                 term.finish = True
             elif t == 'prefer':
                 term.prefer = True
+            elif t == 'dynamic':
+                term.dynamic = True
             else:
                 print(t)
                 assert False
-    return [Production(term, ProductionRHS([rhs_term]), prior=term.prior)]
+    return [Production(term, ProductionRHS([rhs_term]), dynamic=term.dynamic,
+                       prior=term.prior)]
 
 
 # def act_assoc_prior(_, nodes):

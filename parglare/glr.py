@@ -38,6 +38,10 @@ class GLRParser(Parser):
         self.errors = []
         self.current_error = None
 
+        # Initialize dynamic disambiguation
+        if self.dynamic_disambiguation:
+            self.dynamic_disambiguation(None, None)
+
         self.last_position = 0
         self.expected = set()
         self.empty_reductions_results = {}
@@ -186,18 +190,25 @@ class GLRParser(Parser):
 
             for token in tokens:
                 symbol = token.symbol
+                symbol_actions = actions.get(symbol, [])
+
+                # Dynamic disambiguation
+                if self.dynamic_disambiguation and \
+                   len(symbol_actions) > 1 and symbol in state.dynamic:
+                    symbol_actions = \
+                        self.dynamic_disambiguation(symbol_actions, token)
 
                 # Do all reductions for this head and tokens
                 context.symbol = symbol
                 reduce_head = head.for_token(token)
                 reduce_head.next_position = position
                 reduce_head.next_layout_content = layout_content
-                reduce_actions = [a for a in actions.get(symbol, [])
+                reduce_actions = [a for a in symbol_actions
                                   if a.action is REDUCE]
                 for action in reduce_actions:
                     reduce(reduce_head, action.prod, token, context)
 
-                symbol_act = actions.get(token.symbol, [None])[0]
+                symbol_act = symbol_actions[0] if symbol_actions else None
                 if symbol_act and symbol_act.action is SHIFT:
                     self.add_to_heads_for_shift(reduce_head)
                 elif not reduce_actions:
