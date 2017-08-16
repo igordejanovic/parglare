@@ -100,9 +100,10 @@ recognize one or more digits as a number.
 ### Custom recognizers
 
 If you are parsing arbitrary input (non-textual) you'll have to provide your own
-recognizers. In the grammar, you just have to reference your terminal symbol but
-you don't have to provide the definition. You will provide missing recognizers
-during grammar instantiation from Python.
+recognizers. In the grammar, you just have to provide terminal symbol without
+body, i.e. without string or regex recognizer. You will provide missing
+recognizers during grammar instantiation from Python. Although you don't supply
+body of the terminal you can define [disambiguation rules]() as usual.
 
 Lets say that we have a list of integers (real list of Python ints, not a text
 with numbers) and we have some weird requirement to break those numbers
@@ -111,6 +112,7 @@ according to the following grammar:
       Numbers: all_less_than_five  ascending  all_less_than_five EOF;
       all_less_than_five: all_less_than_five  int_less_than_five
                         | int_less_than_five;
+      int_less_than_five: ;  // <--- This terminal has no recognizer in the grammar
 
 
 So, we should first match all numbers less than five and collect those, than we
@@ -120,7 +122,7 @@ defined in Python and passed to grammar construction. `int_less_than_five` will
 recognize Python integer that is less than five. `ascending` will recognize a
 sublist of integers in ascending order.
 
-For more details on the usage see [this test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_parse_list_of_objects.py).
+For more details on the usage see [this test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py).
 
 More on this topic will be written in a separate section.
 

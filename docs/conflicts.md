@@ -352,3 +352,8 @@ For example:
 or:
 
       number = /\d+/ {prefer};
+
+In addition, you can also specify this terminal to take a part in dynamic
+disambiguation:
+
+      number = /\d+/ {dynamic};

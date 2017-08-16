@@ -65,4 +65,4 @@ from the input.
 !!! note
 
     If you want more information you could investigate
-    [test_parse_list_of_objects.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_parse_list_of_objects.py) test.
+    [test_recognizers.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py) test.

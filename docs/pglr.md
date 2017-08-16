@@ -127,23 +127,6 @@ quick intro (click on the image to enlarge):
 [![Calc LR automata](./images/calc.pg.dot.png)](./images/calc.pg.dot.png)
 
 
-!!! note
-
-    If you are parsing non-textual input and you are
-    using [custom recognizers](./recognizers.md) then the grammar will not be
-    valid from the point of view of pglr command as the referenced custom
-    recognizers are missing (they are supplied during `Grammar` instantiation). To
-    visualize PDA automata in this case you can make a set of dummy recognizers in
-    the grammar and comment them out during normal operation but remove the
-    comment when running `pglr viz` command.
-
-        /*  <--- commented out during normal operation. Remove block comment for
-                 visualization
-        my_recognizer1 = "dummy";
-        my_recognizer2 = "dummy";
-        */
-
-
 
 ## Tracing GLR parsing
 
