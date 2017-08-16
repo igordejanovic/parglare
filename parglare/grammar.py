@@ -284,7 +284,10 @@ class Grammar(object):
                         new_symbol = prev_symbol
 
                 if isinstance(new_symbol, Terminal):
-                    self._term_to_lhs[p.rhs[0].name] = new_symbol
+                    if p.rhs:
+                        self._term_to_lhs[p.rhs[0].name] = new_symbol
+                    else:
+                        self._term_to_lhs[new_symbol.name] = new_symbol
                 else:
                     for k, v in self._term_to_lhs.items():
                         if v.name == new_symbol.name:
@@ -534,7 +537,10 @@ pg_productions = [
     [PRODUCTION, [GSYMBOLS, '{', PROD_DIS_RULES, '}']],
 
     [TERMINAL_RULE, [NAME, ':', RECOGNIZER, ';'], ASSOC_LEFT, 15],
+    [TERMINAL_RULE, [NAME, ':', ';'], ASSOC_LEFT, 15],
     [TERMINAL_RULE, [NAME, ':', RECOGNIZER, '{', TERM_DIS_RULES, '}', ';'],
+     ASSOC_LEFT, 15],
+    [TERMINAL_RULE, [NAME, ':', '{', TERM_DIS_RULES, '}', ';'],
      ASSOC_LEFT, 15],
 
     [PROD_DIS_RULE, ['left']],
@@ -651,39 +657,28 @@ def act_term_rule(_, nodes):
             else:
                 print(t)
                 assert False
-    return [Production(term, ProductionRHS([rhs_term]), dynamic=term.dynamic,
-                       prior=term.prior)]
+    return [Production(term, ProductionRHS([rhs_term]))]
 
 
-# def act_assoc_prior(_, nodes):
-#     res = []
-#     res.extend(nodes[0])
-#     res.extend(nodes[2])
-#     return res
+def act_term_rule_empty_body(_, nodes):
+    name = nodes[0]
 
-
-# def act_term_rules(_, nodes):
-#     res = nodes[0]
-#     res.append(nodes[2])
-#     return res
-
-
-# def act_production_rhs_simple(_, nodes):
-#     return (ProductionRHS(nodes[0]),)
-
-
-# def act_production_rhs(_, nodes):
-#     assoc = ASSOC_NONE
-#     prior = DEFAULT_PRIORITY
-#     for ap in nodes[2]:
-#         if type(ap) is int:
-#             prior = ap
-#         else:
-#             if ap == 'left':
-#                 assoc = ASSOC_LEFT
-#             elif ap == 'right':
-#                 assoc = ASSOC_RIGHT
-#     return (ProductionRHS(nodes[0]), assoc, prior)
+    term = Terminal(name)
+    term.recognizer = None
+    if len(nodes) > 3:
+        for t in nodes[3]:
+            if type(t) is int:
+                term.prior = t
+            elif t == 'finish':
+                term.finish = True
+            elif t == 'prefer':
+                term.prefer = True
+            elif t == 'dynamic':
+                term.dynamic = True
+            else:
+                print(t)
+                assert False
+    return [Production(term, ProductionRHS([]))]
 
 
 def act_recognizer_str(_, nodes):
@@ -710,7 +705,10 @@ pg_actions = {
     "ProductionRuleRHS": collect_sep,
     "Production": act_production,
 
-    "TerminalRule": act_term_rule,
+    "TerminalRule": [act_term_rule,
+                     act_term_rule_empty_body,
+                     act_term_rule,
+                     act_term_rule_empty_body],
 
     "ProductionDisambiguationRule": pass_single,
     "ProductionDisambiguationRules": collect_sep,

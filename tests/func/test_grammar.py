@@ -138,3 +138,22 @@ def test_no_terminal_associavitity():
         Grammar.from_string(grammar)
 
     assert 'Error at position 3,16' in str(e)
+
+
+def test_terminal_empty_body():
+    """
+    Test that terminals may have empty bodies (when defined using
+    recognizers)
+    """
+    grammar = """
+    S: A | B;
+    A: {15};
+    B: ;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    a = g.get_terminal('A')
+    assert a.prior == 15
+    b = g.get_terminal('B')
+    assert b.recognizer is None
