@@ -151,7 +151,7 @@ def test_terminal_empty_body():
     B: ;
     """
 
-    g = Grammar.from_string(grammar)
+    g = Grammar.from_string(grammar, recognizers={'B': None, 'A': None})
 
     a = g.get_terminal('A')
     assert a.prior == 15

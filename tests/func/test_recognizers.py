@@ -1,6 +1,6 @@
 import pytest  # noqa
 from parglare import Grammar, Parser
-from parglare.exceptions import ParseError
+from parglare.exceptions import ParseError, GrammarError
 from parglare.actions import pass_single, pass_nochange, collect
 
 
@@ -10,6 +10,8 @@ def test_parse_list_of_integers():
     Numbers: all_less_than_five EOF;
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
+
+    int_less_than_five:;
     """
 
     def int_less_than_five(input, pos):
@@ -45,10 +47,6 @@ def test_parse_list_of_integers_lexical_disambiguation():
         if input[pos] < 5:
             return [input[pos]]
 
-    def int_two(input, pos):
-        if input[pos] == 2:
-            return [input[pos]]
-
     def ascending(input, pos):
         "Match sublist of ascending elements. Matches at least one."
         last = pos + 1
@@ -69,11 +67,12 @@ def test_parse_list_of_integers_lexical_disambiguation():
     Numbers: all_less_than_five ascending all_less_than_five EOF;
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
+    int_less_than_five:;
+    ascending:;
     """
 
     recognizers = {
         'int_less_than_five': int_less_than_five,
-        'int_two': int_two,
         'ascending': ascending
     }
     g = Grammar.from_string(grammar, recognizers=recognizers)
@@ -106,3 +105,37 @@ def test_parse_list_of_integers_lexical_disambiguation():
     p = parser.parse(ints)
 
     assert p == [[3, 4], [1, 4, 7, 8, 9], [3]]
+
+
+def test_terminals_with_emtpy_bodies_require_recognizers():
+    """
+    If there are terminals with empty bodies in the grammar then recognizers
+    must be given and there must be a recognizer for each terminal missing
+    in-grammar recognizer.
+    """
+
+    grammar = """
+    S: A | B | C;
+    A: {15};
+    B: ;
+    C: "c";
+    """
+
+    with pytest.raises(GrammarError):
+        g = Grammar.from_string(grammar)
+
+    recognizers = {
+        'B': lambda input, pos: None,
+    }
+
+    with pytest.raises(GrammarError):
+        g = Grammar.from_string(grammar, recognizers=recognizers)
+
+    recognizers['A'] = lambda input, pos: None
+
+    g = Grammar.from_string(grammar, recognizers=recognizers)
+
+    assert g
+
+
+# def test_terminal_with_emtpy_body_delegate_to_recognizers():

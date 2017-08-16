@@ -256,6 +256,20 @@ class Grammar(object):
         self._by_name['STOP'] = STOP
         self.terminals.update([EMPTY, EOF, STOP])
 
+        # Connect recognizers
+        for term in self.terminals:
+            if term.recognizer is None:
+                if not self.recognizers:
+                    raise GrammarError(
+                        'Terminal "{}" has no recognizer defined '
+                        'and no recognizers are given during parser '
+                        'construction.'.format(term.name))
+                if term.name not in self.recognizers:
+                    raise GrammarError(
+                        'Terminal "{}" has no recognizer defined.'
+                        .format(term.name))
+                term.recognizer = self.recognizers[term.name]
+
         self._resolve_references()
 
         # At the end remove terminal productions as those are not the real
@@ -336,23 +350,9 @@ class Grammar(object):
 
                     else:
                         # Element of RHS must be either a Terminal, a
-                        # NonTerminal or a Reference. Replace it by the
-                        # collected LHS elements just to be sure that we have a
-                        # single instance of each in the grammar.
+                        # NonTerminal or a Reference.
                         assert isinstance(ref, NonTerminal) \
                             or isinstance(ref, Reference)
-                        # All non-terminals must already be registered in
-                        # `self._by_name` as they must be found as LHS of some
-                        # of the productions.
-                        if isinstance(ref, Reference):
-                            # The last option is that the reference is a name
-                            # of user supplied Recognizer. If so create a
-                            # terminal for it.
-                            if ref.name in self.recognizers:
-                                ref_sym = Terminal(ref.name,
-                                                   self.recognizers[ref.name])
-                                self._by_name[ref.name] = ref_sym
-                                self.terminals.add(ref_sym)
 
                 if not ref_sym:
                     raise GrammarError(
