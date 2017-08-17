@@ -423,10 +423,11 @@ input.</p>
 <p>As you can see, operations that appears later in the input are of higher priority.</p>
 <p>In parglare you can implement this dynamic behavior in two steps:</p>
 <p>First, mark productions in your grammar by <code>dynamic</code> rule:</p>
-<pre><code>E: E '+' E {dynamic}
- | E '-' E {dynamic}
- | E '*' E {dynamic}
+<pre><code>E: E op_sum E {dynamic}
+ | E op_mul E {dynamic}
  | /\d+/;
+op_sum: '+' {dynamic};
+op_mul: '*' {dynamic};
 </code></pre>
 
 <p>This tells parglare that those production are candidates for dynamic ambiguity
@@ -437,11 +438,11 @@ state and lookahead token. It receives a list of actions and a token ahead and
 returns a reduced list of actions. Usually, this function will maintain some
 kind of state. To initialize its state at the beginning it is called with (None,
 None) as parameters.</p>
-<pre><code>parser = Parser(grammar, dynamic_disambiguation=custom_disambiguation)
+<pre><code>parser = Parser(grammar, dynamic_filter=dynamic_filter)
 </code></pre>
 
 <p>Where resolution function is of the following form:</p>
-<pre><code>def custom_disambiguation(actions, token_ahead):
+<pre><code>def custom_disambiguation_filter(action, token, production, subresults, state):
     &quot;&quot;&quot;Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
@@ -450,29 +451,55 @@ None) as parameters.</p>
 
     # At the start of parsing this function is called with actions set to
     # None to give a change for the strategy to initialize.
-    if actions is None:
+    if action is None:
         operations = []
         return
 
-    # Find symbol of operation in reduction production (operation to the left)
-    redop = [a for a in actions if a.action == REDUCE][0]
-    redop_symbol = redop.prod.rhs[1]
+    actions = state.actions[token.symbol]
 
-    if not operations:
-        # At the beginning
-        # Add the first operation from reduction
-        operations.append(redop_symbol)
+    # Lookahead operation
+    shift_op = token.symbol
 
-    if token_ahead.symbol not in operations:
-        operations.append(token_ahead.symbol)
+    if action is SHIFT:
+        if shift_op not in operations:
+            operations.append(shift_op)
+        if len(actions) == 1:
+            return True
+        red_op = [a for a in actions if a.action is REDUCE][0].prod.rhs[1]
+        return operations.index(shift_op) &gt; operations.index(red_op)
 
-    if operations.index(token_ahead.symbol) &gt; operations.index(redop_symbol):
-        return [actions[0]]
-    else:
-        return [redop]
+    elif action is REDUCE:
+
+        # Current reduction operation
+        red_op = production.rhs[1]
+        if red_op not in operations:
+            operations.append(red_op)
+
+        if len(actions) == 1:
+            return True
+
+        # If lookahead operation is not processed yet is is of higer priority
+        # so do not reduce.
+        # If lookahead is in operation and its index is higher do not reduce.
+        return (shift_op in operations
+                and (operations.index(shift_op)
+                     &lt;= operations.index(red_op)))
 </code></pre>
 
-<p>For details see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation.py">test_dynamic_disambiguation.py</a>.</p>
+<p>This function is a predicate that will be called for each action that is dynamic
+(SHIFT action for dynamic terminal and REDUCE action for dynamic productions).
+You are provided with enough information to make a custom decision whether to
+perform or reject the operation.</p>
+<p>Parameters are:</p>
+<ul>
+<li><code>action</code> - either SHIFT or REDUCE constant from <code>parglare</code> module,</li>
+<li><code>token</code> - lookahead token,</li>
+<li><code>production</code> - a production to be reduced. Valid only for REDUCE.</li>
+<li><code>subresults</code> - a subresults for the reduction. Valid only for REDUCE. The
+  length of this list must be equal to <code>len(production.rhs)</code>.</li>
+<li><code>state</code> - LR parser state.</li>
+</ul>
+<p>For details see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation_filters.py">test_dynamic_disambiguation_filters.py</a>.</p>
 <h2 id="lexical-ambiguities">Lexical ambiguities<a class="headerlink" href="#lexical-ambiguities" title="Permanent link">&para;</a></h2>
 <p>There is another source of ambiguities.</p>
 <p>Parglare uses integrated scanner, thus tokens are determined on the fly. This
@@ -500,6 +527,10 @@ matches of the same length.</p>
 </code></pre>
 <p>or:</p>
 <pre><code>  number = /\d+/ {prefer};
+</code></pre>
+<p>In addition, you can also specify this terminal to take a part in dynamic
+disambiguation:</p>
+<pre><code>  number = /\d+/ {dynamic};
 </code></pre>
               
             </div>

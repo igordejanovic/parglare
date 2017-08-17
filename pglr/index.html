@@ -323,22 +323,6 @@ software for that).</p>
 <p>This is an example of LR automata visualization for the <code>calc</code> grammar from the
 quick intro (click on the image to enlarge):</p>
 <p><a href="../images/calc.pg.dot.png"><img alt="Calc LR automata" src="../images/calc.pg.dot.png" /></a></p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you are parsing non-textual input and you are
-using <a href="../recognizers/">custom recognizers</a> then the grammar will not be
-valid from the point of view of pglr command as the referenced custom
-recognizers are missing (they are supplied during <code>Grammar</code> instantiation). To
-visualize PDA automata in this case you can make a set of dummy recognizers in
-the grammar and comment them out during normal operation but remove the
-comment when running <code>pglr viz</code> command.</p>
-<pre><code>/*  &lt;--- commented out during normal operation. Remove block comment for
-         visualization
-my_recognizer1 = "dummy";
-my_recognizer2 = "dummy";
-*/
-</code></pre>
-</div>
 <h2 id="tracing-glr-parsing">Tracing GLR parsing<a class="headerlink" href="#tracing-glr-parsing" title="Permanent link">&para;</a></h2>
 <p>GLR parser uses a graph-like stack (<em>Graph-Structured Stack - GSS</em>) and to
 understand what's going on during GLR operation GLR parser and <code>pglr</code> command
