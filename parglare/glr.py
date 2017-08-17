@@ -39,8 +39,10 @@ class GLRParser(Parser):
         self.current_error = None
 
         # Initialize dynamic disambiguation
-        if self.dynamic_disambiguation:
-            self.dynamic_disambiguation(None, None)
+        if self.dynamic_filter:
+            if self.debug:
+                print("\Initializing dynamic disambiguation.")
+            self.dynamic_filter(None, None, None, None, None)
 
         self.last_position = 0
         self.expected = set()
@@ -192,12 +194,6 @@ class GLRParser(Parser):
                 symbol = token.symbol
                 symbol_actions = actions.get(symbol, [])
 
-                # Dynamic disambiguation
-                if self.dynamic_disambiguation and \
-                   len(symbol_actions) > 1 and symbol in state.dynamic:
-                    symbol_actions = \
-                        self.dynamic_disambiguation(symbol_actions, token)
-
                 # Do all reductions for this head and tokens
                 context.symbol = symbol
                 reduce_head = head.for_token(token)
@@ -269,7 +265,12 @@ class GLRParser(Parser):
             # token.
             action = actions.get(symbol, [None])[0]
             if action and action.action is SHIFT:
-                self.shift(head, token, action.state, context)
+                if self.dynamic_filter and \
+                    not self._call_dynamic_filter(
+                            SHIFT, token, None, None, state):
+                        pass
+                else:
+                    self.shift(head, token, action.state, context)
             else:
                 # This should never happen as the shift possibility is checked
                 # during reducing and only those heads that can be shifted are
@@ -288,18 +289,23 @@ class GLRParser(Parser):
         prod_len = len(production.rhs)
         roots = []
         if not prod_len:
-            context.end_position = context.start_position
-            new_state = head.state.gotos[production.symbol]
-            new_head = GSSNode(
-                new_state,
-                start_position=context.start_position,
-                end_position=context.start_position,
-                layout_content=context.layout_content,
-                token_ahead=token_ahead)
+            if self.dynamic_filter and \
+                not self._call_dynamic_filter(
+                        REDUCE, token_ahead, production, [], head.state):
+                    pass
+            else:
+                context.end_position = context.start_position
+                new_state = head.state.gotos[production.symbol]
+                new_head = GSSNode(
+                    new_state,
+                    start_position=context.start_position,
+                    end_position=context.start_position,
+                    layout_content=context.layout_content,
+                    token_ahead=token_ahead)
 
-            self.merge_create_head(new_head, head, head,
-                                   context, [],
-                                   True, True, production)
+                self.merge_create_head(new_head, head, head,
+                                       context, [],
+                                       True, True, production)
         else:
             # Find roots of new heads by going backwards for prod_len steps
             # following all possible paths.
@@ -355,19 +361,26 @@ class GLRParser(Parser):
                     in enumerate(roots):
                 if debug:
                     print("\n\tReducing for root {}:".format(idx + 1))
-                new_state = root.state.gotos[production.symbol]
-                new_head = GSSNode(new_state,
-                                   start_position=root.next_position,
-                                   end_position=head.end_position,
-                                   layout_content=context.layout_content,
-                                   token_ahead=token_ahead)
-                new_head.next_layout_content = head.next_layout_content
-                new_head.next_position = head.next_position
 
-                self.merge_create_head(new_head, head, root,
-                                       context, subresults,
-                                       any_empty, all_empty,
-                                       production)
+                if self.dynamic_filter and \
+                    not self._call_dynamic_filter(REDUCE, token_ahead,
+                                                  production, subresults,
+                                                  head.state):
+                        pass
+                else:
+                    new_state = root.state.gotos[production.symbol]
+                    new_head = GSSNode(new_state,
+                                       start_position=root.next_position,
+                                       end_position=head.end_position,
+                                       layout_content=context.layout_content,
+                                       token_ahead=token_ahead)
+                    new_head.next_layout_content = head.next_layout_content
+                    new_head.next_position = head.next_position
+
+                    self.merge_create_head(new_head, head, root,
+                                           context, subresults,
+                                           any_empty, all_empty,
+                                           production)
                 if debug:
                     print()
 

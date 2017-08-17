@@ -1,13 +1,14 @@
 import pytest  # noqa
-from parglare import GLRParser, Grammar, Parser
+from parglare import GLRParser, Grammar, Parser, SHIFT, REDUCE
 from parglare.exceptions import SRConflicts
-from parglare.parser import REDUCE
 
 
 grammar = """
-E: E '+' E {dynamic}
- | E '*' E {dynamic}
+E: E op_sum E {dynamic}
+ | E op_mul E {dynamic}
  | /\d+/;
+op_sum: '+' {dynamic};
+op_mul: '*' {dynamic};
 """
 instr1 = '1 + 2 * 5 + 3'
 instr2 = '1 * 2 + 5 * 3'
@@ -25,7 +26,7 @@ g = Grammar.from_string(grammar)
 operations = []
 
 
-def custom_disambiguation(actions, token_ahead):
+def custom_disambiguation_filter(action, token, production, subresults, state):
     """Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
@@ -34,26 +35,39 @@ def custom_disambiguation(actions, token_ahead):
 
     # At the start of parsing this function is called with actions set to
     # None to give a change for the strategy to initialize.
-    if actions is None:
+    if action is None:
         operations = []
         return
 
-    # Find symbol of operation in reduction production (operation to the left)
-    redop = [a for a in actions if a.action == REDUCE][0]
-    redop_symbol = redop.prod.rhs[1]
+    actions = state.actions[token.symbol]
 
-    if not operations:
-        # At the beginning
-        # Add the first operation from reduction
-        operations.append(redop_symbol)
+    # Lookahead operation
+    shift_op = token.symbol
 
-    if token_ahead.symbol not in operations:
-        operations.append(token_ahead.symbol)
+    if action is SHIFT:
+        if shift_op not in operations:
+            operations.append(shift_op)
+        if len(actions) == 1:
+            return True
+        red_op = [a for a in actions if a.action is REDUCE][0].prod.rhs[1]
+        return operations.index(shift_op) > operations.index(red_op)
 
-    if operations.index(token_ahead.symbol) > operations.index(redop_symbol):
-        return [actions[0]]
-    else:
-        return [redop]
+    elif action is REDUCE:
+
+        # Current reduction operation
+        red_op = production.rhs[1]
+        if red_op not in operations:
+            operations.append(red_op)
+
+        if len(actions) == 1:
+            return True
+
+        # If lookahead operation is not processed yet is is of higer priority
+        # so do not reduce.
+        # If lookahead is in operation and its index is higher do not reduce.
+        return (shift_op in operations
+                and (operations.index(shift_op)
+                     <= operations.index(red_op)))
 
 
 def test_dynamic_disambiguation():
@@ -69,7 +83,7 @@ def test_dynamic_disambiguation():
     # But if we provide dynamic disambiguation filter
     # the conflicts can be handled at run-time.
     p = Parser(g, actions=actions,
-               dynamic_disambiguation=custom_disambiguation)
+               dynamic_filter=custom_disambiguation_filter)
 
     # * operation will be of higher priority as it appears later in the stream.
     result1 = p.parse(instr1)
@@ -86,7 +100,7 @@ def test_dynamic_disambiguation_glr():
     This tests GLR parsing.
     """
     p = GLRParser(g, actions=actions,
-                  dynamic_disambiguation=custom_disambiguation)
+                  dynamic_filter=custom_disambiguation_filter)
 
     # * operation will be of higher priority as it appears later in the stream.
     result1 = p.parse(instr1)

@@ -32,7 +32,7 @@ class Parser(object):
                  debug_layout=False, ws='\n\t ', default_actions=True,
                  tables=LALR, layout=False, position=False,
                  prefer_shifts=False, error_recovery=False,
-                 dynamic_disambiguation=None):
+                 dynamic_filter=None):
         self.grammar = grammar
         self.start_production = start_production
         self.sem_actions = actions if actions else {}
@@ -62,7 +62,7 @@ class Parser(object):
         self.prefer_shifts = prefer_shifts
 
         self.error_recovery = error_recovery
-        self.dynamic_disambiguation = dynamic_disambiguation
+        self.dynamic_filter = dynamic_filter
 
         from .closure import LR_0, LR_1
         from .tables import create_table
@@ -80,7 +80,7 @@ class Parser(object):
     def _check_parser(self):
         if self.table.sr_conflicts and not self.prefer_shifts:
             self.print_debug()
-            if self.dynamic_disambiguation:
+            if self.dynamic_filter:
                 unhandled_conflicts = []
                 for src in self.table.sr_conflicts:
                     if not src.dynamic:
@@ -94,7 +94,7 @@ class Parser(object):
         # Reduce/Reduce conflicts are fatal for LR parsing
         if self.table.rr_conflicts:
             self.print_debug()
-            if self.dynamic_disambiguation:
+            if self.dynamic_filter:
                 unhandled_conflicts = []
                 for rrc in self.table.rr_conflicts:
                     if not rrc.dynamic:
@@ -136,8 +136,10 @@ class Parser(object):
         self.errors = []
         self.current_error = None
 
-        if self.dynamic_disambiguation:
-            self.dynamic_disambiguation(None, None)
+        if self.dynamic_filter:
+            if self.debug:
+                print("\tInitializing dynamic disambiguation.")
+            self.dynamic_filter(None, None, None, None, None)
 
         state_stack = [StackNode(self.table.states[0], position, 0, None,
                                  None)]
@@ -243,9 +245,27 @@ class Parser(object):
                                  nomatch_error(actions.keys()))
 
             # Dynamic disambiguation
-            if self.dynamic_disambiguation and \
-               len(acts) > 1 and ntok.symbol in cur_state.dynamic:
-                acts = self.dynamic_disambiguation(acts, ntok)
+            if self.dynamic_filter:
+                dacts = []
+                for a in acts:
+                    if a.action is SHIFT:
+                        if self._call_dynamic_filter(
+                                SHIFT, ntok, None, None, cur_state):
+                            dacts.append(a)
+                    elif a.action is REDUCE:
+                        r_len = len(a.prod.rhs)
+                        if r_len:
+                            subresults = [x.result
+                                          for x in state_stack[-r_len:]]
+                        else:
+                            subresults = []
+                        if self._call_dynamic_filter(
+                                REDUCE, ntok, a.prod, subresults, cur_state):
+                            dacts.append(a)
+                    else:
+                        dacts.append(a)
+
+                acts = dacts
 
                 # If after dynamic disambiguation we still have at least one
                 # shift and non-empty reduction or multiple non-empty
@@ -523,6 +543,29 @@ class Parser(object):
             self.current_error = error
             return error, position + 1, None
 
+    def _call_dynamic_filter(self, action, token, production, subresults,
+                             state):
+        if (action is SHIFT and not token.symbol.dynamic)\
+           or (action is REDUCE and not production.dynamic):
+            return True
+
+        if self.debug:
+            print("\tCalling filter for action: {}, token={}{}{}".format(
+                "SHIFT" if action is SHIFT else "REDUCE", token,
+                ", prod={}".format(production) if action is REDUCE else "",
+                ", subresults={}".format(subresults)
+                if action is REDUCE else ""))
+
+        accepted = self.dynamic_filter(action, token, production, subresults,
+                                       state)
+        if self.debug:
+            if accepted:
+                print("\tAction accepted.")
+            else:
+                print("\tAction rejected.")
+
+        return accepted
+
 
 class Context:
     pass
@@ -563,6 +606,18 @@ class Action(object):
         else:
             p = ''
         return '%s%s' % (ac, ':%d' % p if p else '')
+
+    def __repr__(self):
+        return str(self)
+
+    @property
+    def dynamic(self):
+        if self.action is SHIFT:
+            return self.state.symbol.dynamic
+        elif self.action is REDUCE:
+            return self.prod.dynamic
+        else:
+            return False
 
 
 class LRItem(object):
@@ -794,6 +849,12 @@ class NodeTerm(Node):
         return '<Term(start={}, end={}, sym={}, val="{}")>'\
             .format(self.start_position, self.end_position, self.symbol,
                     self.value[:20])
+
+    def __iter__(self):
+        return iter([])
+
+    def __reversed__(self):
+        return iter([])
 
 
 class Token(object):
