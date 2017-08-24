@@ -1,6 +1,18 @@
 History
 -------
 
+- 2017-08-24 Version 0.3
+
+  - Dynamic disambiguation filters. Introducing `dynamic` disambiguation rule in
+    the grammar.
+  - Terminal definitions with empty bodies.
+  - Improved error reporting in recovery.
+  - Report LR state symbol in conflict debug output.
+  - Report killing head on unsuccessful recovery.
+  - Parameter rename layout_debug -> debug_layout
+  - GLR visual tracing parameter is separated from debug.
+  - Fixing GLR trace visualization.
+
 - 2017-08-09 Version 0.2
 
   - GLR parsing. Support for epsilon grammars, cyclic grammars and grammars with
