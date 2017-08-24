@@ -3,7 +3,7 @@
 |build-status| |coverage| |docs| |status| |license| |python-versions|
 
 
-A pure Python LR/GLR parser with integrated scanner.
+A pure Python scannerless LR/GLR parser.
 
 
 For more information see `the docs <http://www.igordejanovic.net/parglare/>`_.
