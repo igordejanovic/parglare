@@ -30,9 +30,11 @@ class GrammarSymbol(object):
 
     Attributes:
     name(str): The name of this grammar symbol.
+    action(string): Common action given in the grammar.
     """
     def __init__(self, name):
         self.name = escape(name)
+        self.action = None
         self._hash = hash(name)
 
     def __unicode__(self):
@@ -508,6 +510,7 @@ class Grammar(object):
  STR_TERM,
  REGEX_TERM,
  PRIOR,
+ ACTION,
  WS,
  COMMENTLINE,
  NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
@@ -517,6 +520,7 @@ class Grammar(object):
                      r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
                     ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
                     ('Prior', r'\d+'),
+                    ('Action', r'@[a-zA-Z0-9_]+'),
                     ('WS', r'\s+'),
                     ('CommentLine', r'\/\/.*'),
                     ('NotComment', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
@@ -527,7 +531,9 @@ pg_productions = [
     [RULES, [RULES, RULE]],
     [RULES, [RULE]],
     [RULE, [PRODUCTION_RULE]],
+    [RULE, [ACTION, PRODUCTION_RULE]],
     [RULE, [TERMINAL_RULE]],
+    [RULE, [ACTION, TERMINAL_RULE]],
 
     [PRODUCTION_RULE, [NAME, ':', PRODUCTION_RULE_RHS, ';']],
     [PRODUCTION_RULE_RHS, [PRODUCTION_RULE_RHS, '|', PRODUCTION],
@@ -597,6 +603,13 @@ def act_rules(_, nodes):
     e1, e2 = nodes
     e1.extend(e2)
     return e1
+
+
+def act_rule_with_action(_, nodes):
+    action, productions = nodes
+    action = action[1:]
+    productions[0].symbol.action = action
+    return productions
 
 
 def act_production_rule(_, nodes):
@@ -699,7 +712,11 @@ def act_recognizer_regex(_, nodes):
 pg_actions = {
     "Grammar": pass_single,
     "Rules": [act_rules, pass_single],
-    "Rule": pass_single,
+    "Action": pass_nochange,
+    "Rule": [pass_single,
+             act_rule_with_action,
+             pass_single,
+             act_rule_with_action],
 
     "ProductionRule": act_production_rule,
     "ProductionRuleRHS": collect_sep,

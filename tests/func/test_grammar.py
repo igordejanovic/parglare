@@ -157,3 +157,23 @@ def test_terminal_empty_body():
     assert a.prior == 15
     b = g.get_terminal('B')
     assert b.recognizer is None
+
+
+def test_common_grammar_action():
+    """
+    Common actions can be defined inside a grammar.
+    """
+
+    grammar = """
+    S: Ones;
+
+    @collect
+    Ones: Ones One | One;
+
+    One: "1";
+    """
+
+    g = Grammar.from_string(grammar)
+
+    ones = g.get_nonterminal('Ones')
+    assert ones.action == 'collect'
