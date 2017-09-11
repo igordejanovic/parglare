@@ -310,6 +310,14 @@ class Grammar(object):
                             del self._term_to_lhs[k]
                             break
 
+            # Get/check grammar actions for rules/symbols.
+            if new_symbol.action and new_symbol.action != p.symbol.action:
+                raise GrammarError(
+                    'Multiple different grammar actions for rule "{}".'
+                    .format(new_symbol.name))
+            elif p.symbol.action:
+                new_symbol.action = p.symbol.action
+
             self._by_name[new_symbol.name] = new_symbol
 
         self.terminals = set([x for x in self._by_name.values()
@@ -607,7 +615,10 @@ def act_rules(_, nodes):
 
 def act_rule_with_action(_, nodes):
     action, productions = nodes
+
+    # Strip @ char
     action = action[1:]
+
     productions[0].symbol.action = action
     return productions
 

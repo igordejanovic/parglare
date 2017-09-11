@@ -177,3 +177,28 @@ def test_common_grammar_action():
 
     ones = g.get_nonterminal('Ones')
     assert ones.action == 'collect'
+
+
+def test_multiple_grammar_action_raises_error():
+    """
+    If multiple actions are given for the same non-terminal GrammarError
+    should be raised.
+    """
+
+    grammar = """
+    S: Ones;
+
+    @collect
+    Ones: Ones One | One;
+
+    @something
+    Ones: 'foo';
+
+    One: "1";
+    """
+
+    # Actions 'collect' and 'something' defined for rule 'Ones'
+    with pytest.raises(GrammarError) as e:
+        Grammar.from_string(grammar)
+
+    assert 'Multiple' in str(e)
