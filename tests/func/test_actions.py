@@ -1,5 +1,5 @@
 import pytest  # noqa
-from parglare.parser import Parser, NodeNonTerm
+from parglare import Parser, NodeNonTerm
 from .expression_grammar_numbers import get_grammar
 
 

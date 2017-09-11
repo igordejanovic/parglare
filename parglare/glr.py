@@ -356,7 +356,7 @@ class GLRParser(Parser):
                 for r in roots:
                     print("\t\t{}".format(str(r[0])))
 
-            # Create new heads. Execute semantic actions.
+            # Create new heads.
             for idx, (root, subresults, any_empty, all_empty) \
                     in enumerate(roots):
                 if debug:
@@ -421,9 +421,11 @@ class GLRParser(Parser):
 
             context.end_position = context.start_position + len(token)
             result = None
-            if state.symbol.name in self.sem_actions:
-                result = self.sem_actions[state.symbol.name](context,
-                                                             token.value)
+            sem_action = state.symbol.action
+            if not sem_action:
+                sem_action = self.sem_actions.get(state.symbol.name)
+            if sem_action:
+                result = sem_action(context, token.value)
             elif self.default_actions:
                 result = default_shift_action(context, token.value)
 
@@ -480,7 +482,9 @@ class GLRParser(Parser):
 
         def execute_actions(context, subresults):
             result = None
-            sem_action = self.sem_actions.get(production.symbol.name)
+            sem_action = production.symbol.action
+            if not sem_action:
+                sem_action = self.sem_actions.get(production.symbol.name)
             if sem_action:
                 if type(sem_action) is list:
                     result = sem_action[production.prod_symbol_id](context,

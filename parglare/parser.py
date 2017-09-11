@@ -350,7 +350,9 @@ class Parser(object):
 
                 # Calling semantic actions
                 result = None
-                sem_action = sem_actions.get(symbol.name)
+                sem_action = symbol.action
+                if not sem_action:
+                    sem_action = sem_actions.get(symbol.name)
                 if sem_action:
                     if type(sem_action) is list:
                         result = sem_action[production.prod_symbol_id](
@@ -396,7 +398,9 @@ class Parser(object):
             context.layout_content = node.layout_content
 
         def inner_call_actions(node):
-            sem_action = actions.get(node.symbol.name)
+            sem_action = node.symbol.action
+            if not sem_action:
+                sem_action = actions.get(node.symbol.name)
             if sem_action:
                 if isinstance(node, NodeTerm):
                     set_context(context, node)

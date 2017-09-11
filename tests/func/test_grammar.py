@@ -1,6 +1,6 @@
 import pytest
-from parglare.grammar import Grammar, Terminal, NonTerminal, ASSOC_LEFT, \
-    ASSOC_RIGHT, DEFAULT_PRIORITY
+from parglare import Parser, Grammar, Terminal, NonTerminal
+from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
 from parglare.exceptions import GrammarError, ParseError
 
 
@@ -165,8 +165,6 @@ def test_common_grammar_action():
     """
 
     grammar = """
-    S: Ones;
-
     @collect
     Ones: Ones One | One;
 
@@ -176,7 +174,13 @@ def test_common_grammar_action():
     g = Grammar.from_string(grammar)
 
     ones = g.get_nonterminal('Ones')
-    assert ones.action == 'collect'
+    from parglare.actions import collect
+    assert ones.action == collect
+
+    p = Parser(g)
+    result = p.parse('1 1 1 1 1')
+
+    assert result == "1 1 1 1 1".split()
 
 
 def test_multiple_grammar_action_raises_error():

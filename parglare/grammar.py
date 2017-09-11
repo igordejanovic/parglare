@@ -310,13 +310,8 @@ class Grammar(object):
                             del self._term_to_lhs[k]
                             break
 
-            # Get/check grammar actions for rules/symbols.
-            if new_symbol.action and new_symbol.action != p.symbol.action:
-                raise GrammarError(
-                    'Multiple different grammar actions for rule "{}".'
-                    .format(new_symbol.name))
-            elif p.symbol.action:
-                new_symbol.action = p.symbol.action
+            self._resolve_action(p.symbol, new_symbol)
+
 
             self._by_name[new_symbol.name] = new_symbol
 
@@ -324,6 +319,27 @@ class Grammar(object):
                               if isinstance(x, Terminal)])
         self.nonterminals = set([x for x in self._by_name.values()
                                  if isinstance(x, NonTerminal)])
+
+    def _resolve_action(self, old_symbol, new_symbol):
+        """
+        Checks and resolves common semantic actions given in the grammar.
+        """
+        # Get/check grammar actions for rules/symbols.
+        if new_symbol.action \
+           and new_symbol.action != old_symbol.action:
+            raise GrammarError(
+                'Multiple different grammar actions for rule "{}".'
+                .format(new_symbol.name))
+
+        if new_symbol.action and type(new_symbol.action) is str:
+            # Try to find action in common action module
+            action_name = new_symbol.action
+            import parglare.actions as actmodule
+            if not hasattr(actmodule, action_name):
+                raise GrammarError(
+                    'Unexising common action "{}" given for rule "{}".'
+                    .format(action_name, new_symbol.name))
+            new_symbol.action = getattr(actmodule, action_name)
 
     def _resolve_references(self):
         """
