@@ -81,7 +81,7 @@ def test_parse_context_call_actions():
     global called
     called = [False, False, False]
 
-    parser = Parser(g, debug=True)
+    parser = Parser(g, build_tree=True, debug=True)
 
     tree = parser.parse("   1 + 2  ")
     context = Context()

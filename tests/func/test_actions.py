@@ -50,7 +50,7 @@ def test_actions_manual():
     """
 
     grammar = get_grammar()
-    p = Parser(grammar)
+    p = Parser(grammar, build_tree=True)
 
     result = p.parse("""34.7+78*34 +89+
     12.223*4""")

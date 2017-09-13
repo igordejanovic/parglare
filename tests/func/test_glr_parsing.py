@@ -43,7 +43,7 @@ def test_expressions():
             lambda _, nodes: nodes[0] + nodes[2],
             lambda _, nodes: nodes[0] * nodes[2],
             lambda _, nodes: nodes[1],
-            lambda _, nodes: int(nodes[0].value)
+            lambda _, nodes: int(nodes[0])
         ]
     }
 

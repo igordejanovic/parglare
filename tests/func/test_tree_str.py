@@ -6,7 +6,7 @@ from .expression_grammar import get_grammar
 def test_tree_str():
 
     grammar = get_grammar()
-    p = Parser(grammar)
+    p = Parser(grammar, build_tree=True)
 
     res = p.parse("""id+  id * (id
     +id  )

@@ -141,7 +141,6 @@ def test_cyclic_grammar_2():
     # This grammar has infinite ambiguity but by minimizing empty reductions
     # we shall get only one result xx -> xS -> SS -> S
     assert len(results) == 1
-    print(results[0].tree_str())
 
 
 def test_cyclic_grammar_3():

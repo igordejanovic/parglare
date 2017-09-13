@@ -16,7 +16,7 @@ instr2 = '1 * 2 + 5 * 3'
 actions = {
     'E': [lambda _, nodes: nodes[0] + nodes[2],
           lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: float(nodes[0].value)]
+          lambda _, nodes: float(nodes[0])]
 }
 
 

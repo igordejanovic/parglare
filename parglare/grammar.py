@@ -720,7 +720,7 @@ def act_term_rule_empty_body(_, nodes):
 
 
 def act_recognizer_str(_, nodes):
-    value = nodes[0].value[1:-1]
+    value = nodes[0][1:-1]
     value = value.replace(r'\"', '"')\
                  .replace(r"\'", "'")\
                  .replace(r"\\", "\\")\
@@ -730,7 +730,7 @@ def act_recognizer_str(_, nodes):
 
 
 def act_recognizer_regex(_, nodes):
-    value = nodes[0].value[1:-1]
+    value = nodes[0][1:-1]
     return Terminal(value, RegExRecognizer(value))
 
 

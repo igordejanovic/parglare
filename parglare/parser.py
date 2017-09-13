@@ -404,9 +404,9 @@ class Parser(object):
         in_len = len(input_str)
         layout_content = ''
         if self.layout_parser:
-            layout_content, pos = self.layout_parser.parse(
+            _, pos = self.layout_parser.parse(
                 input_str, position, context=context)
-            if not layout_content:
+            if pos > position:
                 layout_content = input_str[position:pos]
             position = pos
         elif self.ws:

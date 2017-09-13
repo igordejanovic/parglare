@@ -2,7 +2,7 @@ import pytest  # noqa
 from parglare.actions import collect, collect_optional, \
     collect_sep, collect_sep_optional, collect_right, \
     collect_right_optional, collect_right_sep, \
-    collect_right_sep_optional, pass_value
+    collect_right_sep_optional, pass_single
 from parglare import Grammar, Parser
 
 
@@ -16,7 +16,7 @@ def test_collect_left():
 
     actions = {
         "Elements": collect,
-        "Element": pass_value
+        "Element": pass_single
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -36,7 +36,7 @@ def test_collect_left_optional():
 
     actions = {
         "Elements": collect_optional,
-        "Element": pass_value
+        "Element": pass_single
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -59,7 +59,7 @@ def test_collect_left_sep():
 
     actions = {
         "Elements": collect_sep,
-        "Element": pass_value
+        "Element": pass_single
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -79,7 +79,7 @@ def test_collect_left_sep_optional():
 
     actions = {
         "Elements": collect_sep_optional,
-        "Element": pass_value
+        "Element": pass_single
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -102,7 +102,7 @@ def test_collect_right():
 
     actions = {
         "Elements": collect_right,
-        "Element": pass_value
+        "Element": pass_single
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -122,7 +122,7 @@ def test_collect_right_optional():
 
     actions = {
         "Elements": collect_right_optional,
-        "Element": pass_value
+        "Element": pass_single
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -145,7 +145,7 @@ def test_collect_right_sep():
 
     actions = {
         "Elements": collect_right_sep,
-        "Element": pass_value
+        "Element": pass_single
     }
 
     parser = Parser(g, actions=actions, debug=True)
@@ -165,7 +165,7 @@ def test_collect_right_sep_optional():
 
     actions = {
         "Elements": collect_right_sep_optional,
-        "Element": pass_value
+        "Element": pass_single
     }
 
     parser = Parser(g, actions=actions, debug=True)
