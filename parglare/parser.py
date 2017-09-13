@@ -29,7 +29,7 @@ class Parser(object):
     """
     def __init__(self, grammar, start_production=1, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
-                 debug_layout=False, ws='\n\t ', build_tree=True,
+                 debug_layout=False, ws='\n\t ', build_tree=False,
                  tables=LALR, layout=False, position=False,
                  prefer_shifts=False, error_recovery=False,
                  dynamic_filter=None):
@@ -468,6 +468,13 @@ class Parser(object):
         """
         debug = self.debug
 
+        if self.build_tree:
+            # call action for building tree node if tree building is enabled
+            if debug:
+                print("\tBuilding terminal node for '{}'. "
+                      .format(symbol.name))
+            return treebuild_shift_action(context, matched_str)
+
         # Get action defined by the grammar
         sem_action = symbol.action
         if not sem_action:
@@ -476,14 +483,6 @@ class Parser(object):
 
         if sem_action:
             result = sem_action(context, matched_str)
-
-        elif self.build_tree:
-            # If action is not given and tree building is enabled
-            # call action for building tree node.
-            if debug:
-                print("\tNo action defined for '{}'. "
-                      "Building terminal node.".format(symbol.name))
-            result = treebuild_shift_action(context, matched_str)
 
         else:
             if debug:
@@ -504,12 +503,20 @@ class Parser(object):
         debug = self.debug
         result = None
 
+        if self.build_tree:
+            # call action for building tree node if enabled.
+            if debug:
+                print("\tBuilding non-terminal node '{}'."
+                      .format(production.symbol.name))
+            return treebuild_reduce_action(context, nodes=subresults)
+
         # Get action defined by the grammar
         sem_action = production.symbol.action
 
         if not sem_action:
             # Override grammar action if given explicitely in the actions dict
             sem_action = self.sem_actions.get(production.symbol.name)
+
         if sem_action:
             if type(sem_action) is list:
                 result = sem_action[production.prod_symbol_id](context,
@@ -517,14 +524,12 @@ class Parser(object):
             else:
                 result = sem_action(context, subresults)
 
-        elif self.build_tree:
-            # If action is not given and tree building is enabled
-            # call action for building tree node.
+        else:
             if debug:
                 print("\tNo action defined for '{}'. "
-                      "Building non-terminal node."
+                      "Result is a list of subresults."
                       .format(production.symbol.name))
-            result = treebuild_reduce_action(context, nodes=subresults)
+            result = subresults
 
         if debug:
             print("\tAction result = type:{} value:{}"
