@@ -311,8 +311,6 @@ class Grammar(object):
                             break
 
             self._resolve_action(p.symbol, new_symbol)
-
-
             self._by_name[new_symbol.name] = new_symbol
 
         self.terminals = set([x for x in self._by_name.values()

@@ -80,7 +80,7 @@ actions build a [parse tree](./parse_trees.md) whose elements are instances of
 `NodeNonTerm` and `NodeTerm` classes representing a non-terminals and terminals
 respectively.
 
-If we set `default_actions` parser parameter to `False` and don't provide
+If we set `build_tree` parser parameter to `False` and don't provide
 actions, no actions will be called making the parser a mere recognizer, i.e.
 parser will parse the input and return nothing if parse is successful or raise
 `ParseError` if there is an error in the input.
