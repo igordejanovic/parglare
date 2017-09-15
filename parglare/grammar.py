@@ -737,7 +737,6 @@ def act_recognizer_regex(_, nodes):
 pg_actions = {
     "Grammar": pass_single,
     "Rules": [act_rules, pass_single],
-    "Action": pass_nochange,
     "Rule": [pass_single,
              act_rule_with_action,
              pass_single,
@@ -752,10 +751,7 @@ pg_actions = {
                      act_term_rule,
                      act_term_rule_empty_body],
 
-    "ProductionDisambiguationRule": pass_single,
     "ProductionDisambiguationRules": collect_sep,
-
-    "TerminalDisambiguationRule": pass_single,
     "TerminalDisambiguationRules": collect_sep,
 
     "GrammarSymbols": collect,
@@ -765,12 +761,6 @@ pg_actions = {
     "Recognizer": [act_recognizer_str, act_recognizer_regex],
 
     # Terminals
-    "Name": pass_nochange,
     "Prior": lambda _, value: int(value),
-    "left": pass_nochange,
-    "right": pass_nochange,
-    "dynamic": pass_nochange,
-    "prefer": pass_nochange,
-    "finish": pass_nochange
 
 }

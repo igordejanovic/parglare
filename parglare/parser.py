@@ -526,10 +526,16 @@ class Parser(object):
 
         else:
             if debug:
-                print("\tNo action defined for '{}'. "
-                      "Result is a list of subresults."
+                print("\tNo action defined for '{}'."
                       .format(production.symbol.name))
-            result = subresults
+            if len(subresults) == 1:
+                if debug:
+                    print("\tUnpacking a single subresult.")
+                result = subresults[0]
+            else:
+                if debug:
+                    print("\tResult is a list of subresults.")
+                result = subresults
 
         if debug:
             print("\tAction result = type:{} value:{}"
