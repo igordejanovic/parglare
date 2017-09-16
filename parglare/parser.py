@@ -143,6 +143,7 @@ class Parser(object):
         state_stack = [StackNode(self.table.states[0], position, 0, None,
                                  None)]
         context = Context() if not context else context
+        context.input_str = input_str
 
         next_token = self._next_token
         debug = self.debug

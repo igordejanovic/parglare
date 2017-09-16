@@ -48,6 +48,7 @@ class GLRParser(Parser):
         self.expected = set()
         self.empty_reductions_results = {}
         self.context = context = context if context else Context()
+        context.input_str = input_str
         position, layout_content = self._skipws(context, input_str, position)
 
         # We start with a single parser head in state 0.
