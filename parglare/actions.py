@@ -156,3 +156,10 @@ collect_right_sep_optional = [
     pass_nochange,
     pass_empty
 ]
+
+# Used for the production of the form:
+# OptionalElement: Element | EMTPY;
+optional = [
+    pass_single,
+    pass_none
+]
