@@ -330,7 +330,7 @@ class Grammar(object):
                 'Multiple different grammar actions for rule "{}".'
                 .format(new_symbol.name))
 
-        if new_symbol.action and type(new_symbol.action) is str:
+        if new_symbol.action and type(new_symbol.action) is text:
             # Try to find action in common action module
             action_name = new_symbol.action
             import parglare.actions as actmodule

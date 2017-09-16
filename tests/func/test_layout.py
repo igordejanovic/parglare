@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Parser, GLRParser, Grammar
 from parglare.actions import pass_single_if_exists

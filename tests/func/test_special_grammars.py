@@ -2,6 +2,7 @@
 """
 Test non-deterministic parsing.
 """
+from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Parser, GLRParser, Grammar, SLR, LALR
 from parglare.exceptions import ParseError, SRConflicts, RRConflicts

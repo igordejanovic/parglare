@@ -1044,7 +1044,7 @@ def pos_to_line_col(input_str, position):
     Returns position in the (line,column) form.
     """
 
-    if type(input_str) is not str:
+    if type(input_str) is not text:
         # If we are not parsing string
         return 1, position
 
