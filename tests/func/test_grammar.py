@@ -233,6 +233,14 @@ def test_action_override():
         "Bar": lambda _, __: "bar reduce"})
     result = p.parse(input_str)
     assert result == ["eggs", "bar reduce"]
+
+    # Test with actions call postponing
+    p = Parser(g, build_tree=True)
+    tree = p.parse(input_str)
+    result = p.call_actions(tree, actions={
+        "Foo": lambda _, __: "eggs",
+        "Bar": lambda _, __: "bar reduce"})
+    assert result == ["eggs", "bar reduce"]
     """
 
     g = Grammar.from_string(grammar)

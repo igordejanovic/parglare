@@ -371,32 +371,40 @@ class Parser(object):
             context.layout_content = node.layout_content
 
         def inner_call_actions(node):
-            sem_action = node.symbol.action
+            sem_action = actions.get(node.symbol.name)
             if not sem_action:
-                sem_action = actions.get(node.symbol.name)
-            if sem_action:
-                if isinstance(node, NodeTerm):
+                sem_action = node.symbol.action
+            if isinstance(node, NodeTerm):
+                if sem_action:
                     set_context(context, node)
-                    return sem_action(context, node.value)
+                    result = sem_action(context, node.value)
                 else:
-                    results = []
-                    # Recursive right to left, bottom up. Simulate LR
-                    # reductions.
-                    for n in reversed(node):
-                        results.append(inner_call_actions(n))
-                    results.reverse()
+                    result = node.value
+            else:
+                subresults = []
+                # Recursive right to left, bottom up. Simulate LR
+                # reductions.
+                for n in reversed(node):
+                    subresults.append(inner_call_actions(n))
+                subresults.reverse()
 
+                if sem_action:
                     set_context(context, node)
                     context.production = node.production
                     if type(sem_action) is list:
                         result = \
                             sem_action[
                                 node.production.prod_symbol_id](context,
-                                                                results)
+                                                                subresults)
                     else:
-                        result = sem_action(context, results)
-            else:
-                result = node
+                        result = sem_action(context, subresults)
+                else:
+                    if len(subresults) == 1:
+                        # Unpack if single subresult
+                        result = subresults[0]
+                    else:
+                        result = subresults
+
             return result
 
         return inner_call_actions(node)
