@@ -98,21 +98,21 @@ def collect_right_first_sep(_, nodes):
 
 
 # Used for productions of the form - one or more elements:
-# Elements = Elements Element | Element;
+# Elements: Elements Element | Element;
 collect = [
     collect_first,
     pass_nochange
 ]
 
 # Used for productions of the form - one or more elements:
-# Elements = Elements "," Element | Element;
+# Elements: Elements "," Element | Element;
 collect_sep = [
     collect_first_sep,
     pass_nochange
 ]
 
 # Used for productions of the form - zero or more elements:
-# Elements = Elements Element | Element | EMPTY;
+# Elements: Elements Element | Element | EMPTY;
 collect_optional = [
     collect_first,
     pass_nochange,
@@ -120,7 +120,7 @@ collect_optional = [
 ]
 
 # Used for productions of the form - zero or more elements:
-# Elements = Elements "," Element | Element | EMPTY;
+# Elements: Elements "," Element | Element | EMPTY;
 collect_sep_optional = [
     collect_first_sep,
     pass_nochange,
@@ -128,21 +128,21 @@ collect_sep_optional = [
 ]
 
 # Used for productions of the form - one or more elements:
-# Elements = Element Elements | Element;
+# Elements: Element Elements | Element;
 collect_right = [
     collect_right_first,
     pass_nochange
 ]
 
 # Used for productions of the form - one or more elements:
-# Elements = Element "," Elements | Element;
+# Elements: Element "," Elements | Element;
 collect_right_sep = [
     collect_right_first_sep,
     pass_nochange
 ]
 
 # Used for productions of the form - zero or more elements:
-# Elements = Element Elements | Element | EMPTY;
+# Elements: Element Elements | Element | EMPTY;
 collect_right_optional = [
     collect_right_first,
     pass_nochange,
@@ -150,7 +150,7 @@ collect_right_optional = [
 ]
 
 # Used for productions of the form - zero or more elements:
-# Elements = Element "," Elements | Element | EMPTY;
+# Elements: Element "," Elements | Element | EMPTY;
 collect_right_sep_optional = [
     collect_right_first_sep,
     pass_nochange,

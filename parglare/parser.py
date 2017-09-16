@@ -438,7 +438,7 @@ class Parser(object):
         # Find the next token in the input
         if position == in_len and EMPTY not in actions \
            and STOP not in actions:
-            # Execute EOF action at end of input only if EMTPY and
+            # Execute EOF action at end of input only if EMPTY and
             # STOP terminals are not in actions as this might call
             # for reduction.
             ntok = EOF_token
