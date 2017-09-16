@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 import codecs
 from itertools import chain
 from parglare import Parser
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
-    treebuild_reduce_action, treebuild_shift_action, pos_to_line_col, STOP, \
-    Context
+    pos_to_line_col, STOP, Context
 from .export import dot_escape
 
 
