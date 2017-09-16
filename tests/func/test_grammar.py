@@ -206,3 +206,41 @@ def test_multiple_grammar_action_raises_error():
         Grammar.from_string(grammar)
 
     assert 'Multiple' in str(e)
+
+
+def test_action_override():
+    """
+    Explicitely provided action in `actions` param overrides default or
+    grammar provided.
+    """
+    grammar = """
+    S: Foo Bar;
+    @pass_nochange
+    Foo: 'foo';
+    @pass_nochange
+    Bar: "1" a;
+    a: "a";
+    """
+
+    g = Grammar.from_string(grammar)
+    p = Parser(g)
+    input_str = "foo 1 a"
+    result = p.parse(input_str)
+    assert result == ["foo", ["1", "a"]]
+
+    p = Parser(g, actions={
+        "Foo": lambda _, __: "eggs",
+        "Bar": lambda _, __: "bar reduce"})
+    result = p.parse(input_str)
+    assert result == ["eggs", "bar reduce"]
+    """
+
+    g = Grammar.from_string(grammar)
+    p = Parser(g)
+    input_str = "foo"
+    result = p.parse(input_str)
+    assert result == "foo"
+
+    p = Parser(g, actions={"Foo": lambda _, __: "bar"})
+    result = p.parse(input_str)
+    assert result == "foo"

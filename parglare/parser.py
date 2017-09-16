@@ -476,11 +476,12 @@ class Parser(object):
                       .format(symbol.name))
             return treebuild_shift_action(context, matched_str)
 
-        # Get action defined by the grammar
-        sem_action = symbol.action
+        # Override grammar action if given explicitely in the actions dict
+        sem_action = self.sem_actions.get(symbol.name)
+
         if not sem_action:
-            # Override grammar action if given explicitely in the actions dict
-            sem_action = self.sem_actions.get(symbol.name)
+            # Get action defined by the grammar
+            sem_action = symbol.action
 
         if sem_action:
             result = sem_action(context, matched_str)
@@ -511,12 +512,12 @@ class Parser(object):
                       .format(production.symbol.name))
             return treebuild_reduce_action(context, nodes=subresults)
 
-        # Get action defined by the grammar
-        sem_action = production.symbol.action
+        # Override grammar action if given explicitely in the actions dict
+        sem_action = self.sem_actions.get(production.symbol.name)
 
         if not sem_action:
-            # Override grammar action if given explicitely in the actions dict
-            sem_action = self.sem_actions.get(production.symbol.name)
+            # Get action defined by the grammar
+            sem_action = production.symbol.action
 
         if sem_action:
             if type(sem_action) is list:
