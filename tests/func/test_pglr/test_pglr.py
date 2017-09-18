@@ -3,7 +3,7 @@ import subprocess
 import os
 
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
-GRAMMAR_FILE = 'grammar.pg'
+GRAMMAR_FILE = os.path.join(CURRENT_DIR, 'grammar.pg')
 
 
 def test_pglr_check():
