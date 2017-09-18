@@ -134,8 +134,8 @@ def test_terminals_with_emtpy_bodies_require_recognizers():
     recognizers['A'] = lambda input, pos: None
 
     g = Grammar.from_string(grammar, recognizers=recognizers)
-
     assert g
 
-
-# def test_terminal_with_emtpy_body_delegate_to_recognizers():
+    # Test that setting _no_check_recognizers will prevent grammar
+    # error. This is used in pglr command.
+    Grammar.from_string(grammar, _no_check_recognizers=True)

@@ -225,11 +225,21 @@ class Grammar(object):
 
     """
 
-    def __init__(self, productions, root_symbol=None, recognizers=None):
+    def __init__(self, productions, root_symbol=None, recognizers=None,
+                 _no_check_recognizers=False):
+        """
+        Arguments:
+        productions (list): A list of Production instances.
+        root_symbol (GrammarSymbol): The root of the grammar (start symbol).
+        recognizers (dict): A dict of user supplied recognizers.
+        _no_check_recognizers (bool, internal): Used by pglr tool to circumvent
+             errors for empty recognizers that will be provided in user code.
+        """
         self.productions = productions
         self.root_symbol = \
             root_symbol if root_symbol else productions[0].symbol
         self.recognizers = recognizers if recognizers else {}
+        self._no_check_recognizers = _no_check_recognizers
 
         self._init_grammar()
 
@@ -256,19 +266,21 @@ class Grammar(object):
         self._by_name['STOP'] = STOP
         self.terminals.update([EMPTY, EOF, STOP])
 
-        # Connect recognizers
-        for term in self.terminals:
-            if term.recognizer is None:
-                if not self.recognizers:
+        # Connect recognizers, override grammar provided
+        if not self._no_check_recognizers:
+            for term in self.terminals:
+                if not self.recognizers and term.recognizer is None:
                     raise GrammarError(
                         'Terminal "{}" has no recognizer defined '
-                        'and no recognizers are given during parser '
+                        'and no recognizers are given during grammar '
                         'construction.'.format(term.name))
                 if term.name not in self.recognizers:
-                    raise GrammarError(
-                        'Terminal "{}" has no recognizer defined.'
-                        .format(term.name))
-                term.recognizer = self.recognizers[term.name]
+                    if term.recognizer is None:
+                        raise GrammarError(
+                            'Terminal "{}" has no recognizer defined.'
+                            .format(term.name))
+                else:
+                    term.recognizer = self.recognizers[term.name]
 
         self._resolve_references()
 
@@ -436,17 +448,20 @@ class Grammar(object):
 
     @staticmethod
     def from_string(grammar_str, recognizers=None, debug=False,
-                    parse_debug=False):
+                    parse_debug=False, _no_check_recognizers=False):
         g = Grammar(get_grammar_parser(parse_debug).parse(grammar_str),
-                    recognizers=recognizers)
+                    recognizers=recognizers,
+                    _no_check_recognizers=_no_check_recognizers)
         if debug:
             g.print_debug()
         return g
 
     @staticmethod
-    def from_file(file_name, recognizers=None, debug=False, parse_debug=False):
+    def from_file(file_name, recognizers=None, debug=False, parse_debug=False,
+                  _no_check_recognizers=False):
         g = Grammar(get_grammar_parser(parse_debug).parse_file(file_name),
-                    recognizers=recognizers)
+                    recognizers=recognizers,
+                    _no_check_recognizers=_no_check_recognizers)
         if debug:
             g.print_debug()
         return g

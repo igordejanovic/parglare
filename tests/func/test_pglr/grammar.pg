@@ -1,0 +1,6 @@
+A: B C D;
+B: C D;
+
+// Terminal rules without recognizers
+C:;
+D:;
