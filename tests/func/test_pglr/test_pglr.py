@@ -6,6 +6,9 @@ CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 GRAMMAR_FILE = os.path.join(CURRENT_DIR, 'grammar.pg')
 
 
+@pytest.mark.skipif("TRAVIS" in os.environ
+                    and os.environ["TRAVIS"] == "true",
+                    reason="Test fails under TRAVIS")
 def test_pglr_check():
     """
     Test pglr command for grammar checking.
@@ -14,6 +17,9 @@ def test_pglr_check():
     assert result == 0
 
 
+@pytest.mark.skipif("TRAVIS" in os.environ
+                    and os.environ["TRAVIS"] == "true",
+                    reason="Test fails under TRAVIS")
 def test_pglr_viz():
     """
     Test pglr command for PDA visualization.
