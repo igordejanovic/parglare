@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Parser, GLRParser, Grammar
 from parglare.actions import pass_single_if_exists
@@ -125,6 +127,7 @@ def test_layout_context(parser_class):
     layout_passed = [False]
 
     parser = parser_class(g, actions=actions)
+
     parser.parse(in_str)
 
     assert layout_called[0]
@@ -134,7 +137,7 @@ def test_layout_context(parser_class):
 @parsers
 def test_layout_actions(parser_class):
     """
-    Test that user provided actions for layout rules are used if given.
+    Test that user provided actions for layout rules are called if given.
     """
 
     grammar = r"""
@@ -156,10 +159,7 @@ def test_layout_actions(parser_class):
     """
 
     def comment_action(_, nodes):
-        called[0] = True
-        # If layout action return non-None value it should be used as a
-        # layout_content in the context object
-        return "This is processed comment"
+        layout_called[0] = True
 
     def layout_action(_, nodes):
         ret = ''
@@ -169,9 +169,7 @@ def test_layout_actions(parser_class):
         return ret
 
     def a_action(context, _):
-        layout_called[0] = True
-        if 'This is processed comment' in context.layout_content:
-            layout_passed[0] = True
+        called[0] = True
 
     actions = {
         'Comment': comment_action,
@@ -182,11 +180,9 @@ def test_layout_actions(parser_class):
 
     called = [False]
     layout_called = [False]
-    layout_passed = [False]
 
     parser = parser_class(g, actions=actions, layout_actions=actions)
     parser.parse(in_str)
 
     assert called[0]
     assert layout_called[0]
-    assert layout_passed[0]

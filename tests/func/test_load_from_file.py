@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import pytest  # noqa
 import os
 from parglare import Grammar, Parser

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import pytest
 from parglare import GLRParser, Grammar, Parser
 from parglare.exceptions import SRConflicts
@@ -43,7 +45,7 @@ def test_expressions():
             lambda _, nodes: nodes[0] + nodes[2],
             lambda _, nodes: nodes[0] * nodes[2],
             lambda _, nodes: nodes[1],
-            lambda _, nodes: int(nodes[0].value)
+            lambda _, nodes: int(nodes[0])
         ]
     }
 

@@ -31,7 +31,7 @@ if [layout subgrammar](./grammar.md#handling-whitespaces-and-comments) (`LAYOUT`
 grammar rule) is not defined. If `LAYOUT` rule is given in the grammar it is
 used instead and this parameter is ignored.
 
-## default_actions
+## build_tree
 
 A boolean whose default value is `True`. This flag is used to decide if default
 actions should be used if `actions` is not defined. The default actions build a

@@ -1,5 +1,5 @@
 import pytest  # noqa
-from parglare.parser import Parser, NodeNonTerm
+from parglare import Parser, NodeNonTerm
 from .expression_grammar_numbers import get_grammar
 
 
@@ -50,7 +50,7 @@ def test_actions_manual():
     """
 
     grammar = get_grammar()
-    p = Parser(grammar)
+    p = Parser(grammar, build_tree=True)
 
     result = p.parse("""34.7+78*34 +89+
     12.223*4""")

@@ -3,8 +3,7 @@ from __future__ import unicode_literals, print_function
 import sys
 import re
 from parglare.exceptions import GrammarError
-from parglare.actions import pass_single, pass_nochange, collect, \
-    collect_sep
+from parglare.actions import pass_single, pass_none, collect, collect_sep
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -30,9 +29,11 @@ class GrammarSymbol(object):
 
     Attributes:
     name(str): The name of this grammar symbol.
+    action(string): Common action given in the grammar.
     """
     def __init__(self, name):
         self.name = escape(name)
+        self.action = None
         self._hash = hash(name)
 
     def __unicode__(self):
@@ -147,7 +148,9 @@ STOP = Terminal("STOP", STOP_recognizer)
 # EMPTY will match nothing and always succeed.
 # EOF will match only at the end of the input string.
 EMPTY = Terminal("EMPTY", EMPTY_recognizer)
+EMPTY.action = pass_none
 EOF = Terminal("EOF", EOF_recognizer)
+EOF.action = pass_none
 
 
 class Production(object):
@@ -320,12 +323,34 @@ class Grammar(object):
                             del self._term_to_lhs[k]
                             break
 
+            self._resolve_action(p.symbol, new_symbol)
             self._by_name[new_symbol.name] = new_symbol
 
         self.terminals = set([x for x in self._by_name.values()
                               if isinstance(x, Terminal)])
         self.nonterminals = set([x for x in self._by_name.values()
                                  if isinstance(x, NonTerminal)])
+
+    def _resolve_action(self, old_symbol, new_symbol):
+        """
+        Checks and resolves common semantic actions given in the grammar.
+        """
+        # Get/check grammar actions for rules/symbols.
+        if new_symbol.action \
+           and new_symbol.action != old_symbol.action:
+            raise GrammarError(
+                'Multiple different grammar actions for rule "{}".'
+                .format(new_symbol.name))
+
+        if new_symbol.action and type(new_symbol.action) is text:
+            # Try to find action in common action module
+            action_name = new_symbol.action
+            import parglare.actions as actmodule
+            if not hasattr(actmodule, action_name):
+                raise GrammarError(
+                    'Unexising common action "{}" given for rule "{}".'
+                    .format(action_name, new_symbol.name))
+            new_symbol.action = getattr(actmodule, action_name)
 
     def _resolve_references(self):
         """
@@ -491,6 +516,17 @@ class Grammar(object):
  PROD_DIS_RULES,
  TERM_DIS_RULE,
  TERM_DIS_RULES,
+
+ REPEATABLE_GSYMBOL,
+ REPEATABLE_GSYMBOLS,
+ OPT_REP_OPERATOR,
+ REP_OPERATOR_ZERO,
+ REP_OPERATOR_ONE,
+ REP_OPERATOR_OPTIONAL,
+ OPT_REP_MODIFIERS_EXP,
+ OPT_REP_MODIFIERS,
+ OPT_REP_MODIFIER,
+
  GSYMBOL,
  GSYMBOLS,
  RECOGNIZER,
@@ -510,6 +546,17 @@ class Grammar(object):
      'ProductionDisambiguationRules',
      'TerminalDisambiguationRule',
      'TerminalDisambiguationRules',
+
+     'RepeatableGrammarSymbol',
+     'RepeatableGrammarSymbols',
+     'OptRepeatOperator',
+     'RepeatOperatorZero',
+     'RepeatOperatorOne',
+     'RepeatOperatorOptional',
+     'OptionalRepeatModifiersExpression',
+     'OptionalRepeatModifiers',
+     'OptionalRepeatModifier',
+
      'GrammarSymbol',
      'GrammarSymbols',
      'Recognizer',
@@ -523,6 +570,7 @@ class Grammar(object):
  STR_TERM,
  REGEX_TERM,
  PRIOR,
+ ACTION,
  WS,
  COMMENTLINE,
  NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
@@ -532,6 +580,7 @@ class Grammar(object):
                      r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
                     ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
                     ('Prior', r'\d+'),
+                    ('Action', r'@[a-zA-Z0-9_]+'),
                     ('WS', r'\s+'),
                     ('CommentLine', r'\/\/.*'),
                     ('NotComment', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
@@ -542,14 +591,16 @@ pg_productions = [
     [RULES, [RULES, RULE]],
     [RULES, [RULE]],
     [RULE, [PRODUCTION_RULE]],
+    [RULE, [ACTION, PRODUCTION_RULE]],
     [RULE, [TERMINAL_RULE]],
+    [RULE, [ACTION, TERMINAL_RULE]],
 
     [PRODUCTION_RULE, [NAME, ':', PRODUCTION_RULE_RHS, ';']],
     [PRODUCTION_RULE_RHS, [PRODUCTION_RULE_RHS, '|', PRODUCTION],
      ASSOC_LEFT, 5],
     [PRODUCTION_RULE_RHS, [PRODUCTION], ASSOC_LEFT, 5],
-    [PRODUCTION, [GSYMBOLS]],
-    [PRODUCTION, [GSYMBOLS, '{', PROD_DIS_RULES, '}']],
+    [PRODUCTION, [REPEATABLE_GSYMBOLS]],
+    [PRODUCTION, [REPEATABLE_GSYMBOLS, '{', PROD_DIS_RULES, '}']],
 
     [TERMINAL_RULE, [NAME, ':', RECOGNIZER, ';'], ASSOC_LEFT, 15],
     [TERMINAL_RULE, [NAME, ':', ';'], ASSOC_LEFT, 15],
@@ -572,9 +623,25 @@ pg_productions = [
     [TERM_DIS_RULES, [TERM_DIS_RULES, ',', TERM_DIS_RULE]],
     [TERM_DIS_RULES, [TERM_DIS_RULE]],
 
+    # Regex-like repeat operators
+    [REPEATABLE_GSYMBOL, [GSYMBOL, OPT_REP_OPERATOR]],
+    [REPEATABLE_GSYMBOLS, [REPEATABLE_GSYMBOLS, REPEATABLE_GSYMBOL]],
+    [REPEATABLE_GSYMBOLS, [REPEATABLE_GSYMBOL]],
+    [OPT_REP_OPERATOR, [REP_OPERATOR_ZERO]],
+    [OPT_REP_OPERATOR, [REP_OPERATOR_ONE]],
+    [OPT_REP_OPERATOR, [REP_OPERATOR_OPTIONAL]],
+    [OPT_REP_OPERATOR, [EMPTY]],
+    [REP_OPERATOR_ZERO, ['*', OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR_ONE, ['+', OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR_OPTIONAL, ['?', OPT_REP_MODIFIERS_EXP]],
+    [OPT_REP_MODIFIERS_EXP, ['[', OPT_REP_MODIFIERS, ']']],
+    [OPT_REP_MODIFIERS_EXP, [EMPTY]],
+    [OPT_REP_MODIFIERS, [OPT_REP_MODIFIERS, ',', OPT_REP_MODIFIER]],
+    [OPT_REP_MODIFIERS, [OPT_REP_MODIFIER]],
+    [OPT_REP_MODIFIER, [NAME]],
+
     [GSYMBOL, [NAME]],
     [GSYMBOL, [RECOGNIZER]],
-    [GSYMBOLS, [GSYMBOLS, GSYMBOL]],
     [GSYMBOLS, [GSYMBOL]],
     [RECOGNIZER, [STR_TERM]],
     [RECOGNIZER, [REGEX_TERM]],
@@ -608,10 +675,28 @@ def get_grammar_parser(debug):
     return grammar_parser
 
 
+def act_grammar(context, nodes):
+    productions = nodes[0]
+    if hasattr(context, 'new_productions'):
+        for _, (nt, prods) in context.new_productions.items():
+            productions.extend(prods)
+    return productions
+
+
 def act_rules(_, nodes):
     e1, e2 = nodes
     e1.extend(e2)
     return e1
+
+
+def act_rule_with_action(_, nodes):
+    action, productions = nodes
+
+    # Strip @ char
+    action = action[1:]
+
+    productions[0].symbol.action = action
+    return productions
 
 
 def act_production_rule(_, nodes):
@@ -696,8 +781,90 @@ def act_term_rule_empty_body(_, nodes):
     return [Production(term, ProductionRHS([]))]
 
 
+def act_repeatable_gsymbol(context, nodes):
+    if len(nodes) > 1:
+        gsymbol, rep_op = nodes
+
+        if not rep_op:
+            return gsymbol
+
+        if len(rep_op) > 1:
+            rep_op, modifiers = rep_op
+        else:
+            rep_op = rep_op[0]
+            modifiers = None
+
+        new_gsymbol_name = gsymbol.name
+        if rep_op == '*':
+            new_gsymbol_name += '_0'
+        elif rep_op == '+':
+            new_gsymbol_name += '_1'
+        else:
+            new_gsymbol_name += '_opt'
+
+        sep_ref = None
+        if modifiers:
+            sep_ref = modifiers[1]
+            new_gsymbol_name = new_gsymbol_name + '_' + sep_ref
+            sep_ref = Reference(sep_ref)
+
+        if not hasattr(context, 'new_productions'):
+            context.new_productions = {}
+
+        if new_gsymbol_name in context.new_productions:
+            return context.new_productions[new_gsymbol_name][0]
+
+        new_nt = NonTerminal(new_gsymbol_name)
+        new_productions = []
+        if rep_op == '*':
+            new_nt.action = 'collect_optional' \
+                            if sep_ref is None else 'collect_sep_optional'
+        elif rep_op == '+':
+            new_nt.action = 'collect' if sep_ref is None else 'collect_sep'
+        elif rep_op == '?':
+            new_nt.action = 'optional'
+
+        if rep_op in ['*', '+']:
+            if sep_ref:
+                new_productions.append(
+                    Production(new_nt,
+                               ProductionRHS([new_nt, sep_ref, gsymbol])))
+            else:
+                new_productions.append(
+                    Production(new_nt, ProductionRHS([new_nt, gsymbol])))
+
+            new_productions.append(
+                Production(new_nt, ProductionRHS([gsymbol])))
+
+            if rep_op == '*':
+                new_productions.append(
+                    Production(new_nt, ProductionRHS([EMPTY])))
+
+        else:
+            if sep_ref:
+                from parglare import pos_to_line_col
+                raise GrammarError(
+                    'Repetition modifier not allowed for '
+                    'optional (?) for symbol "{}" at {}.'
+                    .format(gsymbol.name,
+                            pos_to_line_col(context.input_str,
+                                            context.start_position)))
+
+            # Optional
+            new_productions.extend(
+                [Production(new_nt, ProductionRHS([gsymbol])),
+                 Production(new_nt, ProductionRHS([EMPTY]))])
+
+        context.new_productions[new_gsymbol_name] = (new_nt, new_productions)
+
+        return new_nt
+
+    else:
+        return nodes[0]
+
+
 def act_recognizer_str(_, nodes):
-    value = nodes[0].value[1:-1]
+    value = nodes[0][1:-1]
     value = value.replace(r'\"', '"')\
                  .replace(r"\'", "'")\
                  .replace(r"\\", "\\")\
@@ -707,43 +874,40 @@ def act_recognizer_str(_, nodes):
 
 
 def act_recognizer_regex(_, nodes):
-    value = nodes[0].value[1:-1]
+    value = nodes[0][1:-1]
     return Terminal(value, RegExRecognizer(value))
 
 
 pg_actions = {
-    "Grammar": pass_single,
+    "Grammar": act_grammar,
     "Rules": [act_rules, pass_single],
-    "Rule": pass_single,
+    "Rule": [pass_single,
+             act_rule_with_action,
+             pass_single,
+             act_rule_with_action],
 
-    "ProductionRule": act_production_rule,
-    "ProductionRuleRHS": collect_sep,
-    "Production": act_production,
+    'ProductionRule': act_production_rule,
+    'ProductionRuleRHS': collect_sep,
+    'Production': act_production,
 
-    "TerminalRule": [act_term_rule,
+    'TerminalRule': [act_term_rule,
                      act_term_rule_empty_body,
                      act_term_rule,
                      act_term_rule_empty_body],
 
-    "ProductionDisambiguationRule": pass_single,
     "ProductionDisambiguationRules": collect_sep,
-
-    "TerminalDisambiguationRule": pass_single,
     "TerminalDisambiguationRules": collect_sep,
 
-    "GrammarSymbols": collect,
-    "GrammarSymbol": [lambda _, nodes: Reference(nodes[0]),
+    'RepeatableGrammarSymbol': act_repeatable_gsymbol,
+    'RepeatableGrammarSymbols': collect,
+
+    'GrammarSymbols': collect,
+    'GrammarSymbol': [lambda _, nodes: Reference(nodes[0]),
                       pass_single],
 
-    "Recognizer": [act_recognizer_str, act_recognizer_regex],
+    'Recognizer': [act_recognizer_str, act_recognizer_regex],
 
     # Terminals
-    "Name": pass_nochange,
     "Prior": lambda _, value: int(value),
-    "left": pass_nochange,
-    "right": pass_nochange,
-    "dynamic": pass_nochange,
-    "prefer": pass_nochange,
-    "finish": pass_nochange
 
 }

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Test lexical disambiguation strategy.
 
 Longest-match strategy is first used. If more tokens has the same length
@@ -6,6 +7,7 @@ If ambiguity is still unresolved priority is checked as the last resort.
 At the end disambiguation error is reported.
 
 """
+from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Parser, Grammar
 from parglare.exceptions import ParseError

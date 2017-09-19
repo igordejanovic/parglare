@@ -80,7 +80,7 @@ actions build a [parse tree](./parse_trees.md) whose elements are instances of
 `NodeNonTerm` and `NodeTerm` classes representing a non-terminals and terminals
 respectively.
 
-If we set `default_actions` parser parameter to `False` and don't provide
+If we set `build_tree` parser parameter to `False` and don't provide
 actions, no actions will be called making the parser a mere recognizer, i.e.
 parser will parse the input and return nothing if parse is successful or raise
 `ParseError` if there is an error in the input.
@@ -125,6 +125,8 @@ These attributes are available on the context object:
   the lenght of the match including the layout. You can use
   `parglare.pos_to_line_col(input, position)` function to get line and column of
   the position. This function returns a tuple `(line, column)`.
+
+- `input_str` - the input string (or list of objects) that is being parsed.
 
 - `layout_content` - is the layout (whitespaces, comments etc.) that are
   collected from the previous non-layout match. Default actions will attach this

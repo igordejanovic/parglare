@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 import codecs
 from itertools import chain
 from parglare import Parser
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
-    default_reduce_action, default_shift_action, pos_to_line_col, STOP, \
-    Context
+    pos_to_line_col, STOP, Context
 from .export import dot_escape
 
 
@@ -48,6 +48,7 @@ class GLRParser(Parser):
         self.expected = set()
         self.empty_reductions_results = {}
         self.context = context = context if context else Context()
+        context.input_str = input_str
         position, layout_content = self._skipws(context, input_str, position)
 
         # We start with a single parser head in state 0.
@@ -356,7 +357,7 @@ class GLRParser(Parser):
                 for r in roots:
                     print("\t\t{}".format(str(r[0])))
 
-            # Create new heads. Execute semantic actions.
+            # Create new heads.
             for idx, (root, subresults, any_empty, all_empty) \
                     in enumerate(roots):
                 if debug:
@@ -420,16 +421,9 @@ class GLRParser(Parser):
                       pos_to_line_col(self.input_str, context.start_position))
 
             context.end_position = context.start_position + len(token)
-            result = None
-            if state.symbol.name in self.sem_actions:
-                result = self.sem_actions[state.symbol.name](context,
-                                                             token.value)
-            elif self.default_actions:
-                result = default_shift_action(context, token.value)
 
-            if debug:
-                print("\tAction result = type:{} value:{}"
-                      .format(type(result), repr(result)))
+            result = self._call_shift_action(state.symbol, token.value,
+                                             context)
 
             new_head = GSSNode(
                 state,
@@ -478,29 +472,12 @@ class GLRParser(Parser):
 
         debug = self.debug
 
-        def execute_actions(context, subresults):
-            result = None
-            sem_action = self.sem_actions.get(production.symbol.name)
-            if sem_action:
-                if type(sem_action) is list:
-                    result = sem_action[production.prod_symbol_id](context,
-                                                                   subresults)
-                else:
-                    result = sem_action(context, subresults)
-            elif self.default_actions:
-                result = default_reduce_action(context, nodes=subresults)
-
-            if debug:
-                print("\tAction result = type:{} value:{}"
-                      .format(type(result), repr(result)))
-            return result
-
         if new_head == old_head:
             # Special case is reduction of empty production. For automata state
             # self-reference create stack node loop.
             if debug:
                 print("\tLooping automata transition.")
-            result = execute_actions(context, subresults)
+            result = self._call_reduce_action(production, subresults, context)
             old_head.parents.append((old_head, result, True, True))
 
         if (all_empty or any_empty) and new_head in self.reducing_heads:
@@ -512,7 +489,8 @@ class GLRParser(Parser):
                       "Rejecting the new head: {}".format(str(new_head)))
             return
 
-        result = execute_actions(context, subresults)
+        result = self._call_reduce_action(production, subresults, context)
+
         for head in chain(self.heads_for_reduce,
                           [self.finish_head] if self.finish_head else []):
             if head == new_head:

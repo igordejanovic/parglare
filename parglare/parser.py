@@ -29,7 +29,7 @@ class Parser(object):
     """
     def __init__(self, grammar, start_production=1, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
-                 debug_layout=False, ws='\n\t ', default_actions=True,
+                 debug_layout=False, ws='\n\t ', build_tree=False,
                  tables=LALR, layout=False, position=False,
                  prefer_shifts=False, error_recovery=False,
                  dynamic_filter=None):
@@ -44,7 +44,6 @@ class Parser(object):
                 self.layout_parser = Parser(grammar,
                                             start_production=layout_prod,
                                             actions=layout_actions,
-                                            default_actions=False,
                                             ws=None, layout=True,
                                             position=True,
                                             debug=debug_layout)
@@ -57,7 +56,7 @@ class Parser(object):
         self.debug_trace = debug_trace
         self.debug_layout = debug_layout
 
-        self.default_actions = default_actions
+        self.build_tree = build_tree
 
         self.prefer_shifts = prefer_shifts
 
@@ -144,9 +143,8 @@ class Parser(object):
         state_stack = [StackNode(self.table.states[0], position, 0, None,
                                  None)]
         context = Context() if not context else context
+        context.input_str = input_str
 
-        default_actions = self.default_actions
-        sem_actions = self.sem_actions
         next_token = self._next_token
         debug = self.debug
 
@@ -294,18 +292,7 @@ class Parser(object):
                           "at position",
                           pos_to_line_col(input_str, position))
 
-                result = None
-                if symbol.name in sem_actions:
-                    result = sem_actions[symbol.name](context, ntok.value)
-                elif default_actions:
-                    if debug:
-                        print("\tNo action defined for '{}'. Using default."
-                              .format(symbol.name))
-                    result = default_shift_action(context, ntok.value)
-
-                if debug:
-                    print("\tAction result = type:{} value:{}"
-                          .format(type(result), repr(result)))
+                result = self._call_shift_action(symbol, ntok.value, context)
 
                 # If in error recovery mode, get out.
                 self.current_error = None
@@ -348,21 +335,9 @@ class Parser(object):
                     context.start_position = position
                     context.layout_content = ''
 
-                # Calling semantic actions
-                result = None
-                sem_action = sem_actions.get(symbol.name)
-                if sem_action:
-                    if type(sem_action) is list:
-                        result = sem_action[production.prod_symbol_id](
-                            context, subresults)
-                    else:
-                        result = sem_action(context, subresults)
-                elif default_actions:
-                    result = default_reduce_action(context, nodes=subresults)
-
-                if debug:
-                    print("\tAction result = type:{} value:{}"
-                          .format(type(result), repr(result)))
+                # Calling reduce action
+                result = self._call_reduce_action(production, subresults,
+                                                  context)
 
                 cur_state = cur_state.gotos[production.symbol]
                 state_stack.append(StackNode(cur_state,
@@ -397,29 +372,39 @@ class Parser(object):
 
         def inner_call_actions(node):
             sem_action = actions.get(node.symbol.name)
-            if sem_action:
-                if isinstance(node, NodeTerm):
+            if not sem_action:
+                sem_action = node.symbol.action
+            if isinstance(node, NodeTerm):
+                if sem_action:
                     set_context(context, node)
-                    return sem_action(context, node.value)
+                    result = sem_action(context, node.value)
                 else:
-                    results = []
-                    # Recursive right to left, bottom up. Simulate LR
-                    # reductions.
-                    for n in reversed(node):
-                        results.append(inner_call_actions(n))
-                    results.reverse()
+                    result = node.value
+            else:
+                subresults = []
+                # Recursive right to left, bottom up. Simulate LR
+                # reductions.
+                for n in reversed(node):
+                    subresults.append(inner_call_actions(n))
+                subresults.reverse()
 
+                if sem_action:
                     set_context(context, node)
                     context.production = node.production
                     if type(sem_action) is list:
                         result = \
                             sem_action[
                                 node.production.prod_symbol_id](context,
-                                                                results)
+                                                                subresults)
                     else:
-                        result = sem_action(context, results)
-            else:
-                result = node
+                        result = sem_action(context, subresults)
+                else:
+                    if len(subresults) == 1:
+                        # Unpack if single subresult
+                        result = subresults[0]
+                    else:
+                        result = subresults
+
             return result
 
         return inner_call_actions(node)
@@ -428,9 +413,9 @@ class Parser(object):
         in_len = len(input_str)
         layout_content = ''
         if self.layout_parser:
-            layout_content, pos = self.layout_parser.parse(
+            _, pos = self.layout_parser.parse(
                 input_str, position, context=context)
-            if not layout_content:
+            if pos > position:
                 layout_content = input_str[position:pos]
             position = pos
         elif self.ws:
@@ -461,7 +446,7 @@ class Parser(object):
         # Find the next token in the input
         if position == in_len and EMPTY not in actions \
            and STOP not in actions:
-            # Execute EOF action at end of input only if EMTPY and
+            # Execute EOF action at end of input only if EMPTY and
             # STOP terminals are not in actions as this might call
             # for reduction.
             ntok = EOF_token
@@ -485,6 +470,88 @@ class Parser(object):
                 ntok = self._lexical_disambiguation(tokens)
 
         return ntok
+
+    def _call_shift_action(self, symbol, matched_str, context):
+        """
+        Calls registered shift action for the given grammar symbol.
+        """
+        debug = self.debug
+
+        if self.build_tree:
+            # call action for building tree node if tree building is enabled
+            if debug:
+                print("\tBuilding terminal node for '{}'. "
+                      .format(symbol.name))
+            return treebuild_shift_action(context, matched_str)
+
+        # Override grammar action if given explicitely in the actions dict
+        sem_action = self.sem_actions.get(symbol.name)
+
+        if not sem_action:
+            # Get action defined by the grammar
+            sem_action = symbol.action
+
+        if sem_action:
+            result = sem_action(context, matched_str)
+
+        else:
+            if debug:
+                print("\tNo action defined for '{}'. "
+                      "Result is matched string.".format(symbol.name))
+            result = matched_str
+
+        if debug:
+            print("\tAction result = type:{} value:{}"
+                  .format(type(result), repr(result)))
+
+        return result
+
+    def _call_reduce_action(self, production, subresults, context):
+        """
+        Calls registered reduce action for the given grammar symbol.
+        """
+        debug = self.debug
+        result = None
+
+        if self.build_tree:
+            # call action for building tree node if enabled.
+            if debug:
+                print("\tBuilding non-terminal node '{}'."
+                      .format(production.symbol.name))
+            return treebuild_reduce_action(context, nodes=subresults)
+
+        # Override grammar action if given explicitely in the actions dict
+        sem_action = self.sem_actions.get(production.symbol.name)
+
+        if not sem_action:
+            # Get action defined by the grammar
+            sem_action = production.symbol.action
+
+        if sem_action:
+            if type(sem_action) is list:
+                result = sem_action[production.prod_symbol_id](context,
+                                                               subresults)
+            else:
+                result = sem_action(context, subresults)
+
+        else:
+            if debug:
+                print("\tNo action defined for '{}'."
+                      .format(production.symbol.name))
+            if len(subresults) == 1:
+                if debug:
+                    print("\tUnpacking a single subresult.")
+                result = subresults[0]
+            else:
+                if debug:
+                    print("\tResult is a list of subresults.")
+                result = subresults
+
+        if debug:
+            print("\tAction result = type:{} value:{}"
+                  .format(type(result), repr(result)))
+
+        return result
 
     def _lexical_disambiguation(self, tokens):
         """
@@ -883,12 +950,12 @@ EMPTY_token = Token(EMPTY)
 EOF_token = Token(EOF)
 
 
-def default_shift_action(context, value):
+def treebuild_shift_action(context, value):
     return NodeTerm(context.start_position, context.end_position,
                     context.symbol, value, context.layout_content)
 
 
-def default_reduce_action(context, nodes):
+def treebuild_reduce_action(context, nodes):
     return NodeNonTerm(context.start_position, context.end_position,
                        context.production, nodes, context.layout_content)
 
@@ -977,7 +1044,7 @@ def pos_to_line_col(input_str, position):
     Returns position in the (line,column) form.
     """
 
-    if type(input_str) is not str:
+    if type(input_str) is not text:
         # If we are not parsing string
         return 1, position
 
