@@ -216,7 +216,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                                 # Try to resolve using priorities
                                 if prod.prior == t_reduces[0].prod.prior:
                                     actions[t].append(new_reduce)
-                                elif prod.priod > t_reduces[0].prod.prior:
+                                elif prod.prior > t_reduces[0].prod.prior:
                                     # If this production priority is higher
                                     # it should override all other reductions.
                                     actions[t][:] = [x for x in actions[t]
@@ -351,7 +351,12 @@ class LRTable(object):
 
                         empty_prods = [x.prod for x in actions
                                        if not len(x.prod.rhs)]
-                        if len(empty_prods) > 1 or len(prods) > 1:
+                        # Multiple empty reductions possible
+                        if len(empty_prods) > 1:
+                            self.rr_conflicts.append(
+                                RRConflict(state, term, empty_prods))
+                        # Multiple non-empty reductions possible
+                        if len(prods) > 1:
                             self.rr_conflicts.append(
                                 RRConflict(state, term, prods))
 
