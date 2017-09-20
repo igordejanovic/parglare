@@ -872,8 +872,22 @@ def act_repeatable_gsymbol(context, nodes):
     - `_1` - for `+`
     - `_opt` - for `?`
 
+    Zero or more produces `one or more` productions and additional productions
+    of the form:
+
+    ```
+    somerule_0: somerule_1 | EMPTY;
+    ```
+
     In addition if separator is used another suffix is added which is the name
-    of the separator rule.
+    of the separator rule, for example:
+
+    ```
+    spam*[comma] --> spam_0_comma and spam_1_comma
+    spam+[comma] --> spam_1_comma
+    spam* --> spam_0 and spam_1
+    spam? --> spam_opt
+    ```
 
     """
     gsymbol, rep_op = nodes
