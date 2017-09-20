@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import pytest
 from parglare import Parser, Grammar
-from parglare.exceptions import GrammarError, ParseError
+from parglare.exceptions import GrammarError, ParseError, RRConflicts
 
 
 def test_repeatable_zero_or_more():
@@ -196,3 +196,21 @@ def test_repetition_operator_many_times_same():
     input_str = '2 b  3 b, b'
     result = p.parse(input_str)
     assert result == ["2", ["b"], "3", ["b", "b"], None]
+
+
+def test_repeatable_one_zero_rr_conflicts():
+    """
+    Check that translations of B+ and B* don't produce R/R conflict.
+    """
+    grammar = """
+    S: A B+ C;
+    S: A B* D;
+    A:; B:; C:; D:;
+    """
+    g = Grammar.from_string(grammar, _no_check_recognizers=True)
+
+    # Check if parser construction raises exception
+    try:
+        Parser(g)
+    except RRConflicts:
+        pytest.fail("R/R conflicts not expected here.")

@@ -826,25 +826,22 @@ def make_one_or_more(context, gsymbol, sep_ref=None):
 def make_zero_or_more(context, gsymbol, sep_ref=None):
     def prod_callable(new_nt):
         new_productions = []
-        if sep_ref:
-            new_productions.append(
-                Production(new_nt,
-                           ProductionRHS([new_nt, sep_ref, gsymbol])))
-        else:
-            new_productions.append(
-                Production(new_nt, ProductionRHS([new_nt, gsymbol])))
-
+        one_or_more = make_one_or_more(context, gsymbol, sep_ref)
         new_productions.append(
-            Production(new_nt, ProductionRHS([gsymbol])))
+            Production(new_nt, ProductionRHS([one_or_more])))
         new_productions.append(
             Production(new_nt, ProductionRHS([EMPTY])))
 
         return new_productions
 
+    def action(_, nodes):
+        if nodes:
+            return nodes[0]
+        else:
+            return []
+
     return make_repetition(
-        context, gsymbol, sep_ref, '_0',
-        'collect_optional' if sep_ref is None else 'collect_sep_optional',
-        prod_callable)
+        context, gsymbol, sep_ref, '_0', action, prod_callable)
 
 
 def make_optional(context, gsymbol, sep_ref=None):
