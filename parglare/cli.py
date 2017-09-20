@@ -45,7 +45,7 @@ def pglr():
         sys.exit(1)
 
     try:
-        g = Grammar.from_file(args.grammar)
+        g = Grammar.from_file(args.grammar, _no_check_recognizers=True)
         if args.d:
             g.print_debug()
         table = create_table(g)
