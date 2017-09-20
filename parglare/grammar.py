@@ -781,86 +781,128 @@ def act_term_rule_empty_body(_, nodes):
     return [Production(term, ProductionRHS([]))]
 
 
-def act_repeatable_gsymbol(context, nodes):
-    if len(nodes) > 1:
-        gsymbol, rep_op = nodes
+def make_repetition(context, gsymbol, sep_ref, suffix,
+                    action, prod_callable):
+    new_gsymbol_name = gsymbol.name + suffix
+    if sep_ref:
+        new_gsymbol_name += '_' + sep_ref.name
 
-        if not rep_op:
-            return gsymbol
+    if not hasattr(context, 'new_productions'):
+        # symbol_name -> (NonTerminal, [productions])
+        context.new_productions = {}
 
-        if len(rep_op) > 1:
-            rep_op, modifiers = rep_op
-        else:
-            rep_op = rep_op[0]
-            modifiers = None
+    if new_gsymbol_name in context.new_productions:
+        return context.new_productions[new_gsymbol_name][0]
 
-        new_gsymbol_name = gsymbol.name
-        if rep_op == '*':
-            new_gsymbol_name += '_0'
-        elif rep_op == '+':
-            new_gsymbol_name += '_1'
-        else:
-            new_gsymbol_name += '_opt'
+    new_nt = NonTerminal(new_gsymbol_name)
+    new_nt.action = action
+    new_productions = prod_callable(new_nt)
+    context.new_productions[new_gsymbol_name] = (new_nt, new_productions)
 
-        sep_ref = None
-        if modifiers:
-            sep_ref = modifiers[1]
-            new_gsymbol_name = new_gsymbol_name + '_' + sep_ref
-            sep_ref = Reference(sep_ref)
+    return new_nt
 
-        if not hasattr(context, 'new_productions'):
-            context.new_productions = {}
 
-        if new_gsymbol_name in context.new_productions:
-            return context.new_productions[new_gsymbol_name][0]
-
-        new_nt = NonTerminal(new_gsymbol_name)
+def make_one_or_more(context, gsymbol, sep_ref=None):
+    def prod_callable(new_nt):
         new_productions = []
-        if rep_op == '*':
-            new_nt.action = 'collect_optional' \
-                            if sep_ref is None else 'collect_sep_optional'
-        elif rep_op == '+':
-            new_nt.action = 'collect' if sep_ref is None else 'collect_sep'
-        elif rep_op == '?':
-            new_nt.action = 'optional'
-
-        if rep_op in ['*', '+']:
-            if sep_ref:
-                new_productions.append(
-                    Production(new_nt,
-                               ProductionRHS([new_nt, sep_ref, gsymbol])))
-            else:
-                new_productions.append(
-                    Production(new_nt, ProductionRHS([new_nt, gsymbol])))
-
+        if sep_ref:
             new_productions.append(
-                Production(new_nt, ProductionRHS([gsymbol])))
-
-            if rep_op == '*':
-                new_productions.append(
-                    Production(new_nt, ProductionRHS([EMPTY])))
-
+                Production(new_nt,
+                           ProductionRHS([new_nt, sep_ref, gsymbol])))
         else:
-            if sep_ref:
-                from parglare import pos_to_line_col
-                raise GrammarError(
-                    'Repetition modifier not allowed for '
-                    'optional (?) for symbol "{}" at {}.'
-                    .format(gsymbol.name,
-                            pos_to_line_col(context.input_str,
-                                            context.start_position)))
+            new_productions.append(
+                Production(new_nt, ProductionRHS([new_nt, gsymbol])))
 
-            # Optional
-            new_productions.extend(
-                [Production(new_nt, ProductionRHS([gsymbol])),
-                 Production(new_nt, ProductionRHS([EMPTY]))])
+        new_productions.append(
+            Production(new_nt, ProductionRHS([gsymbol])))
 
-        context.new_productions[new_gsymbol_name] = (new_nt, new_productions)
+        return new_productions
 
-        return new_nt
+    return make_repetition(context, gsymbol, sep_ref, '_1',
+                           'collect' if sep_ref is None else 'collect_sep',
+                           prod_callable)
 
+
+def make_zero_or_more(context, gsymbol, sep_ref=None):
+    def prod_callable(new_nt):
+        new_productions = []
+        if sep_ref:
+            new_productions.append(
+                Production(new_nt,
+                           ProductionRHS([new_nt, sep_ref, gsymbol])))
+        else:
+            new_productions.append(
+                Production(new_nt, ProductionRHS([new_nt, gsymbol])))
+
+        new_productions.append(
+            Production(new_nt, ProductionRHS([gsymbol])))
+        new_productions.append(
+            Production(new_nt, ProductionRHS([EMPTY])))
+
+        return new_productions
+
+    return make_repetition(
+        context, gsymbol, sep_ref, '_0',
+        'collect_optional' if sep_ref is None else 'collect_sep_optional',
+        prod_callable)
+
+
+def make_optional(context, gsymbol, sep_ref=None):
+    def prod_callable(new_nt):
+        if sep_ref:
+            from parglare import pos_to_line_col
+            raise GrammarError(
+                'Repetition modifier not allowed for '
+                'optional (?) for symbol "{}" at {}.'
+                .format(gsymbol.name,
+                        pos_to_line_col(context.input_str,
+                                        context.start_position)))
+        # Optional
+        new_productions = [Production(new_nt, ProductionRHS([gsymbol])),
+                           Production(new_nt, ProductionRHS([EMPTY]))]
+
+        return new_productions
+
+    return make_repetition(
+        context, gsymbol, sep_ref, '_opt', 'optional',
+        prod_callable)
+
+
+def act_repeatable_gsymbol(context, nodes):
+    """Repetition operators (`*`, `+`, `?`) will create additional productions in
+    the grammar with name generated from original symbol name and suffixes:
+    - `_0` - for `*`
+    - `_1` - for `+`
+    - `_opt` - for `?`
+
+    In addition if separator is used another suffix is added which is the name
+    of the separator rule.
+
+    """
+    gsymbol, rep_op = nodes
+
+    if not rep_op:
+        return gsymbol
+
+    if len(rep_op) > 1:
+        rep_op, modifiers = rep_op
     else:
-        return nodes[0]
+        rep_op = rep_op[0]
+        modifiers = None
+
+    sep_ref = None
+    if modifiers:
+        sep_ref = modifiers[1]
+        sep_ref = Reference(sep_ref)
+
+    if rep_op == '*':
+        new_nt = make_zero_or_more(context, gsymbol, sep_ref)
+    elif rep_op == '+':
+        new_nt = make_one_or_more(context, gsymbol, sep_ref)
+    else:
+        new_nt = make_optional(context, gsymbol, sep_ref)
+
+    return new_nt
 
 
 def act_recognizer_str(_, nodes):
