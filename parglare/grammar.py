@@ -808,7 +808,7 @@ def make_repetition(context, gsymbol, sep_ref, suffix,
         return context.new_productions[new_gsymbol_name][0]
 
     new_nt = NonTerminal(new_gsymbol_name)
-    if type(action) is str:
+    if type(action) is text:
         new_nt.action_name = action
     else:
         new_nt.action = action
