@@ -50,12 +50,12 @@ def test_actions_manual():
     """
 
     grammar = get_grammar()
-    p = Parser(grammar, build_tree=True)
+    p = Parser(grammar, build_tree=True, actions=get_actions())
 
     result = p.parse("""34.7+78*34 +89+
     12.223*4""")
 
     assert type(result) is NodeNonTerm
 
-    assert p.call_actions(result, get_actions()) == \
+    assert p.call_actions(result) == \
         34.7 + 78 * 34 + 89 + 12.223 * 4

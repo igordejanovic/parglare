@@ -5,9 +5,10 @@ import sys
 from collections import OrderedDict
 from .grammar import Grammar, EMPTY, AUGSYMBOL, EOF, STOP
 from .errors import Error, expected_symbols_str
-from .exceptions import ParseError, DisambiguationError, \
+from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, disambiguation_error, \
     nomatch_error, SRConflicts, RRConflicts
+from .actions import pass_none
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -35,7 +36,10 @@ class Parser(object):
                  dynamic_filter=None):
         self.grammar = grammar
         self.start_production = start_production
-        self.sem_actions = actions if actions else {}
+        EMPTY.action = pass_none
+        EOF.action = pass_none
+        if actions:
+            self._resolve_override_common_actions(actions)
 
         self.layout_parser = None
         if not layout:
@@ -103,6 +107,32 @@ class Parser(object):
 
             if unhandled_conflicts:
                 raise RRConflicts(unhandled_conflicts)
+
+    def _resolve_override_common_actions(self, actions):
+        """
+        If a user provides `common_actions` param resolve all grammar symbol
+        actions and override already resolved parglare common actions.
+        """
+        for symbol in self.grammar:
+
+            symbol.action = None
+
+            # Action given by rule name has higher precendence
+            if symbol.name in actions:
+                action_name = symbol.name
+            else:
+                action_name = symbol.action_name or symbol.name
+            if action_name in actions:
+                symbol.action = actions[action_name]
+            else:
+                symbol.action = symbol.grammar_action
+
+            if symbol.action_name and symbol.action is None:
+                raise ParserInitError(
+                    'Action "{}" given for rule "{}" '
+                    'doesn\'t exists in parglare common actions and '
+                    'is not provided using "actions" parameter.'
+                    .format(symbol.action_name, symbol.name))
 
     def print_debug(self):
         if self.layout and self.debug_layout:
@@ -356,7 +386,7 @@ class Parser(object):
                 else:
                     return state_stack[1].result
 
-    def call_actions(self, node, actions, context=None):
+    def call_actions(self, node, context=None):
         """
         Calls semantic actions for the given tree node.
         """
@@ -371,9 +401,7 @@ class Parser(object):
             context.layout_content = node.layout_content
 
         def inner_call_actions(node):
-            sem_action = actions.get(node.symbol.name)
-            if not sem_action:
-                sem_action = node.symbol.action
+            sem_action = node.symbol.action
             if isinstance(node, NodeTerm):
                 if sem_action:
                     set_context(context, node)
@@ -484,13 +512,7 @@ class Parser(object):
                       .format(symbol.name))
             return treebuild_shift_action(context, matched_str)
 
-        # Override grammar action if given explicitely in the actions dict
-        sem_action = self.sem_actions.get(symbol.name)
-
-        if not sem_action:
-            # Get action defined by the grammar
-            sem_action = symbol.action
-
+        sem_action = symbol.action
         if sem_action:
             result = sem_action(context, matched_str)
 
@@ -520,13 +542,7 @@ class Parser(object):
                       .format(production.symbol.name))
             return treebuild_reduce_action(context, nodes=subresults)
 
-        # Override grammar action if given explicitely in the actions dict
-        sem_action = self.sem_actions.get(production.symbol.name)
-
-        if not sem_action:
-            # Get action defined by the grammar
-            sem_action = production.symbol.action
-
+        sem_action = production.symbol.action
         if sem_action:
             if type(sem_action) is list:
                 result = sem_action[production.prod_symbol_id](context,

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function
 import sys
 import re
+import itertools
 from parglare.exceptions import GrammarError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 
@@ -29,11 +30,17 @@ class GrammarSymbol(object):
 
     Attributes:
     name(str): The name of this grammar symbol.
-    action(string): Common action given in the grammar.
+    action_name(string): Name of common/user action given in the grammar.
+    action(callable): Resolved action given by the user. Overrides grammar
+        action if provided. If not provided by the user defaults to
+        grammar_action.
+    grammar_action(callable): Resolved action given in the grammar.
     """
     def __init__(self, name):
         self.name = escape(name)
+        self.action_name = None
         self.action = None
+        self.grammar_action = None
         self._hash = hash(name)
 
     def __unicode__(self):
@@ -148,9 +155,9 @@ STOP = Terminal("STOP", STOP_recognizer)
 # EMPTY will match nothing and always succeed.
 # EOF will match only at the end of the input string.
 EMPTY = Terminal("EMPTY", EMPTY_recognizer)
-EMPTY.action = pass_none
+EMPTY.grammar_action = pass_none
 EOF = Terminal("EOF", EOF_recognizer)
-EOF.action = pass_none
+EOF.grammar_action = pass_none
 
 
 class Production(object):
@@ -336,21 +343,21 @@ class Grammar(object):
         Checks and resolves common semantic actions given in the grammar.
         """
         # Get/check grammar actions for rules/symbols.
-        if new_symbol.action \
-           and new_symbol.action != old_symbol.action:
-            raise GrammarError(
-                'Multiple different grammar actions for rule "{}".'
-                .format(new_symbol.name))
-
-        if new_symbol.action and type(new_symbol.action) is text:
-            # Try to find action in common action module
-            action_name = new_symbol.action
-            import parglare.actions as actmodule
-            if not hasattr(actmodule, action_name):
+        if new_symbol.action_name:
+            if new_symbol.action_name != old_symbol.action_name:
                 raise GrammarError(
-                    'Unexising common action "{}" given for rule "{}".'
-                    .format(action_name, new_symbol.name))
-            new_symbol.action = getattr(actmodule, action_name)
+                    'Multiple different grammar actions for rule "{}".'
+                    .format(new_symbol.name))
+
+            # Try to find action in common action module
+            # If action is not given we suppose that it is a user defined
+            # action that will be provided during parser instantiation
+            # using `actions` param.
+            import parglare.actions as actmodule
+            if hasattr(actmodule, new_symbol.action_name):
+                new_symbol.action = \
+                    new_symbol.grammar_action = getattr(actmodule,
+                                                        new_symbol.action_name)
 
     def _resolve_references(self):
         """
@@ -427,6 +434,10 @@ class Grammar(object):
         if not s:
             s = self.get_nonterminal(name)
         return s
+
+    def __iter__(self):
+        return (s for s in itertools.chain(self.nonterminals, self.terminals)
+                if s not in [AUGSYMBOL, STOP])
 
     def get_production_id(self, name):
         "Returns first production id for the given symbol name"
@@ -672,6 +683,8 @@ def get_grammar_parser(debug):
         from parglare import Parser
         grammar_parser = Parser(Grammar.from_struct(pg_productions, GRAMMAR),
                                 actions=pg_actions, debug=debug)
+    EMPTY.action = pass_none
+    EOF.action = pass_none
     return grammar_parser
 
 
@@ -695,7 +708,7 @@ def act_rule_with_action(_, nodes):
     # Strip @ char
     action = action[1:]
 
-    productions[0].symbol.action = action
+    productions[0].symbol.action_name = action
     return productions
 
 
@@ -795,7 +808,10 @@ def make_repetition(context, gsymbol, sep_ref, suffix,
         return context.new_productions[new_gsymbol_name][0]
 
     new_nt = NonTerminal(new_gsymbol_name)
-    new_nt.action = action
+    if type(action) is str:
+        new_nt.action_name = action
+    else:
+        new_nt.action = action
     new_productions = prod_callable(new_nt)
     context.new_productions[new_gsymbol_name] = (new_nt, new_productions)
 

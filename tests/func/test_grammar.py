@@ -230,16 +230,16 @@ def test_action_override():
     result = p.parse(input_str)
     assert result == ["foo", ["1", "a"]]
 
-    p = Parser(g, actions={
+    actions = {
         "Foo": lambda _, __: "eggs",
-        "Bar": lambda _, __: "bar reduce"})
+        "Bar": lambda _, __: "bar reduce"}
+
+    p = Parser(g, actions=actions)
     result = p.parse(input_str)
     assert result == ["eggs", "bar reduce"]
 
     # Test with actions call postponing
-    p = Parser(g, build_tree=True)
+    p = Parser(g, build_tree=True, actions=actions)
     tree = p.parse(input_str)
-    result = p.call_actions(tree, actions={
-        "Foo": lambda _, __: "eggs",
-        "Bar": lambda _, __: "bar reduce"})
+    result = p.call_actions(tree)
     assert result == ["eggs", "bar reduce"]

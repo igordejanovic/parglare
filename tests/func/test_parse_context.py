@@ -83,12 +83,12 @@ def test_parse_context_call_actions():
     global called
     called = [False, False, False]
 
-    parser = Parser(g, build_tree=True, debug=True)
+    parser = Parser(g, build_tree=True, actions=actions, debug=True)
 
     tree = parser.parse("   1 + 2  ")
     context = Context()
     context.call_actions = True
-    parser.call_actions(tree, actions=actions, context=context)
+    parser.call_actions(tree, context=context)
 
     assert all(called)
     assert node_exists[0]
