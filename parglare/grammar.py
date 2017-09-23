@@ -166,6 +166,7 @@ class Production(object):
     Attributes:
     symbol (GrammarSymbol):
     rhs (ProductionRHS):
+    assignments(dict): Assignment instances keyed by name.
     assoc (int): Associativity. Used for ambiguity (shift/reduce) resolution.
     prior (int): Priority. Used for ambiguity (shift/reduce) resolution.
     dynamic (bool): Is dynamic disambiguation used for this production.
@@ -227,7 +228,7 @@ class ProductionRHS(list):
 
 class Assignment(object):
     """
-    Assignment (`=` or `?=`) in the production.
+    Assignment (`=` or `?=`) in productions.
     """
     def __init__(self, name, op, symbol):
         self.name = name
