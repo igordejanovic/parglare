@@ -438,6 +438,14 @@ def test_repetition_operator_many_times_same():
     assert result == ["2", ["b"], "3", ["b", "b"], None]
 
 
+def assignment_in_productions(prods, symbol_name, assgn_name):
+    found = False
+    for p in prods:
+        if p.symbol.name == symbol_name:
+            found = assgn_name in p.assignments
+    return found
+
+
 def test_assignment_plain():
     """
     Test plain assignment.
@@ -449,6 +457,7 @@ def test_assignment_plain():
     """
 
     g = Grammar.from_string(grammar)
+    assert assignment_in_productions(g.productions, 'S', 'first')
 
     p = Parser(g)
 
@@ -469,6 +478,7 @@ def test_assignment_bool():
     """
 
     g = Grammar.from_string(grammar)
+    assert assignment_in_productions(g.productions, 'S', 'first')
 
     p = Parser(g)
 
@@ -489,6 +499,7 @@ def test_assignment_of_repetition():
     """
 
     g = Grammar.from_string(grammar)
+    assert assignment_in_productions(g.productions, 'S', 'first')
 
     p = Parser(g)
 
@@ -510,6 +521,7 @@ def test_assignment_of_repetition_with_sep():
     """
 
     g = Grammar.from_string(grammar)
+    assert assignment_in_productions(g.productions, 'S', 'first')
 
     p = Parser(g)
 
@@ -531,6 +543,8 @@ def test_multiple_assignment_with_repetitions():
     """
 
     g = Grammar.from_string(grammar)
+    assert assignment_in_productions(g.productions, 'S', 'first')
+    assert assignment_in_productions(g.productions, 'S', 'second')
 
     p = Parser(g)
 

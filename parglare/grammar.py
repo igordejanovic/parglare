@@ -174,8 +174,8 @@ class Production(object):
         production grammar symbol.
     """
 
-    def __init__(self, symbol, rhs, assoc=ASSOC_NONE, prior=DEFAULT_PRIORITY,
-                 dynamic=False):
+    def __init__(self, symbol, rhs, assignments=None, assoc=ASSOC_NONE,
+                 prior=DEFAULT_PRIORITY, dynamic=False):
         """
         Args:
         symbol (GrammarSymbol): A grammar symbol on the LHS of the production.
@@ -183,6 +183,11 @@ class Production(object):
         """
         self.symbol = symbol
         self.rhs = rhs if rhs else ProductionRHS()
+        self.assignments = None
+        if assignments:
+            self.assignments = {}
+            for assignment in assignments:
+                self.assignments[assignment.name] = assignment
         self.assoc = assoc
         self.prior = prior
         self.dynamic = dynamic
@@ -218,6 +223,16 @@ class ProductionRHS(list):
     def __repr__(self):
         return "<ProductionRHS([{}])>".format(
             ", ".join([str(x) for x in self]))
+
+
+class Assignment(object):
+    """
+    Assignment (`=` or `?=`) in the production.
+    """
+    def __init__(self, name, op, symbol):
+        self.name = name
+        self.op = op
+        self.symbol = symbol
 
 
 class Grammar(object):
@@ -473,7 +488,7 @@ class Grammar(object):
                 if isinstance(t, text):
                     rhs[idx] = Terminal(t)
 
-            gp.append(Production(symbol, rhs, assoc, prior))
+            gp.append(Production(symbol, rhs, assoc=assoc, prior=prior))
 
         return gp
 
@@ -734,12 +749,14 @@ def act_production_rule(_, nodes):
     # Collect all productions for this rule
     prods = []
     for prod in rhs_prods:
-        gsymbols, disrules = prod
+        assignments, disrules = prod
+        gsymbols = (a.symbol for a in assignments)
         assoc = disrules.get('assoc', ASSOC_NONE)
         prior = disrules.get('priority', DEFAULT_PRIORITY)
         dynamic = disrules.get('dynamic', False)
         prods.append(Production(symbol,
                                 ProductionRHS(gsymbols),
+                                assignments=assignments,
                                 assoc=assoc,
                                 prior=prior,
                                 dynamic=dynamic))
@@ -748,7 +765,7 @@ def act_production_rule(_, nodes):
 
 
 def act_production(_, nodes):
-    gsymbols = nodes[0]
+    assignments = nodes[0]
     disrules = {}
     if len(nodes) > 1:
         rules = nodes[2]
@@ -762,7 +779,7 @@ def act_production(_, nodes):
             elif type(rule) is int:
                 disrules['priority'] = rule
 
-    return (gsymbols, disrules)
+    return (assignments, disrules)
 
 
 def act_term_rule(_, nodes):
@@ -946,14 +963,14 @@ def act_repeatable_gsymbol(context, nodes):
     return new_nt
 
 
-def act_assignment(context, nodes):
+def act_assignment(_, nodes):
     elem = nodes[0]
     if type(elem) is list:
-        # TODO: Implement support for assignments
-        name, assign_op, gsymbol = elem
-        return gsymbol
+        name, op, symbol = elem
     else:
-        return elem
+        name, op, symbol = None, None, elem
+
+    return Assignment(name, op, symbol)
 
 
 def act_recognizer_str(_, nodes):
