@@ -476,3 +476,65 @@ def test_assignment_bool():
 
     result = p.parse(input_str)
     assert result == ["1", "2", "3"]
+
+
+def test_assignment_of_repetition():
+    """
+    Test assignment of repetition.
+    """
+
+    grammar = """
+    S: "1" first=some_match+ "3";
+    some_match: "2";
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = Parser(g)
+
+    input_str = '1 2 2 3'
+
+    result = p.parse(input_str)
+    assert result == ["1", ["2", "2"], "3"]
+
+
+def test_assignment_of_repetition_with_sep():
+    """
+    Test assignment of repetition.
+    """
+
+    grammar = """
+    S: "1" first=some_match+[comma] "3";
+    some_match: "2";
+    comma: ",";
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = Parser(g)
+
+    input_str = '1 2, 2 3'
+
+    result = p.parse(input_str)
+    assert result == ["1", ["2", "2"], "3"]
+
+
+def test_multiple_assignment_with_repetitions():
+    """
+    Test assignment of repetition.
+    """
+
+    grammar = """
+    S: "1" first=some_match+[comma] second?=some_match* "3";
+    some_match: "2";
+    comma: ",";
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = Parser(g)
+
+    input_str = '1 2, 2 2 2 2 3'
+
+    result = p.parse(input_str)
+    assert result == ["1", ["2", "2"], ["2", "2", "2"], "3"]
