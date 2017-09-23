@@ -459,12 +459,24 @@ def test_assignment_plain():
     g = Grammar.from_string(grammar)
     assert assignment_in_productions(g.productions, 'S', 'first')
 
-    p = Parser(g)
+    called = [False]
+
+    def act_s(_, nodes, first):
+        called[0] = True
+        assert first == "2"
+        return nodes
+
+    actions = {
+        "S": act_s
+    }
+
+    p = Parser(g, actions=actions)
 
     input_str = '1 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", "2", "3"]
+    assert called[0]
 
 
 def test_assignment_bool():
@@ -480,12 +492,24 @@ def test_assignment_bool():
     g = Grammar.from_string(grammar)
     assert assignment_in_productions(g.productions, 'S', 'first')
 
-    p = Parser(g)
+    called = [False]
+
+    def act_s(_, nodes, first):
+        called[0] = True
+        assert first is True
+        return nodes
+
+    actions = {
+        "S": act_s
+    }
+
+    p = Parser(g, actions=actions)
 
     input_str = '1 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", "2", "3"]
+    assert called[0]
 
 
 def test_assignment_of_repetition():
@@ -501,12 +525,24 @@ def test_assignment_of_repetition():
     g = Grammar.from_string(grammar)
     assert assignment_in_productions(g.productions, 'S', 'first')
 
-    p = Parser(g)
+    called = [False]
+
+    def act_s(_, nodes, first):
+        called[0] = True
+        assert first == ["2", "2"]
+        return nodes
+
+    actions = {
+        "S": act_s
+    }
+
+    p = Parser(g, actions=actions)
 
     input_str = '1 2 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], "3"]
+    assert called[0]
 
 
 def test_assignment_of_repetition_with_sep():
@@ -523,12 +559,24 @@ def test_assignment_of_repetition_with_sep():
     g = Grammar.from_string(grammar)
     assert assignment_in_productions(g.productions, 'S', 'first')
 
-    p = Parser(g)
+    called = [False]
+
+    def act_s(_, nodes, first):
+        called[0] = True
+        assert first == ["2", "2"]
+        return nodes
+
+    actions = {
+        "S": act_s
+    }
+
+    p = Parser(g, actions=actions)
 
     input_str = '1 2, 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], "3"]
+    assert called[0]
 
 
 def test_multiple_assignment_with_repetitions():
@@ -546,9 +594,22 @@ def test_multiple_assignment_with_repetitions():
     assert assignment_in_productions(g.productions, 'S', 'first')
     assert assignment_in_productions(g.productions, 'S', 'second')
 
-    p = Parser(g)
+    called = [False]
+
+    def act_s(_, nodes, first, second):
+        called[0] = True
+        assert first == ["2", "2"]
+        assert second is True
+        return nodes
+
+    actions = {
+        "S": act_s
+    }
+
+    p = Parser(g, actions=actions)
 
     input_str = '1 2, 2 2 2 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], ["2", "2", "2"], "3"]
+    assert called[0]

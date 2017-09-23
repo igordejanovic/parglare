@@ -419,13 +419,32 @@ class Parser(object):
                 if sem_action:
                     set_context(context, node)
                     context.production = node.production
+                    assignments = node.production.assignments
+                    if assignments:
+                        assgn_results = {}
+                        for a in assignments.values():
+                            if a.op == '=':
+                                assgn_results[a.name] = subresults[a.index]
+                            else:
+                                assgn_results[a.name] = \
+                                    bool(subresults[a.index])
                     if type(sem_action) is list:
-                        result = \
-                            sem_action[
-                                node.production.prod_symbol_id](context,
-                                                                subresults)
+                        if assignments:
+                            result = \
+                                sem_action[
+                                    node.production.prod_symbol_id](
+                                        context, subresults, **assgn_results)
+                        else:
+                            result = \
+                                sem_action[
+                                    node.production.prod_symbol_id](context,
+                                                                    subresults)
                     else:
-                        result = sem_action(context, subresults)
+                        if assignments:
+                            result = sem_action(context, subresults,
+                                                **assgn_results)
+                        else:
+                            result = sem_action(context, subresults)
                 else:
                     if len(subresults) == 1:
                         # Unpack if single subresult
@@ -544,11 +563,27 @@ class Parser(object):
 
         sem_action = production.symbol.action
         if sem_action:
+            assignments = production.assignments
+            if assignments:
+                assgn_results = {}
+                for a in assignments.values():
+                    if a.op == '=':
+                        assgn_results[a.name] = subresults[a.index]
+                    else:
+                        assgn_results[a.name] = bool(subresults[a.index])
+
             if type(sem_action) is list:
-                result = sem_action[production.prod_symbol_id](context,
-                                                               subresults)
+                if assignments:
+                    result = sem_action[production.prod_symbol_id](
+                        context, subresults, **assgn_results)
+                else:
+                    result = sem_action[production.prod_symbol_id](context,
+                                                                   subresults)
             else:
-                result = sem_action(context, subresults)
+                if assignments:
+                    result = sem_action(context, subresults, **assgn_results)
+                else:
+                    result = sem_action(context, subresults)
 
         else:
             if debug:

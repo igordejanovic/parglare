@@ -188,7 +188,8 @@ class Production(object):
         if assignments:
             self.assignments = {}
             for assignment in assignments:
-                self.assignments[assignment.name] = assignment
+                if assignment.name:
+                    self.assignments[assignment.name] = assignment
         self.assoc = assoc
         self.prior = prior
         self.dynamic = dynamic
@@ -230,10 +231,18 @@ class Assignment(object):
     """
     Assignment (`=` or `?=`) in productions.
     """
-    def __init__(self, name, op, symbol):
+    def __init__(self, name, op, symbol, index=None):
+        """
+        Attributes:
+        name(str): The name on the LHS of assignment.
+        op(str): Either a `=` or `?=`.
+        symbol(GrammarSymbol): A grammar symbol on the RHS.
+        index(int): Index in the production RHS
+        """
         self.name = name
         self.op = op
         self.symbol = symbol
+        self.index = index
 
 
 class Grammar(object):
@@ -751,6 +760,10 @@ def act_production_rule(_, nodes):
     prods = []
     for prod in rhs_prods:
         assignments, disrules = prod
+        # Here we know the indexes of assignments
+        for idx, a in enumerate(assignments):
+            if a.name:
+                a.index = idx
         gsymbols = (a.symbol for a in assignments)
         assoc = disrules.get('assoc', ASSOC_NONE)
         prior = disrules.get('priority', DEFAULT_PRIORITY)
