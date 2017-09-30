@@ -1,16 +1,19 @@
 from __future__ import unicode_literals
 from parglare import Grammar, Parser
-from parglare.actions import pass_inner, pass_nochange, pass_single, \
-    collect_sep
 
 grammar = r"""
+@pass_inner
 CSVFile: OptionalNewLines Records OptionalNewLines;
+@collect_sep
 Records: Records OptionalNewLines Record| Record;
+@pass_single
 Record: Fields NewLine;
+@collect_sep
 Fields: Fields "," Field | Field;
 Field: QuotedField | FieldContent;
 NewLines: NewLine | NewLines NewLine;
 OptionalNewLines: NewLines | EMPTY;
+@pass_inner
 QuotedField: "\"" FieldContentQuoted "\"";
 FieldContent: /[^,\n]+/;
 FieldContentQuoted: /(("")|([^"]))+/;
@@ -18,22 +21,9 @@ NewLine: "\n";
 """
 
 
-# Semantic Actions
-actions = {
-    "CSVFile": pass_inner,
-    "Records": collect_sep,
-    "Record": pass_single,
-    "Fields": collect_sep,
-    "Field": pass_single,
-    "QuotedField": pass_inner,
-    "FieldContent": pass_nochange,
-    "FieldContentQuoted": pass_nochange,
-}
-
-
 def main(debug=False):
     g = Grammar.from_string(grammar)
-    parser = Parser(g, ws='\t ', actions=actions, debug=debug)
+    parser = Parser(g, ws='\t ', debug=debug)
 
     input_str = """
     First, Second with multiple words, "Third, quoted with comma"

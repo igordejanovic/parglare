@@ -1,9 +1,8 @@
 Model:        Header Object;
-Object:       '{' ID Properties '}';
-Properties:   Property | Properties Property;
-Property:     '-' ID '=' Values OptionalSemiColon;
-Property:     '-' ID '=' ';';
-Values:       Value  | Values ';' Value | Values Value;
+Object:       '{' ID Property+ '}';
+Property:     '-' ID '=' Values SemiColon?;
+Property:     '-' ID '=' SemiColon;
+Values:       Value  | Values SemiColon? Value;
 Value:        STRING | INT | FLOAT | GUID | Object | ID;
 
 
@@ -14,6 +13,6 @@ INT: /[-+]?[0-9]+\b/ {prefer};
 FLOAT: /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
 
 GUID: /[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*/;
-OptionalSemiColon: ';' | EMPTY;
+SemiColon: ';';
 ID: /[a-zA-Z_][a-zA-Z_0-9]*/;
 Header: /[^\n]*/;

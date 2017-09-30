@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from parglare import Grammar, Parser
-from parglare.actions import pass_inner, pass_single, pass_nochange
+from parglare.actions import pass_inner, pass_single
 
 grammar = """
 Calc: Assignments E;
@@ -47,7 +47,6 @@ actions = {
           pass_single,
           pass_single],
     "Number": lambda _, value: float(value),
-    "VariableName": pass_nochange,
     "VariableRef": lambda context, nodes: context.variables[nodes[0]],
 }
 
