@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 import sys
 import re
 import itertools
+from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 
@@ -18,6 +19,12 @@ ASSOC_RIGHT = 2
 
 # Priority
 DEFAULT_PRIORITY = 10
+
+# Multiplicity
+MULT_ONE = '1'
+MULT_OPTIONAL = '0..1'
+MULT_ONE_OR_MORE = '1..*'
+MULT_ZERO_OR_MORE = '0..*'
 
 
 def escape(instr):
@@ -229,20 +236,45 @@ class ProductionRHS(list):
 
 class Assignment(object):
     """
-    Assignment (`=` or `?=`) in productions.
+    General assignment (`=` or `?=`, a.k.a. `named matches`) in productions.
+    Used also for references as LHS and assignment operator are optional.
     """
-    def __init__(self, name, op, symbol, index=None):
+    def __init__(self, name, op, symbol, orig_symbol, multiplicity=MULT_ONE,
+                 index=None):
         """
         Attributes:
-        name(str): The name on the LHS of assignment.
-        op(str): Either a `=` or `?=`.
-        symbol(GrammarSymbol): A grammar symbol on the RHS.
-        index(int): Index in the production RHS
+            name(str): The name on the LHS of assignment.
+            op(str): Either a `=` or `?=`.
+            symbol(GrammarSymbol): A grammar symbol on the RHS.
+            orig_symbol(GrammarSymbol): A de-sugarred grammar symbol on the
+                RHS, i.e. referenced symbol without regex operators.
+            multiplicty(str): Multiplicity of the RHS reference (used for regex
+                operators ?, *, +). See MULT_* constants above. By default
+                multiplicity is MULT_ONE.
+            index(int): Index in the production RHS
         """
         self.name = name
         self.op = op
         self.symbol = symbol
+        self.orig_symbol = orig_symbol
+        self.multiplicity = multiplicity
         self.index = index
+
+
+class PGAttribute(object):
+    """
+    PGAttribute definition created by named matches.
+
+    Attributes:
+        name(str): The name of the attribute.
+        multiplicity(str): Multiplicity of the attribute. See MULT_* constants.
+        type_name(str): The type name of the attribute value(s). It is also the
+            name of the referring grammar rule.
+    """
+    def __init__(self, name, multiplicity, type_name):
+        self.name = name
+        self.multiplicity = multiplicity
+        self.type_name = type_name
 
 
 class Grammar(object):
@@ -510,9 +542,14 @@ class Grammar(object):
     @staticmethod
     def from_string(grammar_str, recognizers=None, debug=False,
                     parse_debug=False, _no_check_recognizers=False):
-        g = Grammar(get_grammar_parser(parse_debug).parse(grammar_str),
+        from .parser import Context
+        context = Context()
+        context.classes = {}
+        g = Grammar(get_grammar_parser(parse_debug).parse(grammar_str,
+                                                          context=context),
                     recognizers=recognizers,
                     _no_check_recognizers=_no_check_recognizers)
+        g.classes = context.classes
         if debug:
             g.print_debug()
         return g
@@ -520,9 +557,13 @@ class Grammar(object):
     @staticmethod
     def from_file(file_name, recognizers=None, debug=False, parse_debug=False,
                   _no_check_recognizers=False):
-        g = Grammar(get_grammar_parser(parse_debug).parse_file(file_name),
-                    recognizers=recognizers,
+        from .parser import Context
+        context = Context()
+        context.classes = {}
+        g = Grammar(get_grammar_parser(parse_debug).parse_file(
+            file_name, context=context), recognizers=recognizers,
                     _no_check_recognizers=_no_check_recognizers)
+        g.classes = context.classes
         if debug:
             g.print_debug()
         return g
@@ -751,13 +792,14 @@ def act_rule_with_action(_, nodes):
     return productions
 
 
-def act_production_rule(_, nodes):
+def act_production_rule(context, nodes):
     name, _, rhs_prods, __ = nodes
 
     symbol = NonTerminal(name)
 
     # Collect all productions for this rule
     prods = []
+    attrs = {}
     for prod in rhs_prods:
         assignments, disrules = prod
         # Here we know the indexes of assignments
@@ -774,6 +816,50 @@ def act_production_rule(_, nodes):
                                 assoc=assoc,
                                 prior=prior,
                                 dynamic=dynamic))
+
+        for a in assignments:
+            if a.name:
+                attrs[a.name] = PGAttribute(a.name, a.multiplicity,
+                                            a.orig_symbol.name)
+            # TODO: check/handle multiple assignments to the same attribute
+
+    # If named matches are used create Python class that will be used
+    # for object instantiation.
+    class ParglareMetaClass(type):
+
+        def __repr__(cls):
+            return '<parglare:{} class at {}>'.format(name, id(cls))
+
+    @add_metaclass(ParglareMetaClass)
+    class ParglareClass(object):
+        """
+        Dynamicaly created class. Each parglare rule that uses named matches
+        by default uses this action that will create Python object of this
+        class.
+
+        Attributes:
+            _pg_attrs(dict): A dict of meta-attributes keyed by name.
+                Used by common rules.
+            _pg_position(int): A position in the input string where
+                this class is defined.
+            _pg_position_end(int): A position in the input string where
+                this class ends.
+        """
+
+        _pg_attrs = attrs
+
+        def __repr__(self):
+            if hasattr(self, 'name'):
+                return "<{}:{}>".format(name, self.name)
+            else:
+                return "<parglare:{} instance at {}>"\
+                    .format(name, hex(id(self)))
+
+    ParglareClass.__name__ = name
+    if name in context.classes:
+        raise GrammarError('Multiple definition for Rule/Class "{}"'
+                           .format(name))
+    context.classes[name] = ParglareClass
 
     return prods
 
@@ -954,7 +1040,7 @@ def act_repeatable_gsymbol(context, nodes):
     gsymbol, rep_op = nodes
 
     if not rep_op:
-        return gsymbol
+        return gsymbol, gsymbol, MULT_ONE
 
     if len(rep_op) > 1:
         rep_op, modifiers = rep_op
@@ -969,22 +1055,28 @@ def act_repeatable_gsymbol(context, nodes):
 
     if rep_op == '*':
         new_nt = make_zero_or_more(context, gsymbol, sep_ref)
+        multiplicity = MULT_ZERO_OR_MORE
     elif rep_op == '+':
         new_nt = make_one_or_more(context, gsymbol, sep_ref)
+        multiplicity = MULT_ONE_OR_MORE
     else:
         new_nt = make_optional(context, gsymbol, sep_ref)
+        multiplicity = MULT_OPTIONAL
 
-    return new_nt
+    return new_nt, gsymbol, multiplicity
 
 
 def act_assignment(_, nodes):
-    elem = nodes[0]
-    if type(elem) is list:
-        name, op, symbol = elem
+    repeatable_gsymbol = nodes[0]
+    if isinstance(repeatable_gsymbol[0], GrammarSymbol):
+        symbol, orig_symbol, multiplicity = repeatable_gsymbol
+        name, op = None, None
     else:
-        name, op, symbol = None, None, elem
+        # Named match
+        name, op, repeatable_gsymbol = repeatable_gsymbol
+        symbol, orig_symbol, multiplicity = repeatable_gsymbol
 
-    return Assignment(name, op, symbol)
+    return Assignment(name, op, symbol, orig_symbol, multiplicity)
 
 
 def act_recognizer_str(_, nodes):
