@@ -163,3 +163,17 @@ optional = [
     pass_single,
     pass_none
 ]
+
+
+def obj(context, nodes, **attrs):
+    """
+    Creates Python object with the attributes created from named matches.
+    This action is used as default action for rules with named matches.
+    """
+    grammar = context.parser.grammar
+    rule_name = context.production.symbol.name
+
+    cls = grammar.classes[rule_name]
+    instance = cls(**attrs)
+
+    return instance

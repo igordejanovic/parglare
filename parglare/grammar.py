@@ -825,41 +825,47 @@ def act_production_rule(context, nodes):
 
     # If named matches are used create Python class that will be used
     # for object instantiation.
-    class ParglareMetaClass(type):
+    if attrs:
+        class ParglareMetaClass(type):
 
-        def __repr__(cls):
-            return '<parglare:{} class at {}>'.format(name, id(cls))
+            def __repr__(cls):
+                return '<parglare:{} class at {}>'.format(name, id(cls))
 
-    @add_metaclass(ParglareMetaClass)
-    class ParglareClass(object):
-        """
-        Dynamicaly created class. Each parglare rule that uses named matches
-        by default uses this action that will create Python object of this
-        class.
+        @add_metaclass(ParglareMetaClass)
+        class ParglareClass(object):
+            """Dynamicaly created class. Each parglare rule that uses named
+            matches by default uses this action that will create Python object
+            of this class.
 
-        Attributes:
-            _pg_attrs(dict): A dict of meta-attributes keyed by name.
-                Used by common rules.
-            _pg_position(int): A position in the input string where
-                this class is defined.
-            _pg_position_end(int): A position in the input string where
-                this class ends.
-        """
+            Attributes:
+                _pg_attrs(dict): A dict of meta-attributes keyed by name.
+                    Used by common rules.
+                _pg_position(int): A position in the input string where
+                    this class is defined.
+                _pg_position_end(int): A position in the input string where
+                    this class ends.
 
-        _pg_attrs = attrs
+            """
 
-        def __repr__(self):
-            if hasattr(self, 'name'):
-                return "<{}:{}>".format(name, self.name)
-            else:
-                return "<parglare:{} instance at {}>"\
-                    .format(name, hex(id(self)))
+            _pg_attrs = attrs
 
-    ParglareClass.__name__ = name
-    if name in context.classes:
-        raise GrammarError('Multiple definition for Rule/Class "{}"'
-                           .format(name))
-    context.classes[name] = ParglareClass
+            def __init__(self, **attrs):
+                for attr_name, attr_value in attrs.items():
+                    setattr(self, attr_name, attr_value)
+
+            def __repr__(self):
+                if hasattr(self, 'name'):
+                    return "<{}:{}>".format(name, self.name)
+                else:
+                    return "<parglare:{} instance at {}>"\
+                        .format(name, hex(id(self)))
+
+        ParglareClass.__name__ = str(name)
+        if name in context.classes:
+            raise GrammarError('Multiple definition for Rule/Class "{}"'
+                               .format(name))
+        context.classes[name] = ParglareClass
+        symbol.action_name = 'obj'
 
     return prods
 
@@ -1068,7 +1074,8 @@ def act_repeatable_gsymbol(context, nodes):
 
 def act_assignment(_, nodes):
     repeatable_gsymbol = nodes[0]
-    if isinstance(repeatable_gsymbol[0], GrammarSymbol):
+    if isinstance(repeatable_gsymbol[0], GrammarSymbol) or \
+       isinstance(repeatable_gsymbol[0], Reference):
         symbol, orig_symbol, multiplicity = repeatable_gsymbol
         name, op = None, None
     else:
