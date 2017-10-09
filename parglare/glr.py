@@ -8,7 +8,7 @@ from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
     pos_to_line_col, STOP, Context
 from .export import dot_escape
-from .termui import prints, h_print, a_print
+from .termui import prints, h_print, a_print, style
 
 
 def no_colors(f):
@@ -332,8 +332,8 @@ class GLRParser(Parser):
                 h_print("Calculate reduction paths of length {}, "
                         "choose only non-empty if possible:"
                         .format(prod_len), level=1)
-                h_print("",
-                        "start node=[{}], symbol={}, empty=[{},{}], "
+                h_print("start node=",
+                        "[{}], symbol={}, empty=[{},{}], "
                         "length={}".format(head, head.state.symbol,
                                            head.any_empty,
                                            head.all_empty, prod_len), level=2)
@@ -346,8 +346,8 @@ class GLRParser(Parser):
                     path_has_empty = path_has_empty or any_empty
                     path_all_empty = path_all_empty and all_empty
                     if debug:
-                        h_print("",
-                                "node=[{}], symbol={}, "
+                        h_print("node=",
+                                "[{}], symbol={}, "
                                 "any_empty={}, all_empty={}, length={}"
                                 .format(parent, parent.state.symbol,
                                         path_has_empty, path_all_empty,
@@ -376,7 +376,7 @@ class GLRParser(Parser):
                 h_print("Reduction roots = ", len(roots),
                         level=1, new_line=True)
                 for r in roots:
-                    prints("\t\t{}".format(str(r[0])))
+                    h_print("", r[0], level=2)
 
             # Create new heads.
             for idx, (root, subresults, any_empty, all_empty) \
@@ -623,7 +623,7 @@ class GLRParser(Parser):
                         self._trace_step_kill(head)
 
     def _debug_active_heads(self, heads):
-        h_print("Active heads {}: {}".format(len(heads), heads))
+        h_print("Active heads {}:".format(len(heads)), heads)
         h_print("Number of trees = ", sum([h.number_of_trees for h in heads]))
 
     def _debug_context(self, input_str, position, lookahead_tokens,
