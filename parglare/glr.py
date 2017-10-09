@@ -3,10 +3,26 @@ from __future__ import print_function, unicode_literals
 import codecs
 from itertools import chain
 from parglare import Parser
+from parglare import termui as t
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
     pos_to_line_col, STOP, Context
 from .export import dot_escape
+from .termui import prints, h_print, a_print
+
+
+def no_colors(f):
+    """
+    Decorator for trace methods to prevent ANSI COLOR codes apearing in
+    the trace dot output.
+    """
+    def nc_f(*args, **kwargs):
+        self = args[0]
+        t.colors = False
+        r = f(*args, **kwargs)
+        t.colors = self.debug_colors
+        return r
+    return nc_f
 
 
 class GLRParser(Parser):
@@ -31,7 +47,7 @@ class GLRParser(Parser):
         """
 
         if self.debug:
-            print("\n*** PARSING STARTED\n")
+            a_print("*** PARSING STARTED\n")
             if self.debug_trace:
                 self._start_trace()
 
@@ -41,7 +57,7 @@ class GLRParser(Parser):
         # Initialize dynamic disambiguation
         if self.dynamic_filter:
             if self.debug:
-                print("\Initializing dynamic disambiguation.")
+                prints("\tInitializing dynamic disambiguation.")
             self.dynamic_filter(None, None, None, None, None)
 
         self.last_position = 0
@@ -83,7 +99,7 @@ class GLRParser(Parser):
                     # Report dying heads
                     if self.debug:
                         for h in self.heads_for_recovery:
-                            print("\t** Killing head: {}".format(h))
+                            a_print("** Killing head:", h, level=1)
                             if self.debug_trace:
                                 self._trace_step_kill(h)
 
@@ -96,7 +112,7 @@ class GLRParser(Parser):
 
         results = [x[1] for x in self.finish_head.parents]
         if self.debug:
-            print("*** {} sucessful parse(s).".format(len(results)))
+            a_print("*** {} sucessful parse(s).".format(len(results)))
             if self.debug_trace:
                 self._export_dot_trace()
 
@@ -108,7 +124,7 @@ class GLRParser(Parser):
         """
         debug = self.debug
         if debug:
-            print("\n**REDUCING HEADS")
+            a_print("**REDUCING HEADS", new_line=True)
             self._debug_active_heads(self.heads_for_reduce)
 
         next_tokens = self._next_tokens
@@ -132,7 +148,7 @@ class GLRParser(Parser):
             head = heads_for_reduce.pop()
             self.reducing_heads.append(head)
             if debug:
-                print("\nReducing head: {}".format(str(head)))
+                a_print("Reducing head: ", str(head), new_line=True)
 
             position = head.next_position
             if position > self.last_position:
@@ -162,7 +178,7 @@ class GLRParser(Parser):
                     symbol_action = actions.get(lookahead_token.symbol, None)
                     if symbol_action and symbol_action[0].action is ACCEPT:
                         if debug:
-                            print("\t*** SUCCESS!!!!")
+                            a_print("*** SUCCESS!!!!")
                             if self.debug_trace:
                                 self._trace_step_finish(head)
                         if self.finish_head:
@@ -187,7 +203,7 @@ class GLRParser(Parser):
             if not tokens:
                 if debug:
                     # This head is dying
-                    print("\t***Killing this head.")
+                    a_print("***Killing this head.", level=1)
                     if self.debug_trace:
                         self._trace_step_kill(head)
 
@@ -215,13 +231,13 @@ class GLRParser(Parser):
                         self.heads_for_recovery.append(
                             (reduce_head, frozenset(actions.keys())))
                     elif debug:
-                        print("\t** Killing head: {}".format(reduce_head))
+                        a_print("** Killing head: ", reduce_head, level=1)
                         if self.debug_trace:
                             self._trace_step_kill(reduce_head)
 
                 if debug:
-                    print("\n\tNo more reductions for this head and "
-                          "lookahead token {}.".format(token))
+                    h_print("No more reductions for this head and "
+                            "lookahead token:", token, level=1, new_line=True)
 
     def _do_shifts(self, context):
         """Perform all shifts.
@@ -233,7 +249,7 @@ class GLRParser(Parser):
         """
         debug = self.debug
         if self.debug:
-            print("\n**SHIFTING HEADS")
+            a_print("**SHIFTING HEADS", new_line=True)
 
         heads_for_shift = self.heads_for_shift
         input_str = self.input_str
@@ -245,7 +261,7 @@ class GLRParser(Parser):
         heads_for_shift.sort(key=lambda h: h.end_position)
         for head in heads_for_shift:
             if debug:
-                print("\nShifting head: {}".format(str(head)))
+                a_print("Shifting head: ", head, new_line=True)
 
             position = head.next_position
             layout_content = head.next_layout_content
@@ -285,7 +301,7 @@ class GLRParser(Parser):
         context.production = production
 
         if debug:
-            print("\n\t* Reducing by prod {}".format(production))
+            a_print("Reducing by prod ", production, level=1, new_line=True)
 
         prod_len = len(production.rhs)
         roots = []
@@ -313,13 +329,14 @@ class GLRParser(Parser):
             # Collect subresults along the way to be used with semantic actions
             to_process = [(head, [], prod_len, False, True)]
             if debug:
-                print("\tCalculate reduction paths of length {}, "
-                      "choose only non-empty if possible:"
-                      .format(prod_len))
-                print("\t\tstart node=[{}], symbol={}, empty=[{},{}], "
-                      "length={}".format(head, head.state.symbol,
-                                         head.any_empty,
-                                         head.all_empty, prod_len))
+                h_print("Calculate reduction paths of length {}, "
+                        "choose only non-empty if possible:"
+                        .format(prod_len), level=1)
+                h_print("",
+                        "start node=[{}], symbol={}, empty=[{},{}], "
+                        "length={}".format(head, head.state.symbol,
+                                           head.any_empty,
+                                           head.all_empty, prod_len), level=2)
             roots = []
             while to_process:
                 node, subresults, length, path_has_empty, path_all_empty \
@@ -329,10 +346,13 @@ class GLRParser(Parser):
                     path_has_empty = path_has_empty or any_empty
                     path_all_empty = path_all_empty and all_empty
                     if debug:
-                        print("\t\tnode=[{}], symbol={}, "
-                              "any_empty={}, all_empty={}, length={}".format(
-                                  parent, parent.state.symbol,
-                                  path_has_empty, path_all_empty, length))
+                        h_print("",
+                                "node=[{}], symbol={}, "
+                                "any_empty={}, all_empty={}, length={}"
+                                .format(parent, parent.state.symbol,
+                                        path_has_empty, path_all_empty,
+                                        length),
+                                level=2)
                     parent_subres = [res] + subresults
                     if length:
                         to_process.append(
@@ -353,15 +373,17 @@ class GLRParser(Parser):
                     roots = non_empty
 
             if debug:
-                print("\n\tReduction roots = {}:".format(len(roots)))
+                h_print("Reduction roots = ", len(roots),
+                        level=1, new_line=True)
                 for r in roots:
-                    print("\t\t{}".format(str(r[0])))
+                    prints("\t\t{}".format(str(r[0])))
 
             # Create new heads.
             for idx, (root, subresults, any_empty, all_empty) \
                     in enumerate(roots):
                 if debug:
-                    print("\n\tReducing for root {}:".format(idx + 1))
+                    h_print("Reducing for root {}:".format(idx + 1),
+                            level=1, new_line=True)
 
                 if self.dynamic_filter and \
                     not self._call_dynamic_filter(REDUCE, token_ahead,
@@ -415,10 +437,12 @@ class GLRParser(Parser):
         else:
 
             if self.debug:
-                print("\n\tShift:{} \"{}\"".format(state.state_id,
-                                                   token.value),
-                      "at position",
-                      pos_to_line_col(self.input_str, context.start_position))
+                a_print("Shifting", "\"{}\" to state {} "
+                        .format(token.value, state.state_id) +
+                        "at position " +
+                        str(pos_to_line_col(self.input_str,
+                                            context.start_position)),
+                        level=1, new_line=True)
 
             context.end_position = context.start_position + len(token)
 
@@ -438,7 +462,7 @@ class GLRParser(Parser):
 
             self.heads_for_reduce.append(new_head)
             if debug:
-                print("\tNew shifted head {}.".format(str(new_head)))
+                h_print("New shifted head ", new_head, level=1)
                 if self.debug_trace:
                     self._trace_head(new_head,
                                      "{}:{}".format(
@@ -456,12 +480,13 @@ class GLRParser(Parser):
         for head in self.heads_for_shift:
             if head == new_head:
                 if self.debug:
-                    print("\tMerging head for shifting.")
+                    h_print("Merging head for shifting.", level=1)
                 head.merge_head(new_head, self)
                 break
         else:
             if self.debug:
-                print("\n\tNew head for shifting: {}.".format(str(new_head)))
+                h_print("New head for shifting: ", new_head,
+                        level=1, new_line=True)
             self.heads_for_shift.append(new_head)
 
     def merge_create_head(self, new_head, old_head, root_head, context,
@@ -476,7 +501,7 @@ class GLRParser(Parser):
             # Special case is reduction of empty production. For automata state
             # self-reference create stack node loop.
             if debug:
-                print("\tLooping automata transition.")
+                a_print("Looping automata transition.", level=1)
             result = self._call_reduce_action(production, subresults, context)
             old_head.parents.append((old_head, result, True, True))
 
@@ -485,8 +510,9 @@ class GLRParser(Parser):
             # had and the new head is empty we have a loop due to EMPTY
             # reductions.
             if debug:
-                print("\tAutomata loop detected. "
-                      "Rejecting the new head: {}".format(str(new_head)))
+                a_print("Automata loop detected. ",
+                        "Rejecting the new head: {}".format(str(new_head)),
+                        level=1)
             return
 
         result = self._call_reduce_action(production, subresults, context)
@@ -499,13 +525,12 @@ class GLRParser(Parser):
                 if head.merge_head(new_head, self):
                     if self.debug and self.debug_trace:
                         self._trace_step(old_head, head, root_head,
-                                         "R:{}".format(
-                                             dot_escape(str(production))))
+                                         "R:{}".format(dot_escape(production)))
                 break
         else:
             self.heads_for_reduce.append(new_head)
             if self.debug:
-                print("\tNew reduced head {}.".format(str(new_head)))
+                h_print("New reduced head ", new_head, level=2, new_line=True)
                 if self.debug_trace:
                     self._trace_head(new_head, "{}:{}".format(
                         new_head.state.state_id,
@@ -514,7 +539,7 @@ class GLRParser(Parser):
 
             if self.debug and self.debug_trace:
                 self._trace_step(old_head, new_head, root_head,
-                                 "R:{}".format(dot_escape(str(production))))
+                                 "R:{}".format(dot_escape(production)))
 
     def _next_tokens(self, state, input_str, position):
         try:
@@ -536,31 +561,32 @@ class GLRParser(Parser):
         input_str = self.input_str
         for head, symbols in self.heads_for_recovery:
             if debug:
-                print("\n\t**Error found. Recovery initiated for head {}."
-                      .format(head))
-                print("\tSymbols expected: {}".format(symbols))
+                a_print("**Error found. ",
+                        "Recovery initiated for head {}.".format(head),
+                        level=1, new_line=True)
+                h_print("Symbols expected: ", symbols, level=1)
             if context.start_position in self.recovery_results:
                 position, token = self.recovery_results[context.start_position]
                 if debug:
-                    print("\tReusing cached recovery results.")
+                    prints("\tReusing cached recovery results.")
             else:
                 if type(self.error_recovery) is bool:
                     # Default recovery
                     if debug:
-                        print("\tDoing default error recovery.")
+                        prints("\tDoing default error recovery.")
                     error, position, token = self.default_error_recovery(
                         input_str, context.start_position, set(symbols))
                 else:
                     # Custom recovery provided during parser construction
                     if debug:
-                        print("\tDoing custom error recovery.")
+                        prints("\tDoing custom error recovery.")
                     error, position, token = self.error_recovery(
                         self, input_str, context.start_position, set(symbols))
 
                 if error:
                     self.errors.append(error)
                     if debug:
-                        print("\tError: {}".format(str(error)))
+                        a_print("Error: ", error, level=1)
                 else:
                     # In GLR multiple heads may initiate recovery at the same
                     # position. If there is already error created at current
@@ -582,45 +608,48 @@ class GLRParser(Parser):
                 if position:
                     head.next_position = position
                     if debug:
-                        print("\tAdvancing position to {}."
-                              .format(pos_to_line_col(input_str, position)))
+                        h_print("Advancing position to ",
+                                pos_to_line_col(input_str, position),
+                                level=1)
                 elif debug:
-                    print("\tIntroducing token {}.".format(repr(token)))
+                    h_print("Introducing token {}", repr(token), level=1)
 
                 head.token_ahead = token
                 self.heads_for_reduce.append(head)
             else:
                 if debug:
-                    print("\tKilling head: {}".format(head))
+                    a_print("Killing head: ", head, level=1)
                     if self.debug_trace:
                         self._trace_step_kill(head)
 
     def _debug_active_heads(self, heads):
-        print("Active heads {}: {}".format(len(heads), heads))
-        print("Number of trees = {}".format(
-            sum([h.number_of_trees for h in heads])))
+        h_print("Active heads {}: {}".format(len(heads), heads))
+        h_print("Number of trees = ", sum([h.number_of_trees for h in heads]))
 
     def _debug_context(self, input_str, position, lookahead_tokens,
                        expected_symbols=None,
                        layout_content=''):
-        print("\tPosition:", pos_to_line_col(input_str, position))
-        print("\tContext:", position_context(input_str, position))
+        h_print("Position:",
+                pos_to_line_col(input_str, position), level=1)
+        h_print("Context:", position_context(input_str, position), level=1)
         lc = layout_content.replace("\n", "\\n") \
             if type(layout_content) is str else layout_content
         if layout_content:
-            print("\tLayout: '{}'".format(lc))
+            h_print("Layout: ", "'{}'".format(lc), level=1)
         if expected_symbols:
-            print("\tSymbols expected: {}".format(
-                [s.name for s in expected_symbols]))
-        print("\tToken(s) ahead: {}".format(lookahead_tokens))
+            h_print("Symbols expected: ",
+                    [s.name for s in expected_symbols], level=1)
+        h_print("Token(s) ahead:", lookahead_tokens, level=1)
 
     def _start_trace(self):
         self.dot_trace = ""
         self.trace_step = 1
 
+    @no_colors
     def _trace_head(self, new_head, label):
         self.dot_trace += '{} [label="{}"];\n'.format(new_head.key, label)
 
+    @no_colors
     def _trace_step(self, old_head, new_head, root_head, label=''):
         new_head_key = new_head.key if isinstance(new_head, GSSNode) \
                        else new_head
@@ -630,9 +659,11 @@ class GLRParser(Parser):
         self.dot_trace += '{} -> {};\n'.format(new_head_key, root_head.key)
         self.trace_step += 1
 
+    @no_colors
     def _trace_step_finish(self, from_head):
         self._trace_step(from_head, "success", from_head)
 
+    @no_colors
     def _trace_step_kill(self, from_head):
         self.dot_trace += '{}_killed [shape="diamond" label="killed"];\n'\
             .format(from_head.key)
@@ -640,6 +671,7 @@ class GLRParser(Parser):
             .format(from_head.key, from_head.key)
         self.trace_step += 1
 
+    @no_colors
     def _trace_step_drop(self, from_head, to_head):
         self.dot_trace += '{} -> {} [label="drop empty" {}];\n'\
             .format(from_head.key, to_head.key, TRACE_DOT_DROP_STYLE)
@@ -652,10 +684,10 @@ class GLRParser(Parser):
             f.write(self.dot_trace)
             f.write("}\n")
 
-        print("Generated file {}.".format(file_name))
-        print("You can use dot viewer or generate pdf with the "
-              "following command:")
-        print("dot -Tpdf {0} -O {0}.pdf".format(file_name))
+        prints("Generated file {}.".format(file_name))
+        prints("You can use dot viewer or generate pdf with the "
+               "following command:")
+        h_print("dot -Tpdf {0} -O {0}.pdf".format(file_name))
 
 
 class GSSNode(object):
@@ -720,13 +752,13 @@ class GSSNode(object):
         # Reject merging if other node is "more empty"
         if other.all_empty or self.less_empty(other):
             if parser.debug:
-                print("\tRejected merging of empty head: {}".format(other))
+                h_print("Rejected merging of empty head: ", other, level=1)
             return False
         else:
             if self.parents and other.less_empty(self):
                 if parser.debug:
-                    print("\tMerging less empty head to more empty -> "
-                          "less empty head wins.")
+                    h_print("Merging less empty head to more empty",
+                            " -> less empty head wins.", level=1)
                     if parser.debug_trace:
                         for p in self.parents:
                             parser._trace_step_drop(self, p[0])
@@ -741,8 +773,8 @@ class GSSNode(object):
             self.parents.extend(other.parents)
 
             if parser.debug:
-                print("\tMerging head {} \n\t\tto head {}.".format(
-                    str(other), str(self)))
+                h_print("Merging head ", other, level=1)
+                h_print("to head", self, level=2)
             return True
 
     def create_link(self, parent, result, any_empty, all_empty, parser):
@@ -751,8 +783,8 @@ class GSSNode(object):
         self.any_empty |= any_empty
         self.all_empty &= all_empty
         if parser.debug:
-            print("\tCreating link \tfrom head {}\n\t\t\tto head   {}"
-                  .format(self, parent))
+            h_print("Creating link \tfrom head:", self, level=2)
+            h_print("  to head:", parent, level=4)
 
     def for_token(self, token):
         """Create head for the given token either by returning this head if the
@@ -780,8 +812,8 @@ class GSSNode(object):
             return new_head
 
     def __eq__(self, other):
-        """Stack nodes are equal if they are on the same position in the same state for
-        the same lookahead token.
+        """Stack nodes are equal if they are on the same position in the
+        same state for the same lookahead token.
 
         """
         return self.state.state_id == other.state.state_id \

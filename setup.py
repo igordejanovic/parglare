@@ -28,17 +28,21 @@ if sys.argv[-1].startswith('publish'):
     sys.exit()
 
 requirements = [
-    # TODO: put package requirements here
+    'click==6.7'
 ]
 
 test_requirements = [
-    # TODO: put package test requirements here
+    'flake8',
+    'tox',
+    'coverage',
+    'coveralls',
+    'pytest',
 ]
 
 setup(
     name='parglare',
     version=VERSION,
-    description="A pure Python Scannerless LR/GLR parser ",
+    description="A pure Python Scannerless LR/GLR parser",
     long_description=README,
     author="Igor R. Dejanovic",
     author_email='igorREPLACEWITHDOTdejanovic@gmail.com',

@@ -6,6 +6,8 @@ import itertools
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
+from parglare.termui import prints, s_emph, s_header, a_print, h_print
+from parglare import termui
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -203,9 +205,10 @@ class Production(object):
 
     def __str__(self):
         if hasattr(self, 'prod_id'):
-            return "%d: %s = %s" % (self.prod_id, self.symbol, self.rhs)
+            return (s_header("%d:") + " %s " + s_emph("=") +
+                    " %s") % (self.prod_id, self.symbol, self.rhs)
         else:
-            return "%s = %s" % (self.symbol, self.rhs)
+            return ("%s " + s_emph("=") + " %s") % (self.symbol, self.rhs)
 
     def __repr__(self):
         return 'Production({})'.format(str(self.symbol))
@@ -541,43 +544,46 @@ class Grammar(object):
 
     @staticmethod
     def from_string(grammar_str, recognizers=None, debug=False,
-                    parse_debug=False, _no_check_recognizers=False):
+                    debug_parse=False, debug_colors=False,
+                    _no_check_recognizers=False):
         from .parser import Context
         context = Context()
         context.classes = {}
-        g = Grammar(get_grammar_parser(parse_debug).parse(grammar_str,
-                                                          context=context),
+        g = Grammar(get_grammar_parser(debug_parse, debug_colors)
+                    .parse(grammar_str, context=context),
                     recognizers=recognizers,
                     _no_check_recognizers=_no_check_recognizers)
         g.classes = context.classes
+        termui.colors = debug_colors
         if debug:
             g.print_debug()
         return g
 
     @staticmethod
-    def from_file(file_name, recognizers=None, debug=False, parse_debug=False,
-                  _no_check_recognizers=False):
+    def from_file(file_name, recognizers=None, debug=False, debug_parse=False,
+                  debug_colors=False, _no_check_recognizers=False):
         from .parser import Context
         context = Context()
         context.classes = {}
-        g = Grammar(get_grammar_parser(parse_debug).parse_file(
+        g = Grammar(get_grammar_parser(debug_parse, debug_colors).parse_file(
             file_name, context=context), recognizers=recognizers,
                     _no_check_recognizers=_no_check_recognizers)
         g.classes = context.classes
+        termui.colors = debug_colors
         if debug:
             g.print_debug()
         return g
 
     def print_debug(self):
-        print("\n\n*** GRAMMAR ***")
-        print("Terminals:")
-        print(" ".join([text(t) for t in self.terminals]))
-        print("NonTerminals:")
-        print(" ".join([text(n) for n in self.nonterminals]))
+        a_print("*** GRAMMAR ***", new_line=True)
+        h_print("Terminals:")
+        prints(" ".join([text(t) for t in self.terminals]))
+        h_print("NonTerminals:")
+        prints(" ".join([text(n) for n in self.nonterminals]))
 
-        print("Productions:")
+        h_print("Productions:")
         for p in self.productions:
-            print(p)
+            prints(text(p))
 
 
 # Grammar for grammars
@@ -757,12 +763,13 @@ pg_productions = [
 grammar_parser = None
 
 
-def get_grammar_parser(debug):
+def get_grammar_parser(debug, debug_colors):
     global grammar_parser
     if not grammar_parser:
         from parglare import Parser
         grammar_parser = Parser(Grammar.from_struct(pg_productions, GRAMMAR),
-                                actions=pg_actions, debug=debug)
+                                actions=pg_actions, debug=debug,
+                                debug_colors=debug_colors)
     EMPTY.action = pass_none
     EOF.action = pass_none
     return grammar_parser

@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+from parglare.termui import s_header as _
+from parglare.termui import s_attention as _a
 
 
 class GrammarError(Exception):
@@ -26,11 +28,13 @@ def _full_context(input_str, position):
 def nomatch_error(symbols):
     def _inner(file_name, input_str, position):
         context, line, column = _full_context(input_str, position)
-        return 'Error {}at position {},{} => "{}". Expected: {}'.format(
+        return (_a('Error') + ' {}at position ' + _a('{},{} ')
+                + _('=>') + ' "{}". ' +
+                _('Expected: ') + '{}').format(
                 'in file "{}" '.format(file_name)
                 if file_name else "",
                 line, column, context,
-                ' or '.join([s.name for s in symbols]))
+                _(' or ').join([s.name for s in symbols]))
     return _inner
 
 
@@ -42,7 +46,7 @@ def disambiguation_error(tokens):
                 'in file "{}" '.format(file_name)
                 if file_name else "",
                 line, column, context,
-                ' or '.join([str(t) for t in tokens]))
+                _(' or ').join([str(t) for t in tokens]))
     return _inner
 
 

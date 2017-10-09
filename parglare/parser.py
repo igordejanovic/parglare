@@ -9,6 +9,8 @@ from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, disambiguation_error, \
     nomatch_error, SRConflicts, RRConflicts
 from .actions import pass_none
+from .termui import prints, h_print, a_print, s_emph, s_header, s_attention
+from parglare import termui
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -30,8 +32,8 @@ class Parser(object):
     """
     def __init__(self, grammar, start_production=1, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
-                 debug_layout=False, ws='\n\t ', build_tree=False,
-                 tables=LALR, layout=False, position=False,
+                 debug_colors=False, debug_layout=False, ws='\n\t ',
+                 build_tree=False, tables=LALR, layout=False, position=False,
                  prefer_shifts=False, error_recovery=False,
                  dynamic_filter=None):
         self.grammar = grammar
@@ -58,6 +60,8 @@ class Parser(object):
         self.position = position
         self.debug = debug
         self.debug_trace = debug_trace
+        self.debug_colors = debug_colors
+        termui.colors = debug_colors
         self.debug_layout = debug_layout
 
         self.build_tree = build_tree
@@ -136,7 +140,7 @@ class Parser(object):
 
     def print_debug(self):
         if self.layout and self.debug_layout:
-            print('\n\n*** LAYOUT parser ***\n')
+            a_print('*** LAYOUT parser ***', new_line=True)
         self.table.print_debug()
 
     def parse_file(self, file_name, **kwargs):
@@ -160,14 +164,14 @@ class Parser(object):
         """
 
         if self.debug:
-            print("*** Parsing started")
+            a_print("*** PARSING STARTED", new_line=True)
 
         self.errors = []
         self.current_error = None
 
         if self.dynamic_filter:
             if self.debug:
-                print("\tInitializing dynamic disambiguation.")
+                prints("\tInitializing dynamic disambiguation.")
             self.dynamic_filter(None, None, None, None, None)
 
         state_stack = [StackNode(self.table.states[0], position, 0, None,
@@ -184,7 +188,7 @@ class Parser(object):
         while True:
             cur_state = state_stack[-1].state
             if debug:
-                print("Current state =", cur_state.state_id)
+                a_print("Current state:", cur_state.state_id, new_line=True)
 
             actions = cur_state.actions
 
@@ -201,7 +205,8 @@ class Parser(object):
                     position, layout_content = self._skipws(context, input_str,
                                                             position)
                     if self.debug:
-                        print("\tLayout content: '{}'".format(layout_content))
+                        h_print("Layout content:",
+                                "'{}'".format(layout_content), level=1)
 
                     ntok = next_token(cur_state, input_str, position)
                     context.layout_content = layout_content
@@ -216,10 +221,11 @@ class Parser(object):
             context.layout_content = layout_content
 
             if debug:
-                print("\tContext:", position_context(input_str, position))
-                print("\tTokens expected: {}"
-                      .format(expected_symbols_str(actions.keys())))
-                print("\tToken ahead: {}".format(ntok))
+                h_print("Context:",
+                        position_context(input_str, position), level=1)
+                h_print("Tokens expected:",
+                        expected_symbols_str(actions.keys()), level=1)
+                h_print("Token ahead:", ntok, level=1)
 
             acts = actions.get(ntok.symbol)
 
@@ -234,7 +240,8 @@ class Parser(object):
                         raise ParseError(file_name, input_str, e.position,
                                          nomatch_error(actions.keys()))
                     if debug:
-                        print("**Error found. Recovery initiated.**")
+                        a_print("**Error found. Recovery initiated.**")
+
                     # No actions to execute. Try error recovery.
                     if type(self.error_recovery) is bool:
                         # Default recovery
@@ -251,7 +258,7 @@ class Parser(object):
                     # missing/invalid tokens.
                     if error:
                         if debug:
-                            print("\tError: {}".format(str(error)))
+                            a_print("Error: ", error, level=1)
                         self.errors.append(error)
 
                     if not ntok:
@@ -259,8 +266,9 @@ class Parser(object):
                         # input and advancing position. Thus, stay in the same
                         # state and try to continue.
                         if debug:
-                            print("\tContinuing at position {}.".format(
-                                pos_to_line_col(input_str, position)))
+                            h_print("Continuing at position ",
+                                    pos_to_line_col(input_str, position),
+                                    level=1)
 
                         new_token = True
                         continue
@@ -317,10 +325,11 @@ class Parser(object):
                 context.symbol = symbol
 
                 if debug:
-                    print("\tShift:{} \"{}\"".format(state.state_id,
-                                                     ntok.value),
-                          "at position",
-                          pos_to_line_col(input_str, position))
+                    a_print("Shift:",
+                            "{} \"{}\"" .format(state.state_id,
+                                                ntok.value) + " at position " +
+                            str(pos_to_line_col(input_str,
+                                                position)), level=1)
 
                 result = self._call_shift_action(symbol, ntok.value, context)
 
@@ -347,7 +356,8 @@ class Parser(object):
                 context.production = production
 
                 if debug:
-                    print("\tReducing by prod '%s'." % str(production))
+                    a_print("Reducing", "by prod '%s'.".format(production),
+                            level=1)
 
                 r_length = len(production.rhs)
                 if r_length:
@@ -379,7 +389,7 @@ class Parser(object):
 
             elif act.action is ACCEPT:
                 if debug:
-                    print("SUCCESS!!!")
+                    a_print("SUCCESS!!!")
                 assert len(state_stack) == 2
                 if self.position:
                     return state_stack[1].result, position
@@ -474,8 +484,10 @@ class Parser(object):
         if self.debug:
             content = layout_content.replace("\n", "\\n") \
                       if type(layout_content) is text else layout_content
-            print("\tSkipping whitespaces: '{}'".format(content))
-            print("\tNew position:", pos_to_line_col(input_str, position))
+            h_print("Skipping whitespaces:",
+                    "'{}'".format(content), level=1)
+            h_print("New position:",
+                    pos_to_line_col(input_str, position), level=1)
 
         return position, layout_content
 
@@ -527,8 +539,8 @@ class Parser(object):
         if self.build_tree:
             # call action for building tree node if tree building is enabled
             if debug:
-                print("\tBuilding terminal node for '{}'. "
-                      .format(symbol.name))
+                h_print("Building terminal node",
+                        "'{}'.".format(symbol.name), level=2)
             return treebuild_shift_action(context, matched_str)
 
         sem_action = symbol.action
@@ -537,13 +549,16 @@ class Parser(object):
 
         else:
             if debug:
-                print("\tNo action defined for '{}'. "
-                      "Result is matched string.".format(symbol.name))
+                h_print("No action defined",
+                        "for '{}'. "
+                        "Result is matched string.".format(symbol.name),
+                        level=1)
             result = matched_str
 
         if debug:
-            print("\tAction result = type:{} value:{}"
-                  .format(type(result), repr(result)))
+            h_print("Action result = ",
+                    "type:{} value:{}"
+                    .format(type(result), repr(result)), level=1)
 
         return result
 
@@ -557,8 +572,8 @@ class Parser(object):
         if self.build_tree:
             # call action for building tree node if enabled.
             if debug:
-                print("\tBuilding non-terminal node '{}'."
-                      .format(production.symbol.name))
+                h_print("Building non-terminal node",
+                        "'{}'.".format(production.symbol.name), level=2)
             return treebuild_reduce_action(context, nodes=subresults)
 
         sem_action = production.symbol.action
@@ -587,20 +602,21 @@ class Parser(object):
 
         else:
             if debug:
-                print("\tNo action defined for '{}'."
-                      .format(production.symbol.name))
+                h_print("No action defined",
+                        " for '{}'.".format(production.symbol.name), level=1)
             if len(subresults) == 1:
                 if debug:
-                    print("\tUnpacking a single subresult.")
+                    h_print("Unpacking a single subresult.", level=1)
                 result = subresults[0]
             else:
                 if debug:
-                    print("\tResult is a list of subresults.")
+                    h_print("Result is a list of subresults.", level=1)
                 result = subresults
 
         if debug:
-            print("\tAction result = type:{} value:{}"
-                  .format(type(result), repr(result)))
+            h_print("Action result =",
+                    "type:{} value:{}"
+                    .format(type(result), repr(result)), level=1)
 
         return result
 
@@ -613,15 +629,15 @@ class Parser(object):
         """
 
         if self.debug:
-            print("\tLexical disambiguation. Tokens:",
-                  [x for x in tokens])
+            h_print("Lexical disambiguation.",
+                    " Tokens: {}".format([x for x in tokens]), level=1)
 
         # Longest-match strategy.
         max_len = max((len(x.value) for x in tokens))
         tokens = [x for x in tokens if len(x.value) == max_len]
         if self.debug:
-            print("\tDisambiguation by longest-match strategy. Tokens:",
-                  [x for x in tokens])
+            h_print("Disambiguation by longest-match strategy.",
+                    "Tokens: {}".format([x for x in tokens]), level=1)
         if len(tokens) == 1:
             return tokens[0]
         else:
@@ -629,7 +645,8 @@ class Parser(object):
             pref_tokens = [x for x in tokens if x.symbol.prefer]
             if len(pref_tokens) == 1:
                 if self.debug:
-                    print("\tPreferring token {}.".format(pref_tokens[0]))
+                    h_print("Preferring token {}.".format(pref_tokens[0]),
+                            level=1)
                 return pref_tokens[0]
             elif len(pref_tokens) > 1:
                 tokens = pref_tokens
@@ -668,19 +685,22 @@ class Parser(object):
             return True
 
         if self.debug:
-            print("\tCalling filter for action: {}, token={}{}{}".format(
-                "SHIFT" if action is SHIFT else "REDUCE", token,
-                ", prod={}".format(production) if action is REDUCE else "",
-                ", subresults={}".format(subresults)
-                if action is REDUCE else ""))
+            h_print("Calling filter for action:",
+                    " {}, token={}{}{}"
+                    .format(
+                        "SHIFT" if action is SHIFT else "REDUCE", token,
+                        ", prod={}".format(production)
+                        if action is REDUCE else "",
+                        ", subresults={}".format(subresults)
+                        if action is REDUCE else ""), level=2)
 
         accepted = self.dynamic_filter(action, token, production, subresults,
                                        state)
         if self.debug:
             if accepted:
-                print("\tAction accepted.")
+                a_print("Action accepted.", level=2)
             else:
-                print("\tAction rejected.")
+                a_print("Action rejected.", level=2)
 
         return accepted
 
@@ -772,12 +792,12 @@ class LRItem(object):
             s.append(".")
         s = " ".join(s)
 
-        follow = "{{{}}}".format(", ".join([str(t) for t in self.follow])) \
-                 if self.follow else "{}"
+        follow = (s_emph("{{") + "{}" + s_emph("}}"))\
+            .format(", ".join([str(t) for t in self.follow])) \
+            if self.follow else "{}"
 
-        return "%d: %s = %s   %s" % (self.production.prod_id,
-                                     self.production.symbol, s,
-                                     follow)
+        return (s_header("%d:") + " %s " + s_emph("=") + " %s   %s") \
+            % (self.production.prod_id, self.production.symbol, s, follow)
 
     @property
     def is_kernel(self):
@@ -880,7 +900,7 @@ class LRState(object):
         return self.items[self.items.index(other_item)]
 
     def __str__(self):
-        s = "\nState %d:%s\n" % (self.state_id, self.symbol)
+        s = "\n\n" + s_header("State %d:%s\n" % (self.state_id, self.symbol))
         for i in self.items:
             s += "\t{}\n".format(i)
         return s
@@ -889,7 +909,7 @@ class LRState(object):
         return str(self)
 
     def print_debug(self):
-        print(text(self))
+        prints(text(self))
 
 
 class Node(object):
@@ -1118,7 +1138,7 @@ def position_context(input_str, position):
     Returns position context string.
     """
     start = max(position-10, 0)
-    c = text(input_str[start:position]) + "*" \
+    c = text(input_str[start:position]) + s_attention("*") \
         + text(input_str[position:position+10])
     c = c.replace("\n", "\\n")
     return c

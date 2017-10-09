@@ -8,6 +8,7 @@ from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_RIGHT, STOP, \
 from .exceptions import GrammarError, SRConflict, RRConflict
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
+from .termui import prints, h_print, a_print, s_emph
 
 
 def create_table(grammar, first_sets=None, follow_sets=None,
@@ -226,8 +227,9 @@ def create_table(grammar, first_sets=None, follow_sets=None,
     # Scanning optimization. Preorder actions based on terminal priority and
     # specificity. Set _finish flags.
     def act_order(act_item):
-        """Priority is the strongest property. After that honor string recognizer over
-        other types of recognizers.
+        """Priority is the strongest property. After that honor string
+        recognizer over other types of recognizers.
+
         """
         symbol, act = act_item
         return symbol.prior * 1000000 + (500000 + len(symbol.recognizer.value)
@@ -361,28 +363,30 @@ class LRTable(object):
                                 RRConflict(state, term, prods))
 
     def print_debug(self):
-        print("\n\n*** STATES ***")
+        a_print("*** STATES ***", new_line=True)
         for state in self.states:
             state.print_debug()
 
             if state.gotos:
-                print("\n\n\tGOTO:")
-                print("\t", ", ".join(["%s->%d" % (k, v.state_id)
-                                       for k, v in state.gotos.items()]))
-            print("\n\tACTIONS:")
-            print("\t", ", ".join(
-                ["%s->%s" % (k, str(v[0])
-                             if len(v) == 1 else "[{}]".format(
-                                     ",".join([str(x) for x in v])))
+                h_print("GOTO:", level=1, new_line=True)
+                prints("\t" + ", ".join([("%s" + s_emph("->") + "%d")
+                                         % (k, v.state_id)
+                                         for k, v in state.gotos.items()]))
+            h_print("ACTIONS:", level=1, new_line=True)
+            prints("\t" + ", ".join(
+                [("%s" + s_emph("->") + "%s")
+                 % (k, str(v[0]) if len(v) == 1 else "[{}]".format(
+                     ",".join([str(x) for x in v])))
                  for k, v in state.actions.items()]))
 
         if self.sr_conflicts:
-            print("\n\n*** S/R conflicts ***")
-            print("There are {} S/R conflicts".format(len(self.sr_conflicts)))
+            a_print("*** S/R conflicts ***", new_line=True)
+            h_print("There are {} S/R conflicts"
+                    .format(len(self.sr_conflicts)))
             for src in self.sr_conflicts:
                 print(src.message)
 
         if self.rr_conflicts:
-            print("\n\n*** R/R conflicts ***\n")
+            a_print("*** R/R conflicts ***", new_line=True)
             for rrc in self.rr_conflicts:
                 print(rrc.message)

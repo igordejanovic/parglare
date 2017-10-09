@@ -6,8 +6,8 @@ def main(debug=False):
 
     this_folder = os.path.dirname(__file__)
     grammar_file = os.path.join(this_folder, 'rhapsody.pg')
-    g = Grammar.from_file(grammar_file)
-    parser = Parser(g, build_tree=True, debug=debug)
+    g = Grammar.from_file(grammar_file, debug=debug, debug_colors=True)
+    parser = Parser(g, build_tree=True, debug=debug, debug_colors=True)
 
     with open(os.path.join(this_folder, 'LightSwitch.rpy'), 'r') as f:
         result = parser.parse(f.read())
@@ -15,4 +15,4 @@ def main(debug=False):
 
 
 if __name__ == '__main__':
-    main(debug=False)
+    main(debug=True)

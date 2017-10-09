@@ -30,7 +30,7 @@ def test_pglr_viz():
     except:
         pass
     assert not os.path.exists(DOT_FILE)
-    result = subprocess.call(['pglr', 'viz', GRAMMAR_FILE])
+    result = subprocess.call(['pglr', '--no-colors', 'viz', GRAMMAR_FILE])
     assert result == 0
     assert os.path.exists(DOT_FILE)
     assert 'digraph grammar' in open(DOT_FILE, 'r').read()

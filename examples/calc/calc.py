@@ -52,8 +52,8 @@ actions = {
 
 
 def main(debug=False):
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
+    g = Grammar.from_string(grammar, debug=debug, debug_colors=True)
+    parser = Parser(g, actions=actions, debug=debug, debug_colors=True)
 
     input_str = """
     a = 5

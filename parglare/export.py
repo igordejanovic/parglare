@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from parglare.parser import REDUCE, SHIFT, ACCEPT
 import codecs
 import sys
+from parglare import termui as t
 if sys.version < '3':
     text = unicode  # noqa
 else:
@@ -26,15 +27,20 @@ HEADER = '''
 
 
 def dot_escape(s):
-    return s.replace('\n', r'\n')\
-            .replace('\\', '\\\\')\
-            .replace('"', r'\"')\
-            .replace('|', r'\|')\
-            .replace('{', r'\{')\
-            .replace('}', r'\}')\
-            .replace('>', r'\>')\
-            .replace('<', r'\<')\
-            .replace('?', r'\?')
+    colors = t.colors
+    t.colors = False
+    s = text(s)
+    out = s.replace('\n', r'\n')\
+           .replace('\\', '\\\\')\
+           .replace('"', r'\"')\
+           .replace('|', r'\|')\
+           .replace('{', r'\{')\
+           .replace('}', r'\}')\
+           .replace('>', r'\>')\
+           .replace('<', r'\<')\
+           .replace('?', r'\?')
+    t.colors = colors
+    return out
 
 
 def grammar_pda_export(table, file_name):
