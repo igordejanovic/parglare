@@ -423,19 +423,21 @@ def test_repetition_operator_many_times_same():
     """
 
     grammar = """
-    S: "2" b*[comma] "3"? b*[comma] EOF;
+    S: "2" b*[comma] "3"? b*[semicolon] EOF;
     b: "b";
     comma: ",";
+    semicolon: ";";
     """
 
     g = Grammar.from_string(grammar)
     assert g.get_nonterminal('b_0_comma')
+    assert g.get_nonterminal('b_0_semicolon')
 
     p = Parser(g)
 
-    input_str = '2 b  3 b, b'
+    input_str = '2 b, b  3 b; b; b'
     result = p.parse(input_str)
-    assert result == ["2", ["b"], "3", ["b", "b"], None]
+    assert result == ["2", ["b", "b"], "3", ["b", "b", "b"], None]
 
 
 def assignment_in_productions(prods, symbol_name, assgn_name):
