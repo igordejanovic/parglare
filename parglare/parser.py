@@ -41,7 +41,7 @@ class Parser(object):
         EMPTY.action = pass_none
         EOF.action = pass_none
         if actions:
-            self._resolve_override_common_actions(actions)
+            self._resolve_override_builtin_actions(actions)
 
         self.layout_parser = None
         if not layout:
@@ -112,9 +112,9 @@ class Parser(object):
             if unhandled_conflicts:
                 raise RRConflicts(unhandled_conflicts)
 
-    def _resolve_override_common_actions(self, actions):
+    def _resolve_override_builtin_actions(self, actions):
         """
-        If a user provides `common_actions` param resolve all grammar symbol
+        If a user provides `actions` param resolve all grammar symbol
         actions and override already resolved parglare common actions.
         """
         for symbol in self.grammar:

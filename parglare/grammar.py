@@ -409,7 +409,7 @@ class Grammar(object):
                     'Multiple different grammar actions for rule "{}".'
                     .format(new_symbol.name))
 
-            # Try to find action in common action module
+            # Try to find action in built-in actions module
             # If action is not given we suppose that it is a user defined
             # action that will be provided during parser instantiation
             # using `actions` param.

@@ -161,9 +161,9 @@ def test_terminal_empty_body():
     assert b.recognizer is None
 
 
-def test_common_grammar_action():
+def test_builtin_grammar_action():
     """
-    Common actions can be defined inside a grammar.
+    Builtin actions can be referenced from a grammar.
     """
 
     grammar = """
