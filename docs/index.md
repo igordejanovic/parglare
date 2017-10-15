@@ -2,12 +2,12 @@
 
 ---
 
-A pure Python scannerless LR/GLR parser.
+A pure Python LR/GLR parser.
 
 
 ## Feature highlights
 
-* **Scannerless parsing**
+* **Integrated scanner**
 
     There is no lexing as a separate phase. There is no separate lexer grammar.
     The parser will try to reconize token during parsing at the given location.
@@ -61,12 +61,16 @@ A pure Python scannerless LR/GLR parser.
     The whole point of parsing is that you want to transform your input to some
     output. There are several options:
 
-    - do nothing - this way your parser is a mere recognizer, it produces
-      nothing but just verifies that your input adhere to the grammar;
-    - call default actions - the default actions will build a parse tree.
+    - by default parser builds nested lists;
+    - you can build a tree using `build_tree=True` parameter to the parser;
     - call user supplied actions - you write a Python function that is called
       when the rule matches. You can do whatever you want at this place and the
-      result returned is used in parent rules/actions.
+      result returned is used in parent rules/actions. There are some handy
+      build-in actions in the `parglare.actions` module.
+    - User actions may be postponed and called on the parse tree - this is handy
+      if you want to process your tree in multiple ways, or you are using GLR
+      parsing and the actions are introducing side-effects and you would like to
+      avoid those effects created from wrong parsers/trees.
 
     Besides calling your actions in-line - during the parsing process - you can
     decide to build the tree first and call custom actions afterwards. This is a
@@ -102,32 +106,11 @@ A pure Python scannerless LR/GLR parser.
 * **Table caching**
 
     At the moment parser tables are constructed on-the-fly which might be slow
-    for larger grammars. In the future tables will be recalculated only if the
-    grammar has changed and cached.
-
-* **Specify common actions in the grammar**
-
-    parglare provides some commonly used custom actions. It would reduce
-    boiler-plate in specification of these actions if a syntax is added to provide
-    that information in the grammar directly.
-
-    Example:
-
-        @collect
-        some_objects: some_objects some_object | some_object;
-
-* **Support for named matches**
-
-    At the moment, as a parameter to action you get a list of matched elements. It
-    would be useful to reference these element by name rather than by position.
-
-        my_rule: first=first_match_rule second=second_match_rule;
-        first_match_rule: ...;
-        second_match_rule: ...;
-
-    Now in your action for `my_rule` you will get `first` and `second` as a parameters.
-    This would make it easy to provide a new common action that will return a Python
-    object with supplied parameters as object attributes.
+    for larger grammars. This is usually a problem only for parsers which need
+    to be instantiated before each parse (e.g. when called from CLI). For
+    long-running processes this is not a problem as parser instance can be kept
+    and reused. In the future, tables will be recalculated only if the grammar
+    has changed and loaded from cache otherwise.
 
 * **GLR performance optimization**
 
