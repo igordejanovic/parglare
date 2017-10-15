@@ -12,7 +12,8 @@ pages:
 - Home: index.md
 - User Guide:
     - Getting started: getting_started.md
-    - Grammar: grammar.md
+    - Grammar language: grammar_language.md
+    - Grammar object: grammar.md
     - Parser parameters: parser.md
     - Actions: actions.md
     - Recognizers: recognizers.md

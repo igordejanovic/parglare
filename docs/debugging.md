@@ -46,7 +46,7 @@ To put the parser in the debug mode do:
     parser = Parser(grammar, debug=True)
 
 
-To debug [layout grammar](./grammar.md#handling-whitespaces-and-comments) do:
+To debug [layout grammar](./grammar_language.md#handling-whitespaces-and-comments) do:
 
     parser = Parser(grammar, debug_layout=True)
 

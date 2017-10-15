@@ -1,7 +1,7 @@
 # Getting started
 
 The first thing to do is to write your language grammar using
-the [parglare grammar language](./grammar.md). You write the grammar either as a
+the [parglare grammar language](./grammar_language.md). You write the grammar either as a
 Python string in your source code or as a separate file. In case you are writing
 a grammar of a complex language I would suggest the separate file approach.
 Although not mandatory, the convention is that parglare grammar files have `.pg`
@@ -19,7 +19,8 @@ file_name = .....
 grammar = Grammar.from_file(file_name)
 ```
 
-If there is no errors in the grammar you now have the grammar instance.
+If there is no errors in the grammar you now have the grammar instance. For more
+information see the [section about `Grammar` object](./grammar.md).
 
 
 !!! note

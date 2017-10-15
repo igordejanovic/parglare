@@ -78,7 +78,7 @@ A pure Python LR/GLR parser.
     are using GLR and want to be sure that actions are called only for the
     surviving tree.
 
-* [**Support for whitespaces/comments**](./grammar.md#)
+* [**Support for whitespaces/comments**](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
 
     Support for language comments/whitespaces is done using the special rule
     `LAYOUT`. By default whitespaces are skipped. This is controlled by `ws`

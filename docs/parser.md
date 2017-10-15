@@ -16,7 +16,7 @@ more on actions see [here](./actions.md).
 ## layout_actions
 
 This parameter is used to specify actions called when the rules
-of [layout subgrammar](./grammar.md#handling-whitespaces-and-comments) are
+of [layout subgrammar](./grammar_language.md#handling-whitespaces-and-comments) are
 reduced. This is rarely needed but there are times when you would like to
 process matched layout (e.g. whitespaces, comments).
 
@@ -27,7 +27,7 @@ by grammar rule names.
 
 This parameter specifies a string whose characters are considered to be
 whitespace. By default its value is `'\n\t '`. It is used
-if [layout subgrammar](./grammar.md#handling-whitespaces-and-comments) (`LAYOUT`
+if [layout subgrammar](./grammar_language.md#handling-whitespaces-and-comments) (`LAYOUT`
 grammar rule) is not defined. If `LAYOUT` rule is given in the grammar it is
 used instead and this parameter is ignored.
 

@@ -15,10 +15,10 @@ constructing a tree (or some other form) out of a flat list of objects. Those
 objects are characters if text is parsed, but don't have to be.
 
 Parglare has two built-in recognizers for textual parsing that can be specified
-in [the grammar directly](./grammar.md#string-recognizer). Those are usually
-enough if text is parsed, but if non-textual content is parsed you will have to
-supply your own recognizers that are able to recognize tokens in the input
-stream of objects.
+in [the grammar directly](./grammar_language.md#string-recognizer). Those are
+usually enough if text is parsed, but if non-textual content is parsed you will
+have to supply your own recognizers that are able to recognize tokens in the
+input stream of objects.
 
 Recognizers are Python callables of the following form:
 

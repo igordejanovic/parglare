@@ -162,7 +162,7 @@ can
 [reference these actions directly from the grammar](#referencing-rule-actions-from-a-grammar).
 Built-in actions are used implicitly by parglare as default actions in
 particular case (e.g.
-for [syntactic sugar](./grammar.md#syntactic-sugar-bnf-extensions)) but you
+for [syntactic sugar](./grammar_language.md#syntactic-sugar-bnf-extensions)) but you
 might need to reference some of these actions.
 
 
@@ -210,7 +210,7 @@ Following are parglare built-in actions from the `parglare.actions` module:
   `None` if empty match.
 
 - `obj` - Used implicitly by rules
-  using [named matches](./grammar.md#named-matches). Creates Python object with
+  using [named matches](./grammar_language.md#named-matches). Creates Python object with
   attributes derived from named matches.
 
 
@@ -236,12 +236,12 @@ built-in actions to be used for each rule directly in the grammar.
 
 ## Actions for rules using named matches
 
-If [named matches](./grammar.md#named-matches) are used in the grammar rule,
+If [named matches](./grammar_language.md#named-matches) are used in the grammar rule,
 action will be called with additional keyword parameters named by the name of
 LHS of rule assignments. If no action is specified for the rule a built-in
 action `obj` is called and will produce instance of dynamically created Python
 class corresponding to the grammar rule. See more in the section
-on [named matches](./grammar.md#named-matches).
+on [named matches](./grammar_language.md#named-matches).
 
 If for some reason you want to override default behavior that create Python
 object you can create action like this:
