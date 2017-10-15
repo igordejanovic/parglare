@@ -32,29 +32,6 @@ def pass_inner(_, nodes):
     return nodes[1]
 
 
-def pass_single_if_exists(_, nodes):
-    """
-    Unpack single value and pass up if value exists, if not return None.
-    """
-    if nodes:
-        return nodes[0]
-
-
-def pass_value(_, nodes):
-    """
-    Used for productions which represent alternatives of terminals:
-    Element = "a" | "b";
-    If this action is attached to `Element` production it will be called
-    with a list of `NodeTerm` instance and will return list with the matched
-    string. This is used in conjuction with collect_* actions.
-    """
-    return nodes[0].value
-
-
-def collect_single(_, nodes):
-    return [nodes[0].value]
-
-
 def collect_first(_, nodes):
     """
     Used for:
@@ -158,7 +135,7 @@ collect_right_sep_optional = [
 ]
 
 # Used for the production of the form:
-# OptionalElement: Element | EMTPY;
+# OptionalElement: Element | EMPTY;
 optional = [
     pass_single,
     pass_none

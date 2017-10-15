@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Parser, GLRParser, Grammar
-from parglare.actions import pass_single_if_exists
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
@@ -173,7 +172,6 @@ def test_layout_actions(parser_class):
 
     actions = {
         'Comment': comment_action,
-        'LayoutItem': pass_single_if_exists,
         'LAYOUT': layout_action,
         'a': a_action
     }
