@@ -10,13 +10,14 @@ All parameters described here work for both `parglare.Parser` and
 
 ## actions
 
-This parameters is a dict of actions keyed by the name of the grammar rule. For
-more on actions see [here](./actions.md).
+This parameters is a dict of [actions](./actions.md) keyed by the name of the
+grammar rule.
 
 ## layout_actions
 
 This parameter is used to specify actions called when the rules
-of [layout subgrammar](./grammar_language.md#handling-whitespaces-and-comments) are
+of
+[layout sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) are
 reduced. This is rarely needed but there are times when you would like to
 process matched layout (e.g. whitespaces, comments).
 
@@ -27,19 +28,15 @@ by grammar rule names.
 
 This parameter specifies a string whose characters are considered to be
 whitespace. By default its value is `'\n\t '`. It is used
-if [layout subgrammar](./grammar_language.md#handling-whitespaces-and-comments) (`LAYOUT`
+if
+[layout sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) (`LAYOUT`
 grammar rule) is not defined. If `LAYOUT` rule is given in the grammar it is
 used instead and this parameter is ignored.
 
 ## build_tree
 
-A boolean whose default value is `True`. This flag is used to decide if default
-actions should be used if `actions` is not defined. The default actions build a
-[parse tree](./parse_trees.md).
-
-If this flag is set to `False` and no `actions` is given parser will work as a
-recognizer, i.e. it will parse the input but will not produce any output except
-the mere information if the input adhere to the given grammar.
+A boolean whose default value is `False`. If set to `True` parser will call
+actions that will build the [parse tree](./parse_trees.md).
 
 ## prefer_shifts
 
@@ -80,7 +77,7 @@ For more information see [Debugging](./debugging.md)
 
 The value of this parameter is either `parglare.LALR` or `parglare.SLR` and it
 is used to chose the type of LR tables to create. By default `LALR` tables are
-used with a slight twist to avoid Reduce/Reduce conflicts that may happen with a
+used with a slight twist to avoid Reduce/Reduce conflicts that may happen with
 pure LALR tables. This parameter should not be used in normal circumstances but
 is provided more for experimentation purposes.
 
@@ -99,3 +96,15 @@ These two calls accepts the following parameters:
   default `None` - context object is created by the parser.
 - `file_name` - first positional and mandatory parameter only for `parse_file`
   call - the name/path of the file to parse.
+
+
+# Token
+
+This class from `parglare.parser` is used to represent lookahead tokens. Token
+is a concrete matched terminal from the input stream.
+
+## Attributes
+
+- **symbol** (`Terminal`) - terminal grammar symbol represented by this token,
+- **value** (`list` or `str`) - matched part of input stream,
+- **length** (`int`) - length of matched input.

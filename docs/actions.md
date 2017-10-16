@@ -25,7 +25,7 @@ callables if the rule has more than one production/choice. You can provide
 additional actions that are not named after the grammar rule names, these
 actions may be referenced from the grammar
 using
-[`@` syntax for action specification](./actions.md#referencing-rule-actions-from-a-grammar).
+[`@` syntax for action specification](./grammar_language.md#referencing-rule-actions-from-a-grammar).
 
 Lets take a closer look at the quick intro example:
 
@@ -122,7 +122,7 @@ object provides us with the parsing context of where the match occurred.
 
 Following attributes are available on the context object:
 
-- `start_position`/`end_position` - the beginning and the end in the input
+- **start_position/end_position** - the beginning and the end in the input
   stream where the match occured. `start_position` is the location of the first
   element/character in the input while the `end_position` is one past the last
   element/character of the match. Thus `end_position - start_position` will give
@@ -130,23 +130,23 @@ Following attributes are available on the context object:
   `parglare.pos_to_line_col(input, position)` function to get line and column of
   the position. This function returns a tuple `(line, column)`.
 
-- `input_str` - the input string (or list of objects) that is being parsed.
+- **input_str** - the input string (or list of objects) that is being parsed.
 
-- `layout_content` - is the layout (whitespaces, comments etc.) that are
+- **layout_content** - is the layout (whitespaces, comments etc.) that are
   collected from the previous non-layout match. Default actions for building the
   parse tree will attach these layouts to the tree nodes.
 
-- `symbol` - the grammar symbol (instance of either `Terminal` or `NonTerminal`
+- **symbol** - the grammar symbol (instance of either `Terminal` or `NonTerminal`
   which inherits `GrammarSymbol`) this match is for.
 
-- `production` - an instance of `parglare.grammar.Production` class available
+- **production** - an instance of `parglare.grammar.Production` class available
   only on reduction actions (not on shifts). Represents the grammar production.
 
-- `node` - this is available only if the actions are called over the parse tree
+- **node** - this is available only if the actions are called over the parse tree
   using `call_actions`. It represens the instance of `NodeNonTerm` or `NodeTerm`
   classes from the parse tree where the actions is executed.
 
-- `parser` - is the reference to the parser instance. You should use this only
+- **parser** - is the reference to the parser instance. You should use this only
   to investigate parser configuration not to alter its state.
 
 You can also use context object to pass information between lower level and
@@ -159,86 +159,66 @@ too.
 
 parglare provides some common actions in the module `parglare.actions`. You
 can
-[reference these actions directly from the grammar](#referencing-rule-actions-from-a-grammar).
+[reference these actions directly from the grammar](./grammar_language.md#referencing-rule-actions-from-a-grammar).
 Built-in actions are used implicitly by parglare as default actions in
 particular case (e.g.
-for [syntactic sugar](./grammar_language.md#syntactic-sugar-bnf-extensions)) but you
-might need to reference some of these actions.
-
+for [syntactic sugar](./grammar_language.md#syntactic-sugar-bnf-extensions)) but
+you might want to reference some of these actions directly.
 
 Following are parglare built-in actions from the `parglare.actions` module:
 
-- `pass_none` - returns `None`;
+- **pass_none** - returns `None`;
 
-- `pass_nochange` - returns second parameter of action callable (`value` or
+- **pass_nochange** - returns second parameter of action callable (`value` or
   `nodes`) unchanged;
 
-- `pass_empty` - returns an empty list `[]`;
+- **pass_empty** - returns an empty list `[]`;
 
-- `pass_single` - returns `nodes[0]`. Used implicitly by rules where all
+- **pass_single** - returns `nodes[0]`. Used implicitly by rules where all
   productions have only a single rule reference on the RHS;
 
-- `pass_inner` - returns `nodes[1]`. Handy to extract sub-expression value for
+- **pass_inner** - returns `nodes[1]`. Handy to extract sub-expression value for
   values in parentheses;
 
-- `collect` - Used for rules of the form `Elements: Elements Element |
+- **collect** - Used for rules of the form `Elements: Elements Element |
   Element;`. Implicitly used for `+` operator. Returns list;
 
-- `collect_sep` - Used for rules of the form `Elements: Elements separator
+- **collect_sep** - Used for rules of the form `Elements: Elements separator
   Element | Element;`. Implicitly used for `+` with separator. Returns list;
 
-- `collect_optional` - Can be used for rules of the form `Elements: Elements
+- **collect_optional** - Can be used for rules of the form `Elements: Elements
   Element | Element | EMPTY;`. Returns list;
 
-- `collect_sep_optional` - Can be used for rules of the form `Elements: Elements
+- **collect_sep_optional** - Can be used for rules of the form `Elements: Elements
   separator Element | Element | EMPTY;`. Returns list;
 
-- `collect_right` - Can be used for rules of the form `Elements: Element
+- **collect_right** - Can be used for rules of the form `Elements: Element
   Elements | Element;`. Returns list;
 
-- `collect_right_sep` - Can be used for rules of the form `Elements: Element
+- **collect_right_sep** - Can be used for rules of the form `Elements: Element
   separator Elements | Element;`. Returns list;
 
-- `collect_right_optional` - Can be used for rules of the form `Elements:
+- **collect_right_optional** - Can be used for rules of the form `Elements:
   Element Elements | Element | EMPTY;`. Returns list;
 
-- `collect_right_sep_optional` - Can be used for rules of the form `Elements:
+- **collect_right_sep_optional** - Can be used for rules of the form `Elements:
   Element separator Elements | Element | EMPTY;`. Returns list;
 
-- `optional` - Used for rules of the form `OptionalElement: Element | EMPTY;`.
+- **optional** - Used for rules of the form `OptionalElement: Element | EMPTY;`.
   Implicitly used for `?` operator. Returns either a sub-expression value or
   `None` if empty match.
 
-- `obj` - Used implicitly by rules
-  using [named matches](./grammar_language.md#named-matches). Creates Python object with
-  attributes derived from named matches.
+- **obj** - Used implicitly by rules
+  using [named matches](./grammar_language.md#named-matches). Creates Python
+  object with attributes derived from named matches.
 
-
-## Referencing rule actions from a grammar
-
-By default action with the name same as the rule name will be searched in the
-`actions` dict. You can override this by specifying action name for the rule
-directly in the grammar using `@` syntax.
-
-For example:
-
-```
-@myaction
-some_rule: first second;
-```
-
-For rule `some_rule` action with the name `myaction` will be searched in the
-`actions` dict or [built-in actions](#built-in-actions) provided by the
-`parglare.actions` module. This is helpful if you have some common action that
-can be used for multiple rules in your grammar. Also this can be used to specify
-built-in actions to be used for each rule directly in the grammar.
 
 
 ## Actions for rules using named matches
 
-If [named matches](./grammar_language.md#named-matches) are used in the grammar rule,
-action will be called with additional keyword parameters named by the name of
-LHS of rule assignments. If no action is specified for the rule a built-in
+If [named matches](./grammar_language.md#named-matches) are used in the grammar
+rule, action will be called with additional keyword parameters named by the name
+of LHS of rule assignments. If no action is specified for the rule a built-in
 action `obj` is called and will produce instance of dynamically created Python
 class corresponding to the grammar rule. See more in the section
 on [named matches](./grammar_language.md#named-matches).

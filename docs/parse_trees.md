@@ -13,27 +13,27 @@ nodes).
 
 Each node of the tree has following attributes:
 
-- `start_position`/`end_position` - the start and end position in the input
+- **start_position/end_position** - the start and end position in the input
   stream where the node starts/ends. It is given in absolute 0-based offset. To
   convert to line/column format for textual inputs you can use
   `parglare.pos_to_line_col(input_str, position)` function which returns tuple
   `(line, column)`. Of course, this call doesn't make any sense if you are
   parsing a non-textual content.
-- `layout_content` - the layout that preceeds the given tree node. The layout
+- **layout_content** - the layout that preceeds the given tree node. The layout
   consists of whitespaces/comments.
-- `symbol` - a grammar symbol this node is created for.
+- **symbol** - a grammar symbol this node is created for.
 
 
 Additionally, each `NodeTerm` has:
 
-- `value` - the value (a part of input_str) which this terminal represents. It
+- **value** - the value (a part of input_str) which this terminal represents. It
   can be viewed as `input_str[start_position:end_position]`.
 
 Additionally, each `NodeNonTerm` has:
 
-- `children` - subnodes which are also of `NodeNonTerm`/`NodeTerm` type.
+- **children** - subnodes which are also of `NodeNonTerm`/`NodeTerm` type.
   `NodeNonTerm` is iterable. Iterating over it will iterate over its children.
-- `production` - a grammar production which reduction created this node.
+- **production** - a grammar production which reduction created this node.
 
 Each node has a `tree_str()` method which will return a string representation of
 the subtree starting from the given node. If called on root node it will return

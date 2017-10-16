@@ -13,8 +13,8 @@ pages:
 - User Guide:
     - Getting started: getting_started.md
     - Grammar language: grammar_language.md
-    - Grammar object: grammar.md
-    - Parser parameters: parser.md
+    - Grammar class: grammar.md
+    - Parser: parser.md
     - Actions: actions.md
     - Recognizers: recognizers.md
     - Conflicts resolving: conflicts.md

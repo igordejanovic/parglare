@@ -1,4 +1,4 @@
-# LR parsing and conflicts resolving
+# LR parsing, ambiguities and conflicts resolving
 
 LR parser operates as a deterministic PDA (Push-down automata). It is a state
 machine which is always in some state during parsing. The state machine must
@@ -220,7 +220,20 @@ This change in the grammar resolves all ambiguities and our grammar is now
 LR(1).
 
 
-## Dynamic disambiguation / conflict resolution
+##
+
+### priority
+
+### associativity
+
+
+### prefer
+
+
+## Order or conflict resolution
+
+
+## Dynamic disambiguation filter
 
 Priority and associativity based conflict resolution is of static nature, i.e.
 it is compiled during LR table calculation and doesn't depend on the parsed
@@ -329,18 +342,19 @@ def custom_disambiguation_filter(action, token, production, subresults, state):
 ```
 
 This function is a predicate that will be called for each action that is dynamic
-(SHIFT action for dynamic terminal and REDUCE action for dynamic productions).
-You are provided with enough information to make a custom decision whether to
-perform or reject the operation.
+(SHIFT action for dynamic terminal production and REDUCE action for dynamic
+non-terminal productions). You are provided with enough information to make a
+custom decision whether to perform or reject the operation.
 
 Parameters are:
 
-- `action` - either SHIFT or REDUCE constant from `parglare` module,
-- `token` - lookahead token,
-- `production` - a production to be reduced. Valid only for REDUCE.
-- `subresults` - a subresults for the reduction. Valid only for REDUCE. The
-  length of this list must be equal to `len(production.rhs)`.
-- `state` - LR parser state.
+- **action** - either SHIFT or REDUCE constant from `parglare` module,
+- **token (Token)** - a [lookahead token](./parser.md#token),
+- **production (Production)** - a [production]() to be reduced. Valid only for
+  REDUCE.
+- **subresults (list)** - a sub-results for the reduction. Valid only for
+  REDUCE. The length of this list must be equal to `len(production.rhs)`.
+- **state (LRState)** - current LR parser state.
 
 For details see [test_dynamic_disambiguation_filters.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation_filters.py).
 
@@ -363,7 +377,8 @@ parglare has implicit lexical disambiguation strategy that will:
 
 1. Use priorities first.
 2. String recognizers are preferred over regexes (i.e. the most specific match).
-3. If priorities are the same and we have no string recognizers use longest-match strategy.
+3. If priorities are the same and we have no string recognizers use
+   longest-match strategy.
 4. If more recognizers still match use `prefer` rule if given.
 5. If all else fails raise an exception. In case of GLR, ambiguity will be
    handled by parser forking, i.e. you will end up with all solutions/trees.
@@ -381,7 +396,7 @@ or:
 
       number = /\d+/ {prefer};
 
-In addition, you can also specify this terminal to take a part in dynamic
+In addition, you can also specify terminal to take a part in dynamic
 disambiguation:
 
       number = /\d+/ {dynamic};

@@ -1,4 +1,4 @@
-# The grammar object and related APIs
+# The grammar class and related APIs
 
 After you write your grammar either as a Python string or as a separate file the
 next step is to instantiate the grammar object that will be used to create the
@@ -19,36 +19,38 @@ the only mandatory parameter to the `Parser/GLRParser` constructor.
 Both methods `from_string` and `from_file` accept additional optional
 parameters:
 
-- `recognizers` - a dict of custom recognizers. These recognizers are mandatory
+- **recognizers** - a dict of custom recognizers. These recognizers are mandatory
   if a non-textual content is being parsed and the grammar terminals don't
   provide recognizers. See [recognizers section](./recognizers.md) for more
   information.
 
-- `debug` - set to `True` to put the grammar in debug/trace mode. `False` by
+- **debug** - set to `True` to put the grammar in debug/trace mode. `False` by
   default. See [debugging section](./debugging.md) for more information.
 
-- `debug_parse` - set to `True` to debug/trace grammar file/string parsing.
+- **debug_parse** - set to `True` to debug/trace grammar file/string parsing.
   `False` by default.
 
-- `debug_colors` - set to `True` to use colorized debug/trace output. `False` by
+- **debug_colors** - set to `True` to use colorized debug/trace output. `False` by
   default.
 
 
-## Grammar object API
+## Grammar class
 
 ### Attributes
 
-- **terminals** - a set of terminals (instances of `Terminal`);
+- **terminals** - a set of terminals (instances of [`Terminal`](#terminal));
 
-- **nonterminals** - a set of non-terminal (instances of `NonTerminal`);
+- **nonterminals** - a set of non-terminal (instances
+  of [`NonTerminal`](#nonterminal));
 
 - **root_symbol** - grammar symbol of the start/root rule. By default this is
   the first rule in the grammar;
 
-- **productions** - a list of productions (`Production` instances);
+- **productions** - a list of productions ([`Production`](#production)
+  instances);
 
-- **recognizers** - a dict of user supplied recognizers keyed by the terminal
-  rule name;
+- **recognizers** - a dict of [user supplied recognizers](./recognizers.md)
+  keyed by the terminal rule name;
 
 - **classes** - a dict of Python classes dynamically created for rules
   using [named matches](./grammar_language.md#named-matches) keyed by the rule
@@ -68,7 +70,7 @@ parameters:
   name or `None` if not found.
 
 
-## GrammarSymbol
+## GrammarSymbol class
 
 This is a base class for `Terminal` and `NonTerminal`.
 
@@ -77,7 +79,7 @@ This is a base class for `Terminal` and `NonTerminal`.
 - **name** - the name of the grammar symbol,
 
 - **action_name** - the action name assigned for the symbol. This is given in
-  the grammar using the `@` syntax.
+  the grammar using the [`@` syntax](./grammar_language.md#).
 
 - **action** - resolved reference to the action given by the user using
   `actions` parameter of the parser. Overrides grammar action if provided. If
@@ -87,8 +89,45 @@ This is a base class for `Terminal` and `NonTerminal`.
 
 
 
-## Terminal
+## Terminal class
 
-## NonTerminal
+### Attributes
 
-## Production
+- **prior (int)** - a priority used for disambiguation,
+- **recognizer (callable)** - callable in charge of recognition of this terminal
+  in the input stream,
+- **prefer (bool)** - If `True` this recognizer/terminal is preferred in case of
+  conflict where multiple recognizer match at the same place and implicit
+  disambiguation doesn't resolve the conflict.
+- **dynamic (bool)** - `True` if disambiguation should be [resolved dynamically]().
+
+
+## NonTerminal class
+
+Only inherited from `GrammarSymbol`.
+
+
+## Production class
+
+### Attributes
+
+- **symbol (GrammarSymbol)** - LHS of the production,
+
+- **rhs (ProductionRHS)** - RHS of this production,
+
+- **assignments (dict)** - `Assignment` instances keyed by match name. Created
+  by [named matches](./grammar_language.md#named-matches),
+
+- **assoc (int)** - associativity of the production. See
+  `parglare.grammar.ASSOC_{NONE|LEFT|RIGHT}`
+
+- **prior (int)** - integer defining priority of this production. Default
+  priority is 10.
+
+- **dynamic (bool)** - `True` if this production disambiguation should
+  be [resolved dynamically]().
+
+- **prod_id (int)** - ordinal number of the production in the grammar,
+
+- **prod_symbol_id** - zero-based ordinal of the production for the `symbol`
+  grammar symbol, i.e. the ordinal for the alternative choice for this symbol.
