@@ -1,6 +1,30 @@
 History
 -------
 
+- 2017-10-18 Version 0.4
+  - Added regex-like syntax extension for grammar language (`?`, `*`, `+`).
+    Issue: https://github.com/igordejanovic/parglare/issues/3
+  - Rule actions can be defined in grammar using `@` syntax for both built-in
+    actions and user supplied ones.
+    Issues: https://github.com/igordejanovic/parglare/issues/1
+            https://github.com/igordejanovic/parglare/issues/6
+  - Introduced named matches (a.k.a. assignments). Python classes created for
+    each rule using named matches.
+    Issue: https://github.com/igordejanovic/parglare/issues/2
+  - Introduced built-in action for creating Python object for rules using
+    named matches.
+  - Colorized and nicely formatted debug/trace output based on `click` package.
+    Issue: https://github.com/igordejanovic/parglare/issues/8
+  - Introduced `build_tree` parameter for explicitly configuring parser for
+    building a parse tree.
+  - Introducing default actions that build nested lists. Simplifying actions
+    writing.
+  - Added input_str to parser context.
+  - Added `click` dependency.
+  - Reworked `pglr` CLI to use `click`.
+  - Docs reworkings/updates.
+  - Various bugfixes + tests.
+
 - 2017-08-24 Version 0.3
 
   - Dynamic disambiguation filters. Introducing `dynamic` disambiguation rule in
