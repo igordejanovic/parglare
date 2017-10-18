@@ -8,7 +8,7 @@ from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
     pos_to_line_col, STOP, Context
 from .export import dot_escape
-from .termui import prints, h_print, a_print, style
+from .termui import prints, h_print, a_print
 
 
 def no_colors(f):
