@@ -78,14 +78,21 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../grammar/">Grammar</a>
+        <a class="" href="../grammar_language/">Grammar language</a>
         
     </li>
 
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../parser/">Parser parameters</a>
+        <a class="" href="../grammar/">Grammar class</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser</a>
         
     </li>
 
@@ -106,7 +113,14 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../conflicts/">Conflicts resolving</a>
+        <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../disambiguation/">Disambiguation</a>
         
     </li>
 
@@ -127,7 +141,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../recovery/">Error recovery</a>
+        <a class="" href="../handling_errors/">Handling errors</a>
         
     </li>
 
@@ -211,42 +225,54 @@
             <div class="section">
               
                 <h1 id="parse-trees">Parse trees<a class="headerlink" href="#parse-trees" title="Permanent link">&para;</a></h1>
-<p>During shift/reduce operations parser will call <a href="../actions/">actions</a>. If no
-user actions are provided the default actions will be called which will build the
-parse tree. In the case of GLR parser multiple trees can be built simultaneously
-(the parse forest). If user actions are provided, no tree building takes place
-but the user actions decide what to create for each shift/reduction.</p>
+<p>During shift/reduce operations parser will call <a href="../actions/">actions</a>. If
+<code>build_tree</code> parser constructor parameter is set to <code>True</code> the default actions
+for building parse tree nodes will be called. In the case of GLR parser multiple
+trees can be built simultaneously (the parse forest).</p>
 <p>The nodes of parse trees are instances of either <code>NodeTerm</code> for terminal nodes
 (leafs of the tree) or <code>NodeNonTerm</code> for non-terminal nodes (intermediate
 nodes).</p>
 <p>Each node of the tree has following attributes:</p>
 <ul>
-<li><code>start_position</code>/<code>end_position</code> - the start and end position in the input
+<li>
+<p><strong>start_position/end_position</strong> - the start and end position in the input
   stream where the node starts/ends. It is given in absolute 0-based offset. To
   convert to line/column format for textual inputs you can use
   <code>parglare.pos_to_line_col(input_str, position)</code> function which returns tuple
   <code>(line, column)</code>. Of course, this call doesn't make any sense if you are
-  parsing a non-textual content.</li>
-<li><code>layout_content</code> - the layout that preceeds the given tree node. The layout
-  consists of whitespaces/comments.</li>
-<li><code>symbol</code> - a grammar symbol this node is created for.</li>
+  parsing a non-textual content.</p>
+</li>
+<li>
+<p><strong>layout_content</strong> -
+  the
+  <a href="../grammar_language/#handling-whitespaces-and-comments-in-your-language">layout</a> that
+  preceeds the given tree node. The layout consists of whitespaces/comments.</p>
+</li>
+<li>
+<p><strong>symbol</strong> - a grammar symbol this node is created for.</p>
+</li>
 </ul>
 <p>Additionally, each <code>NodeTerm</code> has:</p>
 <ul>
-<li><code>value</code> - the value (a part of input_str) which this terminal represents. It
-  can be viewed as <code>input_str[start_position:end_position]</code>.</li>
+<li><strong>value</strong> - the value (a part of input_str) which this terminal represents. It
+  is equivalent to <code>input_str[start_position:end_position]</code>.</li>
 </ul>
 <p>Additionally, each <code>NodeNonTerm</code> has:</p>
 <ul>
-<li><code>children</code> - subnodes which are also of <code>NodeNonTerm</code>/<code>NodeTerm</code> type.
-  <code>NodeNonTerm</code> is iterable. Iterating over it will iterate over its children.</li>
-<li><code>production</code> - a grammar production which reduction created this node.</li>
+<li>
+<p><strong>children</strong> - sub-nodes which are also of <code>NodeNonTerm</code>/<code>NodeTerm</code> type.
+  <code>NodeNonTerm</code> is iterable. Iterating over it will iterate over its children.</p>
+</li>
+<li>
+<p><strong>production</strong> - a grammar production whose reduction created this node.</p>
+</li>
 </ul>
 <p>Each node has a <code>tree_str()</code> method which will return a string representation of
-the subtree starting from the given node. If called on root node it will return
-the string representation of the whole tree.</p>
-<p>For example, parsing the input <code>1 + 2 * 3 -1</code> using default actions (thus,
-producing the parse tree) will look like this if printed with <code>tree_str()</code>:</p>
+the sub-tree starting from the given node. If called on a root node it will
+return the string representation of the whole tree.</p>
+<p>For example, parsing the input <code>1 + 2 * 3 -1</code> with the expression grammar from
+the quick start will look like this if printed
+with <code>tree_str()</code>:</p>
 <pre><code>E[0]
 E[0]
   E[0]
@@ -269,10 +295,10 @@ E[11]
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../recovery/" class="btn btn-neutral float-right" title="Error recovery">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../handling_errors/" class="btn btn-neutral float-right" title="Handling errors">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../conflicts/" class="btn btn-neutral" title="Conflicts resolving"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../disambiguation/" class="btn btn-neutral" title="Disambiguation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -302,10 +328,10 @@ E[11]
           <a href="https://github.com/igordejanovic/parglare" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href="../conflicts/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../disambiguation/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../recovery/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../handling_errors/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

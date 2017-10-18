@@ -103,14 +103,21 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="grammar/">Grammar</a>
+        <a class="" href="grammar_language/">Grammar language</a>
         
     </li>
 
         
             
     <li class="toctree-l1 ">
-        <a class="" href="parser/">Parser parameters</a>
+        <a class="" href="grammar/">Grammar class</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="parser/">Parser</a>
         
     </li>
 
@@ -131,7 +138,14 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="conflicts/">Conflicts resolving</a>
+        <a class="" href="lr_parsing/">LR parsing and conflicts</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="disambiguation/">Disambiguation</a>
         
     </li>
 
@@ -145,7 +159,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="recovery/">Error recovery</a>
+        <a class="" href="handling_errors/">Handling errors</a>
         
     </li>
 
@@ -226,11 +240,11 @@
               
                 <p><img alt="parglare logo" src="./images/parglare-logo.svg" /></p>
 <hr />
-<p>A pure Python scannerless LR/GLR parser.</p>
+<p>A pure Python LR/GLR parser.</p>
 <h2 id="feature-highlights">Feature highlights<a class="headerlink" href="#feature-highlights" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
-<p><strong>Scannerless parsing</strong></p>
+<p><strong>Integrated scanner</strong></p>
 <p>There is no lexing as a separate phase. There is no separate lexer grammar.
 The parser will try to reconize token during parsing at the given location.
 This brings more parsing power as there are no lexical ambiguities
@@ -253,7 +267,7 @@ In case there are multiple interpretation of your input you will get all the
 trees (a.k.a. "the parse forest").</p>
 </li>
 <li>
-<p><a href="conflicts/#resolving-conflicts"><strong>Declarative associativity and priority rules</strong></a></p>
+<p><a href="disambiguation/"><strong>Declarative associativity and priority rules</strong></a></p>
 <p>These problems arise a lot when building expression languages. Even a little
 arithmetic expression as <code>3 + 4 * 5 * 2</code> have multiple interpretation
 depending on the associativity and priority of operations. In parglare it is
@@ -282,12 +296,16 @@ the <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/te
 The whole point of parsing is that you want to transform your input to some
 output. There are several options:</p>
 <ul>
-<li>do nothing - this way your parser is a mere recognizer, it produces
-  nothing but just verifies that your input adhere to the grammar;</li>
-<li>call default actions - the default actions will build a parse tree.</li>
+<li>by default parser builds nested lists;</li>
+<li>you can build a tree using <code>build_tree=True</code> parameter to the parser;</li>
 <li>call user supplied actions - you write a Python function that is called
   when the rule matches. You can do whatever you want at this place and the
-  result returned is used in parent rules/actions.</li>
+  result returned is used in parent rules/actions. There are some handy
+  build-in actions in the <code>parglare.actions</code> module.</li>
+<li>User actions may be postponed and called on the parse tree - this is handy
+  if you want to process your tree in multiple ways, or you are using GLR
+  parsing and the actions are introducing side-effects and you would like to
+  avoid those effects created from wrong parsers/trees.</li>
 </ul>
 <p>Besides calling your actions in-line - during the parsing process - you can
 decide to build the tree first and call custom actions afterwards. This is a
@@ -296,7 +314,7 @@ are using GLR and want to be sure that actions are called only for the
 surviving tree.</p>
 </li>
 <li>
-<p><a href="grammar/"><strong>Support for whitespaces/comments</strong></a></p>
+<p><a href="grammar_language/#handling-whitespaces-and-comments-in-your-language"><strong>Support for whitespaces/comments</strong></a></p>
 <p>Support for language comments/whitespaces is done using the special rule
 <code>LAYOUT</code>. By default whitespaces are skipped. This is controlled by <code>ws</code>
 parameter to the parser constructor which is by default set to <code>\t\n</code>. If
@@ -305,7 +323,7 @@ set to <code>None</code> no whitespace skipping is provided. If there is a rule
 the layout grammar will be built to handle whitespaces.</p>
 </li>
 <li>
-<p><a href="recovery/"><strong>Error recovery</strong></a></p>
+<p><a href="handling_errors/#error-recovery"><strong>Error recovery</strong></a></p>
 <p>This is something that often lacks in parsing libraries. More often than not
 you will want your parser to recover from an error, report it, and continue
 parsing. parglare has a built-in error recovery strategy which is currently
@@ -323,30 +341,11 @@ that will either skip input or introduce non-existing but expected tokens.</p>
 <li>
 <p><strong>Table caching</strong></p>
 <p>At the moment parser tables are constructed on-the-fly which might be slow
-for larger grammars. In the future tables will be recalculated only if the
-grammar has changed and cached.</p>
-</li>
-<li>
-<p><strong>Specify common actions in the grammar</strong></p>
-<p>parglare provides some commonly used custom actions. It would reduce
-boiler-plate in specification of these actions if a syntax is added to provide
-that information in the grammar directly.</p>
-<p>Example:</p>
-<pre><code>@collect
-some_objects: some_objects some_object | some_object;
-</code></pre>
-</li>
-<li>
-<p><strong>Support for named matches</strong></p>
-<p>At the moment, as a parameter to action you get a list of matched elements. It
-would be useful to reference these element by name rather than by position.</p>
-<pre><code>my_rule: first=first_match_rule second=second_match_rule;
-first_match_rule: ...;
-second_match_rule: ...;
-</code></pre>
-<p>Now in your action for <code>my_rule</code> you will get <code>first</code> and <code>second</code> as a parameters.
-This would make it easy to provide a new common action that will return a Python
-object with supplied parameters as object attributes.</p>
+for larger grammars. This is usually a problem only for parsers which need
+to be instantiated before each parse (e.g. when called from CLI). For
+long-running processes this is not a problem as parser instance can be kept
+and reused. In the future, tables will be recalculated only if the grammar
+has changed and loaded from cache otherwise.</p>
 </li>
 <li>
 <p><strong>GLR performance optimization</strong></p>
@@ -484,5 +483,5 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-08-24 07:54:25
+Build Date UTC : 2017-10-18 14:23:58
 -->

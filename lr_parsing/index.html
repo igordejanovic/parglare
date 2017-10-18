@@ -8,7 +8,7 @@
   
   <meta name="author" content="Igor Dejanović">
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Conflicts resolving - parglare</title>
+  <title>LR parsing and conflicts - parglare</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -18,9 +18,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Conflicts resolving";
-    var mkdocs_page_input_path = "conflicts.md";
-    var mkdocs_page_url = "/conflicts/";
+    var mkdocs_page_name = "LR parsing and conflicts";
+    var mkdocs_page_input_path = "lr_parsing.md";
+    var mkdocs_page_url = "/lr_parsing/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -78,14 +78,21 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../grammar/">Grammar</a>
+        <a class="" href="../grammar_language/">Grammar language</a>
         
     </li>
 
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../parser/">Parser parameters</a>
+        <a class="" href="../grammar/">Grammar class</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser</a>
         
     </li>
 
@@ -106,20 +113,23 @@
         
             
     <li class="toctree-l1 current">
-        <a class="current" href="./">Conflicts resolving</a>
+        <a class="current" href="./">LR parsing and conflicts</a>
         
             <ul>
             
-                <li class="toctree-l3"><a href="#lr-parsing-and-conflicts-resolving">LR parsing and conflicts resolving</a></li>
+                <li class="toctree-l3"><a href="#lr-parsing-ambiguities-and-conflicts-resolving">LR parsing, ambiguities and conflicts resolving</a></li>
                 
                     <li><a class="toctree-l4" href="#resolving-conflicts">Resolving conflicts</a></li>
                 
-                    <li><a class="toctree-l4" href="#dynamic-disambiguation-conflict-resolution">Dynamic disambiguation / conflict resolution</a></li>
-                
-                    <li><a class="toctree-l4" href="#lexical-ambiguities">Lexical ambiguities</a></li>
-                
             
             </ul>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../disambiguation/">Disambiguation</a>
         
     </li>
 
@@ -133,7 +143,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../recovery/">Error recovery</a>
+        <a class="" href="../handling_errors/">Handling errors</a>
         
     </li>
 
@@ -203,10 +213,10 @@
         
       
     
-    <li>Conflicts resolving</li>
+    <li>LR parsing and conflicts</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/conflicts.md"
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/lr_parsing.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -216,7 +226,7 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="lr-parsing-and-conflicts-resolving">LR parsing and conflicts resolving<a class="headerlink" href="#lr-parsing-and-conflicts-resolving" title="Permanent link">&para;</a></h1>
+                <h1 id="lr-parsing-ambiguities-and-conflicts-resolving">LR parsing, ambiguities and conflicts resolving<a class="headerlink" href="#lr-parsing-ambiguities-and-conflicts-resolving" title="Permanent link">&para;</a></h1>
 <p>LR parser operates as a deterministic PDA (Push-down automata). It is a state
 machine which is always in some state during parsing. The state machine must
 deterministically decide what is the next state just based on its current state
@@ -244,7 +254,7 @@ interpreted either as:</p>
 token and advance the position. This operation transition the automata to some
 other state. From each state there is only one valid transition that can be
 taken or the PDA won't be deterministic, i.e. we could simultaneously follow
-different paths.</p>
+different paths (that is exactly what the <code>GLRParser</code> does).</p>
 <p>Current position would be (the dot represents the position):</p>
 <pre><code> 1 . + 2 * 3
 </code></pre>
@@ -260,7 +270,7 @@ change state so I'll not repeat that anymore.</p>
 visualize automata for this grammar.</p>
 </div>
 <p>After reduction parser will do shift of <code>+</code> token. There is nothing to reduce as
-the subexpresison on stack is <code>E +</code> which can't be reduced as it's not complete.
+the sub-expresison on stack is <code>E +</code> which can't be reduced as it's not complete.
 So, the only thing we can do is to shift <code>2</code> token.</p>
 <p>Now, the position is:</p>
 <pre><code>  1 + 2 . * 3
@@ -280,8 +290,8 @@ first reduce multiplication and then sum (reduction is always done on the top of
 the stack). We will have the following result:</p>
 <pre><code>1 + (2 * 3)
 </code></pre>
-<p>From the point of view arithmetic priorities, preffered solution is the last one
-but the parser don't know arithmetic rules.</p>
+<p>From the point of view of arithmetic priorities, preferred solution is the last
+one but the parser don't know arithmetic rules.</p>
 <p>If you analyze this grammar using <a href="../pglr/">pglr command</a> you will see that
 the LR tables have Shift/Reduce conflicts as there is a state in which parser
 can't decide whether to shift or to reduce (we just saw that situation).</p>
@@ -292,14 +302,15 @@ resolve these conflicts.</p>
 <li>you need more than one lookahead to disambiguate,</li>
 <li>your language is inherently ambiguous.</li>
 </ul>
-<p>If you end up in one of these situations you should use GLR parsing, which will
+<p>If you end up in one of these situations you must use GLR parsing, which will
 fork the parser at each state which has multiple paths, and explore all
 possibilities.</p>
 <h2 id="resolving-conflicts">Resolving conflicts<a class="headerlink" href="#resolving-conflicts" title="Permanent link">&para;</a></h2>
 <p>When we run:</p>
 <pre><code>$ pglr -d check expr.pg
 </code></pre>
-<p>where in <code>expr.pg</code> we have the above grammar, we get the following output at the end:</p>
+<p>where in <code>expr.pg</code> we have the above grammar, we get the following output at the
+end:</p>
 <pre><code>*** S/R conflicts ***
 There are 4 S/R conflicts
 
@@ -397,141 +408,7 @@ reduced/calculated first.</p>
 </div>
 <p>This change in the grammar resolves all ambiguities and our grammar is now
 LR(1).</p>
-<h2 id="dynamic-disambiguation-conflict-resolution">Dynamic disambiguation / conflict resolution<a class="headerlink" href="#dynamic-disambiguation-conflict-resolution" title="Permanent link">&para;</a></h2>
-<p>Priority and associativity based conflict resolution is of static nature, i.e.
-it is compiled during LR table calculation and doesn't depend on the parsed
-input.</p>
-<p>There are sometimes situations when parsing decision depends on the input.</p>
-<p>For example, lets say that we should parse arithmetic expression but our
-operation priority increase for operations that are introduced later in the
-input.</p>
-<pre><code>1 + 2 * 3 - 4 + 5
-</code></pre>
-
-<p>Should be parsed as:</p>
-<pre><code>((1 + (2 * (3 - 4))) + 5)
-</code></pre>
-
-<p>While</p>
-<pre><code>1 - 2 + 3 * 4 + 5
-</code></pre>
-
-<p>should be parsed as:</p>
-<pre><code>(1 - ((2 + (3 * 4)) + 5))
-</code></pre>
-
-<p>As you can see, operations that appears later in the input are of higher priority.</p>
-<p>In parglare you can implement this dynamic behavior in two steps:</p>
-<p>First, mark productions in your grammar by <code>dynamic</code> rule:</p>
-<pre><code>E: E op_sum E {dynamic}
- | E op_mul E {dynamic}
- | /\d+/;
-op_sum: '+' {dynamic};
-op_mul: '*' {dynamic};
-</code></pre>
-
-<p>This tells parglare that those production are candidates for dynamic ambiguity
-resolution.</p>
-<p>Second step is to register function that will be used for resolution during
-parser construction. This function operates as a filter for actions in a given
-state and lookahead token. It receives a list of actions and a token ahead and
-returns a reduced list of actions. Usually, this function will maintain some
-kind of state. To initialize its state at the beginning it is called with (None,
-None) as parameters.</p>
-<pre><code>parser = Parser(grammar, dynamic_filter=dynamic_filter)
-</code></pre>
-
-<p>Where resolution function is of the following form:</p>
-<pre><code>def custom_disambiguation_filter(action, token, production, subresults, state):
-    &quot;&quot;&quot;Make first operation that appears in the input as lower priority.
-    This demonstrates how priority rule can change dynamically depending
-    on the input.
-    &quot;&quot;&quot;
-    global operations
-
-    # At the start of parsing this function is called with actions set to
-    # None to give a change for the strategy to initialize.
-    if action is None:
-        operations = []
-        return
-
-    actions = state.actions[token.symbol]
-
-    # Lookahead operation
-    shift_op = token.symbol
-
-    if action is SHIFT:
-        if shift_op not in operations:
-            operations.append(shift_op)
-        if len(actions) == 1:
-            return True
-        red_op = [a for a in actions if a.action is REDUCE][0].prod.rhs[1]
-        return operations.index(shift_op) &gt; operations.index(red_op)
-
-    elif action is REDUCE:
-
-        # Current reduction operation
-        red_op = production.rhs[1]
-        if red_op not in operations:
-            operations.append(red_op)
-
-        if len(actions) == 1:
-            return True
-
-        # If lookahead operation is not processed yet is is of higer priority
-        # so do not reduce.
-        # If lookahead is in operation and its index is higher do not reduce.
-        return (shift_op in operations
-                and (operations.index(shift_op)
-                     &lt;= operations.index(red_op)))
-</code></pre>
-
-<p>This function is a predicate that will be called for each action that is dynamic
-(SHIFT action for dynamic terminal and REDUCE action for dynamic productions).
-You are provided with enough information to make a custom decision whether to
-perform or reject the operation.</p>
-<p>Parameters are:</p>
-<ul>
-<li><code>action</code> - either SHIFT or REDUCE constant from <code>parglare</code> module,</li>
-<li><code>token</code> - lookahead token,</li>
-<li><code>production</code> - a production to be reduced. Valid only for REDUCE.</li>
-<li><code>subresults</code> - a subresults for the reduction. Valid only for REDUCE. The
-  length of this list must be equal to <code>len(production.rhs)</code>.</li>
-<li><code>state</code> - LR parser state.</li>
-</ul>
-<p>For details see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation_filters.py">test_dynamic_disambiguation_filters.py</a>.</p>
-<h2 id="lexical-ambiguities">Lexical ambiguities<a class="headerlink" href="#lexical-ambiguities" title="Permanent link">&para;</a></h2>
-<p>There is another source of ambiguities.</p>
-<p>Parglare uses integrated scanner, thus tokens are determined on the fly. This
-gives greater lexical disambiuation power but lexical ambiguities might arise
-nevertheless. Lexical ambiguity is a situation when at some place in the input
-more than one recognizer match successfully.</p>
-<p>For example, if in the input we have <code>3.4</code> and we expect at this place either an
-integer or a float. Both of these recognizer can match the input. The integer
-recognizer would match <code>3</code> while the float recognizer would match <code>3.4</code>. What
-should we use?</p>
-<p>parglare has implicit lexical disambiguation strategy that will:</p>
-<ol>
-<li>Use priorities first.</li>
-<li>String recognizers are preferred over regexes (i.e. the most specific match).</li>
-<li>If priorities are the same and we have no string recognizers use longest-match strategy.</li>
-<li>If more recognizers still match use <code>prefer</code> rule if given.</li>
-<li>If all else fails raise an exception. In case of GLR, ambiguity will be
-   handled by parser forking, i.e. you will end up with all solutions/trees.</li>
-</ol>
-<p>Thus, in terminal definition rules we can use priorities to favor some of the
-recognizers, or we can use <code>prefer</code> to favor recognizer if there are multiple
-matches of the same length.</p>
-<p>For example:</p>
-<pre><code>  number = /\d+/ {15};
-</code></pre>
-<p>or:</p>
-<pre><code>  number = /\d+/ {prefer};
-</code></pre>
-<p>In addition, you can also specify this terminal to take a part in dynamic
-disambiguation:</p>
-<pre><code>  number = /\d+/ {dynamic};
-</code></pre>
+<p>See the section on <a href="../disambiguation/">disambiguation strategies</a> for more.</p>
               
             </div>
           </div>
@@ -539,7 +416,7 @@ disambiguation:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../parse_trees/" class="btn btn-neutral float-right" title="Parse trees">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../disambiguation/" class="btn btn-neutral float-right" title="Disambiguation">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../recognizers/" class="btn btn-neutral" title="Recognizers"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -575,7 +452,7 @@ disambiguation:</p>
         <span><a href="../recognizers/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../parse_trees/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../disambiguation/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

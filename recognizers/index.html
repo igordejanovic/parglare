@@ -78,14 +78,21 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../grammar/">Grammar</a>
+        <a class="" href="../grammar_language/">Grammar language</a>
         
     </li>
 
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../parser/">Parser parameters</a>
+        <a class="" href="../grammar/">Grammar class</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser</a>
         
     </li>
 
@@ -113,7 +120,14 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../conflicts/">Conflicts resolving</a>
+        <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../disambiguation/">Disambiguation</a>
         
     </li>
 
@@ -127,7 +141,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../recovery/">Error recovery</a>
+        <a class="" href="../handling_errors/">Handling errors</a>
         
     </li>
 
@@ -222,10 +236,10 @@ parse not only text but a stream of anything as parsing is nothing more by
 constructing a tree (or some other form) out of a flat list of objects. Those
 objects are characters if text is parsed, but don't have to be.</p>
 <p>Parglare has two built-in recognizers for textual parsing that can be specified
-in <a href="../grammar/#string-recognizer">the grammar directly</a>. Those are usually
-enough if text is parsed, but if non-textual content is parsed you will have to
-supply your own recognizers that are able to recognize tokens in the input
-stream of objects.</p>
+in <a href="../grammar_language/#string-recognizer">the grammar directly</a>. Those are
+usually enough if text is parsed, but if non-textual content is parsed you will
+have to supply your own recognizers that are able to recognize tokens in the
+input stream of objects.</p>
 <p>Recognizers are Python callables of the following form:</p>
 <pre><code>def some_recognizer(input, pos):
    ...
@@ -272,7 +286,7 @@ from the input.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../conflicts/" class="btn btn-neutral float-right" title="Conflicts resolving">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../lr_parsing/" class="btn btn-neutral float-right" title="LR parsing and conflicts">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../actions/" class="btn btn-neutral" title="Actions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -308,7 +322,7 @@ from the input.</p>
         <span><a href="../actions/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../conflicts/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../lr_parsing/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

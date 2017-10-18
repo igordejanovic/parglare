@@ -8,7 +8,7 @@
   
   <meta name="author" content="Igor Dejanović">
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Grammar - parglare</title>
+  <title>Grammar class - parglare</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -18,7 +18,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Grammar";
+    var mkdocs_page_name = "Grammar class";
     var mkdocs_page_input_path = "grammar.md";
     var mkdocs_page_url = "/grammar/";
   </script>
@@ -77,20 +77,31 @@
 
         
             
+    <li class="toctree-l1 ">
+        <a class="" href="../grammar_language/">Grammar language</a>
+        
+    </li>
+
+        
+            
     <li class="toctree-l1 current">
-        <a class="current" href="./">Grammar</a>
+        <a class="current" href="./">Grammar class</a>
         
             <ul>
             
-                <li class="toctree-l3"><a href="#the-parglare-grammar-language">The parglare grammar language</a></li>
+                <li class="toctree-l3"><a href="#the-grammar-class-and-related-apis">The grammar class and related APIs</a></li>
                 
-                    <li><a class="toctree-l4" href="#terminals">Terminals</a></li>
+                    <li><a class="toctree-l4" href="#grammar-factory-methods-additional-parameters">Grammar factory methods additional parameters</a></li>
                 
-                    <li><a class="toctree-l4" href="#usual-patterns">Usual patterns</a></li>
+                    <li><a class="toctree-l4" href="#grammar-class">Grammar class</a></li>
                 
-                    <li><a class="toctree-l4" href="#grammar-comments">Grammar comments</a></li>
+                    <li><a class="toctree-l4" href="#grammarsymbol-class">GrammarSymbol class</a></li>
                 
-                    <li><a class="toctree-l4" href="#handling-whitespaces-and-comments">Handling whitespaces and comments</a></li>
+                    <li><a class="toctree-l4" href="#terminal-class">Terminal class</a></li>
+                
+                    <li><a class="toctree-l4" href="#nonterminal-class">NonTerminal class</a></li>
+                
+                    <li><a class="toctree-l4" href="#production-class">Production class</a></li>
                 
             
             </ul>
@@ -100,7 +111,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../parser/">Parser parameters</a>
+        <a class="" href="../parser/">Parser</a>
         
     </li>
 
@@ -121,7 +132,14 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../conflicts/">Conflicts resolving</a>
+        <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../disambiguation/">Disambiguation</a>
         
     </li>
 
@@ -135,7 +153,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../recovery/">Error recovery</a>
+        <a class="" href="../handling_errors/">Handling errors</a>
         
     </li>
 
@@ -205,7 +223,7 @@
         
       
     
-    <li>Grammar</li>
+    <li>Grammar class</li>
     <li class="wy-breadcrumbs-aside">
       
         <a href="https://github.com/igordejanovic/parglare/edit/master/docs/grammar.md"
@@ -218,183 +236,165 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="the-parglare-grammar-language">The parglare grammar language<a class="headerlink" href="#the-parglare-grammar-language" title="Permanent link">&para;</a></h1>
-<p>The parglare grammar specification language is based
-on <a href="https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form">BNF</a>. parglare is
-based
-on
-<a href="https://en.wikipedia.org/wiki/Context-free_grammar">Context-Free Grammars (CFGs)</a> and
-a grammar is written declaratively. You don't have to think about the parsing
-process like in
-e.g. <a href="https://en.wikipedia.org/wiki/Parsing_expression_grammar">PEGs</a>.
-Ambiguities are dealt with explicitely (see section on conflicts...).</p>
-<p>Grammar consists of a set of derivation rules where each rule is of the form:</p>
-<pre><code>&lt;symbol&gt;: &lt;expression&gt; ;
-</code></pre>
-
-<p>where <code>&lt;symbol&gt;</code> is grammar non-terminal and <code>&lt;expression&gt;</code> is a sequence of
-terminals and non-terminals separated by choice operator <code>|</code>.</p>
-<p>For example:</p>
-<pre><code>Fields: Field | Fields &quot;,&quot; Field;
-</code></pre>
-
-<p>Here <code>Fields</code> is a non-terminal grammar symbol and it is defined as either a
-single <code>Field</code> or, recursively, as <code>Fields</code> followed by a string terminal <code>,</code>
-and than by another <code>Field</code>. It is not given here but <code>Field</code> could also be
-defined as a non-terminal. For example:</p>
-<pre><code>Field: QuotedField | FieldContent;
-</code></pre>
-
-<p>Or it could be defined as a terminal:</p>
-<pre><code>Field: /[A-Z]*/;
-</code></pre>
-
-<p>This terminal definition uses regular expression recognizer.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you got use to various BNF extensions
-(like <a href="https://en.wikipedia.org/wiki/Kleene_star">Kleene star</a>) you might find
-this awkward because you must build <code>zero or more</code> or <code>one or more</code> pattern from
-scratch using just a sequence, choice and recursion. The grammars are indeed
-more verbose but, on the other hand, actions are much easier to write and you
-have full control over tree construction process. parglare might provide some
-syntactic sugar later that would make some constructs shorter to write.</p>
-</div>
-<h2 id="terminals">Terminals<a class="headerlink" href="#terminals" title="Permanent link">&para;</a></h2>
-<p>Terminal symbols of the grammar define the fundamental or atomic elements of
-your language -- tokens or lexemes (e.g. keywords, numbers). In parglare
-terminal is connected to recognizer which is an object used to recognize token
-of particular type in the input. Most of the time you will do parsing of textual
-content and you will need textual recognizers. These recognizers are built-in
-and there are two type of textual recognizers:</p>
-<ul>
-<li>string recognizer</li>
-<li>regular expression recognizer</li>
-</ul>
-<h3 id="string-recognizer">String recognizer<a class="headerlink" href="#string-recognizer" title="Permanent link">&para;</a></h3>
-<p>String recognizer is defined as a plain string inside of double quotes:</p>
-<pre><code>my_rule: "start" other_rule "end";
-</code></pre>
-<p>In this example <code>"start"</code> and <code>"end"</code> will be terminals with string recognizers
-that match exactly the words <code>start</code> and <code>end</code>.</p>
-<p>You can write string recognizing terminal directly in the rule expression or you
-can define terminal separately and reference it by name, like:</p>
-<pre><code>my_rule: start other_rule end;
-start: "start";
-end: "end";
-</code></pre>
-<p>Either way it will be the same terminal. You will usually write as a separate
-terminal if the terminal is used at multiple places in the grammar.</p>
-<h3 id="regular-expression-recognizer">Regular expression recognizer<a class="headerlink" href="#regular-expression-recognizer" title="Permanent link">&para;</a></h3>
-<p>Or regex recognizer for short is a regex pattern written inside slashes
-(<code>/.../</code>).</p>
-<p>For example:</p>
-<pre><code> number: /\d+/;
-</code></pre>
-<p>This rule defines terminal symbol <code>number</code> which has a regex recognizer and will
-recognize one or more digits as a number.</p>
-<h3 id="custom-recognizers">Custom recognizers<a class="headerlink" href="#custom-recognizers" title="Permanent link">&para;</a></h3>
-<p>If you are parsing arbitrary input (non-textual) you'll have to provide your own
-recognizers. In the grammar, you just have to provide terminal symbol without
-body, i.e. without string or regex recognizer. You will provide missing
-recognizers during grammar instantiation from Python. Although you don't supply
-body of the terminal you can define <a href="">disambiguation rules</a> as usual.</p>
-<p>Lets say that we have a list of integers (real list of Python ints, not a text
-with numbers) and we have some weird requirement to break those numbers
-according to the following grammar:</p>
-<pre><code>  Numbers: all_less_than_five  ascending  all_less_than_five EOF;
-  all_less_than_five: all_less_than_five  int_less_than_five
-                    | int_less_than_five;
-  int_less_than_five: ;  // &lt;--- This terminal has no recognizer in the grammar
-</code></pre>
-<p>So, we should first match all numbers less than five and collect those, than we
-should match a list of ascending numbers and than list of less than five again.
-<code>int_less_than_five</code> and <code>ascending</code> are terminals/recognizers that will be
-defined in Python and passed to grammar construction. <code>int_less_than_five</code> will
-recognize Python integer that is less than five. <code>ascending</code> will recognize a
-sublist of integers in ascending order.</p>
-<p>For more details on the usage see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py">this test</a>.</p>
-<p>More on this topic will be written in a separate section.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>You can directly write regex or string recognizer at the place of terminal:</p>
-<pre><code>some_rule: "a" aterm "a";
-aterm: "a";
-</code></pre>
-<p>Writting <code>"a"</code> in <code>some_rule</code> is equivalent to writing terminal reference
-<code>aterm</code>. Rule <code>aterm</code> is terminal definition rule. All occurences of <code>"a"</code>
-as well as <code>aterm</code> will result in the same terminal in the grammar.</p>
-</div>
-<h2 id="usual-patterns">Usual patterns<a class="headerlink" href="#usual-patterns" title="Permanent link">&para;</a></h2>
-<h3 id="one-or-more">One or more<a class="headerlink" href="#one-or-more" title="Permanent link">&para;</a></h3>
-<pre><code>document: sections;
-// sections rule bellow will match one or more section.
-sections: sections section | section;
-</code></pre>
-<p>In this example <code>sections</code> will match one or more <code>section</code>. Notice the
-recursive definition of the rule. You can read this as <em><code>sections</code> consist of
-sections and a section at the end or <code>sections</code> is just a single section</em>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Please note that you could do the same with this rule:</p>
-<pre><code>sections: section sections | section;
-</code></pre>
-<p>which will give you similar result but the resulting tree will be different.
-Former example will reduce sections early and than add another section to it,
-thus the tree will be expanding to the left. The later example will collect all
-the sections and than start reducing from the end, thus building a tree
-expanding to the right. These are subtle differences that are important when you
-start writing your semantic actions. Most of the time you don't care about this
-so use the first version as it is slightly efficient and parglare provides
-common actions for these common cases.</p>
-</div>
-<h3 id="zero-or-more">Zero or more<a class="headerlink" href="#zero-or-more" title="Permanent link">&para;</a></h3>
-<pre><code>document: sections;
-// sections rule bellow will match zero or more section.
-sections: sections section | section | EMPTY;
-</code></pre>
-<p>In this example <code>sections</code> will match zero or more <code>section</code>. Notice the
-addition of the <code>EMPTY</code> choice at the end. This means that matching nothing is a
-valid <code>sections</code> non-terminal.</p>
-<p>Same note from above applies here to.</p>
-<h3 id="optional">Optional<a class="headerlink" href="#optional" title="Permanent link">&para;</a></h3>
-<pre><code>document: optheader body;
-optheader: header | EMPTY;
-</code></pre>
-<p>In this example <code>optheader</code> is either a header or nothing.</p>
-<h2 id="grammar-comments">Grammar comments<a class="headerlink" href="#grammar-comments" title="Permanent link">&para;</a></h2>
-<p>In grammar comments are available as both line comments and block comments:</p>
-<pre><code>// This is a line comment. Everything from the '//' to the end of line is a comment.
-
-/*
-  This is a block comment.
-  Everything in between `/*`  and '*/' is a comment.
-*/
-</code></pre>
-<h2 id="handling-whitespaces-and-comments">Handling whitespaces and comments<a class="headerlink" href="#handling-whitespaces-and-comments" title="Permanent link">&para;</a></h2>
-<p>By default parser will skip whitespaces. Whitespace skipping is controlled by
-<code>ws</code> parameter to the parser which is by default set to <code>'\n\t '</code>.</p>
-<p>If you need more control of the layout, i.e. handling of not only whitespaces by
-comments also, you can use a special rule <code>LAYOUT</code>:</p>
-<pre><code>  LAYOUT: LayoutItem | LAYOUT LayoutItem;
-  LayoutItem: WS | Comment | EMPTY;
-  WS: /\s+/;
-  Comment: /\/\/.*/;
-</code></pre>
-<p>This will form a separate layout parser that will parse in-between each matched
-tokens. In this example spaces and line-comments will get consumed by the layout
+                <h1 id="the-grammar-class-and-related-apis">The grammar class and related APIs<a class="headerlink" href="#the-grammar-class-and-related-apis" title="Permanent link">&para;</a></h1>
+<p>After you write your grammar either as a Python string or as a separate file the
+next step is to instantiate the grammar object that will be used to create the
 parser.</p>
-<p>If this special rule is found in the grammar <code>ws</code> parser parameter is ignored.</p>
-<p>Another example that gives support for both line comments and block comments
-like the one used in the grammar language itself:</p>
-<pre><code>  LAYOUT: LayoutItem | LAYOUT LayoutItem;
-  LayoutItem: WS | Comment | EMPTY;
-  WS: /\s+/;
-  Comment: '/*' CorNCs '*/' | /\/\/.*/;
-  CorNCs: CorNC | CorNCs CorNC | EMPTY;
-  CorNC: Comment | NotComment | WS;
-  NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
-</code></pre>
+<p>There are two factory methods defined on the <code>Grammar</code> class for creating the
+<code>Grammar</code> instance:</p>
+<ul>
+<li><code>Grammar.from_string(grammar_string)</code> - if your grammar is given as a Python
+  string,</li>
+<li><code>Grammar.from_file(file_path)</code> - if the grammar is given as a separate file.</li>
+</ul>
+<p>Both methods return initialized <code>Grammar</code> object that is passed as the first and
+the only mandatory parameter for the <code>Parser/GLRParser</code> constructor.</p>
+<h2 id="grammar-factory-methods-additional-parameters">Grammar factory methods additional parameters<a class="headerlink" href="#grammar-factory-methods-additional-parameters" title="Permanent link">&para;</a></h2>
+<p>Both methods <code>from_string</code> and <code>from_file</code> accept additional optional
+parameters:</p>
+<ul>
+<li>
+<p><strong>recognizers</strong> - a dict of custom recognizers. These recognizers are mandatory
+  if a non-textual content is being parsed and the grammar terminals don't
+  provide recognizers. See <a href="../recognizers/">recognizers section</a> for more
+  information.</p>
+</li>
+<li>
+<p><strong>debug</strong> - set to <code>True</code> to put the grammar in debug/trace mode. <code>False</code> by
+  default. See <a href="../debugging/">debugging section</a> for more information.</p>
+</li>
+<li>
+<p><strong>debug_parse</strong> - set to <code>True</code> to debug/trace grammar file/string parsing.
+  <code>False</code> by default.</p>
+</li>
+<li>
+<p><strong>debug_colors</strong> - set to <code>True</code> to use colorized debug/trace output. <code>False</code> by
+  default.</p>
+</li>
+</ul>
+<h2 id="grammar-class">Grammar class<a class="headerlink" href="#grammar-class" title="Permanent link">&para;</a></h2>
+<h3 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>terminals</strong> - a set of terminals (instances of <a href="#terminal"><code>Terminal</code></a>);</p>
+</li>
+<li>
+<p><strong>nonterminals</strong> - a set of non-terminal (instances
+  of <a href="#nonterminal"><code>NonTerminal</code></a>);</p>
+</li>
+<li>
+<p><strong>root_symbol</strong> - a grammar symbol of the start/root rule. By default this is
+  the first rule in the grammar;</p>
+</li>
+<li>
+<p><strong>productions</strong> - a list of productions (<a href="#production"><code>Production</code></a>
+  instances);</p>
+</li>
+<li>
+<p><strong>recognizers</strong> - a dict of <a href="../recognizers/">user supplied recognizers</a>
+  keyed by the terminal rule name;</p>
+</li>
+<li>
+<p><strong>classes</strong> - a dict of Python classes dynamically created for rules
+  using <a href="../grammar_language/#named-matches-assignments">named matches</a> keyed
+  by the rule name.</p>
+</li>
+</ul>
+<h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>print_debug()</strong> - prints detailed debug/trace info;</p>
+</li>
+<li>
+<p><strong>get_terminal(name)</strong> - gets the terminal by the given name or <code>None</code> if
+  not found;</p>
+</li>
+<li>
+<p><strong>get_nonterminal(name)</strong> - gets the non-terminal by the given name or <code>None</code>
+  if not found;</p>
+</li>
+<li>
+<p><strong>get_symbol(name)</strong> - gets either a terminal or non-terminal by the given
+  name or <code>None</code> if not found.</p>
+</li>
+</ul>
+<h2 id="grammarsymbol-class">GrammarSymbol class<a class="headerlink" href="#grammarsymbol-class" title="Permanent link">&para;</a></h2>
+<p>This is a base class for <code>Terminal</code> and <code>NonTerminal</code>.</p>
+<h3 id="attributes_1">Attributes<a class="headerlink" href="#attributes_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>name</strong> - the name of the grammar symbol,</p>
+</li>
+<li>
+<p><strong>action_name</strong> - the action name assigned for the symbol. This is given in
+  the grammar using the <a href="../grammar_language/"><code>@</code> syntax</a>.</p>
+</li>
+<li>
+<p><strong>action</strong> - resolved reference to the action given by the user using
+  <code>actions</code> parameter of the parser. Overrides grammar action if provided. If
+  not given will be the same as <code>grammar_action</code>.</p>
+</li>
+<li>
+<p><strong>grammar_action</strong> - resolved reference to the action specified in the
+  grammar. Not used if <code>action</code> attribute is defined, i.e. <code>action</code> overrides
+  <code>grammar_action</code>.</p>
+</li>
+</ul>
+<h2 id="terminal-class">Terminal class<a class="headerlink" href="#terminal-class" title="Permanent link">&para;</a></h2>
+<h3 id="attributes_2">Attributes<a class="headerlink" href="#attributes_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>prior (int)</strong> - a priority used in disambiguation,</p>
+</li>
+<li>
+<p><strong>recognizer (callable)</strong> - a callable in charge of recognition of this terminal
+  in the input stream,</p>
+</li>
+<li>
+<p><strong>prefer (bool)</strong> - If <code>True</code> this recognizer/terminal is preferred in case of
+  conflict where multiple recognizer match at the same place and implicit
+  disambiguation doesn't resolve the conflict.</p>
+</li>
+<li>
+<p><strong>dynamic (bool)</strong> - <code>True</code> if disambiguation should
+  be <a href="../disambiguation/#dynamic-disambiguation-filter">resolved dynamically</a>.</p>
+</li>
+</ul>
+<h2 id="nonterminal-class">NonTerminal class<a class="headerlink" href="#nonterminal-class" title="Permanent link">&para;</a></h2>
+<p>Only inherited from <code>GrammarSymbol</code>.</p>
+<h2 id="production-class">Production class<a class="headerlink" href="#production-class" title="Permanent link">&para;</a></h2>
+<h3 id="attributes_3">Attributes<a class="headerlink" href="#attributes_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>symbol (GrammarSymbol)</strong> - LHS of the production,</p>
+</li>
+<li>
+<p><strong>rhs (ProductionRHS)</strong> - RHS of this production,</p>
+</li>
+<li>
+<p><strong>assignments (dict)</strong> - <code>Assignment</code> instances keyed by match name. Created
+  by <a href="../grammar_language/#named-matches-assignments">named matches</a>,</p>
+</li>
+<li>
+<p><strong>assoc (int)</strong> - associativity of the production. See
+  <code>parglare.grammar.ASSOC_{NONE|LEFT|RIGHT}</code></p>
+</li>
+<li>
+<p><strong>prior (int)</strong> - integer defining priority of this production. Default
+  priority is 10.</p>
+</li>
+<li>
+<p><strong>dynamic (bool)</strong> - <code>True</code> if this production disambiguation should
+  be <a href="">resolved dynamically</a>.</p>
+</li>
+<li>
+<p><strong>prod_id (int)</strong> - ordinal number of the production in the grammar,</p>
+</li>
+<li>
+<p><strong>prod_symbol_id</strong> - zero-based ordinal of the production for the <code>symbol</code>
+  grammar symbol, i.e. the ordinal for the alternative choice for this symbol.</p>
+</li>
+</ul>
               
             </div>
           </div>
@@ -402,10 +402,10 @@ like the one used in the grammar language itself:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../parser/" class="btn btn-neutral float-right" title="Parser parameters">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../parser/" class="btn btn-neutral float-right" title="Parser">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../getting_started/" class="btn btn-neutral" title="Getting started"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../grammar_language/" class="btn btn-neutral" title="Grammar language"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -435,7 +435,7 @@ like the one used in the grammar language itself:</p>
           <a href="https://github.com/igordejanovic/parglare" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href="../getting_started/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../grammar_language/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
         <span style="margin-left: 15px"><a href="../parser/" style="color: #fcfcfc">Next &raquo;</a></span>

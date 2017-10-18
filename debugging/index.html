@@ -78,14 +78,21 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../grammar/">Grammar</a>
+        <a class="" href="../grammar_language/">Grammar language</a>
         
     </li>
 
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../parser/">Parser parameters</a>
+        <a class="" href="../grammar/">Grammar class</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser</a>
         
     </li>
 
@@ -106,7 +113,14 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../conflicts/">Conflicts resolving</a>
+        <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../disambiguation/">Disambiguation</a>
         
     </li>
 
@@ -120,7 +134,7 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../recovery/">Error recovery</a>
+        <a class="" href="../handling_errors/">Handling errors</a>
         
     </li>
 
@@ -248,11 +262,11 @@ parser in the debug mode from the code.</p>
 <p>To put the parser in the debug mode do:</p>
 <pre><code>parser = Parser(grammar, debug=True)
 </code></pre>
-<p>To debug <a href="../grammar/#handling-whitespaces-and-comments">layout grammar</a> do:</p>
+<p>To debug <a href="../grammar_language/#handling-whitespaces-and-comments">layout grammar</a> do:</p>
 <pre><code>parser = Parser(grammar, debug_layout=True)
 </code></pre>
-<p><code>GLRParser</code> can produce visual trace. To enable visual tracing set <code>debug</code> and
-<code>debug_trace</code> to <code>True</code>:</p>
+<p><code>GLRParser</code> can <a href="../pglr/#tracing-glr-parsing">produce visual trace</a>. To enable
+visual tracing set <code>debug</code> and <code>debug_trace</code> to <code>True</code>:</p>
 <pre><code>parser = GLRParser(grammar, debug=True, debug_trace=True)
 </code></pre>
 <p>Debug output and visual trace can be generated using <a href="../pglr/">pglr command</a>.

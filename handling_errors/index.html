@@ -8,7 +8,7 @@
   
   <meta name="author" content="Igor Dejanović">
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Error recovery - parglare</title>
+  <title>Handling errors - parglare</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -18,9 +18,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Error recovery";
-    var mkdocs_page_input_path = "recovery.md";
-    var mkdocs_page_url = "/recovery/";
+    var mkdocs_page_name = "Handling errors";
+    var mkdocs_page_input_path = "handling_errors.md";
+    var mkdocs_page_url = "/handling_errors/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -78,14 +78,21 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../grammar/">Grammar</a>
+        <a class="" href="../grammar_language/">Grammar language</a>
         
     </li>
 
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../parser/">Parser parameters</a>
+        <a class="" href="../grammar/">Grammar class</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../parser/">Parser</a>
         
     </li>
 
@@ -106,7 +113,14 @@
         
             
     <li class="toctree-l1 ">
-        <a class="" href="../conflicts/">Conflicts resolving</a>
+        <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../disambiguation/">Disambiguation</a>
         
     </li>
 
@@ -120,9 +134,12 @@
         
             
     <li class="toctree-l1 current">
-        <a class="current" href="./">Error recovery</a>
+        <a class="current" href="./">Handling errors</a>
         
             <ul>
+            
+                <li class="toctree-l3"><a href="#handling-errors">Handling errors</a></li>
+                
             
                 <li class="toctree-l3"><a href="#error-recovery">Error recovery</a></li>
                 
@@ -199,10 +216,10 @@
         
       
     
-    <li>Error recovery</li>
+    <li>Handling errors</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/recovery.md"
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/handling_errors.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -212,22 +229,42 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="error-recovery">Error recovery<a class="headerlink" href="#error-recovery" title="Permanent link">&para;</a></h1>
+                <h1 id="handling-errors">Handling errors<a class="headerlink" href="#handling-errors" title="Permanent link">&para;</a></h1>
+<p>When parglare encounter a situation in which no SHIFT or REDUCE operation could
+be performed it will report an error by raising an instance of
+<code>parglare.ParseError</code> class.</p>
+<p><code>ParseError</code> has the following attributes:</p>
+<ul>
+<li>
+<p><strong>file_name</strong> - the name of the file being parsed (<code>None</code> if string is
+  parsed),</p>
+</li>
+<li>
+<p><strong>position</strong> - an absolute position in the input where the error occured,</p>
+</li>
+<li>
+<p><strong>line</strong>/<strong>column</strong> - line and column where the error occured.</p>
+</li>
+</ul>
+<p>If there is an error in the grammar itself parglare will raise
+<code>parglare.GrammarError</code> exception.</p>
+<h1 id="error-recovery">Error recovery<a class="headerlink" href="#error-recovery" title="Permanent link">&para;</a></h1>
 <p>There are a lot of situations where you would want parser to report all the
-errors in one go. To do this, parser has to recover from the errors, i.e. get to
+errors in one go. To do this, parser has to recover from errors, i.e. get to
 the valid state and continue.</p>
-<p>To enable error recovery set <code>error_recovery</code> parameter to parser construction
+<p>To enable error recovery set
+<code>error_recovery</code> <a href="../parser/#error_recovery">parameter of parser construction</a>
 to <code>True</code>. This will enable implicit error recovery strategy that will simply
 drop characther/object at the place of the error and try to continue. All errors
 will be collected as an <code>errors</code> list on the parser instance.</p>
 <p>Each error is an instance of <code>parglare.Error</code> class. This class has the
 following attributes:</p>
 <ul>
-<li><code>position</code> - absolute position of the error,</li>
-<li><code>length</code> - the length of erroneous part of input,</li>
-<li><code>message</code> - error message.</li>
-<li><code>input_str</code> - The input string/list of objects.</li>
-<li><code>expected_symbol</code> - A set of grammar symbols expected at the location.</li>
+<li><strong>position</strong> - an absolute position of the error,</li>
+<li><strong>length</strong> - the length of erroneous part of input,</li>
+<li><strong>message</strong> - the error message,</li>
+<li><strong>input_str</strong> - the input string/list of objects,</li>
+<li><strong>expected_symbols</strong> - A set of grammar symbols expected at the location.</li>
 </ul>
 <p>which are supplied to the <code>Error</code> constructor to build a new instance. Either a
 <code>message</code> or <code>input_str</code> with <code>expected_symbols</code> should be provided. If
@@ -242,27 +279,28 @@ function. This function should have the following signature:</p>
     ...
 </code></pre>
 <ul>
-<li><code>parser</code> - instance of the parser, should be used only for querying the
+<li><strong>parser</strong> - instance of the parser, should be used only for querying the
    configuration, not for altering the state,</li>
-<li><code>input</code> - the input string/list,</li>
-<li><code>position</code> - the position in the input where the error has been found,</li>
-<li><code>expected_symbols</code> - a set grammar symbols that are expected at this
+<li><strong>input</strong> - the input string/list,</li>
+<li><strong>position</strong> - the position in the input where the error has been found,</li>
+<li><strong>expected_symbols</strong> - a set grammar symbols that are expected at this
    position.</li>
 </ul>
 <p>The recovery function should return the tuple <code>(error, position, token)</code>.
 <code>error</code> should be an instance of <code>parglare.Error</code> class or <code>None</code> if no error
 should be reported. <code>position</code> should be a new position where the parser should
-continue or <code>None</code> if token is introduced. <code>token</code> should be a new token
+continue or <code>None</code> if a new token is introduced. <code>token</code> should be a new token
 introduced at the given position or <code>None</code> if position is advanced.</p>
 <p>So, either position should be advanced if input is skipped, or new token should
 be returned if a new token is introduced at the position. You can't both
 advance position and introduce new token at the same time.</p>
 <p>The <code>token</code> symbol should be from the <code>expected_symbols</code> for the parser to
-recover successfully. <code>token</code> should be an instance of <code>parser.Token</code>. This
-class constructor accepts <code>symbol</code>, <code>value</code> and <code>length</code>. <code>symbol</code> should a
-grammar symbol from <code>expected_symbols</code>, <code>value</code> should be a matched part of
-the input (actually, this value is a made-up value here) and length is the
-length of the token. For introduced tokens, length should be set to 0.</p>
+recover successfully. <code>token</code> should be an instance
+of <a href="../parser/#token"><code>parser.Token</code></a>. This class constructor accepts <code>symbol</code>,
+<code>value</code> and <code>length</code>. <code>symbol</code> should a grammar symbol from <code>expected_symbols</code>,
+<code>value</code> should be a matched part of the input (actually, in the context of error
+recovery this value is a made-up value) and length is the length of the token.
+For introduced tokens, length should be set to 0.</p>
               
             </div>
           </div>
