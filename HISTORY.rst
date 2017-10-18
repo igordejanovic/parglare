@@ -1,6 +1,10 @@
 History
 -------
 
+- 2017-10-18 Version 0.4.1
+  - Fix in GLR parser. Parser reference not set on the parser context.
+
+
 - 2017-10-18 Version 0.4
   - Added regex-like syntax extension for grammar language (`?`, `*`, `+`).
     Issue: https://github.com/igordejanovic/parglare/issues/3
