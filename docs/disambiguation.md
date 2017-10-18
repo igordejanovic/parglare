@@ -34,7 +34,7 @@ language. Ideally, we strive for a grammar that describe all valid sentences in
 our language with a single interpretation for each of them and nothing more.
 
 
-## Disambiguation filters
+## Static disambiguation filters
 
 Static disambiguation filters are given in the grammar at the end of the
 production using `{}` syntax. There is also
@@ -45,35 +45,79 @@ powerful and is specified as a Python function.
 ### priority
 
 Priority is probably the simplest form of disambiguation. It is also the
-strongest form in parglare as it's first checked. It is given as a numeric value
+strongest in parglare as it's first checked. It is given as a numeric value
 where the default is 10. When the parser can't decide what operation to use it
 will favor the one associated with the production with a higher priority.
 
 For example:
 
 ```
+E: E "*" E {2};
+E: E "+" E {1};
 ```
+This gives priority of `2` to the production `E "*" E` and `1` to the production
+`E "+" E`. When parglare needs to decide, e.g. between shifting `+` or reducing
+`*` it saw, it will choose reduce as the multiplication production has higher
+priority.
+
+Priority can also be given to terminal productions.
+
 
 ### associativity
 
-Used to choose between two productions of the same priority
+Associativity is used for disambiguation between productions of the same
+priority. In the grammar fragment above we still have ambiguity for expression:
+
+```
+2 + 3 + 5
+```
+
+There are two interpretations `(2 + 3) + 5` and `2 + (3 + 5)`. Of course, with
+arithmentic `+` operation the result will be the same but that's not true for
+each operation. Anyway, parse trees will be different so some choice has to be
+made.
+
+In this situation associativity is used. Both `+` and `*` in arithmentic are
+left associative (i.e. the operation is evaluated from left to right).
+
+```
+E: E "*" E {2, left};
+E: E "+" E {1, left};
+```
+
+Now, the expression above is not ambiguous anymore. It is interpreted as `(2 +
+3) + 5`.
+
+The associativity given in the grammar is either `left` or `right`. Default is
+no associativity, i.e. associativity is not used for disambiguation decision.
 
 
 ### prefer
 
+This disambiguation filter is applicable to terminal productions only. It will
+be used to choose the right recognizer/terminal in case
+of [lexical ambiguity](#lexical-ambiguity).
 
-## The order or disambiguation rules application
+For example:
+
+```
+INT = /[-+]?[0-9]+\b/ {prefer};
+FLOAT = /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
+```
+
+If in the grammar we have a possibility that both recognizers are tried, both
+will succeed for input `23`, but we want `INT` to be choosen in this case.
 
 
 ## Dynamic disambiguation filter
 
-Priority and associativity based conflict resolution is of static nature, i.e.
-it is compiled during LR table calculation and doesn't depend on the parsed
-input.
+All previously described filters are of static nature, i.e. they are compiled
+during LR table calculation (by removing erroneous automata transitions) and
+they don't depend on the parsed input.
 
 There are sometimes situations when parsing decision depends on the input.
 
-For example, lets say that we should parse arithmetic expression but our
+For example, lets say that we need to parse arithmetic expression but our
 operation priority increase for operations that are introduced later in the
 input.
 
@@ -115,15 +159,16 @@ op_mul: '*' {dynamic};
 This tells parglare that those production are candidates for dynamic ambiguity
 resolution.
 
-Second step is to register function that will be used for resolution during
-parser construction. This function operates as a filter for actions in a given
-state and lookahead token. It receives a list of actions and a token ahead and
-returns a reduced list of actions. Usually, this function will maintain some
-kind of state. To initialize its state at the beginning it is called with (None,
-None) as parameters.
+Second step is to register a function, during parser construction, that will be
+used for resolution. This function operates as a filter for actions in a given
+state and lookahead token. It receives the current action, a token ahead,
+production (for REDUCE action), sub-results (for REDUCE action), and current LR
+automata state and returns either `True` if the action is acceptable or `False`
+otherwise. This function sometimes need to maintain some kind of state. To
+initialize its state at the beginning it is called with `None` as parameters.
 
 ```
-parser = Parser(grammar, dynamic_filter=dynamic_filter)
+parser = Parser(grammar, dynamic_filter=custom_disambiguation_filter)
 ```
 
 Where resolution function is of the following form:
@@ -137,7 +182,7 @@ def custom_disambiguation_filter(action, token, production, subresults, state):
     global operations
 
     # At the start of parsing this function is called with actions set to
-    # None to give a change for the strategy to initialize.
+    # None to give a chance for the strategy to initialize.
     if action is None:
         operations = []
         return
@@ -173,19 +218,24 @@ def custom_disambiguation_filter(action, token, production, subresults, state):
                      <= operations.index(red_op)))
 ```
 
-This function is a predicate that will be called for each action that is dynamic
-(SHIFT action for dynamic terminal production and REDUCE action for dynamic
-non-terminal productions). You are provided with enough information to make a
-custom decision whether to perform or reject the operation.
+This function is a predicate that will be called for each action for productions
+marked with `dynamic` (SHIFT action for dynamic terminal production and REDUCE
+action for dynamic non-terminal productions). You are provided with enough
+information to make a custom decision whether to perform or reject the
+operation.
 
 Parameters are:
 
 - **action** - either SHIFT or REDUCE constant from `parglare` module,
+
 - **token (Token)** - a [lookahead token](./parser.md#token),
+
 - **production (Production)** - a [production]() to be reduced. Valid only for
   REDUCE.
+
 - **subresults (list)** - a sub-results for the reduction. Valid only for
-  REDUCE. The length of this list must be equal to `len(production.rhs)`.
+  REDUCE. The length of this list is equal to `len(production.rhs)`.
+
 - **state (LRState)** - current LR parser state.
 
 For details see [test_dynamic_disambiguation_filters.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation_filters.py).
