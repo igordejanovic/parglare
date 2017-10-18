@@ -54,7 +54,7 @@ You can provide additional [parser parameters](./parser.md) during instantiation
     need additional power of GLR, i.e. either you need more than one token of
     lookahead or your language is inherently ambiguous. pglr tool will help you in
     investigating why you have LR conflicts in your grammar and there are some
-    nice [disambiguation features](./conflicts.md#resolving-conflicts) in parglare
+    nice [disambiguation features](./lr_parsing.md#resolving-conflicts) in parglare
     that will help you resolve some of those conflicts.
 
 Now parse your input calling `parse` method on the parser instance.
@@ -63,10 +63,17 @@ Now parse your input calling `parse` method on the parser instance.
 result = parser.parse(input_str)
 ```
 
-Depending on whether you have configured [actions](./actions.md) or not you will
-get a parse tree or some other representation of your input. In case of the GLR
-parser you will get the list of all possible results (a.k.a. _the parse
-forest_).
+Depending on whether you have configured [actions](./actions.md) and what
+parameters you used for parser instance you will
+get either:
+
+- a nested lists if no actions are used,
+- a parse tree if [`build_tree` parser param](./parser.md#build_tree) is set to
+  `True`,
+- some other representation of your input if custom actions are used.
+
+In case of the GLR parser you will get a list of all possible results (a.k.a.
+_the parse forest_).
 
 ## Where to go next?
 

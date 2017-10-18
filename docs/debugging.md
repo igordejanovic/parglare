@@ -51,8 +51,8 @@ To debug [layout grammar](./grammar_language.md#handling-whitespaces-and-comment
     parser = Parser(grammar, debug_layout=True)
 
 
-`GLRParser` can produce visual trace. To enable visual tracing set `debug` and
-`debug_trace` to `True`:
+`GLRParser` can [produce visual trace](./pglr.md#tracing-glr-parsing). To enable
+visual tracing set `debug` and `debug_trace` to `True`:
 
     parser = GLRParser(grammar, debug=True, debug_trace=True)
 

@@ -209,19 +209,19 @@ Following are parglare built-in actions from the `parglare.actions` module:
   `None` if empty match.
 
 - **obj** - Used implicitly by rules
-  using [named matches](./grammar_language.md#named-matches). Creates Python
-  object with attributes derived from named matches.
+  using [named matches](./grammar_language.md#named-matches-assignments).
+  Creates Python object with attributes derived from named matches.
 
 
 
 ## Actions for rules using named matches
 
-If [named matches](./grammar_language.md#named-matches) are used in the grammar
-rule, action will be called with additional keyword parameters named by the name
-of LHS of rule assignments. If no action is specified for the rule a built-in
-action `obj` is called and will produce instance of dynamically created Python
-class corresponding to the grammar rule. See more in the section
-on [named matches](./grammar_language.md#named-matches).
+If [named matches](./grammar_language.md#named-matches-assignments) are used in
+the grammar rule, action will be called with additional keyword parameters named
+by the name of LHS of rule assignments. If no action is specified for the rule a
+built-in action `obj` is called and will produce instance of dynamically created
+Python class corresponding to the grammar rule. See more in the section
+on [named matches](./grammar_language.md#named-matches-assignments).
 
 If for some reason you want to override default behavior that create Python
 object you can create action like this:

@@ -40,19 +40,20 @@ actions that will build the [parse tree](./parse_trees.md).
 
 ## prefer_shifts
 
-By default set to `False`. In case of [shift/reduce conflicts](./conflicts.md)
+By default set to `False`. In case of [shift/reduce conflicts](./lr_parsing.md)
 this strategy would favor shift over reduce.
 
 !!! note
 
     Do not use `prefer_shifts` if you don't understand the implications. Try to
-    understand [conflict and resolution strategies](./conflicts.md).
+    understand [conflicts](./lr_parsing.md) and
+    [resolution strategies](./disambiguation.md).
 
 ## error_recovery
 
 By default set to `False`. If set to `True` default error recovery will be used.
 If set to a Python function, the function will be called to recover from errors.
-For more information see [Error recovery](./recovery.md).
+For more information see [Error recovery](./handling_errors.md#error-recovery).
 
 ## start_production
 

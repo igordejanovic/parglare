@@ -10,7 +10,7 @@ a grammar is written declaratively. You don't have to think about the parsing
 process like in
 e.g. [PEGs](https://en.wikipedia.org/wiki/Parsing_expression_grammar).
 Ambiguities are dealt with explicitly (see
-the [section on conflicts](./conflicts.md)).
+the [section on conflicts](./lr_parsing.md#resolving-conflicts)).
 
 Grammar consists of a set of derivation rules where each rule is of the form:
 
@@ -435,11 +435,11 @@ Effectively, using named matches enables automatic creation of a nice AST.
     See the next section.
 
 
-## Referencing rule actions from a grammar
+## Referencing semantic actions from a grammar
 
 By default [action](./actions.md) with the name same as the rule name will be
-searched in the `actions` dict. You can override this by specifying action name
-for the rule directly in the grammar using `@` syntax.
+searched in the [`actions` dict](./parser.md#actions). You can override this by
+specifying action name for the rule directly in the grammar using `@` syntax.
 
 For example:
 
@@ -452,7 +452,7 @@ For rule `some_rule` action with the name `myaction` will be searched in the
 `actions` dict or [built-in actions](#built-in-actions) provided by the
 `parglare.actions` module. This is helpful if you have some common action that
 can be used for multiple rules in your grammar. Also this can be used to specify
-built-in action to be used a rule directly in the grammar.
+built-in action to be used for a rule directly in the grammar.
 
 
 ## Grammar comments
@@ -471,11 +471,12 @@ comments:
 
 ## Handling whitespaces and comments in your language
 
-By default parser will skip whitespaces. Whitespace skipping is controlled by
-`ws` parameter to the parser which is by default set to `'\n\t '`.
+By default parser will skip whitespaces. Whitespace skipping is controlled
+by [`ws` parameter to the parser](./parser.md#ws) which is by default set to
+`'\n\t '`.
 
-If you need more control of the layout, i.e. handling of not only whitespaces by
-comments also, you can use a special rule `LAYOUT`:
+If you need more control of the layout, i.e. handling of not only whitespaces
+but comments also, you can use a special rule `LAYOUT`:
 
 
       LAYOUT: LayoutItem | LAYOUT LayoutItem;
@@ -484,13 +485,13 @@ comments also, you can use a special rule `LAYOUT`:
       Comment: /\/\/.*/;
 
 This will form a separate layout parser that will parse in-between each matched
-tokens. In this example spaces and line-comments will get consumed by the layout
-parser.
+tokens. In this example whitespaces and line-comments will be consumed by the
+layout parser.
 
 If this special rule is found in the grammar `ws` parser parameter is ignored.
 
-Another example that gives support for both line comments and block comments
-like the one used in the grammar language itself:
+Here is another example that gives support for both line comments and block
+comments like the one used in the grammar language itself:
 
       LAYOUT: LayoutItem | LAYOUT LayoutItem;
       LayoutItem: WS | Comment | EMPTY;

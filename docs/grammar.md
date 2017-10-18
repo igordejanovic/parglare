@@ -4,14 +4,15 @@ After you write your grammar either as a Python string or as a separate file the
 next step is to instantiate the grammar object that will be used to create the
 parser.
 
-There are two factory methods defined on `Grammar` class for creating the
+There are two factory methods defined on the `Grammar` class for creating the
 `Grammar` instance:
 
-- `Grammar.from_string(grammar)` - if your grammar is given as a Python string,
+- `Grammar.from_string(grammar_string)` - if your grammar is given as a Python
+  string,
 - `Grammar.from_file(file_path)` - if the grammar is given as a separate file.
 
 Both methods return initialized `Grammar` object that is passed as the first and
-the only mandatory parameter to the `Parser/GLRParser` constructor.
+the only mandatory parameter for the `Parser/GLRParser` constructor.
 
 
 ## Grammar factory methods additional parameters
@@ -43,7 +44,7 @@ parameters:
 - **nonterminals** - a set of non-terminal (instances
   of [`NonTerminal`](#nonterminal));
 
-- **root_symbol** - grammar symbol of the start/root rule. By default this is
+- **root_symbol** - a grammar symbol of the start/root rule. By default this is
   the first rule in the grammar;
 
 - **productions** - a list of productions ([`Production`](#production)
@@ -53,8 +54,8 @@ parameters:
   keyed by the terminal rule name;
 
 - **classes** - a dict of Python classes dynamically created for rules
-  using [named matches](./grammar_language.md#named-matches) keyed by the rule
-  name.
+  using [named matches](./grammar_language.md#named-matches-assignments) keyed
+  by the rule name.
 
 ### Methods
 
@@ -85,7 +86,9 @@ This is a base class for `Terminal` and `NonTerminal`.
   `actions` parameter of the parser. Overrides grammar action if provided. If
   not given will be the same as `grammar_action`.
 
-- **grammar_action** - resolved reference to the action given in the grammar.
+- **grammar_action** - resolved reference to the action specified in the
+  grammar. Not used if `action` attribute is defined, i.e. `action` overrides
+  `grammar_action`.
 
 
 
@@ -93,13 +96,17 @@ This is a base class for `Terminal` and `NonTerminal`.
 
 ### Attributes
 
-- **prior (int)** - a priority used for disambiguation,
-- **recognizer (callable)** - callable in charge of recognition of this terminal
+- **prior (int)** - a priority used in disambiguation,
+
+- **recognizer (callable)** - a callable in charge of recognition of this terminal
   in the input stream,
+
 - **prefer (bool)** - If `True` this recognizer/terminal is preferred in case of
   conflict where multiple recognizer match at the same place and implicit
   disambiguation doesn't resolve the conflict.
-- **dynamic (bool)** - `True` if disambiguation should be [resolved dynamically]().
+
+- **dynamic (bool)** - `True` if disambiguation should
+  be [resolved dynamically](./disambiguation.md#dynamic-disambiguation-filter).
 
 
 ## NonTerminal class
@@ -116,7 +123,7 @@ Only inherited from `GrammarSymbol`.
 - **rhs (ProductionRHS)** - RHS of this production,
 
 - **assignments (dict)** - `Assignment` instances keyed by match name. Created
-  by [named matches](./grammar_language.md#named-matches),
+  by [named matches](./grammar_language.md#named-matches-assignments),
 
 - **assoc (int)** - associativity of the production. See
   `parglare.grammar.ASSOC_{NONE|LEFT|RIGHT}`

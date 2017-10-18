@@ -31,7 +31,7 @@ A pure Python LR/GLR parser.
     In case there are multiple interpretation of your input you will get all the
     trees (a.k.a. "the parse forest").
 
-* [**Declarative associativity and priority rules**](./conflicts.md#resolving-conflicts)
+* [**Declarative associativity and priority rules**](./disambiguation.md)
 
     These problems arise a lot when building expression languages. Even a little
     arithmetic expression as `3 + 4 * 5 * 2` have multiple interpretation
@@ -87,7 +87,7 @@ A pure Python LR/GLR parser.
     `LAYOUT` in the grammar this rule is used instead. An additional parser with
     the layout grammar will be built to handle whitespaces.
 
-* [**Error recovery**](./recovery.md)
+* [**Error recovery**](./handling_errors.md#error-recovery)
 
     This is something that often lacks in parsing libraries. More often than not
     you will want your parser to recover from an error, report it, and continue

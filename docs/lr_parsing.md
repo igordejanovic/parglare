@@ -34,7 +34,7 @@ The only thing a parser can do in this case is to shift, i.e. to consume the
 token and advance the position. This operation transition the automata to some
 other state. From each state there is only one valid transition that can be
 taken or the PDA won't be deterministic, i.e. we could simultaneously follow
-different paths.
+different paths (that is exactly what the `GLRParser` does).
 
 Current position would be (the dot represents the position):
 
@@ -53,7 +53,7 @@ change state so I'll not repeat that anymore.
 
 
 After reduction parser will do shift of `+` token. There is nothing to reduce as
-the subexpresison on stack is `E +` which can't be reduced as it's not complete.
+the sub-expresison on stack is `E +` which can't be reduced as it's not complete.
 So, the only thing we can do is to shift `2` token.
 
 Now, the position is:
@@ -79,8 +79,8 @@ the stack). We will have the following result:
 
     1 + (2 * 3)
 
-From the point of view arithmetic priorities, preffered solution is the last one
-but the parser don't know arithmetic rules.
+From the point of view of arithmetic priorities, preferred solution is the last
+one but the parser don't know arithmetic rules.
 
 If you analyze this grammar using [pglr command](./pglr.md) you will see that
 the LR tables have Shift/Reduce conflicts as there is a state in which parser
@@ -94,7 +94,7 @@ There are two situations when conflicts can't be resolved:
 - you need more than one lookahead to disambiguate,
 - your language is inherently ambiguous.
 
-If you end up in one of these situations you should use GLR parsing, which will
+If you end up in one of these situations you must use GLR parsing, which will
 fork the parser at each state which has multiple paths, and explore all
 possibilities.
 
@@ -105,7 +105,8 @@ When we run:
 
     $ pglr -d check expr.pg
 
-where in `expr.pg` we have the above grammar, we get the following output at the end:
+where in `expr.pg` we have the above grammar, we get the following output at the
+end:
 
     *** S/R conflicts ***
     There are 4 S/R conflicts
@@ -220,183 +221,4 @@ This change in the grammar resolves all ambiguities and our grammar is now
 LR(1).
 
 
-##
-
-### priority
-
-### associativity
-
-
-### prefer
-
-
-## Order or conflict resolution
-
-
-## Dynamic disambiguation filter
-
-Priority and associativity based conflict resolution is of static nature, i.e.
-it is compiled during LR table calculation and doesn't depend on the parsed
-input.
-
-There are sometimes situations when parsing decision depends on the input.
-
-For example, lets say that we should parse arithmetic expression but our
-operation priority increase for operations that are introduced later in the
-input.
-
-```
-1 + 2 * 3 - 4 + 5
-```
-Should be parsed as:
-
-```
-((1 + (2 * (3 - 4))) + 5)
-```
-
-While
-
-```
-1 - 2 + 3 * 4 + 5
-```
-
-should be parsed as:
-
-```
-(1 - ((2 + (3 * 4)) + 5))
-```
-
-As you can see, operations that appears later in the input are of higher priority.
-
-In parglare you can implement this dynamic behavior in two steps:
-
-First, mark productions in your grammar by `dynamic` rule:
-
-```
-E: E op_sum E {dynamic}
- | E op_mul E {dynamic}
- | /\d+/;
-op_sum: '+' {dynamic};
-op_mul: '*' {dynamic};
-```
-
-This tells parglare that those production are candidates for dynamic ambiguity
-resolution.
-
-Second step is to register function that will be used for resolution during
-parser construction. This function operates as a filter for actions in a given
-state and lookahead token. It receives a list of actions and a token ahead and
-returns a reduced list of actions. Usually, this function will maintain some
-kind of state. To initialize its state at the beginning it is called with (None,
-None) as parameters.
-
-```
-parser = Parser(grammar, dynamic_filter=dynamic_filter)
-```
-
-Where resolution function is of the following form:
-
-```
-def custom_disambiguation_filter(action, token, production, subresults, state):
-    """Make first operation that appears in the input as lower priority.
-    This demonstrates how priority rule can change dynamically depending
-    on the input.
-    """
-    global operations
-
-    # At the start of parsing this function is called with actions set to
-    # None to give a change for the strategy to initialize.
-    if action is None:
-        operations = []
-        return
-
-    actions = state.actions[token.symbol]
-
-    # Lookahead operation
-    shift_op = token.symbol
-
-    if action is SHIFT:
-        if shift_op not in operations:
-            operations.append(shift_op)
-        if len(actions) == 1:
-            return True
-        red_op = [a for a in actions if a.action is REDUCE][0].prod.rhs[1]
-        return operations.index(shift_op) > operations.index(red_op)
-
-    elif action is REDUCE:
-
-        # Current reduction operation
-        red_op = production.rhs[1]
-        if red_op not in operations:
-            operations.append(red_op)
-
-        if len(actions) == 1:
-            return True
-
-        # If lookahead operation is not processed yet is is of higer priority
-        # so do not reduce.
-        # If lookahead is in operation and its index is higher do not reduce.
-        return (shift_op in operations
-                and (operations.index(shift_op)
-                     <= operations.index(red_op)))
-```
-
-This function is a predicate that will be called for each action that is dynamic
-(SHIFT action for dynamic terminal production and REDUCE action for dynamic
-non-terminal productions). You are provided with enough information to make a
-custom decision whether to perform or reject the operation.
-
-Parameters are:
-
-- **action** - either SHIFT or REDUCE constant from `parglare` module,
-- **token (Token)** - a [lookahead token](./parser.md#token),
-- **production (Production)** - a [production]() to be reduced. Valid only for
-  REDUCE.
-- **subresults (list)** - a sub-results for the reduction. Valid only for
-  REDUCE. The length of this list must be equal to `len(production.rhs)`.
-- **state (LRState)** - current LR parser state.
-
-For details see [test_dynamic_disambiguation_filters.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation_filters.py).
-
-
-## Lexical ambiguities
-
-There is another source of ambiguities.
-
-Parglare uses integrated scanner, thus tokens are determined on the fly. This
-gives greater lexical disambiuation power but lexical ambiguities might arise
-nevertheless. Lexical ambiguity is a situation when at some place in the input
-more than one recognizer match successfully.
-
-For example, if in the input we have `3.4` and we expect at this place either an
-integer or a float. Both of these recognizer can match the input. The integer
-recognizer would match `3` while the float recognizer would match `3.4`. What
-should we use?
-
-parglare has implicit lexical disambiguation strategy that will:
-
-1. Use priorities first.
-2. String recognizers are preferred over regexes (i.e. the most specific match).
-3. If priorities are the same and we have no string recognizers use
-   longest-match strategy.
-4. If more recognizers still match use `prefer` rule if given.
-5. If all else fails raise an exception. In case of GLR, ambiguity will be
-   handled by parser forking, i.e. you will end up with all solutions/trees.
-
-
-Thus, in terminal definition rules we can use priorities to favor some of the
-recognizers, or we can use `prefer` to favor recognizer if there are multiple
-matches of the same length.
-
-For example:
-
-      number = /\d+/ {15};
-
-or:
-
-      number = /\d+/ {prefer};
-
-In addition, you can also specify terminal to take a part in dynamic
-disambiguation:
-
-      number = /\d+/ {dynamic};
+See the section on [disambiguation strategies](./disambiguation.md) for more.

@@ -7,6 +7,7 @@ repo_url: https://github.com/igordejanovic/parglare
 google_analytics: ['UA-68681917-1', 'igordejanovic.net']
 theme: readthedocs
 extra_css: ['style.css']
+strict: true
 
 pages:
 - Home: index.md
@@ -17,9 +18,10 @@ pages:
     - Parser: parser.md
     - Actions: actions.md
     - Recognizers: recognizers.md
-    - Conflicts resolving: conflicts.md
+    - LR parsing and conflicts: lr_parsing.md
+    - Disambiguation: disambiguation.md
     - Parse trees: parse_trees.md
-    - Error recovery: recovery.md
+    - Handling errors: handling_errors.md
     - pglr command: pglr.md
     - Debugging: debugging.md
 - About:
