@@ -48,19 +48,18 @@ def viz(ctx, grammar_file):
 @click.argument('grammar_file', type=click.Path())
 @click.option('--input-file', '-f', type=click.Path(),
               help="Input file for tracing")
-@click.option('--expression', '-e', help="Expression for tracing")
+@click.option('--input', '-i', help="Input string for tracing")
 @click.pass_context
-def trace(ctx, grammar_file, input_file, expression):
-    if not (input_file or expression):
-        prints('Expected either input_file or expression.')
+def trace(ctx, grammar_file, input_file, input):
+    if not (input_file or input):
+        prints('Expected either input_file or input string.')
         sys.exit(1)
-    debug = ctx.obj['debug']
     colors = ctx.obj['colors']
-    grammar, table = check_get_grammar_table(grammar_file, debug, colors)
-    parser = GLRParser(grammar, debug=debug, debug_trace=debug,
+    grammar, table = check_get_grammar_table(grammar_file, True, colors)
+    parser = GLRParser(grammar, debug=True, debug_trace=True,
                        debug_colors=colors)
-    if expression:
-        parser.parse(expression)
+    if input:
+        parser.parse(input)
     else:
         parser.parse_file(input_file)
 
