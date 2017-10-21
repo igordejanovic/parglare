@@ -71,7 +71,7 @@ def test_layout_nested_comments(parser_class):
     """
     g = Grammar.from_string(grammar)
 
-    in_str = """
+    in_str = """//Line comment at beginning
     a  b b b   b // This is line comment
     b b b b b b  /* This is block
     comment */
