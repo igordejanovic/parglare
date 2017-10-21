@@ -34,6 +34,9 @@ parameters:
 - **debug_colors** - set to `True` to use colorized debug/trace output. `False` by
   default.
 
+- **re_flags** - regex flags used for regex recognizers. See Python `re` module.
+  By default flags is set to `re.MULTILINE`.
+
 
 ## Grammar class
 

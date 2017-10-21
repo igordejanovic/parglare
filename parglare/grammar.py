@@ -132,10 +132,10 @@ class StringRecognizer(Recognizer):
 
 
 class RegExRecognizer(Recognizer):
-    def __init__(self, regex):
+    def __init__(self, regex, re_flags=re.MULTILINE):
         super(RegExRecognizer, self).__init__(regex)
         self._regex = regex
-        self.regex = re.compile(self._regex)
+        self.regex = re.compile(self._regex, re_flags)
 
     def __call__(self, in_str, pos):
         m = self.regex.match(in_str, pos)
@@ -543,11 +543,12 @@ class Grammar(object):
                        start_symbol, recognizers=recognizers)
 
     @staticmethod
-    def from_string(grammar_str, recognizers=None, debug=False,
-                    debug_parse=False, debug_colors=False,
+    def from_string(grammar_str, recognizers=None, re_flags=re.MULTILINE,
+                    debug=False, debug_parse=False, debug_colors=False,
                     _no_check_recognizers=False):
         from .parser import Context
         context = Context()
+        context.re_flags = re_flags
         context.classes = {}
         g = Grammar(get_grammar_parser(debug_parse, debug_colors)
                     .parse(grammar_str, context=context),
@@ -560,10 +561,12 @@ class Grammar(object):
         return g
 
     @staticmethod
-    def from_file(file_name, recognizers=None, debug=False, debug_parse=False,
-                  debug_colors=False, _no_check_recognizers=False):
+    def from_file(file_name, recognizers=None, re_flags=re.MULTILINE,
+                  debug=False, debug_parse=False, debug_colors=False,
+                  _no_check_recognizers=False):
         from .parser import Context
         context = Context()
+        context.re_flags = re_flags
         context.classes = {}
         g = Grammar(get_grammar_parser(debug_parse, debug_colors).parse_file(
             file_name, context=context), recognizers=recognizers,
@@ -1103,9 +1106,9 @@ def act_recognizer_str(_, nodes):
     return Terminal(value, StringRecognizer(value))
 
 
-def act_recognizer_regex(_, nodes):
+def act_recognizer_regex(context, nodes):
     value = nodes[0][1:-1]
-    return Terminal(value, RegExRecognizer(value))
+    return Terminal(value, RegExRecognizer(value, context.re_flags))
 
 
 pg_actions = {
