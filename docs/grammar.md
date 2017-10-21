@@ -31,8 +31,8 @@ parameters:
 - **debug_parse** - set to `True` to debug/trace grammar file/string parsing.
   `False` by default.
 
-- **debug_colors** - set to `True` to use colorized debug/trace output. `False` by
-  default.
+- **debug_colors** - set to `True` to enable terminal colors in debug/trace
+  output. `False` by default.
 
 - **re_flags** - regex flags used for regex recognizers. See Python `re` module.
   By default flags is set to `re.MULTILINE`.

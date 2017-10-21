@@ -74,6 +74,12 @@ parameters are set to `False` by default.
 
 For more information see [Debugging](./debugging.md)
 
+
+## debug_colors
+
+Set this to `True` to enable terminal colors in debug/trace output. `False` by
+default.
+
 ## tables
 
 The value of this parameter is either `parglare.LALR` or `parglare.SLR` and it
