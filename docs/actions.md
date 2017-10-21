@@ -213,7 +213,10 @@ Following are parglare built-in actions from the `parglare.actions` module:
 
 - **obj** - Used implicitly by rules
   using [named matches](./grammar_language.md#named-matches-assignments).
-  Creates Python object with attributes derived from named matches.
+  Creates Python object with attributes derived from named matches. Objects
+  created this way have additional attributes
+  `_pg_start_position`/`_pg_end_position` with start/end position in the input
+  stream where the object is found.
 
 
 

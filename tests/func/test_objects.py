@@ -123,3 +123,28 @@ def test_obj_action_override():
     A = g.get_nonterminal('A')
     assert A.action_name == 'myaction'
     assert A.action is None
+
+
+def test_obj_position():
+    """
+    Test that object start/end position is set properly.
+    """
+    grammar = """
+    S: "first" seconds=Second+;
+    Second: value=/\d+/;
+    """
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+
+    result = parser.parse("""
+    first 45 56
+    66 3434342
+    """)
+
+    n = result.seconds[1]
+    assert n._pg_start_position == 14
+    assert n._pg_end_position == 16
+
+    n = result.seconds[3]
+    assert n._pg_start_position == 24
+    assert n._pg_end_position == 31

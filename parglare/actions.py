@@ -153,4 +153,7 @@ def obj(context, nodes, **attrs):
     cls = grammar.classes[rule_name]
     instance = cls(**attrs)
 
+    instance._pg_start_position = context.start_position
+    instance._pg_end_position = context.end_position
+
     return instance
