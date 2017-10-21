@@ -356,7 +356,7 @@ class Parser(object):
                 context.production = production
 
                 if debug:
-                    a_print("Reducing", "by prod '%s'.".format(production),
+                    a_print("Reducing", "by prod '{}'.".format(production),
                             level=1)
 
                 r_length = len(production.rhs)
