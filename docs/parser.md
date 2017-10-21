@@ -96,12 +96,15 @@ textual file `parse_file` is used.
 
 These two calls accepts the following parameters:
 
-- `input_str` - first positional and mandatory parameter only for `parse` call -
+- **input_str** - first positional and mandatory parameter only for `parse` call -
   the input string/list of objects.
-- `position` - the start position to parse from. By default 0.
-- `context` - the [context object](./actions.md#the-context-object) to use. By
+
+- **position** - the start position to parse from. By default 0.
+
+- **context** - the [context object](./actions.md#the-context-object) to use. By
   default `None` - context object is created by the parser.
-- `file_name` - first positional and mandatory parameter only for `parse_file`
+
+- **file_name** - first positional and mandatory parameter only for `parse_file`
   call - the name/path of the file to parse.
 
 
@@ -113,5 +116,7 @@ is a concrete matched terminal from the input stream.
 ## Attributes
 
 - **symbol** (`Terminal`) - terminal grammar symbol represented by this token,
+
 - **value** (`list` or `str`) - matched part of input stream,
+
 - **length** (`int`) - length of matched input.
