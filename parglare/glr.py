@@ -67,6 +67,7 @@ class GLRParser(Parser):
         self.context = context = context if context else Context()
         context.parser = self
         context.input_str = input_str
+        context.file_name = file_name
 
         position, layout_content = self._skipws(context, input_str, position)
 

@@ -130,6 +130,9 @@ Following attributes are available on the context object:
   `parglare.pos_to_line_col(input, position)` function to get line and column of
   the position. This function returns a tuple `(line, column)`.
 
+- **file_name** - the name/path of the file being parsed. `None` if Python
+  string is parsed.
+
 - **input_str** - the input string (or list of objects) that is being parsed.
 
 - **layout_content** - is the layout (whitespaces, comments etc.) that are

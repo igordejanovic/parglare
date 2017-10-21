@@ -178,6 +178,7 @@ class Parser(object):
                                  None)]
         context = Context() if not context else context
         context.input_str = input_str
+        context.file_name = file_name
 
         next_token = self._next_token
         debug = self.debug
@@ -189,7 +190,8 @@ class Parser(object):
         while True:
             cur_state = state_stack[-1].state
             if debug:
-                a_print("Current state:", cur_state.state_id, new_line=True)
+                a_print("Current state:", str(cur_state.state_id),
+                        new_line=True)
 
             actions = cur_state.actions
 
