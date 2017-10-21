@@ -181,6 +181,7 @@ class Parser(object):
 
         next_token = self._next_token
         debug = self.debug
+        layout_content = ''
 
         new_token = True
         ntok = Token()
@@ -202,14 +203,15 @@ class Parser(object):
                 # always leading to reduction.
                 try:
 
-                    position, layout_content = self._skipws(context, input_str,
-                                                            position)
-                    if self.debug:
-                        h_print("Layout content:",
-                                "'{}'".format(layout_content), level=1)
+                    if not self.layout:
+                        position, layout_content = self._skipws(context,
+                                                                input_str,
+                                                                position)
+                        if self.debug:
+                            h_print("Layout content:",
+                                    "'{}'".format(layout_content), level=1)
 
                     ntok = next_token(cur_state, input_str, position)
-                    context.layout_content = layout_content
 
                 except DisambiguationError as e:
                     raise ParseError(file_name, input_str, position,
