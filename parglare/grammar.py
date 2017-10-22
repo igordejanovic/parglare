@@ -360,6 +360,7 @@ class Grammar(object):
                                if isinstance(p.symbol, NonTerminal)]
 
         self._enumerate_productions()
+        self._fix_keyword_terminals()
 
     def _collect_grammar_symbols(self):
         """
@@ -475,6 +476,31 @@ class Grammar(object):
             s.prod_id = idx
             s.prod_symbol_id = idx_per_symbol.get(s.symbol, 0)
             idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 0) + 1
+
+    def _fix_keyword_terminals(self):
+        """
+        If KEYWORD terminal with regex match is given fix all matching string
+        recognizers to match on word boundary.
+        """
+        keyword_term = self.get_terminal('KEYWORD')
+        if keyword_term is None:
+            return
+
+        # KEYWORD rule must have a regex recognizer
+        keyword_rec = keyword_term.recognizer
+        if not isinstance(keyword_rec, RegExRecognizer):
+            raise GrammarError(
+                'KEYWORD rule must have a regex recognizer defined.')
+
+        # Change each string recognizer corresponding to the KEYWORD
+        # regex by the regex recognizer that match on word boundaries.
+        for prod in self:
+            if isinstance(prod, Terminal):
+                if isinstance(prod.recognizer, StringRecognizer):
+                    match = keyword_rec(prod.recognizer.value, 0)
+                    if match == prod.recognizer.value:
+                        prod.recognizer = RegExRecognizer(
+                            r'\b{}\b'.format(match))
 
     def get_terminal(self, name):
         "Returns terminal with the given name."

@@ -500,3 +500,64 @@ comments like the one used in the grammar language itself:
       CorNCs: CorNC | CorNCs CorNC | EMPTY;
       CorNC: Comment | NotComment | WS;
       NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
+
+
+## Handling keywords in your language
+
+By default parser will match given string recognizer even if it is part of some
+larger word, i.e. it will not require matching on the word boundary. This is not
+the desired behaviour for language keywords.
+
+For example, lets take this little grammar:
+
+    S: "for" name=ID "=" from=INT "to" to=INT EOF;
+    ID: /\w+/;
+    INT: /\d+/;
+
+
+This grammar is intended to match statement like this one:
+
+    for a=10 to 20
+
+But it will also match:
+
+    fora=10 to20
+
+which is not what we wanted.
+
+parglare allows the definition of a special terminal rule `KEYWORD`. This rule
+must define a [regular expression recognizer](#regular-expression-recognizer).
+Any string recognizer in the grammar that can be recognized by the `KEYWORD`
+recognizer is treated as a keyword and is changed during grammar construction to
+match only on word boundary.
+
+For example:
+
+    S: "for" name=ID "=" from=INT "to" to=INT EOF;
+    ID: /\w+/;
+    INT: /\d+/;
+    KEYWORD: /\w+/;
+
+
+Now,
+
+    fora=10 to20
+
+will not be recognized as the words `for` and `to` are recognized to be keywords
+(they can be matched by the `KEYWORD` rule).
+
+This will be parsed correctly:
+
+    for a=10 to 20
+
+As `=` is not matched by the `KEYWORD` rule and thus doesn't require to be
+separated from the surrounding tokens.
+
+!!! note
+    parglare uses integrated scanner so this example:
+
+        for for=10 to 20
+
+    will be correctly parsed. `for` in `for=10` will be recognized as `ID` and
+    not as a keyword `for`, i.e. there is no lexical ambiguity due to tokenizer
+    separation.

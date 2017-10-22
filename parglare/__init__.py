@@ -4,7 +4,7 @@ from parglare.parser import Parser, Token, LALR, SLR, pos_to_line_col, \
     SHIFT, REDUCE, ACCEPT, Node, NodeTerm, NodeNonTerm
 from parglare.glr import GLRParser
 from parglare.grammar import Grammar, NonTerminal, Terminal, \
-    RegExRecognizer, EMPTY, EOF, STOP
+    RegExRecognizer, StringRecognizer, EMPTY, EOF, STOP
 from parglare.errors import Error
 from parglare.exceptions import ParseError, GrammarError
 
