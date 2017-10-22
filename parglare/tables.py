@@ -4,7 +4,7 @@ from itertools import chain
 from parglare.parser import LRItem, LRState
 from parglare import NonTerminal
 from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_RIGHT, STOP, \
-    StringRecognizer
+    StringRecognizer, RegExRecognizer
 from .exceptions import GrammarError, SRConflict, RRConflict
 from .parser import Action, SHIFT, REDUCE, ACCEPT, first, follow
 from .closure import closure, LR_1
@@ -232,9 +232,14 @@ def create_table(grammar, first_sets=None, follow_sets=None,
 
         """
         symbol, act = act_item
-        return symbol.prior * 1000000 + (500000 + len(symbol.recognizer.value)
-                                         if type(symbol.recognizer)
-                                         is StringRecognizer else 0)
+        return symbol.prior * 1000000 + (500000 +
+                                         (len(symbol.recognizer.value)
+                                          if type(symbol.recognizer) is
+                                          StringRecognizer else 0) +
+                                         ((len(symbol.recognizer._regex) - 4)
+                                          if type(symbol.recognizer) is
+                                          RegExRecognizer and symbol.keyword
+                                          else 0))
     for state in states:
         finish_flags = []
         state.actions = OrderedDict(sorted(state.actions.items(),
@@ -244,7 +249,8 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         for symbol, act in reversed(list(state.actions.items())):
             finish_flags.append(symbol.finish
                                 or (symbol.prior > prior if prior else False)
-                                or type(symbol.recognizer) is StringRecognizer)
+                                or type(symbol.recognizer) is StringRecognizer
+                                or symbol.keyword)
             prior = symbol.prior
 
         finish_flags.reverse()

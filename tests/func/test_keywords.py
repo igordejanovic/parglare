@@ -73,3 +73,26 @@ def test_keyword_matches_on_word_boundary():
     # But this is OK
     parser.parse('for id=10 to 20')
     parser.parse('for for=10 to 20')
+
+
+def test_keyword_preferred_over_regexes():
+    """
+    Test that keyword matches (internally converted to regex matches) are
+    preferred over ordinary regex matches of the same length.
+    """
+
+    grammar = r"""
+    S: "for"? name=ID? "=" from=INT "to" to=INT EOF;
+    ID: /\w+/;
+    INT: /\d+/;
+    KEYWORD: /\w+/;
+    """
+    g = Grammar.from_string(grammar)
+
+    parser = Parser(g)
+
+    # 'for' is ambiguous as it can be keyword or ID(name)
+    # ParseError could be thrown but parglare will prefer
+    # StringRecognizer and keywords over RegExRecognizer for
+    # the match of the same lenght (i.e. "more specific match")
+    parser.parse("for = 10 to 100")

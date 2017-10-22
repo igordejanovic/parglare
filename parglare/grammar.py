@@ -86,6 +86,8 @@ class Terminal(GrammarSymbol):
         recognizers will be checked if this succeeds.
     prefer(bool): Prefer this recognizer in case of multiple recognizers match
         at the same place and implicit disambiguation doesn't resolve.
+    keyword(bool): `True` if this Terminal represents keyword. `False` by
+        default.
 
     recognizer(callable): Called with input list of objects and position in the
         stream. Should return a sublist of recognized objects. The sublist
@@ -97,6 +99,7 @@ class Terminal(GrammarSymbol):
         self.finish = False
         self.prefer = False
         self.dynamic = False
+        self.keyword = False
         super(Terminal, self).__init__(name)
 
 
@@ -496,11 +499,13 @@ class Grammar(object):
         # regex by the regex recognizer that match on word boundaries.
         for prod in self:
             if isinstance(prod, Terminal):
-                if isinstance(prod.recognizer, StringRecognizer):
-                    match = keyword_rec(prod.recognizer.value, 0)
-                    if match == prod.recognizer.value:
-                        prod.recognizer = RegExRecognizer(
+                term = prod
+                if isinstance(term.recognizer, StringRecognizer):
+                    match = keyword_rec(term.recognizer.value, 0)
+                    if match == term.recognizer.value:
+                        term.recognizer = RegExRecognizer(
                             r'\b{}\b'.format(match))
+                        term.keyword = True
 
     def get_terminal(self, name):
         "Returns terminal with the given name."
