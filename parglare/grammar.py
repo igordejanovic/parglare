@@ -125,19 +125,29 @@ class Recognizer(object):
 
 
 class StringRecognizer(Recognizer):
-    def __init__(self, value):
+    def __init__(self, value, ignore_case=False):
         super(StringRecognizer, self).__init__(value)
         self.value = value
+        self.ignore_case = ignore_case
+        self.value_cmp = value.lower() if ignore_case else value
 
     def __call__(self, in_str, pos):
-        if in_str[pos:pos+len(self.value)] == self.value:
-            return self.value
+        if self.ignore_case:
+            if in_str[pos:pos+len(self.value)].lower() == self.value_cmp:
+                return self.value
+        else:
+            if in_str[pos:pos+len(self.value)] == self.value_cmp:
+                return self.value
 
 
 class RegExRecognizer(Recognizer):
-    def __init__(self, regex, re_flags=re.MULTILINE):
+    def __init__(self, regex, re_flags=re.MULTILINE, ignore_case=False):
         super(RegExRecognizer, self).__init__(regex)
         self._regex = regex
+        self.ignore_case = ignore_case
+        if ignore_case:
+            re_flags |= re.IGNORECASE
+        self.re_flags = re_flags
         self.regex = re.compile(self._regex, re_flags)
 
     def __call__(self, in_str, pos):
@@ -504,7 +514,8 @@ class Grammar(object):
                     match = keyword_rec(term.recognizer.value, 0)
                     if match == term.recognizer.value:
                         term.recognizer = RegExRecognizer(
-                            r'\b{}\b'.format(match))
+                            r'\b{}\b'.format(match),
+                            ignore_case=term.recognizer.ignore_case)
                         term.keyword = True
 
     def get_terminal(self, name):
@@ -574,12 +585,13 @@ class Grammar(object):
                        start_symbol, recognizers=recognizers)
 
     @staticmethod
-    def from_string(grammar_str, recognizers=None, re_flags=re.MULTILINE,
-                    debug=False, debug_parse=False, debug_colors=False,
-                    _no_check_recognizers=False):
+    def from_string(grammar_str, recognizers=None, ignore_case=False,
+                    re_flags=re.MULTILINE, debug=False, debug_parse=False,
+                    debug_colors=False, _no_check_recognizers=False):
         from .parser import Context
         context = Context()
         context.re_flags = re_flags
+        context.ignore_case = ignore_case
         context.classes = {}
         g = Grammar(get_grammar_parser(debug_parse, debug_colors)
                     .parse(grammar_str, context=context),
@@ -592,12 +604,13 @@ class Grammar(object):
         return g
 
     @staticmethod
-    def from_file(file_name, recognizers=None, re_flags=re.MULTILINE,
-                  debug=False, debug_parse=False, debug_colors=False,
-                  _no_check_recognizers=False):
+    def from_file(file_name, recognizers=None, ignore_case=False,
+                  re_flags=re.MULTILINE, debug=False, debug_parse=False,
+                  debug_colors=False, _no_check_recognizers=False):
         from .parser import Context
         context = Context()
         context.re_flags = re_flags
+        context.ignore_case = ignore_case
         context.classes = {}
         g = Grammar(get_grammar_parser(debug_parse, debug_colors).parse_file(
             file_name, context=context), recognizers=recognizers,
@@ -1127,19 +1140,22 @@ def act_assignment(_, nodes):
     return Assignment(name, op, symbol, orig_symbol, multiplicity)
 
 
-def act_recognizer_str(_, nodes):
+def act_recognizer_str(context, nodes):
     value = nodes[0][1:-1]
     value = value.replace(r'\"', '"')\
                  .replace(r"\'", "'")\
                  .replace(r"\\", "\\")\
                  .replace(r"\n", "\n")\
                  .replace(r"\t", "\t")
-    return Terminal(value, StringRecognizer(value))
+    return Terminal(value, StringRecognizer(value,
+                                            ignore_case=context.ignore_case))
 
 
 def act_recognizer_regex(context, nodes):
     value = nodes[0][1:-1]
-    return Terminal(value, RegExRecognizer(value, context.re_flags))
+    return Terminal(value, RegExRecognizer(value,
+                                           re_flags=context.re_flags,
+                                           ignore_case=context.ignore_case))
 
 
 pg_actions = {

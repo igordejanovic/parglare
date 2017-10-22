@@ -37,6 +37,9 @@ parameters:
 - **re_flags** - regex flags used for regex recognizers. See Python `re` module.
   By default flags is set to `re.MULTILINE`.
 
+- **ignore_case** - By default parsing is case sensitive. Set this param to
+  `True` for case-insensitive parsing.
+
 
 ## Grammar class
 

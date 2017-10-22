@@ -615,3 +615,29 @@ def test_multiple_assignment_with_repetitions():
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], ["2", "2", "2"], "3"]
     assert called[0]
+
+
+def test_case_insensitive_parsing():
+    """
+    By default parglare is case sensitive. This test parsing without case
+    sensitivity.
+    """
+
+    grammar = """
+    S: "one" "Two" /Aa\w+/;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    # By default parsing is case sensitive for both string and regex matches.
+    parser = Parser(g)
+    with pytest.raises(ParseError):
+        parser.parse('One Two Aaa')
+
+    with pytest.raises(ParseError):
+        parser.parse('one Two AAa')
+
+    g = Grammar.from_string(grammar, ignore_case=True)
+    parser = Parser(g)
+    parser.parse('One Two Aaa')
+    parser.parse('one Two AAa')
