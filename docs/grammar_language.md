@@ -346,6 +346,7 @@ empty list. For example:
     assert result == ["2", []]
 
 
+!!! note
     Syntax equivalence `zero of more`:
 
         S: a*;
