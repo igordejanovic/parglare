@@ -6,6 +6,27 @@ from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
 from parglare.exceptions import GrammarError, ParseError
 
 
+def test_single_terminal():
+    """
+    Test that grammar may be just a single terminal.
+    """
+    grammar = r"""
+    S: "a";
+    """
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+    result = parser.parse('a')
+    assert result == 'a'
+
+    grammar = r"""
+    S: /\d+/;
+    """
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+    result = parser.parse('23')
+    assert result == '23'
+
+
 def test_undefined_grammar_symbol():
     "Tests that undefined grammar symbols raises errors."
     grammar = """

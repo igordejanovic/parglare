@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Parser, GLRParser, Grammar
+from parglare import Parser, GLRParser, Grammar, ParseError
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
@@ -184,3 +184,33 @@ def test_layout_actions(parser_class):
 
     assert called[0]
     assert layout_called[0]
+
+
+def test_layout_terminal():
+    """
+    Test that layout definition may be just a terminal rule.
+    """
+    grammar = r"""
+    S: "a" "b";
+    LAYOUT: "c";
+    """
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+
+    with pytest.raises(ParseError):
+        parser.parse("a b")
+    parser.parse("cacbc")
+
+    grammar = r"""
+    S: "a" "b";
+    LAYOUT: /\d*/;
+    """
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+
+    with pytest.raises(ParseError):
+        parser.parse("a b")
+    result = parser.parse("4444a23b545")
+    assert result == ['a', 'b']

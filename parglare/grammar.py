@@ -369,8 +369,12 @@ class Grammar(object):
 
         # At the end remove terminal productions as those are not the real
         # productions, but just a symbolic names for terminals.
-        self.productions[:] = [p for p in self.productions
-                               if isinstance(p.symbol, NonTerminal)]
+        non_term_productions = [p for p in self.productions
+                                if isinstance(p.symbol, NonTerminal)
+                                or p.symbol.name == 'LAYOUT']
+        if len(non_term_productions) > 1:
+            # We have non-terminals
+            self.productions[:] = non_term_productions
 
         self._enumerate_productions()
         self._fix_keyword_terminals()
