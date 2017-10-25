@@ -346,17 +346,21 @@ class GLRParser(Parser):
                 node, subresults, length, path_has_empty, path_all_empty \
                     = to_process.pop()
                 length = length - 1
+                if debug:
+                    h_print("node = {}".format(node), level=2, new_line=True)
+                    h_print("backpath length = {}{}"
+                            .format(prod_len - length,
+                                    " - ROOT" if not length else ""),
+                            level=2)
                 for parent, res, any_empty, all_empty in node.parents:
                     path_has_empty = path_has_empty or any_empty
                     path_all_empty = path_all_empty and all_empty
                     if debug:
-                        h_print("node=",
-                                "[{}], symbol={}, "
-                                "any_empty={}, all_empty={}, length={}"
-                                .format(parent, parent.state.symbol,
-                                        path_has_empty, path_all_empty,
-                                        length),
-                                level=2)
+                        h_print("", "parent=[{}]: path_any_empty={}, "
+                                "path_all_empty={}"
+                                .format(parent,
+                                        path_has_empty, path_all_empty),
+                                level=3)
                     parent_subres = [res] + subresults
                     if length:
                         to_process.append(
@@ -377,16 +381,17 @@ class GLRParser(Parser):
                     roots = non_empty
 
             if debug:
-                h_print("Reduction roots = ", len(roots),
+                h_print("Reduction paths = ", len(roots),
                         level=1, new_line=True)
-                for r in roots:
-                    h_print("", r[0], level=2)
+                h_print("Roots:", level=1)
+                for idx, r in enumerate(roots):
+                    h_print("{}.".format(idx+1), r[0], level=2)
 
             # Create new heads.
             for idx, (root, subresults, any_empty, all_empty) \
                     in enumerate(roots):
                 if debug:
-                    h_print("Reducing for root {}:".format(idx + 1),
+                    h_print("Reducing path {}:".format(idx + 1),
                             level=1, new_line=True)
 
                 if self.dynamic_filter and \
@@ -627,7 +632,9 @@ class GLRParser(Parser):
                         self._trace_step_kill(head)
 
     def _debug_active_heads(self, heads):
-        h_print("Active heads {}:".format(len(heads)), heads)
+        h_print("Active heads = ", len(heads))
+        for head in heads:
+            prints("\t{}".format(head))
         h_print("Number of trees = ", sum([h.number_of_trees for h in heads]))
 
     def _debug_context(self, input_str, position, lookahead_tokens,
@@ -828,9 +835,10 @@ class GSSNode(object):
         return not self == other
 
     def __str__(self):
-        return "state={}:{}, pos={}, endpos={}{}, empty=[{},{}], " \
+        return "state={}:{}, id={}, pos={}, endpos={}{}, empty=[{},{}], " \
             "parents={}, trees={}".format(
                 self.state.state_id, self.state.symbol,
+                id(self),
                 self.start_position, self.end_position,
                 ", token ahead={}".format(self.token_ahead)
                 if self.token_ahead is not None else "",
