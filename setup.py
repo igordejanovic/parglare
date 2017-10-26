@@ -4,7 +4,8 @@ import os
 import sys
 import codecs
 from setuptools import setup
-from parglare import __version__ as VERSION
+
+VERSION = '0.4.1'
 
 README = codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
                      'r', encoding='utf-8').read()
@@ -26,17 +27,6 @@ if sys.argv[-1].startswith('publish'):
         print("  git push --tags")
     sys.exit()
 
-requirements = [
-    'click==6.7'
-]
-
-test_requirements = [
-    'flake8',
-    'tox',
-    'coverage',
-    'coveralls',
-    'pytest',
-]
 
 setup(
     name='parglare',
@@ -52,7 +42,15 @@ setup(
     package_dir={'parglare':
                  'parglare'},
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=['click'],
+    tests_require=[
+        'flake8',
+        'tox',
+        'coverage',
+        'coveralls',
+        'pytest',
+    ],
+    test_suite='tests',
     license="MIT license",
     zip_safe=False,
     keywords='parglare',
@@ -79,7 +77,5 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Operating System :: OS Independent',
-    ],
-    test_suite='tests',
-    tests_require=test_requirements
+    ]
 )
