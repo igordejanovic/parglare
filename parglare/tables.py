@@ -236,6 +236,8 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                                          (len(symbol.recognizer.value)
                                           if type(symbol.recognizer) is
                                           StringRecognizer else 0) +
+                                         # Account for `\b` at the beginning
+                                         # and end of keyword regex
                                          ((len(symbol.recognizer._regex) - 4)
                                           if type(symbol.recognizer) is
                                           RegExRecognizer and symbol.keyword
