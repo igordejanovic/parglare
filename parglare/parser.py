@@ -2,28 +2,20 @@
 from __future__ import unicode_literals, print_function
 import codecs
 import sys
-from collections import OrderedDict
-from .grammar import Grammar, EMPTY, AUGSYMBOL, EOF, STOP
+from .grammar import EMPTY, EOF, STOP
+from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, disambiguation_error, \
     nomatch_error, SRConflicts, RRConflicts
 from .actions import pass_none
-from .termui import prints, h_print, a_print, s_emph, s_header, s_attention
+from .termui import prints, h_print, a_print, s_attention
 from parglare import termui
 
 if sys.version < '3':
     text = unicode  # NOQA
 else:
     text = str
-
-SHIFT = 0
-REDUCE = 1
-ACCEPT = 2
-
-# Tables construction algorithms
-SLR = 0
-LALR = 1
 
 
 class Parser(object):
@@ -729,193 +721,6 @@ class StackNode:
         self.result = result
 
 
-class Action(object):
-    __slots__ = ['action', 'state', 'prod']
-
-    def __init__(self, action, state=None, prod=None):
-        self.action = action
-        self.state = state
-        self.prod = prod
-
-    def __str__(self):
-        ac = {SHIFT: 'SHIFT',
-              REDUCE: 'REDUCE',
-              ACCEPT: 'ACCEPT'}.get(self.action)
-        if self.action == SHIFT:
-            p = self.state.state_id
-        elif self.action == REDUCE:
-            p = self.prod.prod_id
-        else:
-            p = ''
-        return '%s%s' % (ac, ':%d' % p if p else '')
-
-    def __repr__(self):
-        return str(self)
-
-    @property
-    def dynamic(self):
-        if self.action is SHIFT:
-            return self.state.symbol.dynamic
-        elif self.action is REDUCE:
-            return self.prod.dynamic
-        else:
-            return False
-
-
-class LRItem(object):
-    """
-    Represents an item in the items set. Item is defined by a production and a
-    position inside production (the dot). If the item is of LR_1 type follow
-    set is also defined. Follow set is a set of terminals that can follow
-    non-terminal at given position in the given production.
-    """
-    __slots__ = ('production', 'position', 'follow')
-
-    def __init__(self, production, position, follow=None):
-        self.production = production
-        self.position = position
-        self.follow = set() if not follow else follow
-
-    def __eq__(self, other):
-        return other and self.production == other.production and \
-            self.position == other.position
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        s = []
-        for idx, r in enumerate(self.production.rhs):
-            if idx == self.position:
-                s.append(".")
-            s.append(str(r))
-        if len(self.production.rhs) == self.position:
-            s.append(".")
-        s = " ".join(s)
-
-        follow = (s_emph("{{") + "{}" + s_emph("}}"))\
-            .format(", ".join([str(t) for t in self.follow])) \
-            if self.follow else "{}"
-
-        return (s_header("%d:") + " %s " + s_emph("=") + " %s   %s") \
-            % (self.production.prod_id, self.production.symbol, s, follow)
-
-    @property
-    def is_kernel(self):
-        """
-        Kernel items are items whose position is not at the beginning.
-        The only exception to this rule is start symbol of the augmented
-        grammar.
-        """
-        return self.position > 0 or self.production.symbol is AUGSYMBOL
-
-    def get_pos_inc(self):
-        """
-        Returns new LRItem with incremented position or None if position
-        cannot be incremented (e.g. it is already at the end of the production)
-        """
-
-        if self.position < len(self.production.rhs):
-            return LRItem(self.production, self.position+1, self.follow)
-
-    @property
-    def symbol_at_position(self):
-        """
-        Returns symbol from production RHS at the position of this item.
-        """
-        return self.production.rhs[self.position]
-
-    @property
-    def is_at_end(self):
-        """
-        Is the position at the end? If so, it is a candidate for reduction.
-        """
-        return self.position == len(self.production.rhs)
-
-
-class LRState(object):
-    """LR State is a set of LR items and a dict of LR automata actions and
-    gotos.
-
-    Attributes:
-    grammar(Grammar):
-    state_id(int):
-    symbol(GrammarSymbol):
-    items(list of LRItem):
-    actions(OrderedDict): Keys are grammar terminal symbols, values are
-        lists of Action instances.
-    goto(OrderedDict): Keys are grammar non-terminal symbols, values are
-        instances of LRState.
-    dynamic(set of terminal symbols): If terminal symbol is in set dynamic
-        ambiguity strategy callable is called for the terminal symbol
-        lookahead.
-    finish_flags:
-
-    """
-    __slots__ = ['grammar', 'state_id', 'symbol', 'items',
-                 'actions', 'gotos', 'dynamic', 'finish_flags',
-                 '_per_next_symbol', '_max_prior_per_symbol']
-
-    def __init__(self, grammar, state_id, symbol, items):
-        self.grammar = grammar
-        self.state_id = state_id
-        self.symbol = symbol
-        self.items = items if items else []
-
-        self.actions = OrderedDict()
-        self.gotos = OrderedDict()
-        self.dynamic = set()
-
-    def __eq__(self, other):
-        """Two states are equal if their kernel items are equal."""
-        this_kernel = [x for x in self.items if x.is_kernel]
-        other_kernel = [x for x in other.items if x.is_kernel]
-        if len(this_kernel) != len(other_kernel):
-            return False
-        for item in this_kernel:
-            if item not in other_kernel:
-                return False
-        return True
-
-    def __ne__(self, other):
-        return not self == other
-
-    @property
-    def kernel_items(self):
-        """
-        Returns kernel items of this state.
-        """
-        return [i for i in self.items if i.is_kernel]
-
-    @property
-    def nonkernel_items(self):
-        """
-        Returns nonkernel items of this state.
-        """
-        return [i for i in self.items if not i.is_kernel]
-
-    def get_item(self, other_item):
-        """
-        Get this state item that is equal to the given other_item.
-        """
-        return self.items[self.items.index(other_item)]
-
-    def __str__(self):
-        s = "\n\n" + s_header("State %d:%s\n" % (self.state_id, self.symbol))
-        for i in self.items:
-            s += "\t{}\n".format(i)
-        return s
-
-    def __unicode__(self):
-        return str(self)
-
-    def print_debug(self):
-        prints(text(self))
-
-
 class Node(object):
     """A node of the parse tree."""
     def __init__(self, start_position, end_position, layout_content=None):
@@ -1033,85 +838,6 @@ def treebuild_shift_action(context, value):
 def treebuild_reduce_action(context, nodes):
     return NodeNonTerm(context.start_position, context.end_position,
                        context.production, nodes, context.layout_content)
-
-
-def first(grammar):
-    """Calculates the sets of terminals that can start the sentence derived from
-    all grammar symbols.
-
-    The Dragon book p. 221.
-    """
-    assert isinstance(grammar, Grammar), \
-        "grammar parameter should be Grammar instance."
-
-    first_sets = {}
-    for t in grammar.terminals:
-        first_sets[t] = set([t])
-    for nt in grammar.nonterminals:
-        first_sets[nt] = set()
-
-    additions = True
-    while additions:
-        additions = False
-
-        for p in grammar.productions:
-            nonterm = p.symbol
-            for rhs_symbol in p.rhs:
-                rhs_symbol_first = set(first_sets[rhs_symbol])
-                rhs_symbol_first.discard(EMPTY)
-                if rhs_symbol_first.difference(first_sets[nonterm]):
-                    first_sets[nonterm].update(first_sets[rhs_symbol])
-                    additions = True
-                # If current RHS symbol can't derive EMPTY
-                # this production can't add any more members of
-                # the first set for LHS nonterminal.
-                if EMPTY not in first_sets[rhs_symbol]:
-                    break
-            else:
-                # If we reached the end of the RHS and each
-                # symbol along the way could derive EMPTY than
-                # we must add EMPTY to the first set of LHS symbol.
-                first_sets[nonterm].add(EMPTY)
-
-    return first_sets
-
-
-def follow(grammar, first_sets=None):
-    """Calculates the sets of terminals that can follow some non-terminal for the
-    given grammar.
-
-    Args:
-    grammar (Grammar): An initialized grammar.
-    first_sets (dict): A sets of FIRST terminals keyed by a grammar symbol.
-    """
-
-    if first_sets is None:
-        first_sets = first(grammar)
-
-    follow_sets = {}
-    for symbol in grammar.nonterminals:
-        follow_sets[symbol] = set()
-
-    additions = True
-    while additions:
-        additions = False
-        for symbol in grammar.nonterminals:
-            for p in grammar.productions:
-                for idx, s in enumerate(p.rhs):
-                    if s == symbol:
-                        prod_follow = set()
-                        for rsymbol in p.rhs[idx+1:]:
-                            sfollow = first_sets[rsymbol]
-                            prod_follow.update(sfollow)
-                            if EMPTY not in sfollow:
-                                break
-                        else:
-                            prod_follow.update(follow_sets[p.symbol])
-                        prod_follow.discard(EMPTY)
-                        if prod_follow.difference(follow_sets[symbol]):
-                            additions = True
-                            follow_sets[symbol].update(prod_follow)
-    return follow_sets
 
 
 def pos_to_line_col(input_str, position):

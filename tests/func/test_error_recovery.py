@@ -1,6 +1,5 @@
 import pytest  # noqa
-from parglare.parser import Parser, Grammar, ParseError
-from parglare.grammar import Terminal
+from parglare import Parser, ParseError, Terminal, Grammar
 from parglare.actions import pass_single
 
 grammar = r"""

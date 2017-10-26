@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare.parser import first, follow
-from parglare import Grammar, NonTerminal, Terminal, EMPTY
-from parglare.grammar import STOP
+from parglare import Grammar, NonTerminal, Terminal, EMPTY, STOP
+from parglare.tables import first, follow
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 
 

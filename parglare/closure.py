@@ -1,6 +1,4 @@
-from parglare import NonTerminal
-from parglare.parser import LRItem
-from parglare.grammar import EMPTY
+from parglare.grammar import EMPTY, NonTerminal
 
 LR_0 = 0
 LR_1 = 1
@@ -15,6 +13,7 @@ def closure(state, itemset_type, first_sets=None):
     itemset_type(int): LR_0 or LR_1
     first_sets(dict of sets): Used in LR_1 itemsets calculation.
     """
+    from parglare.tables import LRItem
 
     while True:
 
