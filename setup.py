@@ -4,11 +4,10 @@ import os
 import sys
 import codecs
 from setuptools import setup
+from parglare import __version__ as VERSION
 
 README = codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
                      'r', encoding='utf-8').read()
-
-VERSION = '0.4.1'
 
 if sys.argv[-1].startswith('publish'):
     if os.system("pip list | grep wheel"):
