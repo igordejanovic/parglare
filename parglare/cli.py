@@ -76,14 +76,22 @@ def check_get_grammar_table(grammar_file, debug, colors):
 
         h_print("Grammar OK.")
         if table.sr_conflicts:
-            a_print("There are {} Shift/Reduce conflicts."
-                    .format(len(table.sr_conflicts)))
+            if len(table.sr_conflicts) == 1:
+                message = 'There is 1 Shift/Reduce conflict.'
+            else:
+                message = 'There are {} Shift/Reduce conflicts.'\
+                          .format(len(table.sr_conflicts))
+            a_print(message)
             prints("Either use 'prefer_shifts' parser mode, try to resolve "
-                   "manually or use GLR parsing.".format(
+                   "manually, or use GLR parsing.".format(
                        len(table.sr_conflicts)))
         if table.rr_conflicts:
-            a_print("There are {} Reduce/Reduce conflicts."
-                    .format(len(table.rr_conflicts)))
+            if len(table.rr_conflicts) == 1:
+                message = 'There is 1 Reduce/Reduce conflict.'
+            else:
+                message = 'There are {} Reduce/Reduce conflicts.'\
+                          .format(len(table.rr_conflicts))
+            a_print(message)
             prints("Try to resolve manually or use GLR parsing.")
 
         if (table.sr_conflicts or table.rr_conflicts) and not debug:
