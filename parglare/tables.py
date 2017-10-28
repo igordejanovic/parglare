@@ -23,7 +23,25 @@ LALR = 1
 
 
 def create_table(grammar, first_sets=None, follow_sets=None,
-                 itemset_type=LR_1, start_production=1):
+                 itemset_type=LR_1, start_production=1,
+                 prefer_shifts=False, prefer_shifts_over_empty=True):
+    """
+    Arguments:
+    grammar (Grammar):
+    first_sets(dict of sets): keyed by GrammarSymbol. sets contain Terminal
+        instances. If not given it is calculated from the grammar.
+    follow_sets(dict of sets): keyed by NonTerminal. sets contain Terminal
+        instances that can follow given NonTerminal. If not given it is
+        calculated from the grammar.
+    itemset_type(int) - SRL=0 LR_1=1. By default LR_1.
+    start_production(int) - The production which defines start state.
+        By default 1 - first production from the grammar.
+    prefer_shifts(bool) - Conflict resolution strategy which favours SHIFT over
+        REDUCE (gready). By default False.
+    prefer_shifts_over_empty(bool) - Conflict resolution strategy which favours
+        SHIFT over REDUCE of EMPTY. By default False. If prefer_shifts is
+        `True` this param is ignored.
+    """
 
     first_sets = first_sets if first_sets else first(grammar)
 
@@ -180,14 +198,14 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                         t_acts = actions[t]
                         should_reduce = True
 
-                        # Only one SHIFT might exists for single terminal
-                        try:
-                            t_shift = [x for x in t_acts
-                                       if x.action is SHIFT][0]
-                        except IndexError:
-                            t_shift = None
+                        # Only one SHIFT or ACCEPT might exists for a single
+                        # terminal.
+                        shifts = [x for x in t_acts
+                                  if x.action in (SHIFT, ACCEPT)]
+                        assert len(shifts) <= 1
+                        t_shift = shifts[0] if shifts else None
 
-                        # But many REDUCE might exist
+                        # But many REDUCEs might exist
                         t_reduces = [x for x in t_acts if x.action is REDUCE]
 
                         # We should try to resolve using standard
@@ -209,6 +227,18 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                                     # this reduction any more. Right
                                     # associative reductions can't be in the
                                     # same set of actions together with SHIFTs.
+                                    should_reduce = False
+                                elif prefer_shifts:
+                                    # If priorities are the same and no
+                                    # associativity defined prefer SHIFT if
+                                    # prefer_shits is True
+                                    should_reduce = False
+                                elif len(prod.rhs) == 0 and \
+                                        prefer_shifts_over_empty:
+                                    # If prefer_shifts is False but
+                                    # prefer_shifts_over_empty is True and
+                                    # production for REDUCE is EMPTY choose
+                                    # SHIFT.
                                     should_reduce = False
 
                             elif prod.prior > sh_prior:
@@ -359,10 +389,9 @@ class LRTable(object):
                             if r_act.prod.dynamic:
                                 state.dynamic.add(term)
 
-                            if len(r_act.prod.rhs):
-                                self.sr_conflicts.append(
-                                    SRConflict(state, term,
-                                               [x.prod for x in actions[1:]]))
+                            self.sr_conflicts.append(
+                                SRConflict(state, term,
+                                           [x.prod for x in actions[1:]]))
                     else:
                         prods = [x.prod for x in actions if len(x.prod.rhs)]
 
@@ -611,6 +640,9 @@ def first(grammar):
     all grammar symbols.
 
     The Dragon book p. 221.
+
+    Returns:
+    dict of sets of Terminal keyed by GrammarSymbol.
     """
     assert isinstance(grammar, Grammar), \
         "grammar parameter should be Grammar instance."

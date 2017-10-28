@@ -26,8 +26,8 @@ class Parser(object):
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\t ',
                  build_tree=False, tables=LALR, layout=False, position=False,
-                 prefer_shifts=False, error_recovery=False,
-                 dynamic_filter=None):
+                 prefer_shifts=False, prefer_shifts_over_empty=True,
+                 error_recovery=False, dynamic_filter=None):
         self.grammar = grammar
         self.start_production = start_production
         EMPTY.action = pass_none
@@ -39,12 +39,15 @@ class Parser(object):
         if not layout:
             layout_prod = grammar.get_production_id('LAYOUT')
             if layout_prod:
-                self.layout_parser = Parser(grammar,
-                                            start_production=layout_prod,
-                                            actions=layout_actions,
-                                            ws=None, layout=True,
-                                            position=True,
-                                            debug=debug_layout)
+                self.layout_parser = Parser(
+                    grammar,
+                    start_production=layout_prod,
+                    actions=layout_actions,
+                    ws=None, layout=True,
+                    position=True,
+                    prefer_shifts=prefer_shifts,
+                    prefer_shifts_over_empty=prefer_shifts_over_empty,
+                    debug=debug_layout)
 
         self.layout = layout
         # If user recognizers are registered disable white-space skipping
@@ -58,8 +61,6 @@ class Parser(object):
 
         self.build_tree = build_tree
 
-        self.prefer_shifts = prefer_shifts
-
         self.error_recovery = error_recovery
         self.dynamic_filter = dynamic_filter
 
@@ -69,15 +70,17 @@ class Parser(object):
             itemset_type = LR_0
         else:
             itemset_type = LR_1
-        self.table = create_table(grammar, itemset_type=itemset_type,
-                                  start_production=start_production)
+        self.table = create_table(
+            grammar, itemset_type=itemset_type,
+            start_production=start_production, prefer_shifts=prefer_shifts,
+            prefer_shifts_over_empty=prefer_shifts_over_empty)
 
         self._check_parser()
         if debug:
             self.print_debug()
 
     def _check_parser(self):
-        if self.table.sr_conflicts and not self.prefer_shifts:
+        if self.table.sr_conflicts:
             self.print_debug()
             if self.dynamic_filter:
                 unhandled_conflicts = []
