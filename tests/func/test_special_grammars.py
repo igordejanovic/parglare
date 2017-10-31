@@ -95,7 +95,7 @@ def test_nondeterministic_LR_raise_error():
         p = Parser(g)
         p.parse('0101000110001010')
 
-    p = GLRParser(g)
+    p = GLRParser(g, prefer_shifts_over_empty=False)
     results = p.parse('0101000110001010')
 
     assert len(results) == 1
@@ -240,7 +240,7 @@ def test_reduce_enough_empty():
     """
     g = Grammar.from_string(grammar)
 
-    p = GLRParser(g, debug=True)
+    p = GLRParser(g, debug=True, prefer_shifts_over_empty=False)
     results = p.parse("xbbb")
 
     assert len(results) == 1
