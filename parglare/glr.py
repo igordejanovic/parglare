@@ -48,8 +48,9 @@ class GLRParser(Parser):
 
         if self.debug:
             a_print("*** PARSING STARTED\n")
+            self.debug_step = 1
             if self.debug_trace:
-                self._start_trace()
+                self.dot_trace = ""
 
         self.errors = []
         self.current_error = None
@@ -103,9 +104,11 @@ class GLRParser(Parser):
                     # Report dying heads
                     if self.debug:
                         for h in self.heads_for_recovery:
-                            a_print("** Killing head:", h, level=1)
+                            a_print("{}. Killing head:"
+                                    .format(self.debug_step), h, level=1)
                             if self.debug_trace:
                                 self._trace_step_kill(h)
+                                self.debug_step += 1
 
         if not self.finish_head:
             if self.debug and self.debug_trace:
@@ -305,7 +308,9 @@ class GLRParser(Parser):
         context.production = production
 
         if debug:
-            a_print("Reducing by prod ", production, level=1, new_line=True)
+            a_print("{}. REDUCING by prod ".format(self.debug_step),
+                    production, level=1, new_line=True)
+            self.debug_step += 1
 
         prod_len = len(production.rhs)
         roots = []
@@ -446,12 +451,14 @@ class GLRParser(Parser):
         else:
 
             if self.debug:
-                a_print("Shifting", "\"{}\" to state {} "
+                a_print("{}. SHIFTING".format(self.debug_step),
+                        "\"{}\" to state {} "
                         .format(token.value, state.state_id) +
                         "at position " +
                         str(pos_to_line_col(self.input_str,
                                             context.start_position)),
                         level=1, new_line=True)
+                self.debug_step += 1
 
             context.end_position = context.start_position + len(token)
 
@@ -652,10 +659,6 @@ class GLRParser(Parser):
                     [s.name for s in expected_symbols], level=1)
         h_print("Token(s) ahead:", lookahead_tokens, level=1)
 
-    def _start_trace(self):
-        self.dot_trace = ""
-        self.trace_step = 1
-
     @no_colors
     def _trace_head(self, new_head, label):
         self.dot_trace += '{} [label="{}"];\n'.format(new_head.key, label)
@@ -665,10 +668,9 @@ class GLRParser(Parser):
         new_head_key = new_head.key if isinstance(new_head, GSSNode) \
                        else new_head
         self.dot_trace += '{} -> {} [label="{}. {}" {}];\n'.format(
-            old_head.key, new_head_key, self.trace_step, label,
+            old_head.key, new_head_key, self.debug_step, label,
             TRACE_DOT_STEP_STYLE)
         self.dot_trace += '{} -> {};\n'.format(new_head_key, root_head.key)
-        self.trace_step += 1
 
     @no_colors
     def _trace_step_finish(self, from_head):
@@ -680,7 +682,6 @@ class GLRParser(Parser):
             .format(from_head.key)
         self.dot_trace += '{} -> {}_killed;\n'\
             .format(from_head.key, from_head.key)
-        self.trace_step += 1
 
     @no_colors
     def _trace_step_drop(self, from_head, to_head):
