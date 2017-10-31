@@ -39,6 +39,7 @@ def collect_first(_, nodes):
     """
     e1, e2 = nodes
     if e2 is not None:
+        e1 = list(e1)
         e1.append(e2)
     return e1
 
@@ -50,6 +51,7 @@ def collect_first_sep(_, nodes):
     """
     e1, _, e2 = nodes
     if e2 is not None:
+        e1 = list(e1)
         e1.append(e2)
     return e1
 
