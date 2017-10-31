@@ -478,7 +478,7 @@ class GLRParser(Parser):
 
             self.heads_for_reduce.append(new_head)
             if debug:
-                h_print("New shifted head ", new_head, level=1)
+                a_print("New shifted head ", new_head, level=1)
                 if self.debug_trace:
                     self._trace_head(new_head,
                                      "{}:{}".format(
@@ -546,7 +546,7 @@ class GLRParser(Parser):
         else:
             self.heads_for_reduce.append(new_head)
             if self.debug:
-                h_print("New reduced head ", new_head, level=2, new_line=True)
+                a_print("New reduced head ", new_head, level=2, new_line=True)
                 if self.debug_trace:
                     self._trace_head(new_head, "{}:{}".format(
                         new_head.state.state_id,
