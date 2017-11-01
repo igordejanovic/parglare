@@ -86,14 +86,14 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         # priority given for all productions for the given grammar symbol.
         state._max_prior_per_symbol = {}
 
-        for i in state.items:
-            symbol = i.symbol_at_position
+        for item in state.items:
+            symbol = item.symbol_at_position
             if symbol:
-                state._per_next_symbol.setdefault(symbol, []).append(i)
+                state._per_next_symbol.setdefault(symbol, []).append(item)
 
                 # Here we calculate max priorities for each grammar symbol to
                 # use it for SHIFT/REDUCE conflict resolution
-                prod_prior = i.production.prior
+                prod_prior = item.production.prior
                 old_prior = state._max_prior_per_symbol.setdefault(
                     symbol, prod_prior)
                 state._max_prior_per_symbol[symbol] = max(prod_prior,
@@ -102,7 +102,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         # For each group symbol we create new state and form its kernel
         # items from the group items with positions moved one step ahead.
         for symbol, items in state._per_next_symbol.items():
-            inc_items = [i.get_pos_inc() for i in items]
+            inc_items = [item.get_pos_inc() for item in items]
             maybe_new_state = LRState(grammar, state_id, symbol, inc_items)
             target_state = maybe_new_state
             try:
@@ -176,26 +176,26 @@ def create_table(grammar, first_sets=None, follow_sets=None,
     for state in states:
         actions = state.actions
 
-        for i in state.items:
-            if i.is_at_end:
+        for item in state.items:
+            if item.is_at_end:
                 # If the position is at the end then this item
                 # would call for reduction but only for terminals
                 # from the FOLLOW set of item (LR(1)) or the production LHS
                 # non-terminal (LR(0)).
                 if itemset_type is LR_1:
-                    f_set = i.follow
+                    follow_set = item.follow
                 else:
-                    f_set = follow_sets[i.production.symbol]
+                    follow_set = follow_sets[item.production.symbol]
 
-                prod = i.production
+                prod = item.production
                 new_reduce = Action(REDUCE, prod=prod)
 
-                for t in f_set:
-                    if t not in actions:
-                        actions[t] = [new_reduce]
+                for terminal in follow_set:
+                    if terminal not in actions:
+                        actions[terminal] = [new_reduce]
                     else:
                         # Conflict! Try to resolve
-                        t_acts = actions[t]
+                        t_acts = actions[terminal]
                         should_reduce = True
 
                         # Only one SHIFT or ACCEPT might exists for a single
@@ -220,7 +220,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                             if prod.prior == sh_prior:
                                 if prod.assoc == ASSOC_LEFT:
                                     # Override SHIFT with this REDUCE
-                                    actions[t].remove(t_shift)
+                                    actions[terminal].remove(t_shift)
                                 elif prod.assoc == ASSOC_RIGHT:
                                     # If associativity is right leave SHIFT
                                     # action as "stronger" and don't consider
@@ -244,7 +244,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                             elif prod.prior > sh_prior:
                                 # This item operation priority is higher =>
                                 # override with reduce
-                                actions[t].remove(t_shift)
+                                actions[terminal].remove(t_shift)
                             else:
                                 # If priority of existing SHIFT action is
                                 # higher then leave it instead
@@ -252,18 +252,19 @@ def create_table(grammar, first_sets=None, follow_sets=None,
 
                         if should_reduce:
                             if not t_reduces:
-                                actions[t].append(new_reduce)
+                                actions[terminal].append(new_reduce)
                             else:
                                 # REDUCE/REDUCE conflicts
                                 # Try to resolve using priorities
                                 if prod.prior == t_reduces[0].prod.prior:
-                                    actions[t].append(new_reduce)
+                                    actions[terminal].append(new_reduce)
                                 elif prod.prior > t_reduces[0].prod.prior:
                                     # If this production priority is higher
                                     # it should override all other reductions.
-                                    actions[t][:] = [x for x in actions[t]
-                                                     if x.action is not REDUCE]
-                                    actions[t].append(new_reduce)
+                                    actions[terminal][:] = \
+                                        [x for x in actions[terminal]
+                                         if x.action is not REDUCE]
+                                    actions[terminal].append(new_reduce)
 
     # Scanning optimization. Preorder actions based on terminal priority and
     # specificity. Set _finish flags.
