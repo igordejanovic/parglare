@@ -9,7 +9,9 @@ At the end disambiguation error is reported.
 """
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Parser, Grammar
+import difflib
+import re
+from parglare import Parser, Grammar, Token, ParseError
 from parglare.exceptions import ParseError
 
 
@@ -149,3 +151,76 @@ def test_longest_match_prefer(cf):
 
     parser.parse('14.75')
     assert called == [False, False, True]
+
+
+def test_dynamic_lexical_disambiguation():
+    """
+    Dynamic disambiguation enables us to choose right token from the
+    tokens posible to appear at given place in the input.
+    """
+    grammar = """
+    S: Element+ EOF;
+    Element: Bar | Baz | Number;
+    Bar: /Bar. \d+/;
+    Baz: /Baz. \d+/;
+    Number: /\d+/;
+    """
+
+    g = Grammar.from_string(grammar)
+    grammar = [g]
+
+    def custom_lexical_disambiguation(symbols, input_str, position,
+                                      get_tokens):
+        """
+        Lexical disambiguation should return a single token that is
+        recognized at the given place in the input string.
+        """
+        # Call default token recognition.
+        tokens = get_tokens()
+
+        if tokens:
+            # If a token is found using default strategy return it.
+            # Must be a single token or we have lexical ambiguity
+            assert len(tokens) == 1
+            return tokens[0]
+        else:
+            # If no tokens are found do the fuzzy match.
+            matchers = [
+                lambda x: difflib.SequenceMatcher(None, 'bar.', x.lower()),
+                lambda x: difflib.SequenceMatcher(None, 'baz.', x.lower())
+            ]
+            symbols = [
+                grammar[0].get_terminal('Bar'),
+                grammar[0].get_terminal('Baz'),
+            ]
+            # Try to do fuzzy match at the position
+            elem = input_str[position:position+4]
+            elem_num = input_str[position:]
+            number_matcher = re.compile('[^\d]*(\d+)')
+            number_match = number_matcher.match(elem_num)
+            ratios = []
+            for matcher in matchers:
+                ratios.append(matcher(elem).ratio())
+
+            max_ratio_index = ratios.index(max(ratios))
+            if ratios[max_ratio_index] > 0.7 and number_match.group(1):
+                return Token(symbols[max_ratio_index], number_match.group())
+
+    parser = Parser(
+        g, custom_lexical_disambiguation=custom_lexical_disambiguation)
+
+    # Bar and Baz will be recognized by a fuzzy match
+    result = parser.parse('bar. 56 Baz 12')
+    assert result == [['bar. 56', 'Baz 12'], None]
+
+    result = parser.parse('Buz. 34 bar 56')
+    assert result == [['Buz. 34', 'bar 56'], None]
+
+    result = parser.parse('Ba. 34 baz 56')
+    assert result == [['Ba. 34', 'baz 56'], None]
+
+    # But if Bar/Baz are too different from the correct pattern
+    # we get ParseError. In this case `bza` score is bellow 0.7
+    # for both Bar and Baz symbols.
+    with pytest.raises(ParseError):
+        parser.parse('Bar. 34 bza 56')

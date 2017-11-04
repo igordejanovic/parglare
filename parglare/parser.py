@@ -27,7 +27,8 @@ class Parser(object):
                  debug_colors=False, debug_layout=False, ws='\n\t ',
                  build_tree=False, tables=LALR, layout=False, position=False,
                  prefer_shifts=False, error_recovery=False,
-                 dynamic_filter=None):
+                 dynamic_filter=None,
+                 custom_lexical_disambiguation=None):
         self.grammar = grammar
         self.start_production = start_production
         EMPTY.action = pass_none
@@ -62,6 +63,7 @@ class Parser(object):
 
         self.error_recovery = error_recovery
         self.dynamic_filter = dynamic_filter
+        self.custom_lexical_disambiguation = custom_lexical_disambiguation
 
         from .closure import LR_0, LR_1
         from .tables import create_table
@@ -508,12 +510,21 @@ class Parser(object):
         else:
             tokens = []
             if position < in_len:
-                for idx, symbol in enumerate(actions):
-                    tok = symbol.recognizer(input_str, position)
+                if self.custom_lexical_disambiguation:
+                    symbols = actions.keys()
+
+                    def get_tokens():
+                        return self._token_recognition(input_str,
+                                                       position, actions,
+                                                       finish_flags)
+
+                    tok = self.custom_lexical_disambiguation(
+                        symbols, input_str, position, get_tokens)
                     if tok:
-                        tokens.append(Token(symbol, tok))
-                        if finish_flags[idx]:
-                            break
+                        tokens.append(tok)
+                else:
+                    tokens = self._token_recognition(input_str, position,
+                                                     actions, finish_flags)
             if not tokens:
                 if STOP in actions:
                     ntok = STOP_token
@@ -525,6 +536,16 @@ class Parser(object):
                 ntok = self._lexical_disambiguation(tokens)
 
         return ntok
+
+    def _token_recognition(self, input_str, position, actions, finish_flags):
+        tokens = []
+        for idx, symbol in enumerate(actions):
+            tok = symbol.recognizer(input_str, position)
+            if tok:
+                tokens.append(Token(symbol, tok))
+                if finish_flags[idx]:
+                    break
+        return tokens
 
     def _call_shift_action(self, symbol, matched_str, context):
         """
