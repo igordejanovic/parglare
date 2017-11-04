@@ -12,12 +12,19 @@ import parglare.termui as t
 @click.group()
 @click.option('--debug/--no-debug', default=False, help="Debug/trace output")
 @click.option('--colors/--no-colors', default=True, help="Output coloring")
+@click.option('--prefer-shifts/--no-prefer-shifts', default=False,
+              help="Prefer shifts over reductions.")
+@click.option('--prefer-shifts-over-empty/--no-prefer-shifts-over-empty',
+              default=True,
+              help="Prefer shifts over empty reductions.")
 @click.pass_context
-def pglr(ctx, debug, colors):
+def pglr(ctx, debug, colors, prefer_shifts, prefer_shifts_over_empty):
     """
     Command line interface for working with parglare grammars.
     """
-    ctx.obj = {'debug': debug, 'colors': colors}
+    ctx.obj = {'debug': debug, 'colors': colors,
+               'prefer_shifts': prefer_shifts,
+               'prefer_shifts_over_empty': prefer_shifts_over_empty}
 
 
 @pglr.command()
@@ -26,7 +33,10 @@ def pglr(ctx, debug, colors):
 def check(ctx, grammar_file):
     debug = ctx.obj['debug']
     colors = ctx.obj['colors']
-    check_get_grammar_table(grammar_file, debug, colors)
+    prefer_shifts = ctx.obj['prefer_shifts']
+    prefer_shifts_over_empty = ctx.obj['prefer_shifts_over_empty']
+    check_get_grammar_table(grammar_file, debug, colors, prefer_shifts,
+                            prefer_shifts_over_empty)
 
 
 @pglr.command()
@@ -35,8 +45,12 @@ def check(ctx, grammar_file):
 def viz(ctx, grammar_file):
     debug = ctx.obj['debug']
     colors = ctx.obj['colors']
+    prefer_shifts = ctx.obj['prefer_shifts']
+    prefer_shifts_over_empty = ctx.obj['prefer_shifts_over_empty']
     t.colors = colors
-    grammar, table = check_get_grammar_table(grammar_file, debug, colors)
+    grammar, table = check_get_grammar_table(grammar_file, debug, colors,
+                                             prefer_shifts,
+                                             prefer_shifts_over_empty)
     prints("Generating '%s.dot' file for the grammar PDA." % grammar_file)
     prints("Use dot viewer (e.g. xdot) "
            "or convert to pdf by running 'dot -Tpdf -O %s.dot'" % grammar_file)
@@ -55,35 +69,50 @@ def trace(ctx, grammar_file, input_file, input):
         prints('Expected either input_file or input string.')
         sys.exit(1)
     colors = ctx.obj['colors']
-    grammar, table = check_get_grammar_table(grammar_file, True, colors)
+    prefer_shifts = ctx.obj['prefer_shifts']
+    prefer_shifts_over_empty = ctx.obj['prefer_shifts_over_empty']
+    grammar, table = check_get_grammar_table(grammar_file, True, colors,
+                                             prefer_shifts,
+                                             prefer_shifts_over_empty)
     parser = GLRParser(grammar, debug=True, debug_trace=True,
-                       debug_colors=colors)
+                       debug_colors=colors, prefer_shifts=prefer_shifts,
+                       prefer_shifts_over_empty=prefer_shifts_over_empty)
     if input:
         parser.parse(input)
     else:
         parser.parse_file(input_file)
 
 
-def check_get_grammar_table(grammar_file, debug, colors):
+def check_get_grammar_table(grammar_file, debug, colors, prefer_shifts,
+                            prefer_shifts_over_empty):
     try:
         g = Grammar.from_file(grammar_file, _no_check_recognizers=True,
                               debug_colors=colors)
         if debug:
             g.print_debug()
-        table = create_table(g)
+        table = create_table(g, prefer_shifts=prefer_shifts,
+                             prefer_shifts_over_empty=prefer_shifts_over_empty)
         if debug:
             table.print_debug()
 
         h_print("Grammar OK.")
         if table.sr_conflicts:
-            a_print("There are {} Shift/Reduce conflicts."
-                    .format(len(table.sr_conflicts)))
+            if len(table.sr_conflicts) == 1:
+                message = 'There is 1 Shift/Reduce conflict.'
+            else:
+                message = 'There are {} Shift/Reduce conflicts.'\
+                          .format(len(table.sr_conflicts))
+            a_print(message)
             prints("Either use 'prefer_shifts' parser mode, try to resolve "
-                   "manually or use GLR parsing.".format(
+                   "manually, or use GLR parsing.".format(
                        len(table.sr_conflicts)))
         if table.rr_conflicts:
-            a_print("There are {} Reduce/Reduce conflicts."
-                    .format(len(table.rr_conflicts)))
+            if len(table.rr_conflicts) == 1:
+                message = 'There is 1 Reduce/Reduce conflict.'
+            else:
+                message = 'There are {} Reduce/Reduce conflicts.'\
+                          .format(len(table.rr_conflicts))
+            a_print(message)
             prints("Try to resolve manually or use GLR parsing.")
 
         if (table.sr_conflicts or table.rr_conflicts) and not debug:

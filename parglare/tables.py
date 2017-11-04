@@ -23,7 +23,25 @@ LALR = 1
 
 
 def create_table(grammar, first_sets=None, follow_sets=None,
-                 itemset_type=LR_1, start_production=1):
+                 itemset_type=LR_1, start_production=1,
+                 prefer_shifts=False, prefer_shifts_over_empty=True):
+    """
+    Arguments:
+    grammar (Grammar):
+    first_sets(dict of sets): keyed by GrammarSymbol. sets contain Terminal
+        instances. If not given it is calculated from the grammar.
+    follow_sets(dict of sets): keyed by NonTerminal. sets contain Terminal
+        instances that can follow given NonTerminal. If not given it is
+        calculated from the grammar.
+    itemset_type(int) - SRL=0 LR_1=1. By default LR_1.
+    start_production(int) - The production which defines start state.
+        By default 1 - first production from the grammar.
+    prefer_shifts(bool) - Conflict resolution strategy which favours SHIFT over
+        REDUCE (gready). By default False.
+    prefer_shifts_over_empty(bool) - Conflict resolution strategy which favours
+        SHIFT over REDUCE of EMPTY. By default False. If prefer_shifts is
+        `True` this param is ignored.
+    """
 
     first_sets = first_sets if first_sets else first(grammar)
 
@@ -68,14 +86,14 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         # priority given for all productions for the given grammar symbol.
         state._max_prior_per_symbol = {}
 
-        for i in state.items:
-            symbol = i.symbol_at_position
+        for item in state.items:
+            symbol = item.symbol_at_position
             if symbol:
-                state._per_next_symbol.setdefault(symbol, []).append(i)
+                state._per_next_symbol.setdefault(symbol, []).append(item)
 
                 # Here we calculate max priorities for each grammar symbol to
                 # use it for SHIFT/REDUCE conflict resolution
-                prod_prior = i.production.prior
+                prod_prior = item.production.prior
                 old_prior = state._max_prior_per_symbol.setdefault(
                     symbol, prod_prior)
                 state._max_prior_per_symbol[symbol] = max(prod_prior,
@@ -84,7 +102,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         # For each group symbol we create new state and form its kernel
         # items from the group items with positions moved one step ahead.
         for symbol, items in state._per_next_symbol.items():
-            inc_items = [i.get_pos_inc() for i in items]
+            inc_items = [item.get_pos_inc() for item in items]
             maybe_new_state = LRState(grammar, state_id, symbol, inc_items)
             target_state = maybe_new_state
             try:
@@ -158,36 +176,36 @@ def create_table(grammar, first_sets=None, follow_sets=None,
     for state in states:
         actions = state.actions
 
-        for i in state.items:
-            if i.is_at_end:
+        for item in state.items:
+            if item.is_at_end:
                 # If the position is at the end then this item
                 # would call for reduction but only for terminals
                 # from the FOLLOW set of item (LR(1)) or the production LHS
                 # non-terminal (LR(0)).
                 if itemset_type is LR_1:
-                    f_set = i.follow
+                    follow_set = item.follow
                 else:
-                    f_set = follow_sets[i.production.symbol]
+                    follow_set = follow_sets[item.production.symbol]
 
-                prod = i.production
+                prod = item.production
                 new_reduce = Action(REDUCE, prod=prod)
 
-                for t in f_set:
-                    if t not in actions:
-                        actions[t] = [new_reduce]
+                for terminal in follow_set:
+                    if terminal not in actions:
+                        actions[terminal] = [new_reduce]
                     else:
                         # Conflict! Try to resolve
-                        t_acts = actions[t]
+                        t_acts = actions[terminal]
                         should_reduce = True
 
-                        # Only one SHIFT might exists for single terminal
-                        try:
-                            t_shift = [x for x in t_acts
-                                       if x.action is SHIFT][0]
-                        except IndexError:
-                            t_shift = None
+                        # Only one SHIFT or ACCEPT might exists for a single
+                        # terminal.
+                        shifts = [x for x in t_acts
+                                  if x.action in (SHIFT, ACCEPT)]
+                        assert len(shifts) <= 1
+                        t_shift = shifts[0] if shifts else None
 
-                        # But many REDUCE might exist
+                        # But many REDUCEs might exist
                         t_reduces = [x for x in t_acts if x.action is REDUCE]
 
                         # We should try to resolve using standard
@@ -202,7 +220,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                             if prod.prior == sh_prior:
                                 if prod.assoc == ASSOC_LEFT:
                                     # Override SHIFT with this REDUCE
-                                    actions[t].remove(t_shift)
+                                    actions[terminal].remove(t_shift)
                                 elif prod.assoc == ASSOC_RIGHT:
                                     # If associativity is right leave SHIFT
                                     # action as "stronger" and don't consider
@@ -210,11 +228,23 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                                     # associative reductions can't be in the
                                     # same set of actions together with SHIFTs.
                                     should_reduce = False
+                                elif prefer_shifts:
+                                    # If priorities are the same and no
+                                    # associativity defined prefer SHIFT if
+                                    # prefer_shits is True
+                                    should_reduce = False
+                                elif len(prod.rhs) == 0 and \
+                                        prefer_shifts_over_empty:
+                                    # If prefer_shifts is False but
+                                    # prefer_shifts_over_empty is True and
+                                    # production for REDUCE is EMPTY choose
+                                    # SHIFT.
+                                    should_reduce = False
 
                             elif prod.prior > sh_prior:
                                 # This item operation priority is higher =>
                                 # override with reduce
-                                actions[t].remove(t_shift)
+                                actions[terminal].remove(t_shift)
                             else:
                                 # If priority of existing SHIFT action is
                                 # higher then leave it instead
@@ -222,18 +252,19 @@ def create_table(grammar, first_sets=None, follow_sets=None,
 
                         if should_reduce:
                             if not t_reduces:
-                                actions[t].append(new_reduce)
+                                actions[terminal].append(new_reduce)
                             else:
                                 # REDUCE/REDUCE conflicts
                                 # Try to resolve using priorities
                                 if prod.prior == t_reduces[0].prod.prior:
-                                    actions[t].append(new_reduce)
+                                    actions[terminal].append(new_reduce)
                                 elif prod.prior > t_reduces[0].prod.prior:
                                     # If this production priority is higher
                                     # it should override all other reductions.
-                                    actions[t][:] = [x for x in actions[t]
-                                                     if x.action is not REDUCE]
-                                    actions[t].append(new_reduce)
+                                    actions[terminal][:] = \
+                                        [x for x in actions[terminal]
+                                         if x.action is not REDUCE]
+                                    actions[terminal].append(new_reduce)
 
     # Scanning optimization. Preorder actions based on terminal priority and
     # specificity. Set _finish flags.
@@ -359,10 +390,9 @@ class LRTable(object):
                             if r_act.prod.dynamic:
                                 state.dynamic.add(term)
 
-                            if len(r_act.prod.rhs):
-                                self.sr_conflicts.append(
-                                    SRConflict(state, term,
-                                               [x.prod for x in actions[1:]]))
+                            self.sr_conflicts.append(
+                                SRConflict(state, term,
+                                           [x.prod for x in actions[1:]]))
                     else:
                         prods = [x.prod for x in actions if len(x.prod.rhs)]
 
@@ -400,13 +430,21 @@ class LRTable(object):
 
         if self.sr_conflicts:
             a_print("*** S/R conflicts ***", new_line=True)
-            h_print("There are {} S/R conflicts"
-                    .format(len(self.sr_conflicts)))
+            if len(self.sr_conflicts) == 1:
+                message = 'There is {} S/R conflict.'
+            else:
+                message = 'There are {} S/R conflicts.'
+            h_print(message.format(len(self.sr_conflicts)))
             for src in self.sr_conflicts:
                 print(src.message)
 
         if self.rr_conflicts:
             a_print("*** R/R conflicts ***", new_line=True)
+            if len(self.rr_conflicts) == 1:
+                message = 'There is {} R/R conflict.'
+            else:
+                message = 'There are {} R/R conflicts.'
+            h_print(message.format(len(self.rr_conflicts)))
             for rrc in self.rr_conflicts:
                 print(rrc.message)
 
@@ -603,6 +641,9 @@ def first(grammar):
     all grammar symbols.
 
     The Dragon book p. 221.
+
+    Returns:
+    dict of sets of Terminal keyed by GrammarSymbol.
     """
     assert isinstance(grammar, Grammar), \
         "grammar parameter should be Grammar instance."
