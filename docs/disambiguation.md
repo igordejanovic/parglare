@@ -246,7 +246,7 @@ For details see [test_dynamic_disambiguation_filters.py](https://github.com/igor
 There is another source of ambiguities.
 
 Parglare uses integrated scanner, thus tokens are determined on the fly. This
-gives greater lexical disambiuation power but lexical ambiguities might arise
+gives greater lexical disambiguation power but lexical ambiguities might arise
 nevertheless. Lexical ambiguity is a situation when at some place in the input
 more than one recognizer match successfully.
 
