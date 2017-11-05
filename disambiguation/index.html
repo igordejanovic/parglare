@@ -132,6 +132,8 @@
                 
                     <li><a class="toctree-l4" href="#lexical-ambiguities">Lexical ambiguities</a></li>
                 
+                    <li><a class="toctree-l4" href="#custom-lexical-disambiguation">Custom lexical disambiguation</a></li>
+                
             
             </ul>
         
@@ -427,7 +429,7 @@ operation.</p>
 <h2 id="lexical-ambiguities">Lexical ambiguities<a class="headerlink" href="#lexical-ambiguities" title="Permanent link">&para;</a></h2>
 <p>There is another source of ambiguities.</p>
 <p>Parglare uses integrated scanner, thus tokens are determined on the fly. This
-gives greater lexical disambiuation power but lexical ambiguities might arise
+gives greater lexical disambiguation power but lexical ambiguities might arise
 nevertheless. Lexical ambiguity is a situation when at some place in the input
 more than one recognizer match successfully.</p>
 <p>For example, if in the input we have <code>3.4</code> and we expect at this place either an
@@ -456,6 +458,104 @@ matches of the same length.</p>
 <p>In addition, you can also specify terminal to take a part in dynamic
 disambiguation:</p>
 <pre><code>  number = /\d+/ {dynamic};
+</code></pre>
+<h2 id="custom-lexical-disambiguation">Custom lexical disambiguation<a class="headerlink" href="#custom-lexical-disambiguation" title="Permanent link">&para;</a></h2>
+<p>In the previous section is explained built-in parglare lexical disambiguation
+strategy. There are use-cases when this strategy is not sufficient. For example,
+if we want to do fuzzy match of tokens and choose the most similar token at the
+position.</p>
+<p>parglare solves this problem by enabling you to register a callable during
+parser instantiation that will, during parsing, get all the symbols expected at
+the current location and return a single token (instance
+of <a href="../parser/#token"><code>Token</code> class</a>) or <code>None</code> if no symbol is found at the
+location.</p>
+<p>This callable is registered during parser instantiation as the parameter
+<code>custom_lexical_disambiguation</code>.</p>
+<pre><code>parser = Parser(
+    grammar, custom_lexical_disambiguation=custom_lexical_disambiguation)
+</code></pre>
+
+<p>The callable accepts:</p>
+<ul>
+<li><strong>symbols</strong> - a list of grammar terminals expected at the current position,</li>
+<li><strong>input_str</strong> - input string,</li>
+<li><strong>position</strong> - current position in the input string.</li>
+<li><strong>get_tokens</strong> - a callable used to get the tokens recognized using the
+  default strategy. Called without parameters. Custom disambiguation might
+  decide to return this list if no change is necessary, reduce the list, or
+  extend it with new tokens. See the example bellow how to return list with a
+  token only if the default recognition doesn't succeed.</li>
+</ul>
+<p><strong>Returns:</strong> a list of <code>Token</code> class instances or <code>None</code>/empty list if no token
+is found.</p>
+<p>To instantiate <code>Token</code> pass in the symbol and the value of the token. Value of
+the token is usually a sub-string of the input string.</p>
+<p>In the following test <code>Bar</code> and <code>Baz</code> non-terminals are fuzzy matched. The
+non-terminal with the higher score wins but only if the score is above 0.7.</p>
+<pre><code>grammar = &quot;&quot;&quot;
+S: Element+ EOF;
+Element: Bar | Baz | Number;
+Bar: /Bar. \d+/;
+Baz: /Baz. \d+/;
+Number: /\d+/;
+&quot;&quot;&quot;
+
+g = Grammar.from_string(grammar)
+grammar = [g]
+
+def custom_lexical_disambiguation(symbols, input_str, position, get_tokens):
+    &quot;&quot;&quot;
+    Lexical disambiguation should return a single token that is
+    recognized at the given place in the input string.
+    &quot;&quot;&quot;
+    # Call default token recognition.
+    tokens = get_tokens()
+
+    if tokens:
+        # If default recognition succeeds use the result.
+        return tokens
+    else:
+        # If no tokens are found do the fuzzy match.
+        matchers = [
+            lambda x: difflib.SequenceMatcher(None, 'bar.', x.lower()),
+            lambda x: difflib.SequenceMatcher(None, 'baz.', x.lower())
+        ]
+        symbols = [
+            grammar[0].get_terminal('Bar'),
+            grammar[0].get_terminal('Baz'),
+        ]
+        # Try to do fuzzy match at the position
+        elem = input_str[position:position+4]
+        elem_num = input_str[position:]
+        number_matcher = re.compile('[^\d]*(\d+)')
+        number_match = number_matcher.match(elem_num)
+        ratios = []
+        for matcher in matchers:
+            ratios.append(matcher(elem).ratio())
+
+        max_ratio_index = ratios.index(max(ratios))
+        if ratios[max_ratio_index] &gt; 0.7 and number_match.group(1):
+            return [Token(symbols[max_ratio_index], number_match.group())]
+
+
+parser = Parser(
+    g, custom_lexical_disambiguation=custom_lexical_disambiguation)
+
+# Bar and Baz will be recognized by a fuzzy match
+result = parser.parse('bar. 56 Baz 12')
+assert result == [['bar. 56', 'Baz 12'], None]
+
+result = parser.parse('Buz. 34 bar 56')
+assert result == [['Buz. 34', 'bar 56'], None]
+
+result = parser.parse('Ba. 34 baz 56')
+assert result == [['Ba. 34', 'baz 56'], None]
+
+# But if Bar/Baz are too different from the correct pattern
+# we get ParseError. In this case `bza` score is bellow 0.7
+# for both Bar and Baz symbols.
+with pytest.raises(ParseError):
+    parser.parse('Bar. 34 bza 56')
 </code></pre>
               
             </div>

@@ -114,6 +114,8 @@
                 
                     <li><a class="toctree-l4" href="#debugdebug_layout">debug/debug_layout</a></li>
                 
+                    <li><a class="toctree-l4" href="#debug_colors">debug_colors</a></li>
+                
                     <li><a class="toctree-l4" href="#tables">tables</a></li>
                 
             
@@ -303,6 +305,9 @@ parser will print a detailed information of its actions to the standard output.
 To put layout subparser in the debug mode use the <code>debug_layout</code> parameter. Both
 parameters are set to <code>False</code> by default.</p>
 <p>For more information see <a href="../debugging/">Debugging</a></p>
+<h2 id="debug_colors">debug_colors<a class="headerlink" href="#debug_colors" title="Permanent link">&para;</a></h2>
+<p>Set this to <code>True</code> to enable terminal colors in debug/trace output. <code>False</code> by
+default.</p>
 <h2 id="tables">tables<a class="headerlink" href="#tables" title="Permanent link">&para;</a></h2>
 <p>The value of this parameter is either <code>parglare.LALR</code> or <code>parglare.SLR</code> and it
 is used to chose the type of LR tables to create. By default <code>LALR</code> tables are
@@ -314,22 +319,36 @@ is provided more for experimentation purposes.</p>
 textual file <code>parse_file</code> is used.</p>
 <p>These two calls accepts the following parameters:</p>
 <ul>
-<li><code>input_str</code> - first positional and mandatory parameter only for <code>parse</code> call -
-  the input string/list of objects.</li>
-<li><code>position</code> - the start position to parse from. By default 0.</li>
-<li><code>context</code> - the <a href="../actions/#the-context-object">context object</a> to use. By
-  default <code>None</code> - context object is created by the parser.</li>
-<li><code>file_name</code> - first positional and mandatory parameter only for <code>parse_file</code>
-  call - the name/path of the file to parse.</li>
+<li>
+<p><strong>input_str</strong> - first positional and mandatory parameter only for <code>parse</code> call -
+  the input string/list of objects.</p>
+</li>
+<li>
+<p><strong>position</strong> - the start position to parse from. By default 0.</p>
+</li>
+<li>
+<p><strong>context</strong> - the <a href="../actions/#the-context-object">context object</a> to use. By
+  default <code>None</code> - context object is created by the parser.</p>
+</li>
+<li>
+<p><strong>file_name</strong> - first positional and mandatory parameter only for <code>parse_file</code>
+  call - the name/path of the file to parse.</p>
+</li>
 </ul>
 <h1 id="token">Token<a class="headerlink" href="#token" title="Permanent link">&para;</a></h1>
 <p>This class from <code>parglare.parser</code> is used to represent lookahead tokens. Token
 is a concrete matched terminal from the input stream.</p>
 <h2 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>symbol</strong> (<code>Terminal</code>) - terminal grammar symbol represented by this token,</li>
-<li><strong>value</strong> (<code>list</code> or <code>str</code>) - matched part of input stream,</li>
-<li><strong>length</strong> (<code>int</code>) - length of matched input.</li>
+<li>
+<p><strong>symbol</strong> (<code>Terminal</code>) - terminal grammar symbol represented by this token,</p>
+</li>
+<li>
+<p><strong>value</strong> (<code>list</code> or <code>str</code>) - matched part of input stream,</p>
+</li>
+<li>
+<p><strong>length</strong> (<code>int</code>) - length of matched input.</p>
+</li>
 </ul>
               
             </div>

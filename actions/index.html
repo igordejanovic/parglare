@@ -350,6 +350,10 @@ object provides us with the parsing context of where the match occurred.</p>
   the position. This function returns a tuple <code>(line, column)</code>.</p>
 </li>
 <li>
+<p><strong>file_name</strong> - the name/path of the file being parsed. <code>None</code> if Python
+  string is parsed.</p>
+</li>
+<li>
 <p><strong>input_str</strong> - the input string (or list of objects) that is being parsed.</p>
 </li>
 <li>
@@ -447,7 +451,10 @@ you might want to reference some of these actions directly.</p>
 <li>
 <p><strong>obj</strong> - Used implicitly by rules
   using <a href="../grammar_language/#named-matches-assignments">named matches</a>.
-  Creates Python object with attributes derived from named matches.</p>
+  Creates Python object with attributes derived from named matches. Objects
+  created this way have additional attributes
+  <code>_pg_start_position</code>/<code>_pg_end_position</code> with start/end position in the input
+  stream where the object is found.</p>
 </li>
 </ul>
 <h2 id="actions-for-rules-using-named-matches">Actions for rules using named matches<a class="headerlink" href="#actions-for-rules-using-named-matches" title="Permanent link">&para;</a></h2>

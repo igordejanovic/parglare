@@ -98,6 +98,8 @@
                 
                     <li><a class="toctree-l4" href="#handling-whitespaces-and-comments-in-your-language">Handling whitespaces and comments in your language</a></li>
                 
+                    <li><a class="toctree-l4" href="#handling-keywords-in-your-language">Handling keywords in your language</a></li>
+                
             
             </ul>
         
@@ -515,25 +517,24 @@ assert result == ["2", ["c", "c", "c"]]
 input_str = '2'
 result = p.parse(input_str)
 assert result == ["2", []]
-
-
-Syntax equivalence `zero of more`:
-
-    S: a*;
-    a: "a";
-
-is equivalent to:
-
-    S: a_0;
-    a_0: a_1 | EMPTY;
-    @collect
-    a_1: a_1 a | a;
-    a: "a";
-
-So using of `*` creates both `a_0` and `a_1` rules.
-Action attached to `a_0` returns a list of matched `a` and empty list
-if no match is found.
 </code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Syntax equivalence <code>zero of more</code>:</p>
+<pre><code>S: a*;
+a: "a";
+</code></pre>
+<p>is equivalent to:</p>
+<pre><code>S: a_0;
+a_0: a_1 | EMPTY;
+@collect
+a_1: a_1 a | a;
+a: "a";
+</code></pre>
+<p>So using of <code>*</code> creates both <code>a_0</code> and <code>a_1</code> rules.
+Action attached to <code>a_0</code> returns a list of matched <code>a</code> and empty list
+if no match is found.</p>
+</div>
 <p>Same as <code>one or more</code> this operator may use separator modifiers.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -642,6 +643,52 @@ comments like the one used in the grammar language itself:</p>
   CorNC: Comment | NotComment | WS;
   NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
 </code></pre>
+<h2 id="handling-keywords-in-your-language">Handling keywords in your language<a class="headerlink" href="#handling-keywords-in-your-language" title="Permanent link">&para;</a></h2>
+<p>By default parser will match given string recognizer even if it is part of some
+larger word, i.e. it will not require matching on the word boundary. This is not
+the desired behaviour for language keywords.</p>
+<p>For example, lets take this little grammar:</p>
+<pre><code>S: "for" name=ID "=" from=INT "to" to=INT EOF;
+ID: /\w+/;
+INT: /\d+/;
+</code></pre>
+<p>This grammar is intended to match statement like this one:</p>
+<pre><code>for a=10 to 20
+</code></pre>
+<p>But it will also match:</p>
+<pre><code>fora=10 to20
+</code></pre>
+<p>which is not what we wanted.</p>
+<p>parglare allows the definition of a special terminal rule <code>KEYWORD</code>. This rule
+must define a <a href="#regular-expression-recognizer">regular expression recognizer</a>.
+Any string recognizer in the grammar that can be recognized by the <code>KEYWORD</code>
+recognizer is treated as a keyword and is changed during grammar construction to
+match only on word boundary.</p>
+<p>For example:</p>
+<pre><code>S: "for" name=ID "=" from=INT "to" to=INT EOF;
+ID: /\w+/;
+INT: /\d+/;
+KEYWORD: /\w+/;
+</code></pre>
+<p>Now,</p>
+<pre><code>fora=10 to20
+</code></pre>
+<p>will not be recognized as the words <code>for</code> and <code>to</code> are recognized to be keywords
+(they can be matched by the <code>KEYWORD</code> rule).</p>
+<p>This will be parsed correctly:</p>
+<pre><code>for a=10 to 20
+</code></pre>
+<p>As <code>=</code> is not matched by the <code>KEYWORD</code> rule and thus doesn't require to be
+separated from the surrounding tokens.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>parglare uses integrated scanner so this example:</p>
+<pre><code>for for=10 to 20
+</code></pre>
+<p>will be correctly parsed. <code>for</code> in <code>for=10</code> will be recognized as <code>ID</code> and
+not as a keyword <code>for</code>, i.e. there is no lexical ambiguity due to tokenizer
+separation.</p>
+</div>
               
             </div>
           </div>
