@@ -466,9 +466,9 @@ if we want to do fuzzy match of tokens and choose the most similar token at the
 position.</p>
 <p>parglare solves this problem by enabling you to register a callable during
 parser instantiation that will, during parsing, get all the symbols expected at
-the current location and return a single token (instance
-of <a href="../parser/#token"><code>Token</code> class</a>) or <code>None</code> if no symbol is found at the
-location.</p>
+the current location and return a list of tokens (instances
+of <a href="../parser/#token"><code>Token</code> class</a>) or <code>None</code> or empty list if no symbol is
+found at the location.</p>
 <p>This callable is registered during parser instantiation as the parameter
 <code>custom_lexical_disambiguation</code>.</p>
 <pre><code>parser = Parser(
@@ -477,7 +477,7 @@ location.</p>
 
 <p>The callable accepts:</p>
 <ul>
-<li><strong>symbols</strong> - a list of grammar terminals expected at the current position,</li>
+<li><strong>symbols</strong> - a list of terminals expected at the current position,</li>
 <li><strong>input_str</strong> - input string,</li>
 <li><strong>position</strong> - current position in the input string.</li>
 <li><strong>get_tokens</strong> - a callable used to get the tokens recognized using the
