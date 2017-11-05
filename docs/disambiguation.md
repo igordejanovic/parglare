@@ -311,10 +311,13 @@ The callable accepts:
 - **input_str** - input string,
 - **position** - current position in the input string.
 - **get_tokens** - a callable used to get the tokens recognized using the
-  default strategy. Custom disambiguation might decide to return choose one of
-  the returned tokens or make one if no tokens are recognized by default strategy.
+  default strategy. Called without parameters. Custom disambiguation might
+  decide to return this list if no change is necessary, reduce the list, or
+  extend it with new tokens. See the example bellow how to return list with a
+  token only if the default recognition doesn't succeed.
 
-**Returns:** an instance of `Token` class or `None` if no token is found.
+**Returns:** a list of `Token` class instances or `None`/empty list if no token
+is found.
 
 To instantiate `Token` pass in the symbol and the value of the token. Value of
 the token is usually a sub-string of the input string.
@@ -344,10 +347,8 @@ def custom_lexical_disambiguation(symbols, input_str, position, get_tokens):
     tokens = get_tokens()
 
     if tokens:
-        # If a token is found using default strategy return it.
-        # Must be a single token or we have lexical ambiguity
-        assert len(tokens) == 1
-        return tokens[0]
+        # If default recognition succeeds use the result.
+        return tokens
     else:
         # If no tokens are found do the fuzzy match.
         matchers = [
@@ -369,7 +370,7 @@ def custom_lexical_disambiguation(symbols, input_str, position, get_tokens):
 
         max_ratio_index = ratios.index(max(ratios))
         if ratios[max_ratio_index] > 0.7 and number_match.group(1):
-            return Token(symbols[max_ratio_index], number_match.group())
+            return [Token(symbols[max_ratio_index], number_match.group())]
 
 
 parser = Parser(

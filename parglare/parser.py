@@ -521,10 +521,8 @@ class Parser(object):
                                                        position, actions,
                                                        finish_flags)
 
-                    tok = self.custom_lexical_disambiguation(
+                    tokens = self.custom_lexical_disambiguation(
                         symbols, input_str, position, get_tokens)
-                    if tok:
-                        tokens.append(tok)
                 else:
                     tokens = self._token_recognition(input_str, position,
                                                      actions, finish_flags)

@@ -179,10 +179,8 @@ def test_dynamic_lexical_disambiguation():
         tokens = get_tokens()
 
         if tokens:
-            # If a token is found using default strategy return it.
-            # Must be a single token or we have lexical ambiguity
-            assert len(tokens) == 1
-            return tokens[0]
+            # If default recognition succeeds use the result.
+            return tokens
         else:
             # If no tokens are found do the fuzzy match.
             matchers = [
@@ -204,7 +202,7 @@ def test_dynamic_lexical_disambiguation():
 
             max_ratio_index = ratios.index(max(ratios))
             if ratios[max_ratio_index] > 0.7 and number_match.group(1):
-                return Token(symbols[max_ratio_index], number_match.group())
+                return [Token(symbols[max_ratio_index], number_match.group())]
 
     parser = Parser(
         g, custom_lexical_disambiguation=custom_lexical_disambiguation)
