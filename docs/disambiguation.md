@@ -293,9 +293,9 @@ position.
 
 parglare solves this problem by enabling you to register a callable during
 parser instantiation that will, during parsing, get all the symbols expected at
-the current location and return a single token (instance
-of [`Token` class](./parser.md#token)) or `None` if no symbol is found at the
-location.
+the current location and return a list of tokens (instances
+of [`Token` class](./parser.md#token)) or `None` or empty list if no symbol is
+found at the location.
 
 This callable is registered during parser instantiation as the parameter
 `custom_lexical_disambiguation`.
@@ -307,7 +307,7 @@ parser = Parser(
 
 The callable accepts:
 
-- **symbols** - a list of grammar terminals expected at the current position,
+- **symbols** - a list of terminals expected at the current position,
 - **input_str** - input string,
 - **position** - current position in the input string.
 - **get_tokens** - a callable used to get the tokens recognized using the
