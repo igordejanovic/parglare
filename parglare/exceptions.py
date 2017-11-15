@@ -34,7 +34,7 @@ def nomatch_error(symbols):
                 'in file "{}" '.format(file_name)
                 if file_name else "",
                 line, column, context,
-                _(' or ').join([s.name for s in symbols]))
+                _(' or ').join(sorted([s.name for s in symbols])))
     return _inner
 
 

@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 
 def expected_symbols_str(symbols):
-    return " or ".join([s.name for s in symbols])
+    return " or ".join(sorted([s.name for s in symbols]))
 
 
 class Error(object):
