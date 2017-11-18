@@ -228,19 +228,17 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                                     # associative reductions can't be in the
                                     # same set of actions together with SHIFTs.
                                     should_reduce = False
-                                elif prefer_shifts:
+                                else:
                                     # If priorities are the same and no
-                                    # associativity defined prefer SHIFT if
-                                    # prefer_shits is True
-                                    should_reduce = False
-                                elif len(prod.rhs) == 0 and \
-                                        prefer_shifts_over_empty:
-                                    # If prefer_shifts is False but
-                                    # prefer_shifts_over_empty is True and
-                                    # production for REDUCE is EMPTY choose
-                                    # SHIFT.
-                                    should_reduce = False
-
+                                    # associativity defined use prefered
+                                    # strategy.
+                                    is_empty = len(prod.rhs) == 0
+                                    should_reduce = \
+                                        (not prefer_shifts
+                                         and (not (prefer_shifts_over_empty
+                                                   and is_empty))) \
+                                        or (not prefer_shifts_over_empty
+                                            and is_empty)
                             elif prod.prior > sh_prior:
                                 # This item operation priority is higher =>
                                 # override with reduce
