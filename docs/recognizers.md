@@ -4,21 +4,21 @@ Parglare uses scannerless parsing. Actually, scanner is integrated in the
 parser. Each token is created/recognized in the input during parsing using so
 called _recognizer_ which is connected to the grammar terminal symbol.
 
-This gives a great flexibility to the parglare.
+This gives us greater flexibility.
 
 First, recognizing tokens during parsing eliminate lexical ambiguities that
 arise in separate scanning due to the lack of parsing context.
 
 Second, having a separate recognizers for grammar terminal symbols allows us to
-parse not only text but a stream of anything as parsing is nothing more by
+parse not only text but a stream of anything as parsing is nothing more but
 constructing a tree (or some other form) out of a flat list of objects. Those
 objects are characters if text is parsed, but don't have to be.
 
 Parglare has two built-in recognizers for textual parsing that can be specified
 in [the grammar directly](./grammar_language.md#string-recognizer). Those are
-usually enough if text is parsed, but if non-textual content is parsed you will
-have to supply your own recognizers that are able to recognize tokens in the
-input stream of objects.
+usually enough if text is parsed, but if a non-textual content is parsed you
+will have to supply your own recognizers that are able to recognize tokens in
+the input stream of objects.
 
 Recognizers are Python callables of the following form:
 
@@ -29,7 +29,7 @@ Recognizers are Python callables of the following form:
 
 
 For example if we have an input stream of objects that are comparable (e.g.
-numbers) and we want to recognize the ascending elements starting at the given
+numbers) and we want to recognize ascending elements starting at the given
 position but such that the recognized token must have at least two object from
 the input. We could write following:
 
@@ -41,13 +41,13 @@ the input. We could write following:
         if last - pos >= 2:
             return input[pos:last]
 
-We register our recognizers during grammar contstruction. All references in the
-grammar rules that don't exists in the grammar (i.e. they are not the rule
-themself) must be resolved as recognizers or the exception will be thrown during
-grammar construction.
+We register our recognizers during grammar construction. All terminal rules in
+the grammar that don't define string or regex match (i.e. they have empty
+bodies) must be augmented with custom recognizers for the parser to be complete.
 
 In order to do that, create a Python dict where the key will be a rule name used
-in the grammar references and the value will be recognizer callable.
+in the grammar references and the value will be recognizer callable. Pass the
+dictionary as a `recognizers` parameter to the parser.
 
 
     recognizers = {
@@ -57,12 +57,12 @@ in the grammar references and the value will be recognizer callable.
     grammar = Grammar.from_file('mygrammar.pg', recognizers=recognizers)
 
 
-Now, in the grammar in file `mygrammar.pg` you can reference terminal rule
-`ascending` (see the key in `recognizers` dict) although it is not defined in
-the grammar itself. This terminal rule will match ascending sublist of objects
-from the input.
+In the file `mygrammar.pg` you have to provide a terminal rule with empty body:
+
+    ascending: ;
+
 
 !!! note
 
-    If you want more information you could investigate
+    If you want more information you can investigate
     [test_recognizers.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py) test.
