@@ -11,7 +11,7 @@ def test_sr_conflict():
     """
     g = Grammar.from_string(grammar, _no_check_recognizers=True)
     with pytest.raises(SRConflicts) as e:
-        Parser(g)
+        Parser(g, prefer_shifts=False)
     assert "whether to shift or reduce by production(s) '2: As = As A'" in \
         str(e.value.conflicts[0].message)
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest
-from parglare import GLRParser, Grammar, Parser
+from parglare import GLRParser, Grammar, Parser, ParseError
 from parglare.exceptions import SRConflicts
 
 
@@ -15,6 +15,12 @@ def test_lr2_grammar():
     ID: /\w+/;
     """
 
+    input_str = """
+    First = One Two three
+    Second = Foo Bar
+    Third = Baz
+    """
+
     g = Grammar.from_string(grammar)
 
     # This grammar is not LR(1) as it requires
@@ -23,18 +29,20 @@ def test_lr2_grammar():
     # If '=' is after ID than it should reduce "Prod"
     # else it should reduce ID as ProdRefs.
     with pytest.raises(SRConflicts):
-        Parser(g)
+        Parser(g, prefer_shifts=False)
+
+    # prefer_shifts strategy (the default)
+    # will remove conflicts but the resulting parser
+    # will fail to parse any input as it will consume
+    # greadily next rule ID as the body element of the previous Prod rule.
+    parser = Parser(g)
+    with pytest.raises(ParseError):
+        parser.parse(input_str)
 
     # But it can be parsed unambiguously by GLR.
     p = GLRParser(g)
 
-    txt = """
-    First = One Two three
-    Second = Foo Bar
-    Third = Baz
-    """
-
-    results = p.parse(txt)
+    results = p.parse(input_str)
     assert len(results) == 1
 
 

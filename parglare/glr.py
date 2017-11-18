@@ -7,6 +7,7 @@ from parglare import termui as t
 from .exceptions import DisambiguationError, ParseError, nomatch_error
 from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
     pos_to_line_col, STOP, Context
+from .tables import LALR
 from .export import dot_escape
 from .termui import prints, h_print, a_print
 
@@ -29,6 +30,31 @@ class GLRParser(Parser):
     """
     A Tomita-style GLR parser.
     """
+    def __init__(self, grammar, start_production=1, actions=None,
+                 layout_actions=None, debug=False, debug_trace=False,
+                 debug_colors=False, debug_layout=False, ws='\n\t ',
+                 build_tree=False, tables=LALR, layout=False, position=False,
+                 prefer_shifts=None, prefer_shifts_over_empty=None,
+                 error_recovery=False, dynamic_filter=None,
+                 custom_lexical_disambiguation=None):
+
+        # The default for GLR is not to use any strategy preferring shifts
+        # over reduce thus investigating all possibilitites.
+        prefer_shifts = False \
+            if prefer_shifts is None else prefer_shifts
+        prefer_shifts_over_empty = False \
+            if prefer_shifts_over_empty is None else prefer_shifts_over_empty
+
+        super(GLRParser, self).__init__(
+            grammar=grammar, start_production=start_production,
+            actions=actions, layout_actions=layout_actions,
+            debug=debug, debug_trace=debug_trace,
+            debug_colors=debug_colors, debug_layout=debug_layout, ws=ws,
+            build_tree=build_tree, tables=tables, layout=layout,
+            position=position, prefer_shifts=prefer_shifts,
+            prefer_shifts_over_empty=prefer_shifts_over_empty,
+            error_recovery=error_recovery, dynamic_filter=dynamic_filter,
+            custom_lexical_disambiguation=custom_lexical_disambiguation)
 
     def _check_parser(self):
         """

@@ -76,13 +76,13 @@ def test_dynamic_disambiguation():
     This tests LR parsing.
     """
 
-    # This grammar is ambiguous
+    # This grammar is ambiguous if no prefer_shift strategy is used.
     with pytest.raises(SRConflicts):
-        Parser(g)
+        Parser(g, prefer_shifts=False)
 
     # But if we provide dynamic disambiguation filter
     # the conflicts can be handled at run-time.
-    p = Parser(g, actions=actions,
+    p = Parser(g, actions=actions, prefer_shifts=False,
                dynamic_filter=custom_disambiguation_filter)
 
     # * operation will be of higher priority as it appears later in the stream.

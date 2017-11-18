@@ -40,14 +40,33 @@ actions that will build the [parse tree](./parse_trees.md).
 
 ## prefer_shifts
 
-By default set to `False`. In case of [shift/reduce conflicts](./lr_parsing.md)
-this strategy would favor shift over reduce.
+By default set to `True` for LR parser and to `False` for GLR parser. In case
+of [shift/reduce conflicts](./lr_parsing.md) this strategy would favor shift
+over reduce. You can still
+use [associativity rules](./disambiguation.md#associativity) to decide per
+production.
 
 !!! note
 
     Do not use `prefer_shifts` if you don't understand the implications. Try to
     understand [conflicts](./lr_parsing.md) and
     [resolution strategies](./disambiguation.md).
+
+
+## prefer_shifts_over_empty
+
+By default set to `True` for LR parser and to `False` for GLR parser. In case
+of [shift/reduce conflicts](./lr_parsing.md) on empty reductions this strategy
+would favor shift over reduce. You can still
+use [associativity rules](./disambiguation.md#associativity) to decide per
+production.
+
+!!! note
+
+    Do not use `prefer_shifts_over_empty` if you don't understand the
+    implications. Try to understand [conflicts](./lr_parsing.md) and
+    [resolution strategies](./disambiguation.md).
+
 
 ## error_recovery
 

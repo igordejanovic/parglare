@@ -44,9 +44,9 @@ def test_slr_conflict():
 
     grammar = Grammar.from_string(grammar)
     with pytest.raises(SRConflicts):
-        Parser(grammar, tables=SLR)
+        Parser(grammar, tables=SLR, prefer_shifts=False)
 
-    Parser(grammar, tables=LALR)
+    Parser(grammar, tables=LALR, prefer_shifts=False)
 
 
 def test_lalr_reduce_reduce_conflict():
@@ -95,7 +95,7 @@ def test_nondeterministic_LR_raise_error():
         p = Parser(g)
         p.parse('0101000110001010')
 
-    p = GLRParser(g, prefer_shifts_over_empty=False)
+    p = GLRParser(g)
     results = p.parse('0101000110001010')
 
     assert len(results) == 1
@@ -112,7 +112,7 @@ def test_cyclic_grammar_1():
     """
     g = Grammar.from_string(grammar)
     with pytest.raises(SRConflicts):
-        Parser(g)
+        Parser(g, prefer_shifts=False)
 
     p = GLRParser(g)
     results = p.parse('x')
@@ -134,7 +134,7 @@ def test_cyclic_grammar_2():
     g = Grammar.from_string(grammar)
 
     with pytest.raises(SRConflicts):
-        Parser(g)
+        Parser(g, prefer_shifts=False)
 
     p = GLRParser(g, debug=True)
     results = p.parse('xx')
@@ -173,7 +173,7 @@ def test_highly_ambiguous_grammar():
     g = Grammar.from_string(grammar)
 
     with pytest.raises(SRConflicts):
-        Parser(g)
+        Parser(g, prefer_shifts=False)
 
     # S/R are resolved by selecting prefer_shifts strategy.
     # But R/R conflicts remain.
@@ -240,7 +240,7 @@ def test_reduce_enough_empty():
     """
     g = Grammar.from_string(grammar)
 
-    p = GLRParser(g, debug=True, prefer_shifts_over_empty=False)
+    p = GLRParser(g, debug=True)
     results = p.parse("xbbb")
 
     assert len(results) == 1

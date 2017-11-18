@@ -26,7 +26,7 @@ class Parser(object):
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\t ',
                  build_tree=False, tables=LALR, layout=False, position=False,
-                 prefer_shifts=False, prefer_shifts_over_empty=True,
+                 prefer_shifts=True, prefer_shifts_over_empty=True,
                  error_recovery=False, dynamic_filter=None,
                  custom_lexical_disambiguation=None):
         self.grammar = grammar
@@ -46,8 +46,8 @@ class Parser(object):
                     actions=layout_actions,
                     ws=None, layout=True,
                     position=True,
-                    prefer_shifts=prefer_shifts,
-                    prefer_shifts_over_empty=prefer_shifts_over_empty,
+                    prefer_shifts=True,
+                    prefer_shifts_over_empty=True,
                     debug=debug_layout)
 
         self.layout = layout
