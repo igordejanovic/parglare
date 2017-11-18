@@ -773,7 +773,9 @@ class NodeNonTerm(Node):
 
     def tree_str(self, depth=0):
         indent = '  ' * depth
-        s = '{}[{}]'.format(self.production.symbol, self.start_position)
+        s = '{}[{}->{}]'.format(self.production.symbol,
+                                self.start_position,
+                                self.end_position)
         if self.children:
             for n in self.children:
                 if hasattr(n, 'tree_str'):
@@ -811,8 +813,10 @@ class NodeTerm(Node):
         self.symbol = symbol
 
     def tree_str(self, depth=0):
-        return '{}[{}, {}]'.format(self.symbol, self.start_position,
-                                   self.value)
+        return '{}[{}->{}, "{}"]'.format(self.symbol,
+                                     self.start_position,
+                                     self.end_position,
+                                     self.value)
 
     def __str__(self):
         return '<Term(start={}, end={}, sym={}, val="{}")>'\
@@ -858,8 +862,12 @@ def treebuild_shift_action(context, value):
 
 
 def treebuild_reduce_action(context, nodes):
-    return NodeNonTerm(context.start_position, context.end_position,
-                       context.production, nodes, context.layout_content)
+    if nodes:
+        return NodeNonTerm(nodes[0].start_position, nodes[-1].end_position,
+                           context.production, nodes, context.layout_content)
+    else:
+        return NodeNonTerm(context.start_position, context.end_position,
+                           context.production, nodes, context.layout_content)
 
 
 def pos_to_line_col(input_str, position):
