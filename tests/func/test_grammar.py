@@ -38,7 +38,7 @@ def test_undefined_grammar_symbol():
         Grammar.from_string(grammar)
 
     assert 'Unknown symbol' in str(e)
-    assert 'B = id' in str(e)
+    assert 'id' in str(e)
 
 
 def test_terminal_nonterminal():

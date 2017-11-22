@@ -29,6 +29,7 @@ MULT_ONE_OR_MORE = '1..*'
 MULT_ZERO_OR_MORE = '0..*'
 
 RESERVED_SYMBOL_NAMES = ['EOF', 'STOP', 'EMPTY']
+SPECIAL_SYMBOL_NAMES = ['KEYWORD', 'LAYOUT']
 
 
 def escape(instr):
@@ -393,7 +394,8 @@ class Grammar(object):
         Collect all terminal and non-terminal symbols from LHS of productions.
         """
         self._by_name = {}
-        self._term_to_lhs = {}
+        # mapping recognizer value -> Terminal
+        self._rec_to_named_term = {}
         for p in self.productions:
             new_symbol = p.symbol
             if isinstance(new_symbol, Terminal):
@@ -403,18 +405,20 @@ class Grammar(object):
                         # Multiple definitions of Terminals. Consider it a
                         # non-terminal with alternative terminals.
                         new_symbol = NonTerminal(new_symbol.name)
-                        for k, v in self._term_to_lhs.items():
+                        for k, v in self._rec_to_named_term.items():
                             if v.name == new_symbol.name:
-                                del self._term_to_lhs[k]
+                                del self._rec_to_named_term[k]
                                 break
                     else:
                         new_symbol = prev_symbol
 
                 else:
                     if p.rhs:
-                        self._term_to_lhs[p.rhs[0].name] = new_symbol
-                    else:
-                        self._term_to_lhs[new_symbol.name] = new_symbol
+                        rec_name = p.rhs[0].name
+                        if rec_name not in SPECIAL_SYMBOL_NAMES:
+                            assert new_symbol.name \
+                                not in self._rec_to_named_term
+                            self._rec_to_named_term[rec_name] = new_symbol
 
             self._resolve_action(p.symbol, new_symbol)
             self._by_name[new_symbol.name] = new_symbol
@@ -452,6 +456,8 @@ class Grammar(object):
         Create Terminal for user supplied Recognizer.
         """
 
+        rec_to_term = {}
+
         for idx, p in enumerate(self.productions):
             if p.symbol.name in self._by_name:
                 p.symbol = self._by_name[p.symbol.name]
@@ -459,30 +465,29 @@ class Grammar(object):
                 ref_sym = None
                 if ref.name in self._by_name:
                     ref_sym = self._by_name[ref.name]
+                elif isinstance(p.symbol, NonTerminal) \
+                        and ref.name in self._rec_to_named_term:
+                    # If terminal is registered by str recognizer and is
+                    # referenced in a RHS of some other production report
+                    # error.
+                    term_by_rec = self._rec_to_named_term[ref.name]
+                    raise GrammarError(
+                        "Terminal '{}' used in production '{}' "
+                        "already exists by the name '{}'.".format(
+                            text(ref.name), text(p.symbol),
+                            text(term_by_rec)))
                 else:
-                    if isinstance(ref, Terminal):
-                        # Register terminal by name
-                        ref_sym = ref
-                        self._by_name[ref.name] = ref_sym
+                    if not isinstance(ref, Terminal):
+                        raise GrammarError(
+                            "Unknown symbol '{}' used in production '{}'."
+                            .format(text(ref.name), text(p.symbol)))
 
-                        # If terminal is registered by str recognizer and is
-                        # referenced in a RHS of some other production report
-                        # error.
-                        if not isinstance(p.symbol, Terminal):
-                            term_by_rec = self._term_to_lhs.get(ref.name)
-                            if term_by_rec:
-                                raise GrammarError(
-                                    "Terminal '{}' used in production '{}' "
-                                    "already exists by the name '{}'.".format(
-                                        text(ref.name), text(p.symbol),
-                                        text(term_by_rec)))
-                        self.terminals.add(ref_sym)
-
+                    if ref.name in rec_to_term:
+                        ref_sym = rec_to_term[ref.name]
                     else:
-                        # Element of RHS must be either a Terminal, a
-                        # NonTerminal or a Reference.
-                        assert isinstance(ref, NonTerminal) \
-                            or isinstance(ref, Reference)
+                        ref_sym = ref
+                        rec_to_term[ref.name] = ref
+                        self.terminals.add(ref_sym)
 
                 if not ref_sym:
                     raise GrammarError(
