@@ -46,6 +46,9 @@ over reduce. You can still
 use [associativity rules](./disambiguation.md#associativity) to decide per
 production.
 
+You can disable this rule on per-production basis by using `nops` on the
+production.
+
 !!! note
 
     Do not use `prefer_shifts` if you don't understand the implications. Try to
@@ -59,6 +62,9 @@ By default set to `True` for LR parser and to `False` for GLR parser. In case
 of [shift/reduce conflicts](./lr_parsing.md) on empty reductions this strategy
 would favor shift over reduce. You can still
 use [associativity rules](./disambiguation.md#associativity) to decide per
+production.
+
+You can disable this rule on per-production basis by using `nopse` on the
 production.
 
 !!! note

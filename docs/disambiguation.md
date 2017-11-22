@@ -73,11 +73,11 @@ priority. In the grammar fragment above we still have ambiguity for expression:
 ```
 
 There are two interpretations `(2 + 3) + 5` and `2 + (3 + 5)`. Of course, with
-arithmentic `+` operation the result will be the same but that's not true for
+arithmetic `+` operation the result will be the same but that's not true for
 each operation. Anyway, parse trees will be different so some choice has to be
 made.
 
-In this situation associativity is used. Both `+` and `*` in arithmentic are
+In this situation associativity is used. Both `+` and `*` in arithmetic are
 left associative (i.e. the operation is evaluated from left to right).
 
 ```
@@ -96,6 +96,23 @@ no associativity, i.e. associativity is not used for disambiguation decision.
 
     Alternatively, you can use keyword `shift` instead of `right` and `reduce`
     instead of `left`.
+
+
+### `nops` and `nopse`
+
+These two are not actual filters but markers used to
+disable [`prefer_shifts`](./parser.md#prefer_shifts) (`nops`)
+and [`prefer_shifts_over_empty`](./parser.md#prefer_shifts_over_empty) (`nopse`)
+set globally during parser construction on a production level. Productions using
+these markers are not influenced by global parser setting meaning that table
+construction will not eliminate possible reductions on these productions. Using
+these markers have sense only for GLR parsing as the LR deterministic parser
+can't be constructed anyway in case of conflicts.
+
+For example:
+
+    Statements: Statements1 {nops}
+              | EMPTY;
 
 
 ### prefer
