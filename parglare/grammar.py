@@ -752,7 +752,9 @@ pg_productions = [
      ASSOC_LEFT, 15],
 
     [PROD_DIS_RULE, ['left']],
+    [PROD_DIS_RULE, ['reduce']],
     [PROD_DIS_RULE, ['right']],
+    [PROD_DIS_RULE, ['shift']],
     [PROD_DIS_RULE, ['dynamic']],
     [PROD_DIS_RULE, [PRIOR]],
     [PROD_DIS_RULES, [PROD_DIS_RULES, ',', PROD_DIS_RULE], ASSOC_LEFT],
@@ -934,9 +936,9 @@ def act_production(_, nodes):
     if len(nodes) > 1:
         rules = nodes[2]
         for rule in rules:
-            if rule == 'left':
+            if rule in ['left', 'reduce']:
                 disrules['assoc'] = ASSOC_LEFT
-            elif rule == 'right':
+            elif rule in ['right', 'shift']:
                 disrules['assoc'] = ASSOC_RIGHT
             elif rule == 'dynamic':
                 disrules['dynamic'] = True

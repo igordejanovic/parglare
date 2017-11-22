@@ -130,6 +130,24 @@ def test_assoc_prior():
 
     assert g.productions[3].prior == DEFAULT_PRIORITY
 
+    # Repeat the same but for alternative keywords "shift" and "reduce"
+    grammar = """
+    E: E '+' E {reduce, 1};
+    E: E '*' E {2, reduce};
+    E: E '^' E {shift};
+    E: id;
+    id: /\d+/;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    assert g.productions[1].prior == 1
+    assert g.productions[1].assoc == ASSOC_LEFT
+    assert g.productions[3].assoc == ASSOC_RIGHT
+    assert g.productions[3].prior == DEFAULT_PRIORITY
+
+    assert g.productions[3].prior == DEFAULT_PRIORITY
+
 
 def test_terminal_priority():
     "Terminals might define priority which is used for lexical disambiguation."

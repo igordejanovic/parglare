@@ -92,6 +92,12 @@ The associativity given in the grammar is either `left` or `right`. Default is
 no associativity, i.e. associativity is not used for disambiguation decision.
 
 
+!!! note
+
+    Alternatively, you can use keyword `shift` instead of `right` and `reduce`
+    instead of `left`.
+
+
 ### prefer
 
 This disambiguation filter is applicable to terminal productions only. It will
