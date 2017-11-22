@@ -394,19 +394,18 @@ class Grammar(object):
                         # Multiple definitions of Terminals. Consider it a
                         # non-terminal with alternative terminals.
                         new_symbol = NonTerminal(new_symbol.name)
+                        for k, v in self._term_to_lhs.items():
+                            if v.name == new_symbol.name:
+                                del self._term_to_lhs[k]
+                                break
                     else:
                         new_symbol = prev_symbol
 
-                if isinstance(new_symbol, Terminal):
+                else:
                     if p.rhs:
                         self._term_to_lhs[p.rhs[0].name] = new_symbol
                     else:
                         self._term_to_lhs[new_symbol.name] = new_symbol
-                else:
-                    for k, v in self._term_to_lhs.items():
-                        if v.name == new_symbol.name:
-                            del self._term_to_lhs[k]
-                            break
 
             self._resolve_action(p.symbol, new_symbol)
             self._by_name[new_symbol.name] = new_symbol
