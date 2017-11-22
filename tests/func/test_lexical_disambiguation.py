@@ -12,7 +12,6 @@ import pytest  # noqa
 import difflib
 import re
 from parglare import Parser, Grammar, Token, ParseError
-from parglare.exceptions import ParseError
 
 
 called = [False, False, False]

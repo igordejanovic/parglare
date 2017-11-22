@@ -46,6 +46,67 @@ def test_lr2_grammar():
     assert len(results) == 1
 
 
+def test_nops():
+    """
+    Test that nops (no prefer shifts) will honored per rule.
+    """
+    grammar = """
+    Program: "begin"
+             statements=Statements
+             ProgramEnd EOF;
+    Statements: Statements1 | EMPTY;
+    Statements1: Statements1 Statement | Statement;
+    ProgramEnd: End;
+    Statement: End "transaction" | "command";
+    End: "end";
+    """
+
+    g = Grammar.from_string(grammar, ignore_case=True)
+    parser = GLRParser(g, build_tree=True, prefer_shifts=True)
+
+    # Here we have "end transaction" which is a statement and "end" which
+    # finish program. Prefer shift strategy will make parser always choose to
+    # shift "end" in anticipation of "end transaction" statement instead of
+    # reducing by "Statements" and finishing.
+    with pytest.raises(ParseError):
+        parser.parse("""
+        begin
+            command
+            end transaction
+            command
+            end transaction
+            command
+        end
+        """)
+
+    # When {nops} is used, GLR parser will investigate both possibilities at
+    # this place and find the correct interpretation while still using
+    # prefer_shift strategy globaly.
+    grammar = """
+    Program: "begin"
+             statements=Statements
+             ProgramEnd EOF;
+    Statements: Statements1 {nops} | EMPTY;
+    Statements1: Statements1 Statement | Statement;
+    ProgramEnd: End;
+    Statement: End "transaction" | "command";
+    End: "end";
+    """
+
+    g = Grammar.from_string(grammar, ignore_case=True)
+    parser = GLRParser(g, build_tree=True, prefer_shifts=True)
+    parser.parse("""
+    begin
+        command
+        end transaction
+        command
+        end transaction
+        command
+    end
+    """)
+
+
+
 def test_expressions():
 
     actions = {
