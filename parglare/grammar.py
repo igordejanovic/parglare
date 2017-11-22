@@ -28,6 +28,8 @@ MULT_OPTIONAL = '0..1'
 MULT_ONE_OR_MORE = '1..*'
 MULT_ZERO_OR_MORE = '0..*'
 
+RESERVED_SYMBOL_NAMES = ['EOF', 'STOP', 'EMPTY']
+
 
 def escape(instr):
     return instr.replace('\n', r'\n').replace('\t', r'\t')
@@ -636,6 +638,18 @@ class Grammar(object):
             prints(text(p))
 
 
+def check_name(context, name):
+    """
+    Used in actions to check for reserved names usage.
+    """
+
+    if name in RESERVED_SYMBOL_NAMES:
+            from parglare.parser import pos_to_line_col
+            raise GrammarError('Rule name "{}" is reserved at {}.'.format(
+                name, pos_to_line_col(context.input_str,
+                                      context.start_position)))
+
+
 # Grammar for grammars
 
 (GRAMMAR,
@@ -854,6 +868,8 @@ def act_rule_with_action(_, nodes):
 def act_production_rule(context, nodes):
     name, _, rhs_prods, __ = nodes
 
+    check_name(context, name)
+
     symbol = NonTerminal(name)
 
     # Collect all productions for this rule
@@ -947,10 +963,12 @@ def act_production(_, nodes):
     return (assignments, disrules)
 
 
-def act_term_rule(_, nodes):
+def act_term_rule(context, nodes):
 
     name = nodes[0]
     rhs_term = nodes[2]
+
+    check_name(context, name)
 
     term = Terminal(name, rhs_term.recognizer)
     if len(nodes) > 4:
@@ -969,8 +987,10 @@ def act_term_rule(_, nodes):
     return [Production(term, ProductionRHS([rhs_term]))]
 
 
-def act_term_rule_empty_body(_, nodes):
+def act_term_rule_empty_body(context, nodes):
     name = nodes[0]
+
+    check_name(context, name)
 
     term = Terminal(name)
     term.recognizer = None

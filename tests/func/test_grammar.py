@@ -108,6 +108,35 @@ def test_multiple_terminal_definition():
     assert Terminal("A") not in g.terminals
 
 
+def test_reserved_symbol_names():
+    """
+    Test that reserved symbol names can't be used.
+    """
+    grammar = """
+    S: EOF "First";
+    EOF: "eof";
+    """
+    with pytest.raises(GrammarError) as e:
+        Grammar.from_string(grammar)
+    assert 'is reserved' in str(e)
+
+    grammar = """
+    S: STOP "First";
+    STOP: "stop";
+    """
+    with pytest.raises(GrammarError) as e:
+        Grammar.from_string(grammar)
+    assert 'is reserved' in str(e)
+
+    grammar = """
+    S: EMPTY "First";
+    EMPTY: "stop";
+    """
+    with pytest.raises(GrammarError) as e:
+        Grammar.from_string(grammar)
+    assert 'is reserved' in str(e)
+
+
 def test_assoc_prior():
     """Test that associativity and priority can be defined for productions and
     terminals.
