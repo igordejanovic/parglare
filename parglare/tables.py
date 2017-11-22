@@ -233,12 +233,12 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                                     # associativity defined use prefered
                                     # strategy.
                                     is_empty = len(prod.rhs) == 0
-                                    should_reduce = \
-                                        (not prefer_shifts
-                                         and (not (prefer_shifts_over_empty
-                                                   and is_empty))) \
-                                        or (not prefer_shifts_over_empty
-                                            and is_empty)
+                                    prod_pse = is_empty \
+                                        and prefer_shifts_over_empty \
+                                        and not prod.nopse
+                                    prod_ps = not is_empty \
+                                        and prefer_shifts and not prod.nops
+                                    should_reduce = not (prod_pse or prod_ps)
                             elif prod.prior > sh_prior:
                                 # This item operation priority is higher =>
                                 # override with reduce

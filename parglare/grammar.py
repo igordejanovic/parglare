@@ -194,13 +194,18 @@ class Production(object):
     assoc (int): Associativity. Used for ambiguity (shift/reduce) resolution.
     prior (int): Priority. Used for ambiguity (shift/reduce) resolution.
     dynamic (bool): Is dynamic disambiguation used for this production.
+    nops (bool): Disable prefer_shifts strategy for this production.
+        Only makes sense for GLR parser.
+    nopse (bool): Disable prefer_shifts_over_empty strategy for this
+        production. Only makes sense for GLR parser.
     prod_id (int): Ordinal number of the production.
     prod_symbol_id (int): A zero-based ordinal of alternative choice for this
         production grammar symbol.
     """
 
     def __init__(self, symbol, rhs, assignments=None, assoc=ASSOC_NONE,
-                 prior=DEFAULT_PRIORITY, dynamic=False):
+                 prior=DEFAULT_PRIORITY, dynamic=False, nops=False,
+                 nopse=False):
         """
         Args:
         symbol (GrammarSymbol): A grammar symbol on the LHS of the production.
@@ -217,6 +222,8 @@ class Production(object):
         self.assoc = assoc
         self.prior = prior
         self.dynamic = dynamic
+        self.nops = nops
+        self.nopse = nopse
 
     def __str__(self):
         if hasattr(self, 'prod_id'):
@@ -769,6 +776,8 @@ pg_productions = [
     [PROD_DIS_RULE, ['right']],
     [PROD_DIS_RULE, ['shift']],
     [PROD_DIS_RULE, ['dynamic']],
+    [PROD_DIS_RULE, ['nops']],   # no prefer shifts
+    [PROD_DIS_RULE, ['nopse']],  # no prefer shifts over empty
     [PROD_DIS_RULE, [PRIOR]],
     [PROD_DIS_RULES, [PROD_DIS_RULES, ',', PROD_DIS_RULE], ASSOC_LEFT],
     [PROD_DIS_RULES, [PROD_DIS_RULE]],
@@ -885,12 +894,16 @@ def act_production_rule(context, nodes):
         assoc = disrules.get('assoc', ASSOC_NONE)
         prior = disrules.get('priority', DEFAULT_PRIORITY)
         dynamic = disrules.get('dynamic', False)
+        nops = disrules.get('nops', False)
+        nopse = disrules.get('nopse', False)
         prods.append(Production(symbol,
                                 ProductionRHS(gsymbols),
                                 assignments=assignments,
                                 assoc=assoc,
                                 prior=prior,
-                                dynamic=dynamic))
+                                dynamic=dynamic,
+                                nops=nops,
+                                nopse=nopse))
 
         for a in assignments:
             if a.name:
@@ -957,6 +970,10 @@ def act_production(_, nodes):
                 disrules['assoc'] = ASSOC_RIGHT
             elif rule == 'dynamic':
                 disrules['dynamic'] = True
+            elif rule == 'nops':
+                disrules['nops'] = True
+            elif rule == 'nopse':
+                disrules['nopse'] = True
             elif type(rule) is int:
                 disrules['priority'] = rule
 
