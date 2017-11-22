@@ -232,6 +232,8 @@ class GLRParser(Parser):
 
             context.start_position = position
             context.layout_content = layout_content
+            if position > self.last_position:
+                self.last_position = position
 
             if not tokens:
                 if debug:
@@ -305,6 +307,8 @@ class GLRParser(Parser):
             context.start_position = position
             context.layout_content = layout_content
             context.symbol = symbol = token.symbol
+            if position > self.last_position:
+                self.last_position = position
 
             if debug:
                 self._debug_context(input_str, position, token,
