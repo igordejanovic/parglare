@@ -27,7 +27,7 @@ by grammar rule names.
 ## ws
 
 This parameter specifies a string whose characters are considered to be
-whitespace. By default its value is `'\n\t '`. It is used
+whitespace. By default its value is `'\n\r\t '`. It is used
 if
 [layout sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) (`LAYOUT`
 grammar rule) is not defined. If `LAYOUT` rule is given in the grammar it is
