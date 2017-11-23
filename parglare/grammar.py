@@ -1082,7 +1082,7 @@ def make_zero_or_more(context, gsymbol, sep_ref=None):
         new_productions = []
         one_or_more = make_one_or_more(context, gsymbol, sep_ref)
         new_productions.append(
-            Production(new_nt, ProductionRHS([one_or_more])))
+            Production(new_nt, ProductionRHS([one_or_more]), nops=True))
         new_productions.append(
             Production(new_nt, ProductionRHS([EMPTY])))
 

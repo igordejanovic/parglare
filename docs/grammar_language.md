@@ -355,14 +355,17 @@ empty list. For example:
     is equivalent to:
 
         S: a_0;
-        a_0: a_1 | EMPTY;
+        a_0: a_1 {nops} | EMPTY;
         @collect
         a_1: a_1 a | a;
         a: "a";
 
-    So using of `*` creates both `a_0` and `a_1` rules.
-    Action attached to `a_0` returns a list of matched `a` and empty list
-    if no match is found.
+    So using of `*` creates both `a_0` and `a_1` rules. Action attached to `a_0`
+    returns a list of matched `a` and empty list if no match is found. Please note
+    the [usage of `nops`](./disambiguation.md#nops-and-nopse). In case if
+    `prefer_shift` strategy is used using `nops` will perform both REDUCE and SHIFT
+    during GLR parsing in case what follows zero or more might be another element in
+    the sequence. This is most of the time what you need.
 
 Same as `one or more` this operator may use separator modifiers.
 
