@@ -289,10 +289,13 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         # Finish flags
         prior = None
         for symbol, act in reversed(list(state.actions.items())):
-            finish_flags.append(symbol.finish
-                                or (symbol.prior > prior if prior else False)
-                                or type(symbol.recognizer) is StringRecognizer
-                                or symbol.keyword)
+            if symbol.finish is not None:
+                finish_flags.append(symbol.finish)
+            else:
+                finish_flags.append(
+                    (symbol.prior > prior if prior else False)
+                    or type(symbol.recognizer) is StringRecognizer
+                    or symbol.keyword)
             prior = symbol.prior
 
         finish_flags.reverse()

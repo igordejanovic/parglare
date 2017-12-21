@@ -85,8 +85,9 @@ class Terminal(GrammarSymbol):
     prior(int): Priority used for lexical disambiguation.
     dynamic(bool): Should dynamic disambiguation be called to resolve conflict
         involving this terminal.
-    finish(bool): Used for optimization. If this terminal is `finish` no other
-        recognizers will be checked if this succeeds.
+    finish(bool): Used for scanning optimization. If this terminal is `finish`
+        no other recognizers will be checked if this succeeds. If not provided
+        in the grammar implicit rules will be used during table construction.
     prefer(bool): Prefer this recognizer in case of multiple recognizers match
         at the same place and implicit disambiguation doesn't resolve.
     keyword(bool): `True` if this Terminal represents keyword. `False` by
@@ -99,7 +100,7 @@ class Terminal(GrammarSymbol):
     def __init__(self, name, recognizer=None):
         self.prior = DEFAULT_PRIORITY
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
-        self.finish = False
+        self.finish = None
         self.prefer = False
         self.dynamic = False
         self.keyword = False
@@ -789,6 +790,7 @@ pg_productions = [
 
     [TERM_DIS_RULE, ['prefer']],
     [TERM_DIS_RULE, ['finish']],
+    [TERM_DIS_RULE, ['nofinish']],
     [TERM_DIS_RULE, ['dynamic']],
     [TERM_DIS_RULE, [PRIOR]],
     [TERM_DIS_RULES, [TERM_DIS_RULES, ',', TERM_DIS_RULE]],
@@ -985,6 +987,23 @@ def act_production(_, nodes):
     return (assignments, disrules)
 
 
+def _set_term_props(term, props):
+    for t in props:
+        if type(t) is int:
+            term.prior = t
+        elif t == 'finish':
+            term.finish = True
+        elif t == 'nofinish':
+            term.finish = False
+        elif t == 'prefer':
+            term.prefer = True
+        elif t == 'dynamic':
+            term.dynamic = True
+        else:
+            print(t)
+            assert False
+
+
 def act_term_rule(context, nodes):
 
     name = nodes[0]
@@ -994,18 +1013,7 @@ def act_term_rule(context, nodes):
 
     term = Terminal(name, rhs_term.recognizer)
     if len(nodes) > 4:
-        for t in nodes[4]:
-            if type(t) is int:
-                term.prior = t
-            elif t == 'finish':
-                term.finish = True
-            elif t == 'prefer':
-                term.prefer = True
-            elif t == 'dynamic':
-                term.dynamic = True
-            else:
-                print(t)
-                assert False
+        _set_term_props(term, nodes[4])
     return [Production(term, ProductionRHS([rhs_term]))]
 
 
@@ -1017,18 +1025,7 @@ def act_term_rule_empty_body(context, nodes):
     term = Terminal(name)
     term.recognizer = None
     if len(nodes) > 3:
-        for t in nodes[3]:
-            if type(t) is int:
-                term.prior = t
-            elif t == 'finish':
-                term.finish = True
-            elif t == 'prefer':
-                term.prefer = True
-            elif t == 'dynamic':
-                term.dynamic = True
-            else:
-                print(t)
-                assert False
+        _set_term_props(term, nodes[3])
     return [Production(term, ProductionRHS([]))]
 
 

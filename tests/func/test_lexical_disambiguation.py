@@ -152,6 +152,48 @@ def test_longest_match_prefer(cf):
     assert called == [False, False, True]
 
 
+def test_nofinish(cf):
+    """
+    Test that `nofinish` terminal filter will disable `finish` short-circuit
+    optimization.
+    """
+    global called
+
+    # In rare circumstances `finish` scanning optimization may lead to a
+    # problem. This grammar demonstrates the problem.
+    grammar = """
+    S: First | Second | Third;
+    First: /\d+\.\d+/;
+    Second: '*';
+    Third: /[A-Za-z0-9\*\-]+/;
+    """
+
+    # In the previous grammar trying to parse input "*ThirdShouldMatchThis"
+    # will parse only "*" at the beginning as Second will be short-circed by
+    # implicit "prefer string match" rule and `finish` flag on Second terminal
+    # will be set.
+    g = Grammar.from_string(grammar)
+    parser = Parser(g, actions=actions)
+    parser.parse('*ThirdShouldMatchThis')
+    assert called == [False, True, False]
+
+    # In this case we would actually like for Third to match as it is a longer
+    # match. To do this we should set `nofinish` flag on Second terminal which
+    # will make parglare doesn't use short-circuit and try other possibilities
+    # also.
+    grammar = """
+    S: First | Second | Third;
+    First: /\d+\.\d+/;
+    Second: '*' {nofinish};
+    Third: /[A-Za-z0-9\*\-]+/;
+    """
+    called = [False, False, False]
+    g = Grammar.from_string(grammar)
+    parser = Parser(g, actions=actions)
+    parser.parse('*ThirdShouldMatchThis')
+    assert called == [False, False, True]
+
+
 def test_dynamic_lexical_disambiguation():
     """
     Dynamic disambiguation enables us to choose right token from the
