@@ -174,7 +174,6 @@ class GLRParser(Parser):
         if self.error_recovery:
             # Pairs of (new_position, token) keyed by (position, symbols)
             self.recovery_results = {}
-            # Pairs of (head, symbols)
             self.heads_for_recovery = []
 
         while heads_for_reduce:
@@ -263,8 +262,7 @@ class GLRParser(Parser):
                     if self.error_recovery:
                         # If this head is not reduced and no shift is possible
                         # collect if for possible recovery.
-                        self.heads_for_recovery.append(
-                            (reduce_head, frozenset(actions.keys())))
+                        self.heads_for_recovery.append(reduce_head)
                     elif debug:
                         a_print("** Killing head: ", reduce_head, level=1)
                         if self.debug_trace:
@@ -605,7 +603,8 @@ class GLRParser(Parser):
         """
         debug = self.debug
         input_str = self.input_str
-        for head, symbols in self.heads_for_recovery:
+        for head in self.heads_for_recovery:
+            symbols = head.state.actions.keys()
             if debug:
                 a_print("**Error found. ",
                         "Recovery initiated for head {}.".format(head),
