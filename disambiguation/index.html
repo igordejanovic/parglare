@@ -286,10 +286,10 @@ priority. In the grammar fragment above we still have ambiguity for expression:<
 </code></pre>
 
 <p>There are two interpretations <code>(2 + 3) + 5</code> and <code>2 + (3 + 5)</code>. Of course, with
-arithmentic <code>+</code> operation the result will be the same but that's not true for
+arithmetic <code>+</code> operation the result will be the same but that's not true for
 each operation. Anyway, parse trees will be different so some choice has to be
 made.</p>
-<p>In this situation associativity is used. Both <code>+</code> and <code>*</code> in arithmentic are
+<p>In this situation associativity is used. Both <code>+</code> and <code>*</code> in arithmetic are
 left associative (i.e. the operation is evaluated from left to right).</p>
 <pre><code>E: E &quot;*&quot; E {2, left};
 E: E &quot;+&quot; E {1, left};
@@ -299,6 +299,24 @@ E: E &quot;+&quot; E {1, left};
 3) + 5</code>.</p>
 <p>The associativity given in the grammar is either <code>left</code> or <code>right</code>. Default is
 no associativity, i.e. associativity is not used for disambiguation decision.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Alternatively, you can use keyword <code>shift</code> instead of <code>right</code> and <code>reduce</code>
+instead of <code>left</code>.</p>
+</div>
+<h3 id="nops-and-nopse"><code>nops</code> and <code>nopse</code><a class="headerlink" href="#nops-and-nopse" title="Permanent link">&para;</a></h3>
+<p>These two are not actual filters but markers used to
+disable <a href="../parser/#prefer_shifts"><code>prefer_shifts</code></a> (<code>nops</code>)
+and <a href="../parser/#prefer_shifts_over_empty"><code>prefer_shifts_over_empty</code></a> (<code>nopse</code>)
+set globally during parser construction on a production level. Productions using
+these markers are not influenced by global parser setting meaning that table
+construction will not eliminate possible reductions on these productions. Using
+these markers have sense only for GLR parsing as the LR deterministic parser
+can't be constructed anyway in case of conflicts.</p>
+<p>For example:</p>
+<pre><code>Statements: Statements1 {nops}
+          | EMPTY;
+</code></pre>
 <h3 id="prefer">prefer<a class="headerlink" href="#prefer" title="Permanent link">&para;</a></h3>
 <p>This disambiguation filter is applicable to terminal productions only. It will
 be used to choose the right recognizer/terminal in case

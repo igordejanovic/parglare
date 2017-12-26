@@ -108,6 +108,8 @@
                 
                     <li><a class="toctree-l4" href="#prefer_shifts">prefer_shifts</a></li>
                 
+                    <li><a class="toctree-l4" href="#prefer_shifts_over_empty">prefer_shifts_over_empty</a></li>
+                
                     <li><a class="toctree-l4" href="#error_recovery">error_recovery</a></li>
                 
                     <li><a class="toctree-l4" href="#start_production">start_production</a></li>
@@ -271,7 +273,7 @@ process matched layout (e.g. whitespaces, comments).</p>
 by grammar rule names.</p>
 <h2 id="ws">ws<a class="headerlink" href="#ws" title="Permanent link">&para;</a></h2>
 <p>This parameter specifies a string whose characters are considered to be
-whitespace. By default its value is <code>'\n\t '</code>. It is used
+whitespace. By default its value is <code>'\n\r\t '</code>. It is used
 if
 <a href="../grammar_language/#handling-whitespaces-and-comments-in-your-language">layout sub-grammar</a> (<code>LAYOUT</code>
 grammar rule) is not defined. If <code>LAYOUT</code> rule is given in the grammar it is
@@ -280,12 +282,31 @@ used instead and this parameter is ignored.</p>
 <p>A boolean whose default value is <code>False</code>. If set to <code>True</code> parser will call
 actions that will build the <a href="../parse_trees/">parse tree</a>.</p>
 <h2 id="prefer_shifts">prefer_shifts<a class="headerlink" href="#prefer_shifts" title="Permanent link">&para;</a></h2>
-<p>By default set to <code>False</code>. In case of <a href="../lr_parsing/">shift/reduce conflicts</a>
-this strategy would favor shift over reduce.</p>
+<p>By default set to <code>True</code> for LR parser and to <code>False</code> for GLR parser. In case
+of <a href="../lr_parsing/">shift/reduce conflicts</a> this strategy would favor shift
+over reduce. You can still
+use <a href="../disambiguation/#associativity">associativity rules</a> to decide per
+production.</p>
+<p>You can disable this rule on per-production basis by using <code>nops</code> on the
+production.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Do not use <code>prefer_shifts</code> if you don't understand the implications. Try to
 understand <a href="../lr_parsing/">conflicts</a> and
+<a href="../disambiguation/">resolution strategies</a>.</p>
+</div>
+<h2 id="prefer_shifts_over_empty">prefer_shifts_over_empty<a class="headerlink" href="#prefer_shifts_over_empty" title="Permanent link">&para;</a></h2>
+<p>By default set to <code>True</code> for LR parser and to <code>False</code> for GLR parser. In case
+of <a href="../lr_parsing/">shift/reduce conflicts</a> on empty reductions this strategy
+would favor shift over reduce. You can still
+use <a href="../disambiguation/#associativity">associativity rules</a> to decide per
+production.</p>
+<p>You can disable this rule on per-production basis by using <code>nopse</code> on the
+production.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not use <code>prefer_shifts_over_empty</code> if you don't understand the
+implications. Try to understand <a href="../lr_parsing/">conflicts</a> and
 <a href="../disambiguation/">resolution strategies</a>.</p>
 </div>
 <h2 id="error_recovery">error_recovery<a class="headerlink" href="#error_recovery" title="Permanent link">&para;</a></h2>

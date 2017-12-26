@@ -526,14 +526,17 @@ a: "a";
 </code></pre>
 <p>is equivalent to:</p>
 <pre><code>S: a_0;
-a_0: a_1 | EMPTY;
+a_0: a_1 {nops} | EMPTY;
 @collect
 a_1: a_1 a | a;
 a: "a";
 </code></pre>
-<p>So using of <code>*</code> creates both <code>a_0</code> and <code>a_1</code> rules.
-Action attached to <code>a_0</code> returns a list of matched <code>a</code> and empty list
-if no match is found.</p>
+<p>So using of <code>*</code> creates both <code>a_0</code> and <code>a_1</code> rules. Action attached to <code>a_0</code>
+returns a list of matched <code>a</code> and empty list if no match is found. Please note
+the <a href="../disambiguation/#nops-and-nopse">usage of <code>nops</code></a>. In case if
+<code>prefer_shift</code> strategy is used using <code>nops</code> will perform both REDUCE and SHIFT
+during GLR parsing in case what follows zero or more might be another element in
+the sequence. This is most of the time what you need.</p>
 </div>
 <p>Same as <code>one or more</code> this operator may use separator modifiers.</p>
 <div class="admonition note">
