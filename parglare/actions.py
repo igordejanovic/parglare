@@ -159,3 +159,30 @@ def obj(context, nodes, **attrs):
     instance._pg_end_position = context.end_position
 
     return instance
+
+
+def action_decorator():
+    """
+    Produces action decorator that will collect all decorated actions under
+    dictionary attribute `all`.
+    """
+    all = {}
+
+    def action(act_name=None):
+        def action_inner(f):
+            nonlocal act_name
+            if act_name is None:
+                act_name = f.__name__
+            actions = all.get(act_name, None)
+            if actions:
+                if type(actions) is list:
+                    actions.append(f)
+                else:
+                    all[act_name] = [actions, f]
+            else:
+                all[act_name] = f
+            return f
+        return action_inner
+
+    action.all = all
+    return action

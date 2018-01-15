@@ -91,6 +91,56 @@ elements are instances of `NodeNonTerm` and `NodeTerm` classes representing a
 non-terminals and terminals respectively.
 
 
+## `action` decorator
+
+You can use a special decorator factory `parglare.actions.action_decorator` to
+create decorator that can be used to collect all actions.
+
+```python
+from parglare.actions import action_decorator
+
+action = action_decorator()
+
+@action()
+def number(_, value):
+    return float(value)
+
+@action('E')
+def sum_act(_, nodes):
+    return nodes[0] + nodes[2]
+
+@action('E')
+def pass_act_E(_, nodes):
+    return nodes[0]
+
+@action()
+def T(_, nodes):
+    if len(nodes) == 3:
+        return nodes[0] * nodes[2]
+    else:
+        return nodes[0]
+
+@action('F')
+def parenthesses_act(_, nodes):
+    return nodes[1]
+
+@action('F')
+def pass_act_F(_, nodes):
+    return nodes[0]
+
+p = Parser(grammar, actions=action.all)
+```
+
+In the previous example `action` decorator is created using `action_decorator`
+factory. This decorator is parametrized where optional parameter is the name of
+the action. If the name is not given the name of the decorated function will be
+used. As you can see in the previous example, same name can be used multiple
+times (e.g. `E` for `sum_act` and `pass_act_E`). If same name is used multiple
+times all action functions will be collected as a list in the order of
+definition. Dictionary holding all actions for the created action decorator is
+`action.all`.
+
+
 ## Time of actions call
 
 In parglare actions can be called during parsing (i.e. on the fly) which you

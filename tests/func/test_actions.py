@@ -1,5 +1,6 @@
 import pytest  # noqa
 from parglare import Parser, NodeNonTerm
+from parglare.actions import action_decorator
 from .expression_grammar_numbers import get_grammar
 
 
@@ -59,3 +60,46 @@ def test_actions_manual():
 
     assert p.call_actions(result) == \
         34.7 + 78 * 34 + 89 + 12.223 * 4
+
+
+def test_action_decorator():
+    """
+    Test collecting actions using action decorator.
+    """
+
+    action = action_decorator()
+
+    @action()
+    def number(_, value):
+        return float(value)
+
+    @action('E')
+    def sum_act(_, nodes):
+        return nodes[0] + nodes[2]
+
+    @action('E')
+    def pass_act_E(_, nodes):
+        return nodes[0]
+
+    @action()
+    def T(_, nodes):
+        if len(nodes) == 3:
+            return nodes[0] * nodes[2]
+        else:
+            return nodes[0]
+
+    @action('F')
+    def parenthesses_act(_, nodes):
+        return nodes[1]
+
+    @action('F')
+    def pass_act_F(_, nodes):
+        return nodes[0]
+
+    grammar = get_grammar()
+    p = Parser(grammar, actions=action.all)
+
+    result = p.parse("""34.7+78*34 +89+
+    12.223*4""")
+
+    assert result == 34.7 + 78 * 34 + 89 + 12.223 * 4
