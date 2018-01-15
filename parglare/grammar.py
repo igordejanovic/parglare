@@ -566,7 +566,7 @@ class Grammar(object):
                 return p.prod_id
 
     @staticmethod
-    def _create_productions(productions, start_symbol=None):
+    def _create_productions(productions):
         """Creates Production instances from the list of productions given in
         the form:
         [LHS, RHS, optional ASSOC, optional PRIOR].
@@ -599,7 +599,7 @@ class Grammar(object):
 
     @staticmethod
     def from_struct(productions, start_symbol, recognizers=None):
-        return Grammar(Grammar._create_productions(productions, start_symbol),
+        return Grammar(Grammar._create_productions(productions),
                        start_symbol, recognizers=recognizers)
 
     @staticmethod
