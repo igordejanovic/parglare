@@ -169,10 +169,13 @@ def action_decorator():
     all = {}
 
     def action(act_name=None):
+        an = {0: act_name}
+
         def action_inner(f):
-            nonlocal act_name
-            if act_name is None:
+            if an[0] is None:
                 act_name = f.__name__
+            else:
+                act_name = an[0]
             actions = all.get(act_name, None)
             if actions:
                 if type(actions) is list:
