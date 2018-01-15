@@ -107,6 +107,8 @@
                 
                     <li><a class="toctree-l4" href="#custom-actions-and-built-in-actions">Custom actions and built-in actions</a></li>
                 
+                    <li><a class="toctree-l4" href="#action-decorator">action decorator</a></li>
+                
                     <li><a class="toctree-l4" href="#time-of-actions-call">Time of actions call</a></li>
                 
                     <li><a class="toctree-l4" href="#the-context-object">The Context object</a></li>
@@ -314,6 +316,51 @@ effectively producing nested lists. If we set <code>build_tree</code> parameter 
 parser to <code>True</code> the parser will produce a <a href="../parse_trees/">parse tree</a> whose
 elements are instances of <code>NodeNonTerm</code> and <code>NodeTerm</code> classes representing a
 non-terminals and terminals respectively.</p>
+<h2 id="action-decorator"><code>action</code> decorator<a class="headerlink" href="#action-decorator" title="Permanent link">&para;</a></h2>
+<p>You can use a special decorator factory <code>parglare.actions.action_decorator</code> to
+create decorator that can be used to collect all actions.</p>
+<pre><code class="python">from parglare.actions import action_decorator
+
+action = action_decorator()
+
+@action()
+def number(_, value):
+    return float(value)
+
+@action('E')
+def sum_act(_, nodes):
+    return nodes[0] + nodes[2]
+
+@action('E')
+def pass_act_E(_, nodes):
+    return nodes[0]
+
+@action()
+def T(_, nodes):
+    if len(nodes) == 3:
+        return nodes[0] * nodes[2]
+    else:
+        return nodes[0]
+
+@action('F')
+def parenthesses_act(_, nodes):
+    return nodes[1]
+
+@action('F')
+def pass_act_F(_, nodes):
+    return nodes[0]
+
+p = Parser(grammar, actions=action.all)
+</code></pre>
+
+<p>In the previous example <code>action</code> decorator is created using <code>action_decorator</code>
+factory. This decorator is parametrized where optional parameter is the name of
+the action. If the name is not given the name of the decorated function will be
+used. As you can see in the previous example, same name can be used multiple
+times (e.g. <code>E</code> for <code>sum_act</code> and <code>pass_act_E</code>). If same name is used multiple
+times all action functions will be collected as a list in the order of
+definition. Dictionary holding all actions for the created action decorator is
+<code>action.all</code>.</p>
 <h2 id="time-of-actions-call">Time of actions call<a class="headerlink" href="#time-of-actions-call" title="Permanent link">&para;</a></h2>
 <p>In parglare actions can be called during parsing (i.e. on the fly) which you
 could use if you want to transform input immediately without building the parse
