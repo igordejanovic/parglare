@@ -314,7 +314,7 @@ def merge_states(old_state, new_state):
     not done if it would add R/R conflict.
     """
 
-    # If states are not equal (e.g. have the same kernel items)
+    # If states are not equal (i.e. have the same kernel items)
     # no merge is possible
     if old_state != new_state:
         return False
