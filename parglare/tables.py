@@ -326,7 +326,6 @@ def merge_states(old_state, new_state):
 
     # Check if merging would result in additional R/R conflict
     for old, new in item_pairs:
-        (new.follow.difference(old.follow))
         for s in (s for s in old_state.kernel_items
                   if s.is_at_end and s is not old):
             if s.follow.intersection(
