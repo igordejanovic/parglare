@@ -506,9 +506,11 @@ comments like the one used in the grammar language itself:
       NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
 
 !!! note
-    If `LAYOUT` is provided it *must* match between any two tokens including the
-    beginning and end of the input. If layout is optional be sure to include
-    `EMPTY` as one of its alternatives like in the previous examples.
+    If `LAYOUT` is provided it *must* match before the first token, between any
+    two tokens in the input, and after the last token. If layout cannot be
+    empty, the input cannot start or end with a token. If this is not desired,
+    make sure to include `EMPTY` in the layout as one of its alternatives like
+    in the previous examples.
 
 
 ## Handling keywords in your language
