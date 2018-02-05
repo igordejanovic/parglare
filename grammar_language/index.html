@@ -646,6 +646,12 @@ comments like the one used in the grammar language itself:</p>
   CorNC: Comment | NotComment | WS;
   NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
 </code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code>LAYOUT</code> is provided it <em>must</em> match between any two tokens including the
+beginning and end of the input. If layout is optional be sure to include
+<code>EMPTY</code> as one of its alternatives like in the previous examples.</p>
+</div>
 <h2 id="handling-keywords-in-your-language">Handling keywords in your language<a class="headerlink" href="#handling-keywords-in-your-language" title="Permanent link">&para;</a></h2>
 <p>By default parser will match given string recognizer even if it is part of some
 larger word, i.e. it will not require matching on the word boundary. This is not
