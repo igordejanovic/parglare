@@ -814,9 +814,9 @@ class NodeTerm(Node):
 
     def tree_str(self, depth=0):
         return '{}[{}->{}, "{}"]'.format(self.symbol,
-                                     self.start_position,
-                                     self.end_position,
-                                     self.value)
+                                         self.start_position,
+                                         self.end_position,
+                                         self.value)
 
     def __str__(self):
         return '<Term(start={}, end={}, sym={}, val="{}")>'\
