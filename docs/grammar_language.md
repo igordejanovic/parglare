@@ -505,6 +505,11 @@ comments like the one used in the grammar language itself:
       CorNC: Comment | NotComment | WS;
       NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
 
+!!! note
+    If `LAYOUT` is provided it *must* match between any two tokens including the
+    beginning and end of the input. If layout is optional be sure to include
+    `EMPTY` as one of its alternatives like in the previous examples.
+
 
 ## Handling keywords in your language
 
