@@ -648,9 +648,11 @@ comments like the one used in the grammar language itself:</p>
 </code></pre>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If <code>LAYOUT</code> is provided it <em>must</em> match between any two tokens including the
-beginning and end of the input. If layout is optional be sure to include
-<code>EMPTY</code> as one of its alternatives like in the previous examples.</p>
+<p>If <code>LAYOUT</code> is provided it <em>must</em> match before the first token, between any
+two tokens in the input, and after the last token. If layout cannot be
+empty, the input cannot start or end with a token. If this is not desired,
+make sure to include <code>EMPTY</code> in the layout as one of its alternatives like
+in the previous examples.</p>
 </div>
 <h2 id="handling-keywords-in-your-language">Handling keywords in your language<a class="headerlink" href="#handling-keywords-in-your-language" title="Permanent link">&para;</a></h2>
 <p>By default parser will match given string recognizer even if it is part of some
