@@ -1,5 +1,8 @@
 import sys
-import click
+try:
+    import click
+except ImportError:
+    click = None
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -14,11 +17,14 @@ S_EMPH = {'fg': 'yellow'}
 
 
 def prints(message, s={}):
-    click.echo(style(message, s), color=colors)
+    if click:
+        click.echo(style(message, s), color=colors)
+    else:
+        print(message)
 
 
 def style_message(message, style):
-    if colors:
+    if colors and click:
         return click.style(message, **style)
     else:
         return message
