@@ -388,6 +388,24 @@ Same as `one or more` this operator may use separator modifiers.
     matched `a` and empty list if no match is found.
 
 
+## Special built-in rules
+
+There are two special rules your can reference in your grammars: `EMPTY` and
+`EOF`. `EMPTY` rule will reduce without consuming any input and will always
+succeed, i.e. it is empty recognition. `EOF` rule will match only at the end of
+the input.
+
+!!! note
+    parglare doesn't assume that parse should be complete, i.e. that the whole
+    input should be consumed. Thus, if you want to ensure that the whole input
+    is consumed you must match `EOF` at the end of your input.
+
+    Example:
+
+        MyFile: SomeRootRule EOF;
+        SomeRootRule: ...
+
+
 ## Named matches (*assignments*)
 
 In section on [actions](./actions.md) you can see that semantic action (Python
