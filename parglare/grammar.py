@@ -143,6 +143,15 @@ class StringRecognizer(Recognizer):
             if in_str[pos:pos+len(self.value)] == self.value_cmp:
                 return self.value
 
+def esc_control_characters(regex):
+    """
+    Escape control characters in regular expressions.
+    """
+    unescapes = [('\a', r'\a'), ('\b', r'\b'), ('\f', r'\f'), ('\n', r'\n'),
+                 ('\r', r'\r'), ('\t', r'\t'), ('\v', r'\v')]
+    for val, text in unescapes:
+        regex = regex.replace(val, text)
+    return regex
 
 class RegExRecognizer(Recognizer):
     def __init__(self, regex, re_flags=re.MULTILINE, ignore_case=False):
@@ -152,7 +161,12 @@ class RegExRecognizer(Recognizer):
         if ignore_case:
             re_flags |= re.IGNORECASE
         self.re_flags = re_flags
-        self.regex = re.compile(self._regex, re_flags)
+        try:
+            self.regex = re.compile(self._regex, re_flags)
+        except re.error as ex:
+            regex = esc_control_characters(self._regex)
+            message = 'Regex compile error in /{}/ (report: "{}")'
+            raise GrammarError(message.format(regex, str(ex)))
 
     def __call__(self, in_str, pos):
         m = self.regex.match(in_str, pos)
