@@ -707,10 +707,11 @@ class GLRParser(Parser):
 
     @no_colors
     def _trace_step_kill(self, from_head):
-        self.dot_trace += '{}_killed [shape="diamond" label="killed"];\n'\
+        self.dot_trace += \
+            '{}_killed [shape="diamond" fillcolor="red" label="killed"];\n'\
             .format(from_head.key)
-        self.dot_trace += '{} -> {}_killed;\n'\
-            .format(from_head.key, from_head.key)
+        self.dot_trace += '{} -> {}_killed [{}];\n'\
+            .format(from_head.key, from_head.key, TRACE_DOT_STEP_STYLE)
 
     @no_colors
     def _trace_step_drop(self, from_head, to_head):
