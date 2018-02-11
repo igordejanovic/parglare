@@ -931,6 +931,8 @@ def act_production_rule(context, nodes):
                 attrs[a.name] = PGAttribute(a.name, a.multiplicity,
                                             a.orig_symbol.name)
             # TODO: check/handle multiple assignments to the same attribute
+            #       If a single production have multiple assignment of the
+            #       same attribute, multiplicity must be set to many.
 
     # If named matches are used create Python class that will be used
     # for object instantiation.
@@ -971,9 +973,11 @@ def act_production_rule(context, nodes):
 
         ParglareClass.__name__ = str(name)
         if name in context.classes:
-            raise GrammarError('Multiple definition for Rule/Class "{}"'
-                               .format(name))
-        context.classes[name] = ParglareClass
+            # If rule has multiple definition merge attributes.
+            context.classes[name]._pg_attrs.update(attrs)
+        else:
+            context.classes[name] = ParglareClass
+
         symbol.action_name = 'obj'
 
     return prods
