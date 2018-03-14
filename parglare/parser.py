@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 import codecs
 import sys
-from .grammar import EMPTY, EOF, STOP
+from .grammar import Terminal, EMPTY, EOF, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
@@ -134,6 +134,19 @@ class Parser(object):
                     'doesn\'t exists in parglare common actions and '
                     'is not provided using "actions" parameter.'
                     .format(symbol.action_name, symbol.name))
+
+            # Some sanity checks for actions
+            if type(symbol.action) is list:
+                if type(symbol) is Terminal:
+                    raise ParserInitError(
+                        'Cannot use a list of actions for '
+                        'terminal "{}".'.format(symbol.name))
+                else:
+                    if len(symbol.action) != len(symbol.productions):
+                        raise ParserInitError(
+                            'Lenght of list of actions must match the '
+                            'number of productions for non-terminal '
+                            '"{}".'.format(symbol.name))
 
     def print_debug(self):
         if self.layout and self.debug_layout:

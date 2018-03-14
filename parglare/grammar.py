@@ -75,7 +75,15 @@ class GrammarSymbol(object):
 
 
 class NonTerminal(GrammarSymbol):
-    pass
+    """Represents a non-termial symbol of the grammar.
+
+    Attributes:
+    productions(list of Production): A list of alternative productions for
+        this NonTerminal.
+    """
+    def __init__(self, name, productions=None):
+        super(NonTerminal, self).__init__(name)
+        self.productions = productions if productions else []
 
 
 class Terminal(GrammarSymbol):
@@ -474,8 +482,13 @@ class Grammar(object):
         rec_to_term = {}
 
         for idx, p in enumerate(self.productions):
+
             if p.symbol.name in self._by_name:
                 p.symbol = self._by_name[p.symbol.name]
+
+            if type(p.symbol) is NonTerminal:
+                p.symbol.productions.append(p)
+
             for idx_ref, ref in enumerate(p.rhs):
                 ref_sym = None
                 if ref.name in self._by_name:

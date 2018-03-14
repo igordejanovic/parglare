@@ -1,5 +1,6 @@
 import pytest  # noqa
-from parglare import Parser, NodeNonTerm
+from parglare import Grammar, Parser, NodeNonTerm
+from parglare.exceptions import ParserInitError
 from parglare.actions import action_decorator
 from .expression_grammar_numbers import get_grammar
 
@@ -60,6 +61,64 @@ def test_actions_manual():
 
     assert p.call_actions(result) == \
         34.7 + 78 * 34 + 89 + 12.223 * 4
+
+
+def test_action_list_assigned_to_terminal():
+    """
+    Test that list of actions can't be assigned to a Terminal.
+    """
+    grammar = '''
+    S: A+;
+    A: 'a';
+    '''
+    g = Grammar.from_string(grammar)
+
+    def some_action(_, nodes):
+        return nodes[0]
+
+    actions = {
+        'S': some_action,
+        'A': [some_action, some_action]
+    }
+
+    with pytest.raises(ParserInitError,
+                       match=r'Cannot use a list of actions for terminal.*'):
+        Parser(g, actions=actions)
+
+
+def test_invalid_number_of_actions():
+    """
+    Test that parser error is raised if rule is given list of actions
+    where there is less/more actions than rule productions.
+    """
+    grammar = '''
+    S: A+ | B+;
+    A: 'a';
+    B: 'b';
+    '''
+    g = Grammar.from_string(grammar)
+
+    def some_action(_, nodes):
+        return nodes[0]
+
+    actions = {
+        'S': [some_action, some_action]
+    }
+    Parser(g, actions=actions)
+
+    actions = {
+        'S': [some_action]
+    }
+    with pytest.raises(ParserInitError,
+                       match=r'Lenght of list of actions must match.*'):
+        Parser(g, actions=actions)
+
+    actions = {
+        'S': [some_action, some_action, some_action]
+    }
+    with pytest.raises(ParserInitError,
+                       match=r'Lenght of list of actions must match.*'):
+        Parser(g, actions=actions)
 
 
 def test_action_decorator():
