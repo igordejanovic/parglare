@@ -120,11 +120,15 @@ class Reference(object):
     A name reference to a GrammarSymbol used for cross-resolving during
     grammar construction.
     """
-    def __init__(self, name):
+    def __init__(self, name, module_name=None):
         self.name = name
+        self.module_name = module_name
 
     def __repr__(self):
-        return self.name
+        if self.module_name:
+            return "{}.{}".format(self.module_name, self.name)
+        else:
+            return self.name
 
 
 class Recognizer(object):
@@ -151,6 +155,7 @@ class StringRecognizer(Recognizer):
             if in_str[pos:pos+len(self.value)] == self.value_cmp:
                 return self.value
 
+
 def esc_control_characters(regex):
     """
     Escape control characters in regular expressions.
@@ -160,6 +165,7 @@ def esc_control_characters(regex):
     for val, text in unescapes:
         regex = regex.replace(val, text)
     return regex
+
 
 class RegExRecognizer(Recognizer):
     def __init__(self, regex, re_flags=re.MULTILINE, ignore_case=False):
@@ -332,25 +338,28 @@ class Grammar(object):
     First production is reserved for the augmented production (S' -> S).
 
     Attributes:
-    productions (list of Production):
+    imports(dict {name -> Grammar}): Imported grammars.
+    productions (list of Production): A list of Production instances.
     root_symbol (GrammarSymbol): start/root symbol of the grammar.
-    recognizers (dict of callables): A set of Python callables used as a
+    recognizers (dict of callables): A dict of Python callables used as a
         terminal recognizers not specified in the grammar.
     nonterminals (set of NonTerminal):
     terminals(set of Terminal):
 
     """
 
-    def __init__(self, productions, root_symbol=None, recognizers=None,
-                 _no_check_recognizers=False):
+    def __init__(self, imports, productions, root_symbol=None,
+                 recognizers=None, _no_check_recognizers=False):
         """
+        Grammar constructor is not meant to be called directly by the user.
+        See `from_str` and `from_file` static methods instead.
+
         Arguments:
-        productions (list): A list of Production instances.
-        root_symbol (GrammarSymbol): The root of the grammar (start symbol).
-        recognizers (dict): A dict of user supplied recognizers.
+        see Grammar attributes.
         _no_check_recognizers (bool, internal): Used by pglr tool to circumvent
              errors for empty recognizers that will be provided in user code.
         """
+        self.imports = imports
         self.productions = productions
         self.root_symbol = \
             root_symbol if root_symbol else productions[0].symbol
@@ -593,40 +602,8 @@ class Grammar(object):
                 return p.prod_id
 
     @staticmethod
-    def _create_productions(productions):
-        """Creates Production instances from the list of productions given in
-        the form:
-        [LHS, RHS, optional ASSOC, optional PRIOR].
-        Where LHS is grammar symbol and RHS is a list or tuple of grammar
-        symbols from the right-hand side of the production.
-        """
-        gp = []
-        for p in productions:
-            assoc = ASSOC_NONE
-            prior = DEFAULT_PRIORITY
-            symbol = p[0]
-            if not isinstance(symbol, NonTerminal):
-                raise GrammarError("Invalid production symbol '{}' "
-                                   "for production '{}'".format(symbol,
-                                                                text(p)))
-            rhs = ProductionRHS(p[1])
-            if len(p) > 2:
-                assoc = p[2]
-            if len(p) > 3:
-                prior = p[3]
-
-            # Convert strings to Terminals with string recognizers
-            for idx, t in enumerate(rhs):
-                if isinstance(t, text):
-                    rhs[idx] = Terminal(t)
-
-            gp.append(Production(symbol, rhs, assoc=assoc, prior=prior))
-
-        return gp
-
-    @staticmethod
     def from_struct(productions, start_symbol, recognizers=None):
-        return Grammar(Grammar._create_productions(productions),
+        return Grammar(create_productions(productions),
                        start_symbol, recognizers=recognizers)
 
     @staticmethod
@@ -638,8 +615,12 @@ class Grammar(object):
         context.re_flags = re_flags
         context.ignore_case = ignore_case
         context.classes = {}
-        g = Grammar(get_grammar_parser(debug_parse, debug_colors)
-                    .parse(grammar_str, context=context),
+        imports, productions = \
+            get_grammar_parser(debug_parse, debug_colors).parse(
+                grammar_str, context=context)
+        if imports:
+            raise GrammarError('Imports can be used only in file grammars.')
+        g = Grammar(imports, productions,
                     recognizers=recognizers,
                     _no_check_recognizers=_no_check_recognizers)
         g.classes = context.classes
@@ -657,8 +638,12 @@ class Grammar(object):
         context.re_flags = re_flags
         context.ignore_case = ignore_case
         context.classes = {}
-        g = Grammar(get_grammar_parser(debug_parse, debug_colors).parse_file(
-            file_name, context=context), recognizers=recognizers,
+        imports, productions = \
+            get_grammar_parser(debug_parse, debug_colors).parse_file(
+                file_name, context=context)
+        # TODO: Resolve imports
+
+        g = Grammar(imports, productions, recognizers=recognizers,
                     _no_check_recognizers=_no_check_recognizers)
         g.classes = context.classes
         termui.colors = debug_colors
@@ -678,6 +663,83 @@ class Grammar(object):
             prints(text(p))
 
 
+class PGFile(object):
+    """Objects of this class represent parglare grammar files.
+
+    Grammar files can be imported using `import` keyword. Rules referenced from
+    the imported grammar must be fully qualified by the grammar module name. By
+    default the name of the target .pg file is the name of the module. `as`
+    keyword can be used to override the default.
+
+    Example:
+    ```
+    import `some/path/mygrammar.pg` as target
+    ```
+
+    Rules from file `mygrammar.pg` will be available under `target` namespace:
+
+    ```
+    MyRule: target.someRule+;
+    ```
+
+    Actions are by default loaded from the file named `<grammar>_actions.py`
+    where `grammr` is basename of grammar file. Recognizers are loaded from
+    `<grammar>_recognizers.py`. Actions and recognizers given this way are both
+    optional. Furthermore, both actions and recognizers can be overriden by
+    supplying actions and/or recognizers dict during grammar/parser
+    instantiation.
+
+    Attributes:
+
+    file_name (str): An absolute path to the .pg file.
+    imports (dict): Mapping imported module/file local name to PGFile object.
+    productions (list of Production):
+    nonterminals (dict): local name -> NonTerminal
+    terminal (dict): local name -> Terminal
+
+    """
+    def __init__(self, file_name, imports, productions):
+        self.file_name = file_name
+        self.imports = imports
+        self.productions = create_productions(productions)
+        self.extract_symbols()
+
+    def extract_symbols(self):
+        """Extract non-terminals and terminals defined in this file."""
+
+
+def create_productions(productions):
+    """Creates Production instances from the list of productions given in
+    the form:
+    [LHS, RHS, optional ASSOC, optional PRIOR].
+    Where LHS is grammar symbol and RHS is a list or tuple of grammar
+    symbols from the right-hand side of the production.
+    """
+    gp = []
+    for p in productions:
+        assoc = ASSOC_NONE
+        prior = DEFAULT_PRIORITY
+        symbol = p[0]
+        if not isinstance(symbol, NonTerminal):
+            raise GrammarError("Invalid production symbol '{}' "
+                               "for production '{}'".format(symbol,
+                                                            text(p)))
+        rhs = ProductionRHS(p[1])
+        if len(p) > 2:
+            assoc = p[2]
+        if len(p) > 3:
+            prior = p[3]
+
+        # Convert strings to Terminals with string recognizers
+        for idx, t in enumerate(rhs):
+            if isinstance(t, text):
+                rhs[idx] = Terminal(t)
+
+        gp.append(Production(symbol, rhs, assoc=assoc, prior=prior))
+
+    return gp
+
+
 def check_name(context, name):
     """
     Used in actions to check for reserved names usage.
@@ -692,7 +754,9 @@ def check_name(context, name):
 
 # Grammar for grammars
 
-(GRAMMAR,
+(PGFILE,
+ IMPORTS,
+ IMPORT,
  RULES,
  RULE,
  PRODUCTION_RULE,
@@ -726,7 +790,9 @@ def check_name(context, name):
  COMMENT,
  CORNC,
  CORNCS) = [NonTerminal(name) for name in [
-     'Grammar',
+     'PGFile',
+     'Imports',
+     'Import',
      'Rules',
      'Rule',
      'ProductionRule',
@@ -782,7 +848,12 @@ def check_name(context, name):
                 ]]
 
 pg_productions = [
-    [GRAMMAR, [RULES, EOF]],
+    [PGFILE, [RULES, EOF]],
+    [PGFILE, [IMPORTS, RULES, EOF]],
+    [IMPORTS, [IMPORTS, IMPORT]],
+    [IMPORTS, [IMPORT]],
+    [IMPORT, ['import', STR_TERM, ';']]
+    [IMPORT, ['import', STR_TERM, 'as', NAME, ';']]
     [RULES, [RULES, RULE]],
     [RULES, [RULE]],
     [RULE, [PRODUCTION_RULE]],
@@ -876,7 +947,7 @@ def get_grammar_parser(debug, debug_colors):
     global grammar_parser
     if not grammar_parser:
         from parglare import Parser
-        grammar_parser = Parser(Grammar.from_struct(pg_productions, GRAMMAR),
+        grammar_parser = Parser(Grammar.from_struct(pg_productions, PGFILE),
                                 actions=pg_actions, debug=debug,
                                 debug_colors=debug_colors)
     EMPTY.action = pass_none
@@ -884,12 +955,15 @@ def get_grammar_parser(debug, debug_colors):
     return grammar_parser
 
 
-def act_grammar(context, nodes):
-    productions = nodes[0]
+def act_pgfile(context, nodes):
+    if len(nodes) > 1:
+        imports, productions = nodes
+    else:
+        imports, productions = [], nodes[0]
     if hasattr(context, 'new_productions'):
         for _, (nt, prods) in context.new_productions.items():
             productions.extend(prods)
-    return productions
+    return [imports, productions]
 
 
 def act_rules(_, nodes):
@@ -1234,7 +1308,7 @@ def act_recognizer_regex(context, nodes):
 
 
 pg_actions = {
-    "Grammar": act_grammar,
+    "PGFile": act_pgfile,
     "Rules": [act_rules, pass_single],
     "Rule": [pass_single,
              act_rule_with_action,
