@@ -1,7 +1,7 @@
 include AUTHORS.md
 
 include CONTRIBUTING.md
-include HISTORY.rst
+include HISTORY.md
 include LICENSE
 include README.rst
 

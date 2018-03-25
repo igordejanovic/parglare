@@ -1,5 +1,4 @@
-History
--------
+# History
 
 - 2018-03-25 Version 0.5
   - Added file_name to the parse context.
@@ -35,7 +34,6 @@ History
 - 2017-10-18 Version 0.4.1
   - Fix in GLR parser. Parser reference not set on the parser context.
 
-
 - 2017-10-18 Version 0.4
   - Added regex-like syntax extension for grammar language (`?`, `*`, `+`).
     Issue: https://github.com/igordejanovic/parglare/issues/3
@@ -61,7 +59,6 @@ History
   - Various bugfixes + tests.
 
 - 2017-08-24 Version 0.3
-
   - Dynamic disambiguation filters. Introducing `dynamic` disambiguation rule in
     the grammar.
   - Terminal definitions with empty bodies.
@@ -73,7 +70,6 @@ History
   - Fixing GLR trace visualization.
 
 - 2017-08-09 Version 0.2
-
   - GLR parsing. Support for epsilon grammars, cyclic grammars and grammars with
     infinite ambiguity.
   - Lexical recognizers. Parsing the stream of arbitrary objects.
@@ -91,7 +87,6 @@ History
   - Various optimizations and bug fixes.
 
 - 2017-02-02 - Version 0.1
-
   - Textual syntax for grammar specification. Parsed with parglare.
   - SLR and LALR tables calculation (LALR is the default)
   - Scannerless LR(1) parsing
