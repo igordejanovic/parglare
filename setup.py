@@ -5,7 +5,7 @@ import sys
 import codecs
 from setuptools import setup
 
-VERSION = '0.5.dev'
+VERSION = '0.5'
 
 README = codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
                      'r', encoding='utf-8').read()
