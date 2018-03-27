@@ -561,16 +561,14 @@ class Grammar(object):
 
         # Change each string recognizer corresponding to the KEYWORD
         # regex by the regex recognizer that match on word boundaries.
-        for prod in self:
-            if isinstance(prod, Terminal):
-                term = prod
-                if isinstance(term.recognizer, StringRecognizer):
-                    match = keyword_rec(term.recognizer.value, 0)
-                    if match == term.recognizer.value:
-                        term.recognizer = RegExRecognizer(
-                            r'\b{}\b'.format(match),
-                            ignore_case=term.recognizer.ignore_case)
-                        term.keyword = True
+        for term in self.terminals:
+            if isinstance(term.recognizer, StringRecognizer):
+                match = keyword_rec(term.recognizer.value, 0)
+                if match == term.recognizer.value:
+                    term.recognizer = RegExRecognizer(
+                        r'\b{}\b'.format(match),
+                        ignore_case=term.recognizer.ignore_case)
+                    term.keyword = True
 
     def get_terminal(self, name):
         "Returns terminal with the given name."
