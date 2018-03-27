@@ -547,7 +547,7 @@ class Grammar(object):
     def _fix_keyword_terminals(self):
         """
         If KEYWORD terminal with regex match is given fix all matching string
-        recognizers to match on word boundary.
+        recognizers to match on a word boundary.
         """
         keyword_term = self.get_terminal('KEYWORD')
         if keyword_term is None:
@@ -603,6 +603,7 @@ class Grammar(object):
 
     @staticmethod
     def from_struct(productions, start_symbol, recognizers=None):
+        """Used internally to bootstrap grammar file parser."""
         return Grammar(create_productions(productions),
                        start_symbol, recognizers=recognizers)
 
@@ -747,7 +748,7 @@ def check_name(context, name):
 
     if name in RESERVED_SYMBOL_NAMES:
             from parglare.parser import pos_to_line_col
-            raise GrammarError('Rule name "{}" is reserved at {}.'.format(
+            raise GrammarError('Rule name "{}" at {} is reserved.'.format(
                 name, pos_to_line_col(context.input_str,
                                       context.start_position)))
 
