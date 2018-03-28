@@ -393,19 +393,7 @@ class Grammar(object):
 
         # Connect recognizers, override grammar provided
         if not self._no_check_recognizers:
-            for term in self.terminals:
-                if not self.recognizers and term.recognizer is None:
-                    raise GrammarError(
-                        'Terminal "{}" has no recognizer defined '
-                        'and no recognizers are given during grammar '
-                        'construction.'.format(term.name))
-                if term.name not in self.recognizers:
-                    if term.recognizer is None:
-                        raise GrammarError(
-                            'Terminal "{}" has no recognizer defined.'
-                            .format(term.name))
-                else:
-                    term.recognizer = self.recognizers[term.name]
+            self._check_connect_recognizers()
 
         self._resolve_references()
 
@@ -422,8 +410,10 @@ class Grammar(object):
         self._fix_keyword_terminals()
 
     def _collect_grammar_symbols(self):
-        """
-        Collect all terminal and non-terminal symbols from LHS of productions.
+        """Collect all terminal and non-terminal symbols from LHS of productions.
+        Create _by_name dict (names->symbol) and _rec_to_named_term dict (str
+        value -> terminal)
+
         """
         self._by_name = {}
         # mapping recognizer value -> Terminal
@@ -459,6 +449,21 @@ class Grammar(object):
                               if isinstance(x, Terminal)])
         self.nonterminals = set([x for x in self._by_name.values()
                                  if isinstance(x, NonTerminal)])
+
+    def _check_connect_recognizers(self):
+        for term in self.terminals:
+            if not self.recognizers and term.recognizer is None:
+                raise GrammarError(
+                    'Terminal "{}" has no recognizer defined '
+                    'and no recognizers are given during grammar '
+                    'construction.'.format(term.name))
+            if term.name not in self.recognizers:
+                if term.recognizer is None:
+                    raise GrammarError(
+                        'Terminal "{}" has no recognizer defined.'
+                        .format(term.name))
+            else:
+                term.recognizer = self.recognizers[term.name]
 
     def _resolve_action(self, old_symbol, new_symbol):
         """
