@@ -350,10 +350,11 @@ class Grammar(object):
 
     """
 
-    def __init__(self, grammar_file=None, grammar_str=None, start_symbol=None,
-                 recognizers=None, _no_check_recognizers=False,
-                 re_flags=re.MULTILINE, ignore_case=False, debug=False,
-                 debug_parse=False, debug_colors=False):
+    def __init__(self, grammar_file=None, grammar_str=None, productions=None,
+                 start_symbol=None, recognizers=None,
+                 _no_check_recognizers=False, re_flags=re.MULTILINE,
+                 ignore_case=False, debug=False, debug_parse=False,
+                 debug_colors=False):
         """
         Grammar constructor is not meant to be called directly by the user.
         See `from_str` and `from_file` static methods instead.
@@ -363,7 +364,8 @@ class Grammar(object):
         _no_check_recognizers (bool, internal): Used by pglr tool to circumvent
              errors for empty recognizers that will be provided in user code.
         """
-        if grammar_file is None and grammar_str is None:
+        if grammar_file is None and grammar_str is None \
+           and productions is None:
             raise GrammarError(
                 'Either grammar file or grammar string should be given.')
         self.recognizers = recognizers if recognizers else {}
@@ -378,9 +380,15 @@ class Grammar(object):
         if grammar_str:
             self.root_file = \
                 grammar_parser.parse(grammar_str, context=context)
-        else:
+            self.productions = self.root_file.productions
+        elif grammar_file:
             self.root_file = \
                 grammar_parser.parse_file(grammar_file, context=context)
+            # We are copying productions list as we might extend the list due
+            # to imports.
+            self.productions = list(self.root_file.productions)
+        else:
+            self.productions = productions
 
         if grammar_str is not None and self.root_file.imports:
             raise GrammarError('Imports can be used only in file grammars.')
