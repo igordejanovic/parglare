@@ -341,7 +341,8 @@ class Grammar(object):
     Attributes:
     imports(dict {name -> Grammar}): Imported grammars.
     productions (list of Production): A list of Production instances.
-    start_symbol (GrammarSymbol): start/root symbol of the grammar.
+    start_symbol (GrammarSymbol or str): start/root symbol of the grammar or
+        its name.
     recognizers (dict of callables): A dict of Python callables used as a
         terminal recognizers not specified in the grammar.
     nonterminals (set of NonTerminal):
@@ -383,10 +384,18 @@ class Grammar(object):
 
         if grammar_str is not None and self.root_file.imports:
             raise GrammarError('Imports can be used only in file grammars.')
-        if self.start_symbol:
-            if isinstance(self.start_symbol, text)
-        self.start_symbol = \
-            start_symbol if start_symbol else self.productions[0].symbol
+
+        # First
+        if start_symbol:
+            if isinstance(start_symbol, str):
+                for p in self.productions:
+                    if p.symbol.name == start_symbol:
+                        self.start_symbol = p.symbol
+            else:
+                self.start_symbol = start_symbol
+        else:
+            # By default, first production symbol is the start symbol.
+            self.start_symbol = self.productions[0].symbol
 
         self._init_grammar()
         self.classes = context.classes
