@@ -139,3 +139,8 @@ class SRConflicts(LRConflicts):
 
 class RRConflicts(LRConflicts):
     kind = "Reduce/Reduce"
+
+
+class ResolveError(Exception):
+    "Error raised during resolving for invalid reference."
+    pass

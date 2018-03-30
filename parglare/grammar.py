@@ -5,7 +5,7 @@ import sys
 import re
 import itertools
 from parglare.six import add_metaclass
-from parglare.exceptions import GrammarError
+from parglare.exceptions import GrammarError, ResolveError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
@@ -415,6 +415,35 @@ class PGFile(object):
             self._resolve_action(p.symbol, new_symbol)
             self.symbols_by_name[new_symbol.name] = new_symbol
 
+    def resolve(self, symbol_name):
+        """Resolves given symbol by its name.
+
+        For local name search this file, for FQN use imports and delegate to
+        imported file.
+
+        On each resolved symbol productions in the root file are updated.
+
+        """
+        imported_pg_name = None
+        if '.' in symbol_name:
+            imported_pg_name, name = symbol_name.split('.')
+
+        if imported_pg_name and imported_pg_name in self.imports:
+            imported_pg_file = self.imports[imported_pg_name]
+            try:
+                symbol = imported_pg_file.resolve(name)
+            except ResolveError:
+                raise GrammarError('Unexisting symbol "{}"{}.'
+                                   .format(symbol_name),
+                                   ' referenced from file "{}".'
+                                   .format(self.file_path)
+                                   if self.file_path else "")
+        else:
+            if name in self.symbols_by_name:
+                return self.symbol_by_name[name]
+            else:
+                raise ResolveError()
+
 
 class Grammar(PGFile):
     """
@@ -424,6 +453,7 @@ class Grammar(PGFile):
     Attributes:
     start_symbol (GrammarSymbol or str): start/root symbol of the grammar or
         its name.
+    files (dict): A global registry of PGFile instances keyed by abs path.
     nonterminals (set of NonTerminal):
     terminals(set of Terminal):
 
@@ -448,6 +478,9 @@ class Grammar(PGFile):
                                       recognizers=recognizers)
 
         self._no_check_recognizers = _no_check_recognizers
+
+        if file_path is not None:
+            self.files = {file_path: self}
 
         # Determine start symbol. If name is provided search for it. If name is
         # not given use the first production LHS symbol as the start symbol.
@@ -764,13 +797,6 @@ class Grammar(PGFile):
             prints(text(p))
 
 
-class PGFiles(dict):
-    """
-    A collection of .pg files (PGFile instances) keyed by absolute file path.
-    In charge of lazy loading/parsing of .pg files.
-    """
-
-
 class PGFileImport(object):
     """
     Represents import of grammar file.
@@ -781,10 +807,29 @@ class PGFileImport(object):
     pg_file (PGFile instance or None):
 
     """
-    def __init__(self, pg_files, file_path):
-        self.pg_files = pg_files
+    def __init__(self, file_path, root_file):
         self.file_path = file_path
-        self._pg_file = None
+        self.root_file = root_file
+        self.pgfile = None
+
+    def resolve(self, symbol_name):
+        "Resolves symbol from the imported file."
+
+        if self.pgfile is None:
+            # First search the global registry of imported files.
+            if self.file_path in self.root_file.files:
+                self.pgfile = self.root_file.files
+            else:
+                # If not found construct new PGFile
+                imports, productions = \
+                    get_grammar_parser(
+                        debug, debug_colors).parse_file(self.file_path)
+                self.pgfile = PGFile(productions=productions, imports=imports,
+                                     file_path=self.file_path)
+                self.root_files.files[self.file_path] = self.pgfile
+
+        return self.pgfile.resolve(symbol_name)
+
 
     @property
     def pg_file(self):
