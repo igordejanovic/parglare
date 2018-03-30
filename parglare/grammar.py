@@ -333,25 +333,104 @@ class PGAttribute(object):
         self.type_name = type_name
 
 
-class Grammar(object):
+class PGFile(object):
+    """Objects of this class represent parglare grammar files.
+
+    Grammar files can be imported using `import` keyword. Rules referenced from
+    the imported grammar must be fully qualified by the grammar module name. By
+    default the name of the target .pg file is the name of the module. `as`
+    keyword can be used to override the default.
+
+    Example:
+    ```
+    import `some/path/mygrammar.pg` as target
+    ```
+
+    Rules from file `mygrammar.pg` will be available under `target` namespace:
+
+    ```
+    MyRule: target.someRule+;
+    ```
+
+    Actions are by default loaded from the file named `<grammar>_actions.py`
+    where `grammar` is basename of grammar file. Recognizers are loaded from
+    `<grammar>_recognizers.py`. Actions and recognizers given this way are both
+    optional. Furthermore, both actions and recognizers can be overriden by
+    supplying actions and/or recognizers dict during grammar/parser
+    instantiation.
+
+    Attributes:
+
+    productions (list of Production): Local productions defined in this file.
+    imports (dict): Mapping imported module/file local name to PGFile object.
+    file_path (str): A full canonic path to the .pg file.
+    root_file (PGFile): A root/grammar file.
+    recognizers (dict of callables): A dict of Python callables used as a
+        terminal recognizers.
+
     """
-    Grammar is a collection of production rules.
+    def __init__(self, productions, imports=None, file_path=None,
+                 root_file=None, recognizers=None):
+        self.productions = productions
+        self.imports = imports
+        self.file_path = path.realpath(file_path)
+        self.root_file = self if root_file is None else root_file
+
+        # TODO:
+        # Load recognizers from <grammar_name>_recognizers.py
+        # Override with provided recognizers
+
+        self.collect_symbols()
+
+    def collect_symbols(self):
+        """Collect grammar symbols and str match terminals defined in this
+        file."""
+        self.symbols_by_name = {}
+        # mapping recognizer value -> Terminal
+        self.recog_to_terminals = {}
+        for p in self.productions:
+            new_symbol = p.symbol
+            if isinstance(new_symbol, Terminal):
+                prev_symbol = self.symbols_by_name.get(new_symbol.name)
+                if prev_symbol:
+                    if isinstance(prev_symbol, Terminal):
+                        # Multiple definitions of Terminals. Consider it a
+                        # non-terminal with alternative terminals.
+                        new_symbol = NonTerminal(new_symbol.name)
+                        for k, v in self.recog_to_terminals.items():
+                            if v.name == new_symbol.name:
+                                del self.recog_to_terminals[k]
+                                break
+                    else:
+                        new_symbol = prev_symbol
+
+                else:
+                    if p.rhs:
+                        rec_name = p.rhs[0].name
+                        if rec_name not in SPECIAL_SYMBOL_NAMES:
+                            assert new_symbol.name \
+                                not in self.recog_to_terminals
+                            self.recog_to_terminals[rec_name] = new_symbol
+
+            self._resolve_action(p.symbol, new_symbol)
+            self.symbols_by_name[new_symbol.name] = new_symbol
+
+
+class Grammar(PGFile):
+    """
+    Grammar is a collection of production rules, nonterminals and terminals.
     First production is reserved for the augmented production (S' -> S).
 
     Attributes:
-    imports(dict {name -> Grammar}): Imported grammars.
-    productions (list of Production): A list of Production instances.
     start_symbol (GrammarSymbol or str): start/root symbol of the grammar or
         its name.
-    recognizers (dict of callables): A dict of Python callables used as a
-        terminal recognizers not specified in the grammar.
     nonterminals (set of NonTerminal):
     terminals(set of Terminal):
 
     """
 
-    def __init__(self, grammar_file=None, grammar_str=None, productions=None,
-                 start_symbol=None, recognizers=None,
+    def __init__(self, productions=None, imports=None, file_path=None,
+                 recognizers=None, start_symbol=None,
                  _no_check_recognizers=False, re_flags=re.MULTILINE,
                  ignore_case=False, debug=False, debug_parse=False,
                  debug_colors=False):
@@ -364,36 +443,14 @@ class Grammar(object):
         _no_check_recognizers (bool, internal): Used by pglr tool to circumvent
              errors for empty recognizers that will be provided in user code.
         """
-        if grammar_file is None and grammar_str is None \
-           and productions is None:
-            raise GrammarError(
-                'Either grammar file or grammar string should be given.')
-        self.recognizers = recognizers if recognizers else {}
+        super(Grammar, self).__init__(productions=productions, imports=imports,
+                                      file_path=file_path, root_file=self,
+                                      recognizers=recognizers)
+
         self._no_check_recognizers = _no_check_recognizers
 
-        from .parser import Context
-        context = Context()
-        context.re_flags = re_flags
-        context.ignore_case = ignore_case
-        context.classes = {}
-        grammar_parser = get_grammar_parser(debug_parse, debug_colors)
-        if grammar_str:
-            self.root_file = \
-                grammar_parser.parse(grammar_str, context=context)
-            self.productions = self.root_file.productions
-        elif grammar_file:
-            self.root_file = \
-                grammar_parser.parse_file(grammar_file, context=context)
-            # We are copying productions list as we might extend the list due
-            # to imports.
-            self.productions = list(self.root_file.productions)
-        else:
-            self.productions = productions
-
-        if grammar_str is not None and self.root_file.imports:
-            raise GrammarError('Imports can be used only in file grammars.')
-
-        # First
+        # Determine start symbol. If name is provided search for it. If name is
+        # not given use the first production LHS symbol as the start symbol.
         if start_symbol:
             if isinstance(start_symbol, str):
                 for p in self.productions:
@@ -406,11 +463,6 @@ class Grammar(object):
             self.start_symbol = self.productions[0].symbol
 
         self._init_grammar()
-        self.classes = context.classes
-
-        termui.colors = debug_colors
-        if debug:
-            self.print_debug()
 
     def _init_grammar(self):
         """
@@ -430,9 +482,9 @@ class Grammar(object):
         self._collect_grammar_symbols()
 
         # Add special terminals
-        self._by_name['EMPTY'] = EMPTY
-        self._by_name['EOF'] = EOF
-        self._by_name['STOP'] = STOP
+        self.symbols_by_name['EMPTY'] = EMPTY
+        self.symbols_by_name['EOF'] = EOF
+        self.symbols_by_name['STOP'] = STOP
         self.terminals.update([EMPTY, EOF, STOP])
 
         # Connect recognizers, override grammar provided
@@ -455,25 +507,25 @@ class Grammar(object):
 
     def _collect_grammar_symbols(self):
         """Collect all terminal and non-terminal symbols from LHS of productions.
-        Create _by_name dict (names->symbol) and _rec_to_named_term dict (str
-        value -> terminal)
+        Create symbols_by_name dict (names->symbol) and recog_to_terminals dict
+        (str value -> terminal)
 
         """
-        self._by_name = {}
+        self.symbols_by_name = {}
         # mapping recognizer value -> Terminal
-        self._rec_to_named_term = {}
+        self.recog_to_terminals = {}
         for p in self.productions:
             new_symbol = p.symbol
             if isinstance(new_symbol, Terminal):
-                prev_symbol = self._by_name.get(new_symbol.name)
+                prev_symbol = self.symbols_by_name.get(new_symbol.name)
                 if prev_symbol:
                     if isinstance(prev_symbol, Terminal):
                         # Multiple definitions of Terminals. Consider it a
                         # non-terminal with alternative terminals.
                         new_symbol = NonTerminal(new_symbol.name)
-                        for k, v in self._rec_to_named_term.items():
+                        for k, v in self.recog_to_terminals.items():
                             if v.name == new_symbol.name:
-                                del self._rec_to_named_term[k]
+                                del self.recog_to_terminals[k]
                                 break
                     else:
                         new_symbol = prev_symbol
@@ -483,15 +535,15 @@ class Grammar(object):
                         rec_name = p.rhs[0].name
                         if rec_name not in SPECIAL_SYMBOL_NAMES:
                             assert new_symbol.name \
-                                not in self._rec_to_named_term
-                            self._rec_to_named_term[rec_name] = new_symbol
+                                not in self.recog_to_terminals
+                            self.recog_to_terminals[rec_name] = new_symbol
 
             self._resolve_action(p.symbol, new_symbol)
-            self._by_name[new_symbol.name] = new_symbol
+            self.symbols_by_name[new_symbol.name] = new_symbol
 
-        self.terminals = set([x for x in self._by_name.values()
+        self.terminals = set([x for x in self.symbols_by_name.values()
                               if isinstance(x, Terminal)])
-        self.nonterminals = set([x for x in self._by_name.values()
+        self.nonterminals = set([x for x in self.symbols_by_name.values()
                                  if isinstance(x, NonTerminal)])
 
     def _check_connect_recognizers(self):
@@ -541,22 +593,22 @@ class Grammar(object):
 
         for idx, p in enumerate(self.productions):
 
-            if p.symbol.name in self._by_name:
-                p.symbol = self._by_name[p.symbol.name]
+            if p.symbol.name in self.symbols_by_name:
+                p.symbol = self.symbols_by_name[p.symbol.name]
 
             if type(p.symbol) is NonTerminal:
                 p.symbol.productions.append(p)
 
             for idx_ref, ref in enumerate(p.rhs):
                 ref_sym = None
-                if ref.name in self._by_name:
-                    ref_sym = self._by_name[ref.name]
+                if ref.name in self.symbols_by_name:
+                    ref_sym = self.symbols_by_name[ref.name]
                 elif isinstance(p.symbol, NonTerminal) \
-                        and ref.name in self._rec_to_named_term:
+                        and ref.name in self.recog_to_terminals:
                     # If terminal is registered by str recognizer and is
                     # referenced in a RHS of some other production report
                     # error.
-                    term_by_rec = self._rec_to_named_term[ref.name]
+                    term_by_rec = self.recog_to_terminals[ref.name]
                     raise GrammarError(
                         "Terminal '{}' used in production '{}' "
                         "already exists by the name '{}'.".format(
@@ -651,17 +703,53 @@ class Grammar(object):
     @staticmethod
     def from_struct(productions, start_symbol, recognizers=None):
         """Used internally to bootstrap grammar file parser."""
-        return Grammar(create_productions(productions),
-                       start_symbol, recognizers=recognizers)
+        return Grammar(productions=create_productions(productions),
+                       start_symbol=start_symbol, recognizers=recognizers)
 
     @staticmethod
-    def from_string(grammar_str, **kwargs):
-        g = Grammar(grammar_str=grammar_str, **kwargs)
+    def from_string(grammar_str, recognizers=None, ignore_case=False,
+                    re_flags=re.MULTILINE, debug=False, debug_parse=False,
+                    debug_colors=False, _no_check_recognizers=False):
+        from .parser import Context
+        context = Context()
+        context.re_flags = re_flags
+        context.ignore_case = ignore_case
+        context.classes = {}
+        imports, productions = \
+            get_grammar_parser(debug_parse, debug_colors).parse(
+                grammar_str, context=context)
+        if imports:
+            raise GrammarError('Imports can be used only in file grammars.')
+        g = Grammar(productions=productions,
+                    recognizers=recognizers,
+                    _no_check_recognizers=_no_check_recognizers)
+        g.classes = context.classes
+        termui.colors = debug_colors
+        if debug:
+            g.print_debug()
+
         return g
 
     @staticmethod
-    def from_file(file_name, **kwargs):
-        g = Grammar(grammar_file=file_name, **kwargs)
+    def from_file(file_name, recognizers=None, ignore_case=False,
+                  re_flags=re.MULTILINE, debug=False, debug_parse=False,
+                  debug_colors=False, _no_check_recognizers=False):
+        from .parser import Context
+        context = Context()
+        context.re_flags = re_flags
+        context.ignore_case = ignore_case
+        context.classes = {}
+        imports, productions = \
+            get_grammar_parser(debug_parse, debug_colors).parse_file(
+                file_name, context=context)
+
+        g = Grammar(productions, imports, file_name, recognizers=recognizers,
+                    _no_check_recognizers=_no_check_recognizers)
+        g.classes = context.classes
+        termui.colors = debug_colors
+        if debug:
+            g.print_debug()
+
         return g
 
     def print_debug(self):
@@ -681,81 +769,6 @@ class PGFiles(dict):
     A collection of .pg files (PGFile instances) keyed by absolute file path.
     In charge of lazy loading/parsing of .pg files.
     """
-
-
-class PGFile(object):
-    """Objects of this class represent parglare grammar files.
-
-    Grammar files can be imported using `import` keyword. Rules referenced from
-    the imported grammar must be fully qualified by the grammar module name. By
-    default the name of the target .pg file is the name of the module. `as`
-    keyword can be used to override the default.
-
-    Example:
-    ```
-    import `some/path/mygrammar.pg` as target
-    ```
-
-    Rules from file `mygrammar.pg` will be available under `target` namespace:
-
-    ```
-    MyRule: target.someRule+;
-    ```
-
-    Actions are by default loaded from the file named `<grammar>_actions.py`
-    where `grammar` is basename of grammar file. Recognizers are loaded from
-    `<grammar>_recognizers.py`. Actions and recognizers given this way are both
-    optional. Furthermore, both actions and recognizers can be overriden by
-    supplying actions and/or recognizers dict during grammar/parser
-    instantiation.
-
-    Attributes:
-
-    file_name (str): A full canonic path to the .pg file.
-    imports (dict): Mapping imported module/file local name to PGFile object.
-    productions (list of Production):
-    nonterminals (dict): local name -> NonTerminal
-    terminal (dict): local name -> Terminal
-
-    """
-    def __init__(self, file_name, context):
-        self.file_name = path.realpath(file_name)
-        self.imports, self.productions = get_grammar_parser().parse(
-            self.file_name, context)
-        self.collect_symbols_by_name()
-
-    def collect_symbols_by_name(self):
-        """Collect grammar symbols and str match terminals defined in this
-        file."""
-        self._by_name = {}
-        # mapping recognizer value -> Terminal
-        self._rec_to_named_term = {}
-        for p in self.productions:
-            new_symbol = p.symbol
-            if isinstance(new_symbol, Terminal):
-                prev_symbol = self._by_name.get(new_symbol.name)
-                if prev_symbol:
-                    if isinstance(prev_symbol, Terminal):
-                        # Multiple definitions of Terminals. Consider it a
-                        # non-terminal with alternative terminals.
-                        new_symbol = NonTerminal(new_symbol.name)
-                        for k, v in self._rec_to_named_term.items():
-                            if v.name == new_symbol.name:
-                                del self._rec_to_named_term[k]
-                                break
-                    else:
-                        new_symbol = prev_symbol
-
-                else:
-                    if p.rhs:
-                        rec_name = p.rhs[0].name
-                        if rec_name not in SPECIAL_SYMBOL_NAMES:
-                            assert new_symbol.name \
-                                not in self._rec_to_named_term
-                            self._rec_to_named_term[rec_name] = new_symbol
-
-            self._resolve_action(p.symbol, new_symbol)
-            self._by_name[new_symbol.name] = new_symbol
 
 
 class PGFileImport(object):
