@@ -48,8 +48,8 @@ class GrammarSymbol(object):
         action if provided. If not provided by the user defaults to
         grammar_action.
     grammar_action(callable): Resolved action given in the grammar.
-    pgimport (PGImport): PGFileImport where this symbol is first time imported
-        from. Used for FQN calculation.
+    pgimport (PGFileImport): PGFileImport where this symbol is first time
+        imported from. Used for FQN calculation.
     """
     def __init__(self, name):
         self.name = escape(name)
@@ -377,16 +377,13 @@ class PGFile(object):
     grammar (PGFile): A root/grammar file.
     recognizers (dict of callables): A dict of Python callables used as a
         terminal recognizers.
-    pgimport (PGFileImport): First import in order of definition that
-        references this file. Used for grammar symbol FQN calculation.
     """
-    def __init__(self, productions, imports=None, file_path=None,
-                 grammar=None, recognizers=None, pgimport=None):
+    def __init__(self, productions, imports=None, file_path=None, grammar=None,
+                 recognizers=None):
         self.productions = productions
         self.imports = imports
         self.file_path = path.realpath(file_path) if file_path else None
         self.grammar = self if grammar is None else grammar
-        self.pgimport = pgimport
 
         # TODO:
         # Load recognizers from <grammar_name>_recognizers.py
