@@ -48,7 +48,7 @@ class GrammarSymbol(object):
         action if provided. If not provided by the user defaults to
         grammar_action.
     grammar_action(callable): Resolved action given in the grammar.
-    pgimport (PGFileImport): PGFileImport where this symbol is first time
+    imported_with (PGFileImport): PGFileImport where this symbol is first time
         imported from. Used for FQN calculation.
     """
     def __init__(self, name):
@@ -56,13 +56,13 @@ class GrammarSymbol(object):
         self.action_name = None
         self.action = None
         self.grammar_action = None
-        self.pgimport = None
+        self.imported_with = None
         self._hash = hash(name)
 
     @property
     def fqn(self):
-        if self.pgimport:
-            return "{}.{}".format(self.pgimport.fqn, self.name)
+        if self.imported_with:
+            return "{}.{}".format(self.imported_with.fqn, self.name)
         else:
             return self.name
 
@@ -384,12 +384,14 @@ class PGFile(object):
         self.imports = imports
         self.file_path = path.realpath(file_path) if file_path else None
         self.grammar = self if grammar is None else grammar
+        self.recognizers = recognizers
 
         # TODO:
         # Load recognizers from <grammar_name>_recognizers.py
         # Override with provided recognizers
 
         self.collect_symbols()
+        self.init_recognizers()
 
     def collect_symbols(self):
         """Collect grammar symbols and str match terminals defined in this
@@ -445,6 +447,53 @@ class PGFile(object):
                     new_symbol.grammar_action = getattr(actmodule,
                                                         new_symbol.action_name)
 
+    def init_recognizers(self):
+        """Load recognizers from <grammar_name>_recognizers.py. Override
+        with provided recognizers.
+
+        """
+        if self.file_path:
+            recognizers_file = path.join(path.dirname(self.file_path),
+                                         "{}_recognizers.py".format(
+                                             path.basename(self.file_path)))
+
+            if path.exists(recognizers_file):
+                # noqa See https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+                mod_name = "{}.recognizers".format()
+                if sys.version_info >= (3, 5):
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location(
+                        mod_name, recognizers_file)
+                    rec_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(rec_module)
+                elif sys.version_info >= (3, 3):
+                    from importlib.machinery import SourceFileLoader
+                    mod_recognizers = SourceFileLoader(
+                        mod_name, recognizers_file).load_module()
+                else:
+                    import imp
+                    rec_module = imp.load_source(mod_name, recognizers_file)
+                mod_recognizers = rec_module.recognizer.all
+
+                for symbol_name, symbol in self.symbols_by_name.items():
+                    if symbol_name in mod_recognizers:
+                        if not isinstance(symbol, Terminal):
+                            raise GrammarError(
+                                'Recognizer given for non-terminal'
+                                ' "{}" in file "{}"'.format(symbol.name,
+                                                            recognizers_file))
+
+        # Override by recognizers given during instantiation.
+        # TODO: Check that FQN are handled correctly.
+        if self.recognizers:
+            for symbol in self.symbols_by_name.values():
+                if symbol.fqn in self.recognizers:
+                    if not isinstance(symbol, Terminal):
+                        raise GrammarError(
+                            'Recognizer given for non-terminal'
+                            ' "{}" in recognizers parameters.'.format(
+                                symbol.fqn))
+
     def resolve(self, symbol_name):
         """Resolves given symbol by its name.
 
@@ -459,17 +508,22 @@ class PGFile(object):
             try:
                 imported_pg_file = self.imports[import_module_name]
                 return imported_pg_file.resolve(name)
-            except (ResolveError, KeyError):
+            except (GrammarError, KeyError):
                 raise GrammarError('Unexisting symbol "{}"{}.'
-                                   .format(symbol_name),
-                                   ' referenced from file "{}".'
-                                   .format(self.file_path)
-                                   if self.file_path else "")
+                                   .format(symbol_name,
+                                           ' referenced from file "{}"'
+                                           .format(self.file_path)
+                                           if self.file_path else ""))
         else:
-            if name in self.symbols_by_name:
-                return self.symbol_by_name[name]
-            else:
-                raise ResolveError()
+            symbol = self.symbols_by_name.get(symbol_name)
+            if not symbol:
+                import pudb;pudb.set_trace()
+                raise GrammarError('Unexisting symbol "{}"{}.'
+                                   .format(symbol_name,
+                                           ' referenced from file "{}"'
+                                           .format(self.file_path)
+                                           if self.file_path else ""))
+            return symbol
 
 
 class Grammar(PGFile):
@@ -528,18 +582,20 @@ class Grammar(PGFile):
         """
         Extracts all grammar symbol (nonterminal and terminal) from the
         grammar, resolves and check references in productions, unify all
-        grammar symbol objects and enumerate production.
+        grammar symbol objects and enumerate productions.
         """
-        self.terminals = set([x for x in self.symbols_by_name.values()
-                              if isinstance(x, Terminal)])
-        self.nonterminals = set([x for x in self.symbols_by_name.values()
-                                 if isinstance(x, NonTerminal)])
-
         # Reserve 0 production. It is used for augmented prod. in LR
         # automata calculation.
         self.productions.insert(
             0,
             Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
+        self.symbols_by_name[AUGSYMBOL.name] = AUGSYMBOL
+
+        self.terminals = set([x for x in self.symbols_by_name.values()
+                              if isinstance(x, Terminal)])
+        import pudb;pudb.set_trace()
+        self.nonterminals = set([x for x in self.symbols_by_name.values()
+                                 if isinstance(x, NonTerminal)])
 
         # Add special terminals
         self.symbols_by_name['EMPTY'] = EMPTY
@@ -549,7 +605,7 @@ class Grammar(PGFile):
 
         # Connect recognizers, override grammar provided
         if not self._no_check_recognizers:
-            self._check_connect_recognizers()
+            self._connect_override_recognizers()
 
         self._resolve_references()
 
@@ -565,20 +621,22 @@ class Grammar(PGFile):
         self._enumerate_productions()
         self._fix_keyword_terminals()
 
-    def _check_connect_recognizers(self):
+    def _connect_override_recognizers(self):
         for term in self.terminals:
-            if not self.recognizers and term.recognizer is None:
-                raise GrammarError(
-                    'Terminal "{}" has no recognizer defined '
-                    'and no recognizers are given during grammar '
-                    'construction.'.format(term.name))
-            if term.name not in self.recognizers:
-                if term.recognizer is None:
-                    raise GrammarError(
-                        'Terminal "{}" has no recognizer defined.'
-                        .format(term.name))
-            else:
+            if self.recognizers and term.name in self.recognizers:
                 term.recognizer = self.recognizers[term.name]
+            else:
+                if term.recognizer is None:
+                    if not self.recognizers:
+                        raise GrammarError(
+                            'Terminal "{}" has no recognizer defined '
+                            'and no recognizers are given during grammar '
+                            'construction.'.format(term.name))
+                    else:
+                        if term.name not in self.recognizers:
+                            raise GrammarError(
+                                'Terminal "{}" has no recognizer defined.'
+                                .format(term.name))
 
     def _resolve_references(self):
         """
@@ -597,9 +655,7 @@ class Grammar(PGFile):
 
             for idx_ref, ref in enumerate(p.rhs):
                 ref_sym = None
-                if ref.name in self.symbols_by_name:
-                    ref_sym = self.symbols_by_name[ref.name]
-                elif isinstance(p.symbol, NonTerminal) \
+                if isinstance(p.symbol, NonTerminal) \
                         and ref.name in self.recog_to_terminals:
                     # If terminal is registered by str recognizer and is
                     # referenced in a RHS of some other production report
@@ -611,22 +667,17 @@ class Grammar(PGFile):
                             text(ref.name), text(p.symbol),
                             text(term_by_rec)))
                 else:
-                    if not isinstance(ref, Terminal):
-                        raise GrammarError(
-                            "Unknown symbol '{}' used in production '{}'."
-                            .format(text(ref.name), text(p.symbol)))
-
+                    # Unification of terminals
                     if ref.name in rec_to_term:
                         ref_sym = rec_to_term[ref.name]
                     else:
-                        ref_sym = ref
-                        rec_to_term[ref.name] = ref
-                        self.terminals.add(ref_sym)
+                        if isinstance(ref, Terminal):
+                            rec_to_term[ref.name] = ref
+                            self.terminals.add(ref_sym)
+                            ref_sym = ref
 
                 if not ref_sym:
-                    raise GrammarError(
-                        "Unknown symbol '{}' referenced from production '{}'.".
-                        format(ref.name, text(p)))
+                    ref_sym = self.resolve(ref.name)
 
                 p.rhs[idx_ref] = ref_sym
 
@@ -670,6 +721,8 @@ class Grammar(PGFile):
     def get_terminal(self, name):
         "Returns terminal with the given name."
         for t in self.terminals:
+            if t is None:
+                import pudb;pudb.set_trace()
             if t.name == name:
                 return t
 
@@ -768,25 +821,25 @@ class PGFileImport(object):
     module_name (str): Name of this import. By default is the name of grammar
         file without .pg extension.
     file_path (str): A canonical full path of the imported .pg file.
-    pgimport (PGFileImport): First import this import is imported from. Used
+    imported_with (PGFileImport): First import this import is imported from. Used
         for FQN calculation.
     fqn (str): Fully qualified name by first path of imports.
     grammar (Grammar): A grammar this import belongs to.
     pgfile (PGFile instance or None):
 
     """
-    def __init__(self, module_name, file_path, grammar):
+    def __init__(self, module_name, file_path):
         self.module_name = module_name
         self.file_path = file_path
-        self.grammar = grammar
-        self.pgimport = None
+        self.grammar = None
+        self.imported_with = None
         self.pgfile = None
 
     @property
     def fqn(self):
         "A fully qualified name of the import following the first import path."
-        if self.pgimport:
-            return "{}.{}".format(self.pgimport.fqn, self.module_name)
+        if self.imported_with:
+            return "{}.{}".format(self.imported_with.fqn, self.module_name)
         else:
             return self.module_name
 
@@ -1062,8 +1115,8 @@ def get_grammar_parser(debug, debug_colors):
 
 
 def act_pgfile(context, nodes):
-    if len(nodes) > 1:
-        imports, productions = nodes
+    if len(nodes) > 2:
+        imports, productions, _ = nodes
     else:
         imports, productions = [], nodes[0]
     if hasattr(context, 'new_productions'):
@@ -1074,9 +1127,8 @@ def act_pgfile(context, nodes):
 
 def act_import(context, nodes):
     path = nodes[1]
-    if len(nodes) > 3:
-        module_name = nodes[3]
-    return PGFileImport(path, module_name)
+    module_name = nodes[3] if len(nodes) > 3 else None
+    return PGFileImport(module_name, path)
 
 
 def act_rules(_, nodes):
@@ -1422,6 +1474,7 @@ def act_recognizer_regex(context, nodes):
 
 pg_actions = {
     "PGFile": act_pgfile,
+    "Import": act_import,
     "Rules": [act_rules, pass_single],
     "Rule": [pass_single,
              act_rule_with_action,
