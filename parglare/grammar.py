@@ -546,25 +546,22 @@ class PGFile(object):
                 imported_pg_file = self.imports[import_module_name]
                 return imported_pg_file.resolve(name)
             except (GrammarError, KeyError):
-                raise GrammarError('Unexisting symbol "{}"{}.'
-                                   .format(symbol_name,
-                                           ' referenced from file "{}"'
-                                           .format(self.file_path)
-                                           if self.file_path else ""))
+                import pudb;pudb.set_trace()
+                self.raise_grammar_error('Unexisting symbol "{}"'
+                                         .format(symbol_name),
+                                         'referenced from file')
         else:
             symbol = self.symbols_by_name.get(symbol_name)
             if not symbol:
-                raise GrammarError('Unexisting symbol "{}"{}.'
-                                   .format(symbol_name,
-                                           ' referenced from file "{}"'
-                                           .format(self.file_path)
-                                           if self.file_path else ""))
+                self.raise_grammar_error('Unexisting symbol "{}"'
+                                         .format(symbol_name),
+                                         'referenced from file')
             return symbol
 
-    def raise_grammar_error(self, message):
+    def raise_grammar_error(self, message, message2='in file'):
         raise GrammarError("{}{}.".format(
             message,
-            ' in file "{}"'.format(self.file_path)
+            ' {} "{}"'.format(message2, self.file_path)
             if self.file_path else ""))
 
 
@@ -756,6 +753,8 @@ class Grammar(PGFile):
         g = Grammar(productions=productions,
                     terminals=terminals,
                     recognizers=recognizers,
+                    file_path=what_to_parse
+                    if parse_fun_name == 'parse_file' else None,
                     _no_check_recognizers=_no_check_recognizers)
         g.classes = context.classes
         termui.colors = debug_colors
@@ -770,6 +769,7 @@ class Grammar(PGFile):
 
     @staticmethod
     def from_file(file_name, **kwargs):
+        file_name = path.realpath(file_name)
         return Grammar._parse('parse_file', file_name, **kwargs)
 
     def print_debug(self):
