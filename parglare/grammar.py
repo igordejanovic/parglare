@@ -390,15 +390,11 @@ class PGFile(object):
         self.grammar = self if grammar is None else grammar
         self.recognizers = recognizers
 
-        # TODO:
-        # Load recognizers from <grammar_name>_recognizers.py
-        # Override with provided recognizers
-
-        self.collect_unify_symbols()
+        self.collect_and_unify_symbols()
         self.resolve_references()
         self.init_recognizers()
 
-    def collect_unify_symbols(self):
+    def collect_and_unify_symbols(self):
         """Collect non-terminals and terminals (both explicit and implicit/inline)
         defined in this file and make sure there is only one instance for each
         of them.
@@ -544,15 +540,16 @@ class PGFile(object):
             import_module_name, name = symbol_name.split('.')
             try:
                 imported_pg_file = self.imports[import_module_name]
-                return imported_pg_file.resolve(name)
-            except (GrammarError, KeyError):
-                import pudb;pudb.set_trace()
-                self.raise_grammar_error('Unexisting symbol "{}"'
-                                         .format(symbol_name),
-                                         'referenced from file')
+            except KeyError:
+                self.raise_grammar_error(
+                    'Unexisting module "{}" in reference "{}"'
+                    .format(import_module_name, symbol_name),
+                    'referenced from file')
+            return imported_pg_file.resolve(name)
         else:
             symbol = self.symbols_by_name.get(symbol_name)
             if not symbol:
+                import pudb;pudb.set_trace()
                 self.raise_grammar_error('Unexisting symbol "{}"'
                                          .format(symbol_name),
                                          'referenced from file')
@@ -745,13 +742,17 @@ class Grammar(PGFile):
         context = Context()
         context.re_flags = re_flags
         context.ignore_case = ignore_case
+        context.debug = debug
+        context.debug_colors = debug_colors
         context.classes = {}
+        context.imported_files = {}
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
         imports, productions, terminals = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
                                                     context=context)
         g = Grammar(productions=productions,
                     terminals=terminals,
+                    imports=imports,
                     recognizers=recognizers,
                     file_path=what_to_parse
                     if parse_fun_name == 'parse_file' else None,
@@ -795,14 +796,14 @@ class PGFileImport(object):
     imported_with (PGFileImport): First import this import is imported from.
         Used for FQN calculation.
     fqn (str): Fully qualified name by first path of imports.
-    grammar (Grammar): A grammar this import belongs to.
+    context: Parsing context, used to lazy load the pg file.
     pgfile (PGFile instance or None):
 
     """
-    def __init__(self, module_name, file_path):
+    def __init__(self, module_name, file_path, context):
         self.module_name = module_name
         self.file_path = file_path
-        self.grammar = None
+        self.context = context
         self.imported_with = None
         self.pgfile = None
 
@@ -819,25 +820,22 @@ class PGFileImport(object):
 
         if self.pgfile is None:
             # First search the global registry of imported files.
-            if self.file_path in self.grammar.files:
-                self.pgfile = self.grammar.files[self.file_path]
+            if self.file_path in self.context.imported_files:
+                self.pgfile = self.context.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
                 imports, productions, terminals = \
                     get_grammar_parser(
-                        self.debug,
-                        self.debug_colors).parse_file(self.file_path)
+                        self.context.debug,
+                        self.context.debug_colors).parse_file(
+                            self.file_path, context=self.context)
                 self.pgfile = PGFile(productions=productions,
                                      terminals=terminals,
                                      imports=imports,
                                      file_path=self.file_path)
-                self.grammar.files[self.file_path] = self.pgfile
+                self.context.imported_files[self.file_path] = self.pgfile
 
         return self.pgfile.resolve(symbol_name)
-
-    @property
-    def debug(self):
-        return self.grammar.debug
 
 
 def create_productions(productions):
@@ -1123,11 +1121,12 @@ def act_import(context, nodes):
     if module_name is None:
         module_name = path.splitext(path.basename(import_path))[0]
     if not path.isabs(import_path):
-        import_path = path.realpath(path.join(context.file_name, import_path))
+        import_path = path.realpath(path.join(path.dirname(context.file_name),
+                                              import_path))
     else:
         import_path = path.realpath(import_path)
 
-    return PGFileImport(module_name, import_path)
+    return PGFileImport(module_name, import_path, context)
 
 
 def act_production_rules(_, nodes):

@@ -1,1 +1,4 @@
 SecondRule: STRING;
+
+terminals
+STRING: /'[^']'/;
