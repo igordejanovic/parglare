@@ -1127,9 +1127,11 @@ def act_pgfile(context, nodes):
 
 
 def act_import(context, nodes):
-    path = nodes[1]
+    import_path = nodes[1]
     module_name = nodes[3] if len(nodes) > 3 else None
-    return PGFileImport(module_name, path)
+    if module_name is None:
+        module_name = path.splitext(path.basename(import_path))[0]
+    return PGFileImport(module_name, import_path)
 
 
 def act_production_rules(_, nodes):
