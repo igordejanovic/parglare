@@ -1124,6 +1124,9 @@ def act_import(context, nodes):
         module_name = path.splitext(path.basename(import_path))[0]
     if not path.isabs(import_path):
         import_path = path.realpath(path.join(context.file_name, import_path))
+    else:
+        import_path = path.realpath(import_path)
+
     return PGFileImport(module_name, import_path)
 
 
