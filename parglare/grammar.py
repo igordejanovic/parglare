@@ -1469,7 +1469,7 @@ def act_assignment(_, nodes):
 
 
 def act_recognizer_str(context, nodes):
-    value = nodes[0][1:-1]
+    value = nodes[0]
     value = value.replace(r'\"', '"')\
                  .replace(r"\'", "'")\
                  .replace(r"\\", "\\")\
@@ -1479,9 +1479,13 @@ def act_recognizer_str(context, nodes):
 
 
 def act_recognizer_regex(context, nodes):
-    value = nodes[0][1:-1]
+    value = nodes[0]
     return RegExRecognizer(value, re_flags=context.re_flags,
                            ignore_case=context.ignore_case)
+
+
+def act_str_regex_term(context, value):
+    return value[1:-1]
 
 
 pg_actions = {
@@ -1515,6 +1519,8 @@ pg_actions = {
                       act_recognizer_str],
 
     'Recognizer': [act_recognizer_str, act_recognizer_regex],
+    'StrTerm': act_str_regex_term,
+    'RegExTerm': act_str_regex_term,
 
     # Terminals
     "Prior": lambda _, value: int(value),
