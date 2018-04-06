@@ -188,7 +188,8 @@ class Parser(object):
                                  None)]
         context = Context() if not context else context
         context.input_str = input_str
-        context.file_name = file_name
+        if not hasattr(context, 'file_name') or context.file_name is None:
+            context.file_name = file_name
 
         next_token = self._next_token
         debug = self.debug

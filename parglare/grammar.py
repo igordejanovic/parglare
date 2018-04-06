@@ -482,7 +482,7 @@ class PGFile(object):
         for production in self.productions:
             for idx, ref in enumerate(production.rhs):
                 if isinstance(ref, Reference):
-                    production.rhs[idx] = self.resolve(ref)
+                    production.rhs[idx] = self.resolve(ref.name)
 
     def init_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
@@ -823,11 +823,13 @@ class PGFileImport(object):
                 self.pgfile = self.grammar.files[self.file_path]
             else:
                 # If not found construct new PGFile
-                imports, productions = \
+                imports, productions, terminals = \
                     get_grammar_parser(
                         self.debug,
                         self.debug_colors).parse_file(self.file_path)
-                self.pgfile = PGFile(productions=productions, imports=imports,
+                self.pgfile = PGFile(productions=productions,
+                                     terminals=terminals,
+                                     imports=imports,
                                      file_path=self.file_path)
                 self.grammar.files[self.file_path] = self.pgfile
 
