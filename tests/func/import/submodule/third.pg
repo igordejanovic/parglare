@@ -1,1 +1,4 @@
 ThirdRule: FLOAT;
+
+terminals
+FLOAT: /\d+\.\d+/;
