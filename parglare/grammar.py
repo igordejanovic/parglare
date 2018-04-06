@@ -382,7 +382,10 @@ class PGFile(object):
                  file_path=None, grammar=None, recognizers=None):
         self.productions = productions
         self.terminals = terminals if terminals is not None else set()
-        self.imports = imports
+        if imports:
+            self.imports = {i.module_name: i for i in imports}
+        else:
+            self.imports = {}
         self.file_path = path.realpath(file_path) if file_path else None
         self.grammar = self if grammar is None else grammar
         self.recognizers = recognizers
