@@ -824,6 +824,7 @@ class PGFileImport(object):
                 self.pgfile = self.context.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
+                self.context.new_productions = {}
                 imports, productions, terminals = \
                     get_grammar_parser(
                         self.context.debug,
