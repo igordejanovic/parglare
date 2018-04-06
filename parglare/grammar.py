@@ -5,7 +5,7 @@ import sys
 import re
 import itertools
 from parglare.six import add_metaclass
-from parglare.exceptions import GrammarError, ResolveError
+from parglare.exceptions import GrammarError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
@@ -378,9 +378,10 @@ class PGFile(object):
     recognizers (dict of callables): A dict of Python callables used as a
         terminal recognizers.
     """
-    def __init__(self, productions, imports=None, file_path=None, grammar=None,
-                 recognizers=None):
+    def __init__(self, productions, terminals=None, imports=None,
+                 file_path=None, grammar=None, recognizers=None):
         self.productions = productions
+        self.terminals = terminals if terminals is not None else set()
         self.imports = imports
         self.file_path = path.realpath(file_path) if file_path else None
         self.grammar = self if grammar is None else grammar
@@ -390,41 +391,68 @@ class PGFile(object):
         # Load recognizers from <grammar_name>_recognizers.py
         # Override with provided recognizers
 
-        self.collect_symbols()
+        self.collect_unify_symbols()
+        self.resolve_references()
         self.init_recognizers()
 
-    def collect_symbols(self):
-        """Collect grammar symbols and str match terminals defined in this
-        file."""
-        self.symbols_by_name = {}
-        # mapping recognizer value -> Terminal
-        self.recog_to_terminals = {}
-        for p in self.productions:
-            new_symbol = p.symbol
-            if isinstance(new_symbol, Terminal):
-                prev_symbol = self.symbols_by_name.get(new_symbol.name)
-                if prev_symbol:
-                    if isinstance(prev_symbol, Terminal):
-                        # Multiple definitions of Terminals. Consider it a
-                        # non-terminal with alternative terminals.
-                        new_symbol = NonTerminal(new_symbol.name)
-                        for k, v in self.recog_to_terminals.items():
-                            if v.name == new_symbol.name:
-                                del self.recog_to_terminals[k]
-                                break
-                    else:
-                        new_symbol = prev_symbol
+    def collect_unify_symbols(self):
+        """Collect non-terminals and terminals (both explicit and implicit/inline)
+        defined in this file and make sure there is only one instance for each
+        of them.
 
-                else:
-                    if p.rhs:
-                        rec_name = p.rhs[0].name
-                        if rec_name not in SPECIAL_SYMBOL_NAMES:
-                            assert new_symbol.name \
-                                not in self.recog_to_terminals
-                            self.recog_to_terminals[rec_name] = new_symbol
+        """
+        nonterminals_by_name = {}
+        terminals_by_name = {}
+        recognizer_names = set()
 
-            self._resolve_action(p.symbol, new_symbol)
-            self.symbols_by_name[new_symbol.name] = new_symbol
+        # Check terminal rules name uniqueness
+        for terminal in self.terminals:
+            if terminal.name in terminals_by_name:
+                self.raise_grammar_error(
+                    'Multiple definitions of terminal rule "{}"'.
+                    format(terminal.name))
+            terminals_by_name[terminal.name] = terminal
+
+        # Collect inline terminals
+        for production in self.productions:
+            for idx, rhs_elem in enumerate(production.rhs):
+                if isinstance(rhs_elem, StringRecognizer):
+                    recognizer = rhs_elem
+                    # First check if the same recognizer already exists.
+                    if recognizer.name in terminals_by_name \
+                       and recognizer.name not in recognizer_names:
+                        self.raise_grammar_error(
+                            'Terminal rule "{}" defined as explicit and inline'
+                            ' at the same time'.
+                            format(recognizer.name))
+                    recognizer_names.add(recognizer.name)
+                    terminal = Terminal(recognizer.name, recognizer=recognizer)
+                    terminals_by_name[terminal.name] = terminal
+                    production.rhs[idx] = terminal
+
+        # Collect non-terminals
+        for production in self.productions:
+            symbol = production.symbol
+            # Check that there is no terminal defined by the same name.
+            if symbol.name in terminals_by_name:
+                raise self.raise_grammar_error(
+                    'Rule "{}" already defined as terminal'
+                    .format(symbol.name))
+            # Unify all non-terminal objects
+            if symbol.name in nonterminals_by_name:
+                old_symbol = symbol
+                new_symbol = nonterminals_by_name[symbol.name]
+                production.symbol = new_symbol
+            else:
+                nonterminals_by_name[symbol.name] = symbol
+                old_symbol = new_symbol = symbol
+            new_symbol.productions.append(production)
+            self._resolve_action(old_symbol, new_symbol)
+
+        self.terminals = set(terminals_by_name.values())
+        self.nonterminals = set(nonterminals_by_name.values())
+        nonterminals_by_name.update(terminals_by_name)
+        self.symbols_by_name = nonterminals_by_name
 
     def _resolve_action(self, old_symbol, new_symbol):
         """
@@ -446,6 +474,12 @@ class PGFile(object):
                 new_symbol.action = \
                     new_symbol.grammar_action = getattr(actmodule,
                                                         new_symbol.action_name)
+
+    def resolve_references(self):
+        for production in self.productions:
+            for idx, ref in enumerate(production.rhs):
+                if isinstance(ref, Reference):
+                    production.rhs[idx] = self.resolve(ref)
 
     def init_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
@@ -517,13 +551,18 @@ class PGFile(object):
         else:
             symbol = self.symbols_by_name.get(symbol_name)
             if not symbol:
-                import pudb;pudb.set_trace()
                 raise GrammarError('Unexisting symbol "{}"{}.'
                                    .format(symbol_name,
                                            ' referenced from file "{}"'
                                            .format(self.file_path)
                                            if self.file_path else ""))
             return symbol
+
+    def raise_grammar_error(self, message):
+        raise GrammarError("{}{}.".format(
+            message,
+            ' in file "{}"'.format(self.file_path)
+            if self.file_path else ""))
 
 
 class Grammar(PGFile):
@@ -540,8 +579,8 @@ class Grammar(PGFile):
 
     """
 
-    def __init__(self, productions=None, imports=None, file_path=None,
-                 recognizers=None, start_symbol=None,
+    def __init__(self, productions=None, terminals=None, imports=None,
+                 file_path=None, recognizers=None, start_symbol=None,
                  _no_check_recognizers=False, re_flags=re.MULTILINE,
                  ignore_case=False, debug=False, debug_parse=False,
                  debug_colors=False):
@@ -554,7 +593,9 @@ class Grammar(PGFile):
         _no_check_recognizers (bool, internal): Used by pglr tool to circumvent
              errors for empty recognizers that will be provided in user code.
         """
-        super(Grammar, self).__init__(productions=productions, imports=imports,
+        super(Grammar, self).__init__(productions=productions,
+                                      terminals=terminals,
+                                      imports=imports,
                                       file_path=file_path, grammar=self,
                                       recognizers=recognizers)
 
@@ -589,13 +630,8 @@ class Grammar(PGFile):
         self.productions.insert(
             0,
             Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
+        self.nonterminals.add(AUGSYMBOL)
         self.symbols_by_name[AUGSYMBOL.name] = AUGSYMBOL
-
-        self.terminals = set([x for x in self.symbols_by_name.values()
-                              if isinstance(x, Terminal)])
-        import pudb;pudb.set_trace()
-        self.nonterminals = set([x for x in self.symbols_by_name.values()
-                                 if isinstance(x, NonTerminal)])
 
         # Add special terminals
         self.symbols_by_name['EMPTY'] = EMPTY
@@ -606,17 +642,6 @@ class Grammar(PGFile):
         # Connect recognizers, override grammar provided
         if not self._no_check_recognizers:
             self._connect_override_recognizers()
-
-        self._resolve_references()
-
-        # At the end remove terminal productions as those are not the real
-        # productions, but just a symbolic names for terminals.
-        non_term_productions = [p for p in self.productions
-                                if isinstance(p.symbol, NonTerminal)
-                                or p.symbol.name == 'LAYOUT']
-        if len(non_term_productions) > 1:
-            # We have non-terminals
-            self.productions[:] = non_term_productions
 
         self._enumerate_productions()
         self._fix_keyword_terminals()
@@ -637,49 +662,6 @@ class Grammar(PGFile):
                             raise GrammarError(
                                 'Terminal "{}" has no recognizer defined.'
                                 .format(term.name))
-
-    def _resolve_references(self):
-        """
-        Resolve all references and unify objects so that we have single
-        instances of each terminal and non-terminal in the grammar.
-        Create Terminal for user supplied Recognizer.
-        """
-
-        rec_to_term = {}
-
-        for idx, p in enumerate(self.productions):
-
-            p.symbol = self.resolve(p.symbol.name)
-            if type(p.symbol) is NonTerminal:
-                p.symbol.productions.append(p)
-
-            for idx_ref, ref in enumerate(p.rhs):
-                ref_sym = None
-                if isinstance(p.symbol, NonTerminal) \
-                        and ref.name in self.recog_to_terminals:
-                    # If terminal is registered by str recognizer and is
-                    # referenced in a RHS of some other production report
-                    # error.
-                    term_by_rec = self.recog_to_terminals[ref.name]
-                    raise GrammarError(
-                        "Terminal '{}' used in production '{}' "
-                        "already exists by the name '{}'.".format(
-                            text(ref.name), text(p.symbol),
-                            text(term_by_rec)))
-                else:
-                    # Unification of terminals
-                    if ref.name in rec_to_term:
-                        ref_sym = rec_to_term[ref.name]
-                    else:
-                        if isinstance(ref, Terminal):
-                            rec_to_term[ref.name] = ref
-                            self.terminals.add(ref_sym)
-                            ref_sym = ref
-
-                if not ref_sym:
-                    ref_sym = self.resolve(ref.name)
-
-                p.rhs[idx_ref] = ref_sym
 
     def _enumerate_productions(self):
         """
@@ -721,8 +703,6 @@ class Grammar(PGFile):
     def get_terminal(self, name):
         "Returns terminal with the given name."
         for t in self.terminals:
-            if t is None:
-                import pudb;pudb.set_trace()
             if t.name == name:
                 return t
 
@@ -750,9 +730,10 @@ class Grammar(PGFile):
                 return p.prod_id
 
     @staticmethod
-    def from_struct(productions, start_symbol, recognizers=None):
+    def from_struct(productions, terminals, start_symbol, recognizers=None):
         """Used internally to bootstrap grammar file parser."""
         return Grammar(productions=create_productions(productions),
+                       terminals=terminals,
                        start_symbol=start_symbol, recognizers=recognizers)
 
     @staticmethod
@@ -764,12 +745,13 @@ class Grammar(PGFile):
         context.re_flags = re_flags
         context.ignore_case = ignore_case
         context.classes = {}
-        imports, productions = \
+        imports, productions, terminals = \
             get_grammar_parser(debug_parse, debug_colors).parse(
                 grammar_str, context=context)
         if imports:
             raise GrammarError('Imports can be used only in file grammars.')
         g = Grammar(productions=productions,
+                    terminals=terminals,
                     recognizers=recognizers,
                     _no_check_recognizers=_no_check_recognizers)
         g.classes = context.classes
@@ -788,11 +770,14 @@ class Grammar(PGFile):
         context.re_flags = re_flags
         context.ignore_case = ignore_case
         context.classes = {}
-        imports, productions = \
+        imports, productions, terminals = \
             get_grammar_parser(debug_parse, debug_colors).parse_file(
                 file_name, context=context)
 
-        g = Grammar(productions, imports, file_name, recognizers=recognizers,
+        g = Grammar(productions=productions,
+                    terminals=terminals,
+                    recognizers=recognizers,
+                    file_path=file_name,
                     _no_check_recognizers=_no_check_recognizers)
         g.classes = context.classes
         termui.colors = debug_colors
@@ -821,8 +806,8 @@ class PGFileImport(object):
     module_name (str): Name of this import. By default is the name of grammar
         file without .pg extension.
     file_path (str): A canonical full path of the imported .pg file.
-    imported_with (PGFileImport): First import this import is imported from. Used
-        for FQN calculation.
+    imported_with (PGFileImport): First import this import is imported from.
+        Used for FQN calculation.
     fqn (str): Fully qualified name by first path of imports.
     grammar (Grammar): A grammar this import belongs to.
     pgfile (PGFile instance or None):
@@ -889,10 +874,10 @@ def create_productions(productions):
         if len(p) > 3:
             prior = p[3]
 
-        # Convert strings to Terminals with string recognizers
+        # Convert strings to string recognizers
         for idx, t in enumerate(rhs):
             if isinstance(t, text):
-                rhs[idx] = Terminal(t)
+                rhs[idx] = StringRecognizer(t)
 
         gp.append(Production(symbol, rhs, assoc=assoc, prior=prior))
 
@@ -916,12 +901,14 @@ def check_name(context, name):
 (PGFILE,
  IMPORTS,
  IMPORT,
- RULES,
- RULE,
+ PRODUCTION_RULES,
  PRODUCTION_RULE,
+ PRODUCTION_RULE_WITH_ACTION,
  PRODUCTION_RULE_RHS,
  PRODUCTION,
+ TERMINAL_RULES,
  TERMINAL_RULE,
+ TERMINAL_RULE_WITH_ACTION,
  PROD_DIS_RULE,
  PROD_DIS_RULES,
  TERM_DIS_RULE,
@@ -952,12 +939,14 @@ def check_name(context, name):
      'PGFile',
      'Imports',
      'Import',
-     'Rules',
-     'Rule',
+     'ProductionRules',
      'ProductionRule',
+     'ProductionRuleWithAction',
      'ProductionRuleRHS',
      'Production',
+     'TerminalRules',
      'TerminalRule',
+     'TerminalRuleWithAction',
      'ProductionDisambiguationRule',
      'ProductionDisambiguationRules',
      'TerminalDisambiguationRule',
@@ -986,47 +975,54 @@ def check_name(context, name):
      'CORNC',
      'CORNCS']]
 
-(NAME,
- STR_TERM,
- REGEX_TERM,
- PRIOR,
- ACTION,
- WS,
- COMMENTLINE,
- NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
-                [
-                    ('Name', r'[a-zA-Z0-9_\.]+'),
-                    ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
-                     r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
-                    ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
-                    ('Prior', r'\d+'),
-                    ('Action', r'@[a-zA-Z0-9_]+'),
-                    ('WS', r'\s+'),
-                    ('CommentLine', r'\/\/.*'),
-                    ('NotComment', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
-                ]]
+pg_terminals = \
+    (NAME,
+     STR_TERM,
+     REGEX_TERM,
+     PRIOR,
+     ACTION,
+     WS,
+     COMMENTLINE,
+     NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
+                    [
+                        ('Name', r'[a-zA-Z0-9_\.]+'),
+                        ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
+                         r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
+                        ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
+                        ('Prior', r'\d+'),
+                        ('Action', r'@[a-zA-Z0-9_]+'),
+                        ('WS', r'\s+'),
+                        ('CommentLine', r'\/\/.*'),
+                        ('NotComment', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
+                    ]]
 
 pg_productions = [
-    [PGFILE, [RULES, EOF]],
-    [PGFILE, [IMPORTS, RULES, EOF]],
+    [PGFILE, [PRODUCTION_RULES, EOF]],
+    [PGFILE, [IMPORTS, PRODUCTION_RULES, EOF]],
+    [PGFILE, [PRODUCTION_RULES, 'terminals', TERMINAL_RULES, EOF]],
+    [PGFILE, [IMPORTS, PRODUCTION_RULES, 'terminals', TERMINAL_RULES, EOF]],
     [IMPORTS, [IMPORTS, IMPORT]],
     [IMPORTS, [IMPORT]],
     [IMPORT, ['import', STR_TERM, ';']],
     [IMPORT, ['import', STR_TERM, 'as', NAME, ';']],
-    [RULES, [RULES, RULE]],
-    [RULES, [RULE]],
-    [RULE, [PRODUCTION_RULE]],
-    [RULE, [ACTION, PRODUCTION_RULE]],
-    [RULE, [TERMINAL_RULE]],
-    [RULE, [ACTION, TERMINAL_RULE]],
+    [PRODUCTION_RULES, [PRODUCTION_RULES, PRODUCTION_RULE_WITH_ACTION]],
+    [PRODUCTION_RULES, [PRODUCTION_RULE_WITH_ACTION]],
 
+    [PRODUCTION_RULE_WITH_ACTION, [ACTION, PRODUCTION_RULE]],
+    [PRODUCTION_RULE_WITH_ACTION, [PRODUCTION_RULE]],
     [PRODUCTION_RULE, [NAME, ':', PRODUCTION_RULE_RHS, ';']],
+    [PRODUCTION_RULE, [NAME, '{', PROD_DIS_RULES, '}', ':',
+                       PRODUCTION_RULE_RHS, ';']],
     [PRODUCTION_RULE_RHS, [PRODUCTION_RULE_RHS, '|', PRODUCTION],
      ASSOC_LEFT, 5],
     [PRODUCTION_RULE_RHS, [PRODUCTION], ASSOC_LEFT, 5],
     [PRODUCTION, [ASSIGNMENTS]],
     [PRODUCTION, [ASSIGNMENTS, '{', PROD_DIS_RULES, '}']],
 
+    [TERMINAL_RULES, [TERMINAL_RULES, TERMINAL_RULE_WITH_ACTION]],
+    [TERMINAL_RULES, [TERMINAL_RULE_WITH_ACTION]],
+    [TERMINAL_RULE_WITH_ACTION, [ACTION, TERMINAL_RULE]],
+    [TERMINAL_RULE_WITH_ACTION, [TERMINAL_RULE]],
     [TERMINAL_RULE, [NAME, ':', RECOGNIZER, ';'], ASSOC_LEFT, 15],
     [TERMINAL_RULE, [NAME, ':', ';'], ASSOC_LEFT, 15],
     [TERMINAL_RULE, [NAME, ':', RECOGNIZER, '{', TERM_DIS_RULES, '}', ';'],
@@ -1078,7 +1074,7 @@ pg_productions = [
     [OPT_REP_MODIFIER, [NAME]],
 
     [GSYMBOL, [NAME]],
-    [GSYMBOL, [RECOGNIZER]],
+    [GSYMBOL, [STR_TERM]],
     [RECOGNIZER, [STR_TERM]],
     [RECOGNIZER, [REGEX_TERM]],
 
@@ -1106,8 +1102,10 @@ def get_grammar_parser(debug, debug_colors):
     global grammar_parser
     if not grammar_parser:
         from parglare import Parser
-        grammar_parser = Parser(Grammar.from_struct(pg_productions, PGFILE),
-                                actions=pg_actions, debug=debug,
+        grammar_parser = Parser(Grammar.from_struct(pg_productions,
+                                                    pg_terminals, PGFILE),
+                                actions=pg_actions,
+                                debug=debug,
                                 debug_colors=debug_colors)
     EMPTY.action = pass_none
     EOF.action = pass_none
@@ -1115,14 +1113,17 @@ def get_grammar_parser(debug, debug_colors):
 
 
 def act_pgfile(context, nodes):
-    if len(nodes) > 2:
-        imports, productions, _ = nodes
+    if len(nodes) in [3, 5]:
+        imports = nodes.pop(0)
     else:
-        imports, productions = [], nodes[0]
+        imports = []
+    productions = nodes.pop(0)
+    terminals = nodes[1] if len(nodes) > 1 else []
+
     if hasattr(context, 'new_productions'):
         for _, (nt, prods) in context.new_productions.items():
             productions.extend(prods)
-    return [imports, productions]
+    return [imports, productions, terminals]
 
 
 def act_import(context, nodes):
@@ -1131,20 +1132,23 @@ def act_import(context, nodes):
     return PGFileImport(module_name, path)
 
 
-def act_rules(_, nodes):
+def act_production_rules(_, nodes):
     e1, e2 = nodes
     e1.extend(e2)
     return e1
 
 
-def act_rule_with_action(_, nodes):
-    action, productions = nodes
+def act_production_rule_with_action(_, nodes):
+    if len(nodes) > 1:
+        action_name, productions = nodes
+        # Strip @ char
+        action_name = action_name[1:]
+        for p in productions:
+            p.symbol.action_name = action_name
+    else:
+        production = nodes[0]
 
-    # Strip @ char
-    action = action[1:]
-
-    productions[0].symbol.action_name = action
-    return productions
+    return production
 
 
 def act_production_rule(context, nodes):
@@ -1277,26 +1281,36 @@ def _set_term_props(term, props):
 def act_term_rule(context, nodes):
 
     name = nodes[0]
-    rhs_term = nodes[2]
+    recognizer = nodes[2]
 
     check_name(context, name)
-
-    term = Terminal(name, rhs_term.recognizer)
+    term = Terminal(name, recognizer)
     if len(nodes) > 4:
         _set_term_props(term, nodes[4])
-    return [Production(term, ProductionRHS([rhs_term]))]
+    return term
 
 
 def act_term_rule_empty_body(context, nodes):
     name = nodes[0]
 
     check_name(context, name)
-
     term = Terminal(name)
     term.recognizer = None
     if len(nodes) > 3:
         _set_term_props(term, nodes[3])
-    return [Production(term, ProductionRHS([]))]
+    return term
+
+
+def act_term_rule_with_action(context, nodes):
+    if len(nodes) > 1:
+        action_name, term = nodes
+        # Strip @ char
+        action_name = action_name[1:]
+        term.action_name = action_name
+    else:
+        term = nodes[0]
+
+    return term
 
 
 def make_repetition(context, gsymbol, sep_ref, suffix,
@@ -1461,34 +1475,32 @@ def act_recognizer_str(context, nodes):
                  .replace(r"\\", "\\")\
                  .replace(r"\n", "\n")\
                  .replace(r"\t", "\t")
-    return Terminal(value, StringRecognizer(value,
-                                            ignore_case=context.ignore_case))
+    return StringRecognizer(value, ignore_case=context.ignore_case)
 
 
 def act_recognizer_regex(context, nodes):
     value = nodes[0][1:-1]
-    return Terminal(value, RegExRecognizer(value,
-                                           re_flags=context.re_flags,
-                                           ignore_case=context.ignore_case))
+    return RegExRecognizer(value, re_flags=context.re_flags,
+                           ignore_case=context.ignore_case)
 
 
 pg_actions = {
     "PGFile": act_pgfile,
+    "Imports": collect,
     "Import": act_import,
-    "Rules": [act_rules, pass_single],
-    "Rule": [pass_single,
-             act_rule_with_action,
-             pass_single,
-             act_rule_with_action],
 
+    "ProductionRules": [act_production_rules, pass_single],
     'ProductionRule': act_production_rule,
+    'ProductionRuleWithAction': act_production_rule_with_action,
     'ProductionRuleRHS': collect_sep,
     'Production': act_production,
 
+    'TerminalRules': collect,
     'TerminalRule': [act_term_rule,
                      act_term_rule_empty_body,
                      act_term_rule,
                      act_term_rule_empty_body],
+    'TerminalRuleWithAction': act_term_rule_with_action,
 
     "ProductionDisambiguationRules": collect_sep,
     "TerminalDisambiguationRules": collect_sep,
@@ -1500,7 +1512,7 @@ pg_actions = {
     'RepeatableGrammarSymbols': collect,
 
     'GrammarSymbol': [lambda _, nodes: Reference(nodes[0]),
-                      pass_single],
+                      act_recognizer_str],
 
     'Recognizer': [act_recognizer_str, act_recognizer_regex],
 
