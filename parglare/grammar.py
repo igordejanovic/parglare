@@ -1115,6 +1115,9 @@ def act_pgfile(context, nodes):
 
 
 def act_import(context, nodes):
+    if not context.file_name:
+        raise GrammarError('Import can be used only for grammars '
+                           'defined in files.')
     import_path = nodes[1]
     module_name = nodes[3] if len(nodes) > 3 else None
     if module_name is None:
