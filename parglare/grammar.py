@@ -740,19 +740,19 @@ class Grammar(PGFile):
                        start_symbol=start_symbol, recognizers=recognizers)
 
     @staticmethod
-    def from_string(grammar_str, recognizers=None, ignore_case=False,
-                    re_flags=re.MULTILINE, debug=False, debug_parse=False,
-                    debug_colors=False, _no_check_recognizers=False):
+    def _parse(parse_fun_name, what_to_parse, recognizers=None,
+               ignore_case=False, re_flags=re.MULTILINE, debug=False,
+               debug_parse=False, debug_colors=False,
+               _no_check_recognizers=False):
         from .parser import Context
         context = Context()
         context.re_flags = re_flags
         context.ignore_case = ignore_case
         context.classes = {}
+        grammar_parser = get_grammar_parser(debug_parse, debug_colors)
         imports, productions, terminals = \
-            get_grammar_parser(debug_parse, debug_colors).parse(
-                grammar_str, context=context)
-        if imports:
-            raise GrammarError('Imports can be used only in file grammars.')
+            getattr(grammar_parser, parse_fun_name)(what_to_parse,
+                                                    context=context)
         g = Grammar(productions=productions,
                     terminals=terminals,
                     recognizers=recognizers,
@@ -765,29 +765,12 @@ class Grammar(PGFile):
         return g
 
     @staticmethod
-    def from_file(file_name, recognizers=None, ignore_case=False,
-                  re_flags=re.MULTILINE, debug=False, debug_parse=False,
-                  debug_colors=False, _no_check_recognizers=False):
-        from .parser import Context
-        context = Context()
-        context.re_flags = re_flags
-        context.ignore_case = ignore_case
-        context.classes = {}
-        imports, productions, terminals = \
-            get_grammar_parser(debug_parse, debug_colors).parse_file(
-                file_name, context=context)
+    def from_string(grammar_str, **kwargs):
+        return Grammar._parse('parse', grammar_str, **kwargs)
 
-        g = Grammar(productions=productions,
-                    terminals=terminals,
-                    recognizers=recognizers,
-                    file_path=file_name,
-                    _no_check_recognizers=_no_check_recognizers)
-        g.classes = context.classes
-        termui.colors = debug_colors
-        if debug:
-            g.print_debug()
-
-        return g
+    @staticmethod
+    def from_file(file_name, **kwargs):
+        return Grammar._parse('parse_file', file_name, **kwargs)
 
     def print_debug(self):
         a_print("*** GRAMMAR ***", new_line=True)
