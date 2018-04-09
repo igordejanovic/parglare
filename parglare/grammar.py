@@ -1454,8 +1454,8 @@ def act_repeatable_gsymbol(context, nodes):
 
 def act_assignment(_, nodes):
     repeatable_gsymbol = nodes[0]
-    if isinstance(repeatable_gsymbol[0], GrammarSymbol) or \
-       isinstance(repeatable_gsymbol[0], Reference):
+    if type(repeatable_gsymbol[0]) in (NonTerminal, Terminal,
+                                       StringRecognizer, Reference):
         symbol, orig_symbol, multiplicity = repeatable_gsymbol
         name, op = None, None
     else:
