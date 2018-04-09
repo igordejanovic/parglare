@@ -1157,9 +1157,9 @@ def act_production_rule_with_action(_, nodes):
         for p in productions:
             p.symbol.action_name = action_name
     else:
-        production = nodes[0]
+        productions = nodes[0]
 
-    return production
+    return productions
 
 
 def act_production_rule(context, nodes):
