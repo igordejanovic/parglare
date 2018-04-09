@@ -561,7 +561,6 @@ class PGFile(object):
         else:
             symbol = self.symbols_by_name.get(symbol_name)
             if not symbol:
-                import pudb;pudb.set_trace()
                 self.raise_grammar_error('Unexisting symbol "{}"'
                                          .format(symbol_name),
                                          'referenced from file')
