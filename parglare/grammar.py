@@ -727,7 +727,8 @@ class Grammar(PGFile):
                 return p.prod_id
 
     @staticmethod
-    def from_struct(productions, terminals, start_symbol, recognizers=None):
+    def from_struct(productions, terminals=None, start_symbol=None,
+                    recognizers=None):
         """Used internally to bootstrap grammar file parser."""
         return Grammar(productions=create_productions(productions),
                        terminals=terminals,
