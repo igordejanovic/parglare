@@ -428,6 +428,18 @@ class PGFile(object):
                     terminal = Terminal(recognizer.name, recognizer=recognizer)
                     terminals_by_name[terminal.name] = terminal
                     production.rhs[idx] = terminal
+                elif isinstance(rhs_elem, Terminal):
+                    # RHS might contain terminals if from_struct is used or
+                    # built-in special terminals (STOP, EOF). We just have to
+                    # make sure the same object is used everywhere.
+                    terminal = rhs_elem
+                    if terminal.name not in terminals_by_name:
+                        terminals_by_name[terminal.name] = terminal
+                    else:
+                        if terminal is not terminals_by_name[terminal.name]:
+                            self.raise_grammar_error(
+                                'Multiple different terminals "{}" used in '
+                                'the grammar.'.format(terminal.name))
 
         # Collect non-terminals
         for production in self.productions:
