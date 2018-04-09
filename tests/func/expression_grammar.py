@@ -16,4 +16,4 @@ productions = [
 
 
 def get_grammar():
-    return Grammar.from_struct(productions, E)
+    return Grammar.from_struct(productions=productions, start_symbol=E)
