@@ -40,6 +40,8 @@ def test_priority(cf):
 
     grammar = """
     S: First | Second | Third;
+
+    terminals
     First: /\d+\.\d+/ {15};
     Second: '14.75';
     Third: /\d+\.75/;
@@ -57,6 +59,8 @@ def test_most_specific(cf):
 
     grammar = """
     S: First | Second | Third;
+
+    terminals
     First: /\d+\.\d+/;
     Second: '14';
     Third: /\d+/;
@@ -74,6 +78,8 @@ def test_most_specific_longest_match(cf):
 
     grammar = """
     S: First | Second | Third;
+
+    terminals
     First: '147';
     Second: '14';
     Third: /\d+/;
@@ -93,6 +99,8 @@ def test_longest_match(cf):
 
     grammar = """
     S: First | Second | Third;
+
+    terminals
     First: /\d+\.\d+/;
     Second: '13';
     Third: /\d+/;
@@ -111,6 +119,8 @@ def test_failed_disambiguation(cf):
 
     grammar = """
     S: First | Second | Third;
+
+    terminals
     First: /\d+\.\d+/ {15};
     Second: '14.7';
     Third: /\d+\.75/ {15};
@@ -136,6 +146,8 @@ def test_longest_match_prefer(cf):
 
     grammar = """
     S: First | Second | Third;
+
+    terminals
     First: /\d+\.\d+/ {15};
     Second: '14.7';
     Third: /\d+\.75/ {15, prefer};
@@ -163,6 +175,8 @@ def test_nofinish(cf):
     # problem. This grammar demonstrates the problem.
     grammar = """
     S: First | Second | Third;
+
+    terminals
     First: /\d+\.\d+/;
     Second: '*';
     Third: /[A-Za-z0-9\*\-]+/;
@@ -183,6 +197,8 @@ def test_nofinish(cf):
     # also.
     grammar = """
     S: First | Second | Third;
+
+    terminals
     First: /\d+\.\d+/;
     Second: '*' {nofinish};
     Third: /[A-Za-z0-9\*\-]+/;
@@ -202,6 +218,8 @@ def test_dynamic_lexical_disambiguation():
     grammar = """
     S: Element+ EOF;
     Element: Bar | Baz | Number;
+
+    terminals
     Bar: /Bar. \d+/;
     Baz: /Baz. \d+/;
     Number: /\d+/;

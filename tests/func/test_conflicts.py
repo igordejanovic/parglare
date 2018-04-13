@@ -7,6 +7,8 @@ def test_sr_conflict():
     grammar = """
     S: As A A;
     As: As A | A;
+
+    terminals
     A:"a";
     """
     g = Grammar.from_string(grammar, _no_check_recognizers=True)
@@ -21,6 +23,8 @@ def test_rr_empty_conflict():
     S: A B C | A D C;
     B: B1 | EMPTY;
     D: D1 | EMPTY;
+
+    terminals
     A:;
     C:;
     B1:;
@@ -40,6 +44,8 @@ def test_rr_nonempty_conflict():
     S: A | B;
     A: A1 B1;
     B: A1 B1;
+
+    terminals
     A1: ;
     B1: ;
     """

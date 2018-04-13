@@ -11,6 +11,8 @@ from parglare.exceptions import GrammarError, ParseError
 def test_keyword_must_be_regex():
     grammar = r"""
     S: "for" name=ID "=" from=INT "to" to=INT;
+
+    terminals
     KEYWORD: "id";
     ID: /\w+/;
     INT: /\d+/;
@@ -25,6 +27,8 @@ def test_keyword_must_be_regex():
 def test_keyword_grammar_init():
     grammar = r"""
     S: "for" name=ID "=" from=INT "to" to=INT;
+
+    terminals
     KEYWORD: /\w+/;
     ID: /\w+/;
     INT: /\d+/;
@@ -46,6 +50,8 @@ def test_keyword_grammar_init():
 def test_keyword_matches_on_word_boundary():
     grammar = r"""
     S: "for" name=ID "=" from=INT "to" to=INT EOF;
+
+    terminals
     ID: /\w+/;
     INT: /\d+/;
     """
@@ -83,6 +89,8 @@ def test_keyword_preferred_over_regexes():
 
     grammar = r"""
     S: "for"? name=ID? "=" from=INT "to" to=INT EOF;
+
+    terminals
     ID: /\w+/;
     INT: /\d+/;
     KEYWORD: /\w+/;

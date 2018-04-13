@@ -15,6 +15,8 @@ NewLines: NewLine | NewLines NewLine;
 OptionalNewLines: NewLines | EMPTY;
 @pass_inner
 QuotedField: "\"" FieldContentQuoted "\"";
+
+terminals
 FieldContent: /[^,\n]+/;
 FieldContentQuoted: /(("")|([^"]))+/;
 NewLine: "\n";

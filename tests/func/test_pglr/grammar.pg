@@ -2,5 +2,6 @@ A: B C D;
 B: C D;
 
 // Terminal rules without recognizers
+terminals
 C:;
 D:;

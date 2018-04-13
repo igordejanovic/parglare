@@ -6,7 +6,10 @@ from parglare.exceptions import SRConflicts
 grammar = """
 E: E op_sum E {dynamic}
  | E op_mul E {dynamic}
- | /\d+/;
+ | number;
+
+terminals
+number: /\d+/;
 op_sum: '+' {dynamic};
 op_mul: '*' {dynamic};
 """

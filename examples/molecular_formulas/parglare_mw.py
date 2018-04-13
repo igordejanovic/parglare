@@ -11,6 +11,8 @@ grammar = r"""
 mw: EMPTY | formula;
 formula: species | formula species;
 species: ATOM DIGITS | ATOM;
+
+terminals
 DIGITS: /\d+/;
 """
 

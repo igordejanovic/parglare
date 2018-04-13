@@ -11,7 +11,9 @@ def test_single_terminal():
     Test that grammar may be just a single terminal.
     """
     grammar = r"""
-    S: "a";
+    S: A;
+    terminals
+    A: "a";
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)
@@ -19,7 +21,9 @@ def test_single_terminal():
     assert result == 'a'
 
     grammar = r"""
-    S: /\d+/;
+    S: A;
+    terminals
+    A: /\d+/;
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)
@@ -41,71 +45,18 @@ def test_undefined_grammar_symbol():
     assert 'id' in str(e)
 
 
-def test_terminal_nonterminal():
-
-    # Production A is a terminal ("a") and non-terminal at the same time.
-    # Thus, it must be recognized as non-terminal.
-    grammar = """
-    S: A B;
-    A: "a" | B;
-    B: "b";
-    """
-    g = Grammar.from_string(grammar)
-    assert NonTerminal("A") in g.nonterminals
-    assert Terminal("A") not in g.terminals
-    assert Terminal("B") in g.terminals
-    assert NonTerminal("B") not in g.nonterminals
-
-    # Here A should be non-terminal while B should be terminal.
-    grammar = """
-    S: A B;
-    A: B;
-    B: "b";
-    """
-
-    g = Grammar.from_string(grammar)
-    assert NonTerminal("A") in g.nonterminals
-    assert Terminal("A") not in g.terminals
-    assert Terminal("B") in g.terminals
-    assert NonTerminal("B") not in g.nonterminals
-
-    grammar = """
-    S: A;
-    A: S;
-    A: 'x';
-    """
-    g = Grammar.from_string(grammar)
-    assert NonTerminal("S") in g.nonterminals
-    assert NonTerminal("A") in g.nonterminals
-    assert Terminal("A") not in g.terminals
-    assert Terminal("x") in g.terminals
-
-    grammar = """
-    S: S S;
-    S: 'x';
-    S: EMPTY;
-    """
-    g = Grammar.from_string(grammar)
-    assert NonTerminal("S") in g.nonterminals
-    assert Terminal("x") in g.terminals
-    assert NonTerminal("x") not in g.nonterminals
-    assert Terminal("S") not in g.terminals
-
-
 def test_multiple_terminal_definition():
 
-    # A is defined multiple times as terminal thus it must be recognized
-    # as non-terminal with alternative expansions.
     grammar = """
     S: A A;
+    terminals
     A: "a";
     A: "b";
     """
 
-    g = Grammar.from_string(grammar)
-
-    assert NonTerminal("A") in g.nonterminals
-    assert Terminal("A") not in g.terminals
+    with pytest.raises(GrammarError,
+                       match=r'.*Multiple definitions of terminal rule.*'):
+        Grammar.from_string(grammar)
 
 
 def test_reserved_symbol_names():
@@ -147,6 +98,7 @@ def test_assoc_prior():
     E: E '*' E {2, left};
     E: E '^' E {right};
     E: id;
+    terminals
     id: /\d+/;
     """
 
@@ -165,6 +117,7 @@ def test_assoc_prior():
     E: E '*' E {2, reduce};
     E: E '^' E {shift};
     E: id;
+    terminals
     id: /\d+/;
     """
 
@@ -200,6 +153,7 @@ def test_no_terminal_associavitity():
     "Tests that terminals can't have associativity defined."
     grammar = """
     S: A | B;
+    terminals
     A: 'a' {15, left};
     B: 'b';
     """
@@ -207,7 +161,8 @@ def test_no_terminal_associavitity():
     with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Error at position 3,16' in str(e)
+    assert 'Expected: Prior or dynamic or finish or nofinish or prefer' \
+        in str(e)
 
 
 def test_terminal_empty_body():
@@ -217,6 +172,7 @@ def test_terminal_empty_body():
     """
     grammar = """
     S: A | B;
+    terminals
     A: {15};
     B: ;
     """
@@ -238,6 +194,7 @@ def test_builtin_grammar_action():
     @collect
     Ones: Ones One | One;
 
+    terminals
     One: "1";
     """
 
@@ -268,6 +225,7 @@ def test_multiple_grammar_action_raises_error():
     @something
     Ones: 'foo';
 
+    terminals
     One: "1";
     """
 
@@ -286,9 +244,11 @@ def test_action_override():
     grammar = """
     S: Foo Bar;
     @pass_nochange
-    Foo: 'foo';
-    @pass_nochange
     Bar: "1" a;
+
+    terminals
+    @pass_nochange
+    Foo: 'foo';
     a: "a";
     """
 
@@ -369,6 +329,8 @@ def test_repeatable_one_or_more():
 
     grammar = """
     S: "2" b+ "3";
+
+    terminals
     b: "1";
     """
 
@@ -394,6 +356,8 @@ def test_repeatable_one_or_more_with_separator():
 
     grammar = """
     S: "2" b+[comma] "3";
+
+    terminals
     b: "1";
     comma: ",";
     """
@@ -420,6 +384,8 @@ def test_optional():
 
     grammar = """
     S: "2" b? "3"? EOF;
+
+    terminals
     b: "1";
     """
 
@@ -453,6 +419,8 @@ def test_optional_no_modifiers():
 
     grammar = """
     S: "2" b?[comma] "3"? EOF;
+
+    terminals
     b: "1";
     comma: ",";
     """
@@ -469,6 +437,8 @@ def test_multiple_repetition_operators():
     """
     grammar = """
     S: "2" b*[comma] c+ "3"? EOF;
+
+    terminals
     b: "b";
     c: "c";
     comma: ",";
@@ -492,6 +462,8 @@ def test_repetition_operator_many_times_same():
 
     grammar = """
     S: "2" b*[comma] "3"? b*[semicolon] EOF;
+
+    terminals
     b: "b";
     comma: ",";
     semicolon: ";";
@@ -523,6 +495,8 @@ def test_assignment_plain():
 
     grammar = """
     S: "1" first=some_match "3";
+
+    terminals
     some_match: "2";
     """
 
@@ -556,6 +530,8 @@ def test_assignment_bool():
 
     grammar = """
     S: "1" first?=some_match "3";
+
+    terminals
     some_match: "2";
     """
 
@@ -589,6 +565,8 @@ def test_assignment_of_repetition():
 
     grammar = """
     S: "1" first=some_match+ "3";
+
+    terminals
     some_match: "2";
     """
 
@@ -622,6 +600,8 @@ def test_assignment_of_repetition_with_sep():
 
     grammar = """
     S: "1" first=some_match+[comma] "3";
+
+    terminals
     some_match: "2";
     comma: ",";
     """
@@ -656,6 +636,8 @@ def test_multiple_assignment_with_repetitions():
 
     grammar = """
     S: "1" first=some_match+[comma] second?=some_match* "3";
+
+    terminals
     some_match: "2";
     comma: ",";
     """
@@ -692,7 +674,10 @@ def test_case_insensitive_parsing():
     """
 
     grammar = """
-    S: "one" "Two" /Aa\w+/;
+    S: "one" "Two" Astart;
+
+    terminals
+    Astart: /Aa\w+/;
     """
 
     g = Grammar.from_string(grammar)

@@ -14,6 +14,8 @@ def test_layout_whitespaces(parser_class):
     A: 'a' A | 'a';
     B: 'b' B | 'b';
     LAYOUT: WS | EMPTY;
+
+    terminals
     WS: /\s+/;
     """
     g = Grammar.from_string(grammar)
@@ -36,8 +38,11 @@ def test_layout_simple_comments(parser_class):
     K: A | B;
     A: 'a' A | 'a';
     B: 'b' B | 'b';
+
     LAYOUT: LayoutItem | LAYOUT LayoutItem;
     LayoutItem: WS | Comment | EMPTY;
+
+    terminals
     WS: /\s+/;
     Comment: /\/\/.*/;
     """
@@ -63,10 +68,13 @@ def test_layout_nested_comments(parser_class):
 
     LAYOUT: LayoutItem | LAYOUT LayoutItem;
     LayoutItem: WS | Comment | EMPTY;
-    WS: /\s+/;
-    Comment: '/*' CorNCs '*/' | /\/\/.*/;
+    Comment: '/*' CorNCs '*/' | LineComment;
     CorNCs: CorNC | CorNCs CorNC | EMPTY;
     CorNC: Comment | NotComment | WS;
+
+    terminals
+    WS: /\s+/;
+    LineComment: /\/\/.*/;
     NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
     """
     g = Grammar.from_string(grammar)
@@ -100,8 +108,11 @@ def test_layout_context(parser_class):
     K: A | B;
     A: 'a' A | 'a';
     B: 'b' B | 'b';
+
     LAYOUT: LayoutItem | LAYOUT LayoutItem;
     LayoutItem: WS | Comment | EMPTY;
+
+    terminals
     WS: /\s+/;
     Comment: /\/\/.*/;
     """
@@ -144,8 +155,11 @@ def test_layout_actions(parser_class):
     K: A | B;
     A: 'a' A | 'a';
     B: 'b' B | 'b';
+
     LAYOUT: LayoutItem | LAYOUT LayoutItem;
     LayoutItem: WS | Comment | EMPTY;
+
+    terminals
     WS: /\s+/;
     Comment: /\/\/.*/;
     """
@@ -204,7 +218,10 @@ def test_layout_terminal():
 
     grammar = r"""
     S: "a" "b";
-    LAYOUT: /\d*/;
+    LAYOUT: DIGITS;
+
+    terminals
+    DIGITS: /\d*/;
     """
 
     g = Grammar.from_string(grammar)

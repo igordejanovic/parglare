@@ -15,12 +15,15 @@ A: simple=B
    optional=E?
    bool_attr?=F
    obj=Obj;
+
+Obj: a=D b=B+;
+
+terminals
 B: "b";
 C: "c";
 D: "d";
 E: "e";
 F: "f";
-Obj: a=D b=B+;
 """
 
 
@@ -131,7 +134,10 @@ def test_obj_position():
     """
     grammar = """
     S: "first" seconds=Second+;
-    Second: value=/\d+/;
+    Second: value=digits;
+
+    terminals
+    digits:/\d+/;
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)

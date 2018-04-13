@@ -31,6 +31,8 @@ def test_first_empty_in_rhs():
     grammar = """
     S: A C;
     A: B | EMPTY;
+
+    terminals
     B: "b";
     C: "c";
     """
@@ -111,6 +113,8 @@ def test_associativity_conflicts_resolving():
     """
     grammar = r"""
     E: E '+' E | number;
+
+    terminals
     number: /d+/;
     """
 
@@ -121,6 +125,8 @@ def test_associativity_conflicts_resolving():
 
     grammar = r"""
     E: E '+' E {left} | number;
+
+    terminals
     number: /d+/;
     """
 
@@ -150,6 +156,8 @@ def test_prefer_shifts_no_sr_conflicts():
     grammar = r"""
     S: B+;
     B: "b"? A+;
+
+    terminals
     A: "a";
     """
     g = Grammar.from_string(grammar)

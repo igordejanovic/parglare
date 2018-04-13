@@ -10,6 +10,8 @@ grammar = r"""
 Result: E EOF;
 E: E '+' E  {left}
  | number;
+
+terminals
 number: /\d+(\.\d+)?/;
 """
 

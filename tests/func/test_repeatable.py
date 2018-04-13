@@ -12,6 +12,8 @@ def test_repeatable_zero_or_more():
 
     grammar = """
     S: "2" b* "3";
+
+    terminals
     b: "1";
     """
 
@@ -36,6 +38,8 @@ def test_repeatable_zero_or_more_with_separator():
 
     grammar = """
     S: "2" b*[comma] "3";
+
+    terminals
     b: "1";
     comma: ",";
     """
@@ -61,6 +65,8 @@ def test_repeatable_one_or_more():
 
     grammar = """
     S: "2" b+ "3";
+
+    terminals
     b: "1";
     """
 
@@ -86,6 +92,8 @@ def test_repeatable_one_or_more_with_separator():
 
     grammar = """
     S: "2" b+[comma] "3";
+
+    terminals
     b: "1";
     comma: ",";
     """
@@ -112,6 +120,8 @@ def test_optional():
 
     grammar = """
     S: "2" b? "3"? EOF;
+
+    terminals
     b: "1";
     """
 
@@ -145,6 +155,8 @@ def test_optional_no_modifiers():
 
     grammar = """
     S: "2" b?[comma] "3"? EOF;
+
+    terminals
     b: "1";
     comma: ",";
     """
@@ -161,6 +173,8 @@ def test_multiple_repetition_operators():
     """
     grammar = """
     S: "2" b*[comma] c+ "3"? EOF;
+
+    terminals
     b: "b";
     c: "c";
     comma: ",";
@@ -184,6 +198,8 @@ def test_repetition_operator_many_times_same():
 
     grammar = """
     S: "2" b*[comma] "3"? b*[comma] EOF;
+
+    terminals
     b: "b";
     comma: ",";
     """
@@ -205,6 +221,8 @@ def test_repeatable_one_zero_rr_conflicts():
     grammar = """
     S: A B+ C;
     S: A B* D;
+
+    terminals
     A:; B:; C:; D:;
     """
     g = Grammar.from_string(grammar, _no_check_recognizers=True)

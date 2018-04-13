@@ -13,6 +13,7 @@ def test_parse_list_of_integers():
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
 
+    terminals
     int_less_than_five:;
     """
 
@@ -69,6 +70,8 @@ def test_parse_list_of_integers_lexical_disambiguation():
     Numbers: all_less_than_five ascending all_less_than_five EOF;
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
+
+    terminals
     int_less_than_five:;
     ascending:;
     """
@@ -118,6 +121,8 @@ def test_terminals_with_emtpy_bodies_require_recognizers():
 
     grammar = """
     S: A | B | C;
+
+    terminals
     A: {15};
     B: ;
     C: "c";

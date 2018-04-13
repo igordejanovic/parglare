@@ -14,6 +14,8 @@ E: E '+' E
  | E '^' E
  | '(' E ')'
  | number;
+
+terminals
 number: /\d+(\.\d+)?/;
 """
 

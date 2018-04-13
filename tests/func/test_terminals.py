@@ -7,6 +7,8 @@ from parglare import Parser, Grammar
 def test_str_terminals():
     g = r"""
     A: "a" B C D 'b';
+
+    terminals
     B: "b\"";
     C: "\"c\" ";
     D: '\'d\'';
@@ -19,9 +21,13 @@ def test_str_terminals():
 
 def test_regex_terminals():
     g = r"""
-    A: /a\// B C D 'b';
+    A: Aterm B C D 'b';
+    C: 'c' Cterm;
+
+    terminals
+    Aterm: /a\//;
+    Cterm: /a+/;
     B: /a'b[^"]/;
-    C: 'c' /a+/;
     D: /\d+\.\d+/;
     """
     grammar = Grammar.from_string(g)

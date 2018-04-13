@@ -12,6 +12,8 @@ def test_lr2_grammar():
     Prods: Prod | Prods Prod;
     Prod: ID "=" ProdRefs;
     ProdRefs: ID | ProdRefs ID;
+
+    terminals
     ID: /\w+/;
     """
 
@@ -58,6 +60,8 @@ def test_nops():
     Statements1: Statements1 Statement | Statement;
     ProgramEnd: End;
     Statement: End "transaction" | "command";
+
+    terminals
     End: "end";
     """
 
@@ -90,6 +94,8 @@ def test_nops():
     Statements1: Statements1 Statement | Statement;
     ProgramEnd: End;
     Statement: End "transaction" | "command";
+
+    terminals
     End: "end";
     """
 
@@ -121,7 +127,9 @@ def test_expressions():
     # This grammar is highly ambiguous if priorities and
     # associativities are not defined to disambiguate.
     grammar = """
-    E: E "+" E | E "*" E | "(" E ")" | /\d+/;
+    E: E "+" E | E "*" E | "(" E ")" | Number;
+    terminals
+    Number: /\d+/;
     """
     g = Grammar.from_string(grammar)
     p = GLRParser(g, actions=actions, debug=True)
@@ -151,7 +159,9 @@ def test_expressions():
     # Default production priority is 10. Here we will raise it to 15 for
     # multiplication.
     grammar = """
-    E: E "+" E | E "*" E {15}| "(" E ")" | /\d+/;
+    E: E "+" E | E "*" E {15}| "(" E ")" | Number;
+    terminals
+    Number: /\d+/;
     """
     g = Grammar.from_string(grammar)
     p = GLRParser(g, actions=actions)
@@ -166,7 +176,9 @@ def test_expressions():
     # If we define associativity for both + and * we have resolved all
     # ambiguities in the grammar.
     grammar = """
-    E: E "+" E {left}| E "*" E {left, 15}| "(" E ")" | /\d+/;
+    E: E "+" E {left}| E "*" E {left, 15}| "(" E ")" | Number;
+    terminals
+    Number: /\d+/;
     """
     g = Grammar.from_string(grammar)
     p = GLRParser(g, actions=actions)
@@ -183,6 +195,8 @@ def test_epsilon_grammar():
     Prods: Prod | Prods Prod | EMPTY;
     Prod: ID "=" ProdRefs;
     ProdRefs: ID | ProdRefs ID;
+
+    terminals
     ID: /\w+/;
     """
 
@@ -213,6 +227,8 @@ def test_non_eof_grammar_nonempty():
     Prods: Prod | Prods Prod;
     Prod: ID "=" ProdRefs;
     ProdRefs: ID | ProdRefs ID;
+
+    terminals
     ID: /\w+/;
     """
 
@@ -244,6 +260,8 @@ def test_non_eof_grammar_empty():
     Prods: Prod | Prods Prod | EMPTY;
     Prod: ID "=" ProdRefs;
     ProdRefs: ID | ProdRefs ID;
+
+    terminals
     ID: /\w+/;
     """
 

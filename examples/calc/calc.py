@@ -18,6 +18,7 @@ E: E "+" E {left, 1}
 
 VariableRef: VariableName;
 
+terminals
 VariableName: /[a-zA-Z_][_a-zA-Z0-9]*/;
 Number: /\d+(\.\d+)?/;
 """

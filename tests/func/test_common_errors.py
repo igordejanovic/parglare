@@ -39,6 +39,7 @@ def test_terminals_with_different_names():
     grammar = """
     S: 'a' A 'd' | 'b' A B;
     A: 'c' A | 'c';
+    terminals
     B: 'd';
     """
 
@@ -47,7 +48,7 @@ def test_terminals_with_different_names():
 
     assert 'B' in str(e)
     assert 'd' in str(e)
-    assert 'already exists' in str(e)
+    assert 'at the same time' in str(e)
 
 
 def todo_test_grammar_without_valid_inputs():
