@@ -402,32 +402,49 @@ class PGFile(object):
         """
         nonterminals_by_name = {}
         terminals_by_name = {}
-        recognizer_names = set()
+        terminals_by_value = {}
 
-        # Check terminal rules name uniqueness
+        # Check terminal uniqueness in both name and string recognition
+        # and collect all terminals from explicit definitions.
         for terminal in self.terminals:
             if terminal.name in terminals_by_name:
                 self.raise_grammar_error(
-                    'Multiple definitions of terminal rule "{}"'.
-                    format(terminal.name))
+                    'Multiple definitions of terminal rule "{}"'
+                    .format(terminal.name))
+            if isinstance(terminal.recognizer, StringRecognizer):
+                rec = terminal.recognizer
+                if rec.value in terminals_by_value:
+                    self.raise_grammar_error(
+                        'Terminals "{}" and "{}" match the same string.'
+                        .format(terminal.name,
+                                terminals_by_value[rec.value].name))
+                terminals_by_value[rec.value] = terminal
             terminals_by_name[terminal.name] = terminal
 
         # Collect inline terminals
         for production in self.productions:
             for idx, rhs_elem in enumerate(production.rhs):
+
                 if isinstance(rhs_elem, StringRecognizer):
                     recognizer = rhs_elem
                     # First check if the same recognizer already exists.
-                    if recognizer.name in terminals_by_name \
-                       and recognizer.name not in recognizer_names:
-                        self.raise_grammar_error(
-                            'Terminal rule "{}" defined as explicit and inline'
-                            ' at the same time'.
-                            format(recognizer.name))
-                    recognizer_names.add(recognizer.name)
-                    terminal = Terminal(recognizer.name, recognizer=recognizer)
-                    terminals_by_name[terminal.name] = terminal
+                    if recognizer.value in terminals_by_value:
+                        terminal = terminals_by_value[recognizer.value]
+                        if not getattr(terminal, '_inline', False):
+                            self.raise_grammar_error(
+                                'Terminal match "{}" defined as explicit'
+                                ' terminal "{}" and inline at the same time'.
+                                format(recognizer.name, terminal.name))
+                        else:
+                            terminal = terminals_by_value[recognizer.value]
+                    else:
+                        terminal = Terminal(recognizer.name,
+                                            recognizer=recognizer)
+                        terminal._inline = True
+                        terminals_by_name[terminal.name] = terminal
+                        terminals_by_value[recognizer.value] = terminal
                     production.rhs[idx] = terminal
+
                 elif isinstance(rhs_elem, Terminal):
                     # RHS might contain terminals if from_struct is used or
                     # built-in special terminals (STOP, EOF). We just have to
@@ -461,9 +478,15 @@ class PGFile(object):
             self._resolve_action(old_symbol, new_symbol)
 
         self.terminals = set(terminals_by_name.values())
+        self.terminals.update([EMPTY, EOF, STOP])
+
         self.nonterminals = set(nonterminals_by_name.values())
         nonterminals_by_name.update(terminals_by_name)
         self.symbols_by_name = nonterminals_by_name
+        # Add special terminals
+        self.symbols_by_name['EMPTY'] = EMPTY
+        self.symbols_by_name['EOF'] = EOF
+        self.symbols_by_name['STOP'] = STOP
 
     def _resolve_action(self, old_symbol, new_symbol):
         """
@@ -561,7 +584,7 @@ class PGFile(object):
         else:
             symbol = self.symbols_by_name.get(symbol_name)
             if not symbol:
-                self.raise_grammar_error('Unexisting symbol "{}"'
+                self.raise_grammar_error('Unknown symbol "{}"'
                                          .format(symbol_name),
                                          'referenced from file')
             return symbol
@@ -640,12 +663,6 @@ class Grammar(PGFile):
             Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
         self.nonterminals.add(AUGSYMBOL)
         self.symbols_by_name[AUGSYMBOL.name] = AUGSYMBOL
-
-        # Add special terminals
-        self.symbols_by_name['EMPTY'] = EMPTY
-        self.symbols_by_name['EOF'] = EOF
-        self.symbols_by_name['STOP'] = STOP
-        self.terminals.update([EMPTY, EOF, STOP])
 
         # Connect recognizers, override grammar provided
         if not self._no_check_recognizers:
