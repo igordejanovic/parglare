@@ -99,7 +99,7 @@ def test_error_recovery_parse_error():
     with pytest.raises(ParseError) as einfo:
         parser.parse("1 + 2 + * 3 + & -")
 
-    assert einfo.value.position == 14
+    assert einfo.value.location.start_position == 14
 
 
 def test_custom_error_recovery():

@@ -1,53 +1,31 @@
 from __future__ import unicode_literals
 from parglare.termui import s_header as _
-from parglare.termui import s_attention as _a
 
 
-class GrammarError(Exception):
-    pass
+class LocationError(Exception):
+    def __init__(self, location, message):
+        self.location = location
+        super(LocationError, self).__init__(str(location) + message)
 
 
-class ParseError(Exception):
-    def __init__(self, file_name, input_str, position, message_factory):
-        from parglare.parser import pos_to_line_col
-        self.file_name = file_name
-        self.position = position
-        self.line, self.column = pos_to_line_col(input_str, position)
-        super(ParseError, self).__init__(
-            message_factory(file_name, input_str, position))
+class GrammarError(LocationError):
+    def __init__(self, location, message):
+        super(GrammarError, self).__init__(location, message)
 
 
-# Error message factories
-def _full_context(input_str, position):
-    from parglare.parser import pos_to_line_col, position_context
-    line, column = pos_to_line_col(input_str, position)
-    context = position_context(input_str, position)
-    return context, line, column
+class ParseError(LocationError):
+    def __init__(self, location, message):
+        super(ParseError, self).__init__(location, message)
 
 
-def nomatch_error(symbols):
-    def _inner(file_name, input_str, position):
-        context, line, column = _full_context(input_str, position)
-        return (_a('Error') + ' {}at position ' + _a('{},{} ')
-                + _('=>') + ' "{}". ' +
-                _('Expected: ') + '{}').format(
-                'in file "{}" '.format(file_name)
-                if file_name else "",
-                line, column, context,
-                _(' or ').join(sorted([s.name for s in symbols])))
-    return _inner
+def expected_message(symbols):
+    return (_('Expected: ') + '{}').format(
+        _(' or ').join(sorted([s.name for s in symbols])))
 
 
 def disambiguation_error(tokens):
-    def _inner(file_name, input_str, position):
-        context, line, column = _full_context(input_str, position)
-        return 'Error {}at position {},{} => "{}". ' \
-            'Can\'t disambiguate between: {}'.format(
-                'in file "{}" '.format(file_name)
-                if file_name else "",
-                line, column, context,
+    return 'Can\'t disambiguate between: {}'.format(
                 _(' or ').join([str(t) for t in tokens]))
-    return _inner
 
 
 class ParserInitError(Exception):

@@ -50,8 +50,10 @@ def create_table(grammar, first_sets=None, follow_sets=None,
     for nt, firsts in first_sets.items():
         if nt.name != 'S\'' and not firsts:
             raise GrammarError(
-                'First set empty for grammar symbol "{}". '
-                'An infinite recursion on the grammar symbol.'.format(nt))
+                location=nt.location,
+                message='First set empty for grammar symbol "{}". '
+                        'An infinite recursion on the '
+                        'grammar symbol.'.format(nt))
 
     follow_sets = follow_sets if follow_sets else follow(grammar, first_sets)
 

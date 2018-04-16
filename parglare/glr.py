@@ -4,9 +4,9 @@ import codecs
 from itertools import chain
 from parglare import Parser
 from parglare import termui as t
-from .exceptions import DisambiguationError, ParseError, nomatch_error
-from .parser import position_context, SHIFT, REDUCE, ACCEPT, \
-    pos_to_line_col, STOP, Context
+from .exceptions import DisambiguationError, ParseError, expected_message
+from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, STOP, Context
+from .common import Location, position_context
 from .tables import LALR
 from .export import dot_escape
 from .termui import prints, h_print, a_print
@@ -139,9 +139,10 @@ class GLRParser(Parser):
         if not self.finish_head:
             if self.debug and self.debug_trace:
                 self._export_dot_trace()
-            raise ParseError(
-                file_name, input_str, self.last_position,
-                nomatch_error(self.expected))
+            raise ParseError(Location(file_name=file_name,
+                                      input_str=input_str,
+                                      start_position=self.last_position),
+                             message=expected_message(self.expected))
 
         results = [x[1] for x in self.finish_head.parents]
         if self.debug:

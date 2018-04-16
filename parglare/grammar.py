@@ -7,6 +7,7 @@ import itertools
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
+from parglare.common import Location
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
 
@@ -43,6 +44,7 @@ class GrammarSymbol(object):
 
     Attributes:
     name(str): The name of this grammar symbol.
+    location(Location): The location where symbol is defined.
     action_name(string): Name of common/user action given in the grammar.
     action(callable): Resolved action given by the user. Overrides grammar
         action if provided. If not provided by the user defaults to
@@ -51,8 +53,9 @@ class GrammarSymbol(object):
     imported_with (PGFileImport): PGFileImport where this symbol is first time
         imported from. Used for FQN calculation.
     """
-    def __init__(self, name):
+    def __init__(self, name, location=None):
         self.name = escape(name)
+        self.location = location
         self.action_name = None
         self.action = None
         self.grammar_action = None
@@ -92,8 +95,8 @@ class NonTerminal(GrammarSymbol):
     productions(list of Production): A list of alternative productions for
         this NonTerminal.
     """
-    def __init__(self, name, productions=None):
-        super(NonTerminal, self).__init__(name)
+    def __init__(self, name, productions=None, location=None):
+        super(NonTerminal, self).__init__(name, location)
         self.productions = productions if productions else []
 
 
@@ -116,36 +119,14 @@ class Terminal(GrammarSymbol):
         stream. Should return a sublist of recognized objects. The sublist
         should be rooted at the given position.
     """
-    def __init__(self, name, recognizer=None):
+    def __init__(self, name, recognizer=None, location=None):
         self.prior = DEFAULT_PRIORITY
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
         self.finish = None
         self.prefer = False
         self.dynamic = False
         self.keyword = False
-        super(Terminal, self).__init__(name)
-
-
-class Location(object):
-    """
-    Represents a location of the object in the source code.
-    """
-
-    __slots__ = ['file_name', 'start_position', 'end_position', 'input_str']
-
-    def __init__(self, context):
-        self.start_position = context.start_position
-        self.end_position = context.end_position
-        self.file_name = context.file_name
-        self.input_str = context.input_str
-
-    def __repr__(self):
-        from parglare.parser import pos_to_line_col
-        line, col = pos_to_line_col(self.input_str,
-                                    self.start_position)
-        return "{}{}:{}".format("{}:".format(self.file_name)
-                                if self.file_name else "",
-                                line, col)
+        super(Terminal, self).__init__(name, location)
 
 
 class Reference(object):
@@ -155,10 +136,7 @@ class Reference(object):
     """
     def __init__(self, location, name):
         self.name = name
-
-    @property
-    def location(self):
-        return repr(self.location)
+        self.location = location
 
     def __repr__(self):
         return self.name
@@ -169,13 +147,14 @@ class Recognizer(object):
     Recognizers are callables capable of recognizing low-level patterns
     (a.k.a tokens) in the input.
     """
-    def __init__(self, name):
+    def __init__(self, name, location=None):
         self.name = name
+        self.location = location
 
 
 class StringRecognizer(Recognizer):
-    def __init__(self, value, ignore_case=False):
-        super(StringRecognizer, self).__init__(value)
+    def __init__(self, value, ignore_case=False, **kwargs):
+        super(StringRecognizer, self).__init__(value, **kwargs)
         self.value = value
         self.ignore_case = ignore_case
         self.value_cmp = value.lower() if ignore_case else value
@@ -201,8 +180,11 @@ def esc_control_characters(regex):
 
 
 class RegExRecognizer(Recognizer):
-    def __init__(self, regex, re_flags=re.MULTILINE, ignore_case=False):
-        super(RegExRecognizer, self).__init__(regex)
+    def __init__(self, regex, name=None, re_flags=re.MULTILINE,
+                 ignore_case=False, **kwargs):
+        if name is None:
+            name = regex
+        super(RegExRecognizer, self).__init__(name, kwargs)
         self._regex = regex
         self.ignore_case = ignore_case
         if ignore_case:
@@ -430,14 +412,17 @@ class PGFile(object):
         # and collect all terminals from explicit definitions.
         for terminal in self.terminals:
             if terminal.name in terminals_by_name:
-                self.raise_grammar_error(
-                    'Multiple definitions of terminal rule "{}"'
-                    .format(terminal.name))
+                raise GrammarError(
+                    location=terminal.location,
+                    message='Multiple definitions of terminal rule "{}"'
+                            .format(terminal.name))
             if isinstance(terminal.recognizer, StringRecognizer):
                 rec = terminal.recognizer
                 if rec.value in terminals_by_value:
-                    self.raise_grammar_error(
-                        'Terminals "{}" and "{}" match the same string.'
+                    raise GrammarError(
+                        location=terminal.location,
+                        message='Terminals "{}" and "{}" match '
+                        'the same string.'
                         .format(terminal.name,
                                 terminals_by_value[rec.value].name))
                 terminals_by_value[rec.value] = terminal
@@ -453,10 +438,12 @@ class PGFile(object):
                     if recognizer.value in terminals_by_value:
                         terminal = terminals_by_value[recognizer.value]
                         if not getattr(terminal, '_inline', False):
-                            self.raise_grammar_error(
-                                'Terminal match "{}" defined as explicit'
-                                ' terminal "{}" and inline at the same time'.
-                                format(recognizer.name, terminal.name))
+                            raise GrammarError(
+                                location=recognizer.location,
+                                message='Terminal match "{}" defined '
+                                'as explicit terminal "{}" and inline '
+                                'at the same time'.format(recognizer.name,
+                                                          terminal.name))
                         else:
                             terminal = terminals_by_value[recognizer.value]
                     else:
@@ -476,17 +463,20 @@ class PGFile(object):
                         terminals_by_name[terminal.name] = terminal
                     else:
                         if terminal is not terminals_by_name[terminal.name]:
-                            self.raise_grammar_error(
-                                'Multiple different terminals "{}" used in '
-                                'the grammar.'.format(terminal.name))
+                            raise GrammarError(
+                                location=terminal.location,
+                                message='Multiple different terminals '
+                                '"{}" used in the grammar.'
+                                .format(terminal.name))
 
         # Collect non-terminals
         for production in self.productions:
             symbol = production.symbol
             # Check that there is no terminal defined by the same name.
             if symbol.name in terminals_by_name:
-                raise self.raise_grammar_error(
-                    'Rule "{}" already defined as terminal'
+                raise GrammarError(
+                    location=symbol.location,
+                    message='Rule "{}" already defined as terminal'
                     .format(symbol.name))
             # Unify all non-terminal objects
             if symbol.name in nonterminals_by_name:
@@ -518,7 +508,8 @@ class PGFile(object):
         if new_symbol.action_name:
             if new_symbol.action_name != old_symbol.action_name:
                 raise GrammarError(
-                    'Multiple different grammar actions for rule "{}".'
+                    location=new_symbol.location,
+                    message='Multiple different grammar actions for rule "{}".'
                     .format(new_symbol.name))
 
             # Try to find action in built-in actions module
@@ -535,7 +526,7 @@ class PGFile(object):
         for production in self.productions:
             for idx, ref in enumerate(production.rhs):
                 if isinstance(ref, Reference):
-                    production.rhs[idx] = self.resolve(ref.name)
+                    production.rhs[idx] = self.resolve(ref)
 
     def init_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
@@ -584,8 +575,8 @@ class PGFile(object):
                             ' "{}" in recognizers parameters.'.format(
                                 symbol.fqn))
 
-    def resolve(self, symbol_name):
-        """Resolves given symbol by its name.
+    def resolve(self, symbol_ref):
+        """Resolves given symbol reference.
 
         For local name search this file, for FQN use imports and delegate to
         imported file.
@@ -593,29 +584,25 @@ class PGFile(object):
         On each resolved symbol productions in the root file are updated.
 
         """
+        symbol_name = symbol_ref.name
         if '.' in symbol_name:
             import_module_name, name = symbol_name.split('.')
             try:
                 imported_pg_file = self.imports[import_module_name]
             except KeyError:
-                self.raise_grammar_error(
-                    'Unexisting module "{}" in reference "{}"'
-                    .format(import_module_name, symbol_name),
-                    'referenced from file')
-            return imported_pg_file.resolve(name)
+                raise GrammarError(
+                    location=symbol_ref.location,
+                    message='Unexisting module "{}" in reference "{}"'
+                    .format(import_module_name, symbol_name))
+            symbol_ref.name = name
+            return imported_pg_file.resolve(symbol_ref)
         else:
             symbol = self.symbols_by_name.get(symbol_name)
             if not symbol:
-                self.raise_grammar_error('Unknown symbol "{}"'
-                                         .format(symbol_name),
-                                         'referenced from file')
+                raise GrammarError(
+                    location=symbol_ref.location,
+                    message='Unknown symbol "{}"'.format(symbol_name))
             return symbol
-
-    def raise_grammar_error(self, message, message2='in file'):
-        raise GrammarError("{}{}.".format(
-            message,
-            ' {} "{}"'.format(message2, self.file_path)
-            if self.file_path else ""))
 
 
 class Grammar(PGFile):
@@ -701,14 +688,16 @@ class Grammar(PGFile):
                 if term.recognizer is None:
                     if not self.recognizers:
                         raise GrammarError(
-                            'Terminal "{}" has no recognizer defined '
+                            location=term.location,
+                            message='Terminal "{}" has no recognizer defined '
                             'and no recognizers are given during grammar '
                             'construction.'.format(term.name))
                     else:
                         if term.name not in self.recognizers:
                             raise GrammarError(
-                                'Terminal "{}" has no recognizer defined.'
-                                .format(term.name))
+                                location=term.location,
+                                message='Terminal "{}" has no recognizer '
+                                'defined.'.format(term.name))
 
     def _enumerate_productions(self):
         """
@@ -734,7 +723,8 @@ class Grammar(PGFile):
         keyword_rec = keyword_term.recognizer
         if not isinstance(keyword_rec, RegExRecognizer):
             raise GrammarError(
-                'KEYWORD rule must have a regex recognizer defined.')
+                location=keyword_term.location,
+                message='KEYWORD rule must have a regex recognizer defined.')
 
         # Change each string recognizer corresponding to the KEYWORD
         # regex by the regex recognizer that match on word boundaries.
@@ -866,7 +856,7 @@ class PGFileImport(object):
         else:
             return self.module_name
 
-    def resolve(self, symbol_name):
+    def resolve(self, symbol_ref):
         "Resolves symbol from the imported file."
 
         if self.pgfile is None:
@@ -887,7 +877,7 @@ class PGFileImport(object):
                                      file_path=self.file_path)
                 self.context.imported_files[self.file_path] = self.pgfile
 
-        return self.pgfile.resolve(symbol_name)
+        return self.pgfile.resolve(symbol_ref)
 
 
 def create_productions(productions):
@@ -928,10 +918,9 @@ def check_name(context, name):
     """
 
     if name in RESERVED_SYMBOL_NAMES:
-            from parglare.parser import pos_to_line_col
-            raise GrammarError('Rule name "{}" at {} is reserved.'.format(
-                name, pos_to_line_col(context.input_str,
-                                      context.start_position)))
+            raise GrammarError(
+                location=Location(context),
+                message='Rule name "{}" is reserved.'.format(name))
 
 
 # Grammar for grammars
@@ -1205,7 +1194,7 @@ def act_production_rule(context, nodes):
 
     check_name(context, name)
 
-    symbol = NonTerminal(name)
+    symbol = NonTerminal(name, location=Location(context))
 
     # Collect all productions for this rule
     prods = []
@@ -1333,7 +1322,7 @@ def act_term_rule(context, nodes):
     recognizer = nodes[2]
 
     check_name(context, name)
-    term = Terminal(name, recognizer)
+    term = Terminal(name, recognizer, location=Location(context))
     if len(nodes) > 4:
         _set_term_props(term, nodes[4])
     return term
@@ -1343,7 +1332,7 @@ def act_term_rule_empty_body(context, nodes):
     name = nodes[0]
 
     check_name(context, name)
-    term = Terminal(name)
+    term = Terminal(name, location=Location(context))
     term.recognizer = None
     if len(nodes) > 3:
         _set_term_props(term, nodes[3])
@@ -1431,13 +1420,11 @@ def make_zero_or_more(context, gsymbol, sep_ref=None):
 def make_optional(context, gsymbol, sep_ref=None):
     def prod_callable(new_nt):
         if sep_ref:
-            from parglare import pos_to_line_col
             raise GrammarError(
-                'Repetition modifier not allowed for '
-                'optional (?) for symbol "{}" at {}.'
-                .format(gsymbol.name,
-                        pos_to_line_col(context.input_str,
-                                        context.start_position)))
+                location=gsymbol.location,
+                message='Repetition modifier not allowed for '
+                'optional (?) for symbol "{}".'
+                .format(gsymbol.name))
         # Optional
         new_productions = [Production(new_nt, ProductionRHS([gsymbol])),
                            Production(new_nt, ProductionRHS([EMPTY]))]

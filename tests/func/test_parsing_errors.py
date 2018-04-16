@@ -15,7 +15,7 @@ def test_invalid_input():
     with pytest.raises(ParseError) as e:
         p.parse("id+id*+id")
 
-    assert e.value.position == 6
+    assert e.value.location.start_position == 6
     assert "(" in str(e)
     assert "id" in str(e)
 
@@ -28,7 +28,7 @@ def test_premature_end():
     with pytest.raises(ParseError) as e:
         p.parse("id+id*")
 
-    assert e.value.position == 6
+    assert e.value.location.start_position == 6
     assert "(" in str(e)
     assert "id" in str(e)
 
@@ -40,27 +40,30 @@ def test_line_column():
     try:
         p.parse("""id + id * id + id + error * id""")
     except ParseError as e:
-        assert e.position == 20
-        assert e.line == 1
-        assert e.column == 20
+        loc = e.location
+        assert loc.start_position == 20
+        assert loc.line == 1
+        assert loc.column == 20
 
     try:
         p.parse("""id + id * id + id + error * id
 
         """)
     except ParseError as e:
-        assert e.position == 20
-        assert e.line == 1
-        assert e.column == 20
+        loc = e.location
+        assert loc.start_position == 20
+        assert loc.line == 1
+        assert loc.column == 20
 
     try:
         p.parse("""
 
 id + id * id + id + error * id""")
     except ParseError as e:
-        assert e.position == 22
-        assert e.line == 3
-        assert e.column == 20
+        loc = e.location
+        assert loc.start_position == 22
+        assert loc.line == 3
+        assert loc.column == 20
 
     try:
         p.parse("""
@@ -69,9 +72,10 @@ id + id * id + id + error * id
 
         """)
     except ParseError as e:
-        assert e.position == 22
-        assert e.line == 3
-        assert e.column == 20
+        loc = e.location
+        assert loc.start_position == 22
+        assert loc.line == 3
+        assert loc.column == 20
 
 
 def test_file_name():

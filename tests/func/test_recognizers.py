@@ -40,7 +40,7 @@ def test_parse_list_of_integers():
     # Test that error is correctly reported.
     with pytest.raises(ParseError) as e:
         parser.parse([4, 2, 1, 6, 3])
-    assert 'Error at position 1,3 => "[4, 2, 1]*[6, 3]".' in str(e)
+    assert '1:3:"[4, 2, 1]*[6, 3]"' in str(e)
     assert 'int_less_than_five' in str(e)
 
 

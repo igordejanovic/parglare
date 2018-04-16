@@ -6,10 +6,11 @@ from .grammar import Terminal, EMPTY, EOF, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
-    DynamicDisambiguationConflict, disambiguation_error, \
-    nomatch_error, SRConflicts, RRConflicts
+    DynamicDisambiguationConflict, disambiguation_error, expected_message, \
+    SRConflicts, RRConflicts
+from .common import Location, position_context
 from .actions import pass_none
-from .termui import prints, h_print, a_print, s_attention
+from .termui import prints, h_print, a_print
 from parglare import termui
 
 if sys.version < '3':
@@ -227,8 +228,11 @@ class Parser(object):
                     ntok = next_token(cur_state, input_str, position)
 
                 except DisambiguationError as e:
-                    raise ParseError(file_name, input_str, position,
-                                     disambiguation_error(e.tokens))
+                    raise ParseError(
+                        location=Location(file_name=file_name,
+                                          input_str=input_str,
+                                          start_position=position),
+                        message=disambiguation_error(e.tokens))
 
             context.parser = self
             context.start_position = position
@@ -252,8 +256,10 @@ class Parser(object):
                     # ParserError
                     if position > len(input_str):
                         e = self.current_error
-                        raise ParseError(file_name, input_str, e.position,
-                                         nomatch_error(actions.keys()))
+                        raise ParseError(Location(file_name=file_name,
+                                                  input_str=input_str,
+                                                  start_position=e.position),
+                                         expected_message(actions.keys()))
                     if debug:
                         a_print("**Error found. Recovery initiated.**")
 
@@ -292,8 +298,10 @@ class Parser(object):
                         acts = actions.get(ntok.symbol)
 
             if not acts:
-                raise ParseError(file_name, input_str, position,
-                                 nomatch_error(actions.keys()))
+                raise ParseError(Location(file_name=file_name,
+                                          input_str=input_str,
+                                          start_position=position),
+                                 expected_message(actions.keys()))
 
             # Dynamic disambiguation
             if self.dynamic_filter:
@@ -905,14 +913,3 @@ def pos_to_line_col(input_str, position):
         pass
 
     return line, position - old_pos
-
-
-def position_context(input_str, position):
-    """
-    Returns position context string.
-    """
-    start = max(position-10, 0)
-    c = text(input_str[start:position]) + s_attention("*") \
-        + text(input_str[position:position+10])
-    c = c.replace("\n", "\\n")
-    return c

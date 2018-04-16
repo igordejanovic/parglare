@@ -70,7 +70,7 @@ def test_keyword_matches_on_word_boundary():
     with pytest.raises(ParseError) as e:
         # This *will* raise an error
         parser.parse('forid=10 to20')
-    assert '"*forid=10 t". Expected: for' in str(e)
+    assert '"*forid=10 t" => Expected: for' in str(e)
     with pytest.raises(ParseError) as e:
         # This *will* also raise an error
         parser.parse('for id=10 to20')
