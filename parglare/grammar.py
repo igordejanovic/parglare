@@ -126,20 +126,42 @@ class Terminal(GrammarSymbol):
         super(Terminal, self).__init__(name)
 
 
+class Location(object):
+    """
+    Represents a location of the object in the source code.
+    """
+
+    __slots__ = ['file_name', 'start_position', 'end_position', 'input_str']
+
+    def __init__(self, context):
+        self.start_position = context.start_position
+        self.end_position = context.end_position
+        self.file_name = context.file_name
+        self.input_str = context.input_str
+
+    def __repr__(self):
+        from parglare.parser import pos_to_line_col
+        line, col = pos_to_line_col(self.input_str,
+                                    self.start_position)
+        return "{}{}:{}".format("{}:".format(self.file_name)
+                                if self.file_name else "",
+                                line, col)
+
+
 class Reference(object):
     """
     A name reference to a GrammarSymbol used for cross-resolving during
     grammar construction.
     """
-    def __init__(self, name, module_name=None):
+    def __init__(self, location, name):
         self.name = name
-        self.module_name = module_name
+
+    @property
+    def location(self):
+        return repr(self.location)
 
     def __repr__(self):
-        if self.module_name:
-            return "{}.{}".format(self.module_name, self.name)
-        else:
-            return self.name
+        return self.name
 
 
 class Recognizer(object):
@@ -1466,7 +1488,7 @@ def act_repeatable_gsymbol(context, nodes):
     sep_ref = None
     if modifiers:
         sep_ref = modifiers[1]
-        sep_ref = Reference(sep_ref)
+        sep_ref = Reference(Location(context), sep_ref)
 
     if rep_op == '*':
         new_nt = make_zero_or_more(context, gsymbol, sep_ref)
@@ -1542,7 +1564,8 @@ pg_actions = {
     'RepeatableGrammarSymbol': act_repeatable_gsymbol,
     'RepeatableGrammarSymbols': collect,
 
-    'GrammarSymbol': [lambda _, nodes: Reference(nodes[0]),
+    'GrammarSymbol': [lambda context, nodes: Reference(Location(context),
+                                                       nodes[0]),
                       act_recognizer_str],
 
     'Recognizer': [act_recognizer_str, act_recognizer_regex],
