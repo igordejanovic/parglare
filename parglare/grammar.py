@@ -1461,10 +1461,10 @@ def act_repeatable_gsymbol(context, nodes):
     ```
 
     """
-    gsymbol, rep_op = nodes
+    symbol_ref, rep_op = nodes
 
     if not rep_op:
-        return gsymbol, gsymbol, MULT_ONE
+        return symbol_ref, symbol_ref, MULT_ONE
 
     if len(rep_op) > 1:
         rep_op, modifiers = rep_op
@@ -1478,16 +1478,16 @@ def act_repeatable_gsymbol(context, nodes):
         sep_ref = Reference(Location(context), sep_ref)
 
     if rep_op == '*':
-        new_nt = make_zero_or_more(context, gsymbol, sep_ref)
+        new_nt = make_zero_or_more(context, symbol_ref, sep_ref)
         multiplicity = MULT_ZERO_OR_MORE
     elif rep_op == '+':
-        new_nt = make_one_or_more(context, gsymbol, sep_ref)
+        new_nt = make_one_or_more(context, symbol_ref, sep_ref)
         multiplicity = MULT_ONE_OR_MORE
     else:
-        new_nt = make_optional(context, gsymbol, sep_ref)
+        new_nt = make_optional(context, symbol_ref, sep_ref)
         multiplicity = MULT_OPTIONAL
 
-    return new_nt, gsymbol, multiplicity
+    return new_nt, symbol_ref, multiplicity
 
 
 def act_assignment(_, nodes):
