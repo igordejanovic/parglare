@@ -946,8 +946,7 @@ def check_name(context, name):
  PLAIN_ASSIGNMENT,
  BOOL_ASSIGNMENT,
 
- REPEATABLE_GSYMBOL,
- REPEATABLE_GSYMBOLS,
+ GSYMBOL_REFERENCE,
  OPT_REP_OPERATOR,
  REP_OPERATOR_ZERO,
  REP_OPERATOR_ONE,
@@ -984,8 +983,7 @@ def check_name(context, name):
      'PlainAssignment',
      'BoolAssignment',
 
-     'RepeatableGrammarSymbol',
-     'RepeatableGrammarSymbols',
+     'GrammarSymbolReference',
      'OptRepeatOperator',
      'RepeatOperatorZero',
      'RepeatOperatorOne',
@@ -1079,14 +1077,14 @@ pg_productions = [
     # Assignments
     [ASSIGNMENT, [PLAIN_ASSIGNMENT]],
     [ASSIGNMENT, [BOOL_ASSIGNMENT]],
-    [ASSIGNMENT, [REPEATABLE_GSYMBOL]],
+    [ASSIGNMENT, [GSYMBOL_REFERENCE]],
     [ASSIGNMENTS, [ASSIGNMENTS, ASSIGNMENT]],
     [ASSIGNMENTS, [ASSIGNMENT]],
-    [PLAIN_ASSIGNMENT, [NAME, '=', REPEATABLE_GSYMBOL]],
-    [BOOL_ASSIGNMENT, [NAME, '?=', REPEATABLE_GSYMBOL]],
+    [PLAIN_ASSIGNMENT, [NAME, '=', GSYMBOL_REFERENCE]],
+    [BOOL_ASSIGNMENT, [NAME, '?=', GSYMBOL_REFERENCE]],
 
     # Regex-like repeat operators
-    [REPEATABLE_GSYMBOL, [GSYMBOL, OPT_REP_OPERATOR]],
+    [GSYMBOL_REFERENCE, [GSYMBOL, OPT_REP_OPERATOR]],
     [OPT_REP_OPERATOR, [REP_OPERATOR_ZERO]],
     [OPT_REP_OPERATOR, [REP_OPERATOR_ONE]],
     [OPT_REP_OPERATOR, [REP_OPERATOR_OPTIONAL]],
@@ -1436,7 +1434,7 @@ def make_optional(context, gsymbol, sep_ref=None):
         prod_callable)
 
 
-def act_repeatable_gsymbol(context, nodes):
+def act_gsymbol_reference(context, nodes):
     """Repetition operators (`*`, `+`, `?`) will create additional productions in
     the grammar with name generated from original symbol name and suffixes:
     - `_0` - for `*`
@@ -1548,8 +1546,7 @@ pg_actions = {
     "Assignment": act_assignment,
     "Assignments": collect,
 
-    'RepeatableGrammarSymbol': act_repeatable_gsymbol,
-    'RepeatableGrammarSymbols': collect,
+    'GrammarSymbolReference': act_gsymbol_reference,
 
     'GrammarSymbol': [lambda context, nodes: Reference(Location(context),
                                                        nodes[0]),
