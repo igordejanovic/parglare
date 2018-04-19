@@ -97,7 +97,7 @@ class NonTerminal(GrammarSymbol):
     """
     def __init__(self, name, productions=None, location=None):
         super(NonTerminal, self).__init__(name, location)
-        self.productions = productions if productions else []
+        self.productions = productions if productions is not None else []
 
 
 class Terminal(GrammarSymbol):
@@ -133,10 +133,38 @@ class Reference(object):
     """
     A name reference to a GrammarSymbol used for cross-resolving during
     grammar construction.
+    Attributes:
+        name (str): The FQN name of the referred symbol. This is the name of
+            the original desuggared symbol without taking into account
+            multiplicity and separator.
+        location (Location): Location object of this reference.
+        multiplicty(str): Multiplicity of the RHS reference (used for regex
+            operators ?, *, +). See MULT_* constants above. By default
+            multiplicity is MULT_ONE.
+        separator (symbol or Reference): A reference to the separator symbol or
+            the separator symbol itself if resolved.
     """
     def __init__(self, location, name):
         self.name = name
         self.location = location
+        self.multiplicity = MULT_ONE
+        self.separator = None
+
+    @property
+    def multiplicity_name(self):
+        """
+        Returns the name of the symbol that should be used if
+        multiplicity/separator is used.
+        """
+        return make_multiplicity_name(
+            self.name, self.multiplicity,
+            self.separator.name if self.separator else None)
+
+    def clone(self):
+        new_ref = Reference(self.location, self.name)
+        new_ref.multiplicity = self.multiplicity
+        new_ref.separator = self.separator
+        return new_ref
 
     def __repr__(self):
         return self.name
@@ -309,14 +337,13 @@ class Assignment(object):
     General assignment (`=` or `?=`, a.k.a. `named matches`) in productions.
     Used also for references as LHS and assignment operator are optional.
     """
-    def __init__(self, name, op, symbol, orig_symbol, multiplicity=MULT_ONE,
-                 index=None):
+    def __init__(self, name, op, symbol):
         """
         Attributes:
             name(str): The name on the LHS of assignment.
             op(str): Either a `=` or `?=`.
-            symbol(GrammarSymbol): A grammar symbol on the RHS.
-            orig_symbol(GrammarSymbol): A de-sugarred grammar symbol on the
+            symbol(Reference or GrammarSymbol): A grammar symbol on the RHS.
+            symbol_name(str): A de-sugarred grammar symbol name on the
                 RHS, i.e. referenced symbol without regex operators.
             multiplicty(str): Multiplicity of the RHS reference (used for regex
                 operators ?, *, +). See MULT_* constants above. By default
@@ -326,9 +353,10 @@ class Assignment(object):
         self.name = name
         self.op = op
         self.symbol = symbol
-        self.orig_symbol = orig_symbol
-        self.multiplicity = multiplicity
-        self.index = index
+        self.symbol_name = symbol.name
+        self.multiplicity = symbol.multiplicity \
+            if isinstance(symbol, Reference) else MULT_ONE
+        self.index = None
 
 
 class PGAttribute(object):
@@ -527,6 +555,21 @@ class PGFile(object):
             for idx, ref in enumerate(production.rhs):
                 if isinstance(ref, Reference):
                     production.rhs[idx] = self.resolve(ref)
+                elif isinstance(ref, Assignment):
+                    ref.symbol = self.resolve(ref.symbol)
+
+    def register_symbol(self, symbol):
+        if self.grammar is not self:
+            self.grammar.register_symbol(symbol)
+            self.symbols_by_name[symbol] = symbol
+        else:
+            if symbol.fqn not in self.symbols_by_name:
+                self.symbols_by_name[symbol.fqn] = symbol
+                if isinstance(symbol, Terminal):
+                    self.terminals.add(symbol)
+                else:
+                    self.nonterminals.add(symbol)
+                self.productions.extend(symbol.productions)
 
     def init_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
@@ -602,7 +645,98 @@ class PGFile(object):
                 raise GrammarError(
                     location=symbol_ref.location,
                     message='Unknown symbol "{}"'.format(symbol_name))
+
+            mult = symbol_ref.multiplicity
+            if mult != MULT_ONE:
+                # If multiplicity is used than we are referring to
+                # suggared symbol
+
+                # Resolve separator first if exists.
+                separator = None
+                if symbol_ref.separator:
+                    separator = self.resolve(symbol_ref.separator)
+
+                base_symbol = symbol
+                symbol_name = symbol_ref.multiplicity_name
+                symbol = self.symbols_by_name.get(symbol_name)
+                if not symbol:
+                    # If there is no multiplicity version of the symbol we
+                    # will create one at this place
+                    symbol = self.make_multiplicity_symbol(
+                        symbol_ref, base_symbol, separator)
+
             return symbol
+
+    def make_multiplicity_symbol(self, symbol_ref, base_symbol, separator):
+        """
+        Creates new NonTerminal for symbol refs using multiplicity and
+        separators.
+        """
+        mult = symbol_ref.multiplicity
+        if mult in [MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE]:
+            symbol_name = make_multiplicity_name(
+                symbol_ref.name, MULT_ONE_OR_MORE,
+                separator.name if separator else None)
+            symbol = self.symbols_by_name.get(symbol_name)
+            if not symbol:
+                # noqa See: http://www.igordejanovic.net/parglare/grammar_language/#one-or-more_1
+                productions = []
+                symbol = NonTerminal(symbol_name, productions,
+                                     base_symbol.location)
+
+                if separator:
+                    productions.append(
+                        Production(symbol,
+                                   ProductionRHS([symbol,
+                                                  separator,
+                                                  base_symbol])))
+                    symbol.action = collect_sep
+                    symbol.action_name = 'collect_sep'
+                else:
+                    productions.append(
+                        Production(symbol,
+                                   ProductionRHS([symbol,
+                                                  base_symbol])))
+                    symbol.action = collect
+                    symbol.action_name = 'collect'
+
+                productions.append(
+                    Production(symbol, ProductionRHS([base_symbol])))
+
+            if mult == MULT_ZERO_OR_MORE:
+                productions = []
+                symbol_one = symbol
+                symbol_name = make_multiplicity_name(
+                    symbol_ref.name, mult,
+                    separator.name if separator else None)
+                symbol = NonTerminal(symbol_name, productions,
+                                     base_symbol.location)
+
+                productions.extend([Production(symbol,
+                                               ProductionRHS([symbol_one]),
+                                               nops=True),
+                                    Production(symbol,
+                                               ProductionRHS([EMPTY]))])
+
+        else:
+            # MULT_OPTIONAL
+            if separator:
+                raise GrammarError(
+                    location=symbol_ref.location,
+                    message='Repetition modifier not allowed for '
+                    'optional (?) for symbol "{}".'
+                    .format(symbol_ref.name))
+            productions = []
+            symbol_name = make_multiplicity_name(symbol_ref.name, mult)
+            symbol = NonTerminal(symbol_name, productions,
+                                 base_symbol.location)
+            productions.extend([Production(symbol,
+                                           ProductionRHS([base_symbol])),
+                                Production(symbol,
+                                           ProductionRHS([EMPTY]))])
+
+        self.register_symbol(symbol)
+        return symbol
 
 
 class Grammar(PGFile):
@@ -910,6 +1044,21 @@ def create_productions(productions):
         gp.append(Production(symbol, rhs, assoc=assoc, prior=prior))
 
     return gp
+
+
+def make_multiplicity_name(symbol_name, multiplicity=None,
+                           separator_name=None):
+    if multiplicity is None or multiplicity == MULT_ONE:
+        return symbol_name
+    name_by_mult = {
+        MULT_ZERO_OR_MORE: "0",
+        MULT_ONE_OR_MORE: "1",
+        MULT_OPTIONAL: "opt"
+    }
+    if multiplicity:
+        return "{}_{}{}".format(
+            symbol_name, name_by_mult[multiplicity],
+            "_{}".format(separator_name) if separator_name else "")
 
 
 def check_name(context, name):
@@ -1221,7 +1370,7 @@ def act_production_rule(context, nodes):
         for a in assignments:
             if a.name:
                 attrs[a.name] = PGAttribute(a.name, a.multiplicity,
-                                            a.orig_symbol.name)
+                                            a.symbol_name)
             # TODO: check/handle multiple assignments to the same attribute
             #       If a single production have multiple assignment of the
             #       same attribute, multiplicity must be set to many.
@@ -1349,91 +1498,6 @@ def act_term_rule_with_action(context, nodes):
     return term
 
 
-def make_repetition(context, gsymbol, sep_ref, suffix,
-                    action, prod_callable):
-    new_gsymbol_name = gsymbol.name + suffix
-    if sep_ref:
-        new_gsymbol_name += '_' + sep_ref.name
-
-    if not hasattr(context, 'new_productions'):
-        # symbol_name -> (NonTerminal, [productions])
-        context.new_productions = {}
-
-    if new_gsymbol_name in context.new_productions:
-        return context.new_productions[new_gsymbol_name][0]
-
-    new_nt = NonTerminal(new_gsymbol_name)
-    if type(action) is text:
-        new_nt.action_name = action
-    else:
-        new_nt.action = action
-    new_productions = prod_callable(new_nt)
-    context.new_productions[new_gsymbol_name] = (new_nt, new_productions)
-
-    return new_nt
-
-
-def make_one_or_more(context, gsymbol, sep_ref=None):
-    def prod_callable(new_nt):
-        new_productions = []
-        if sep_ref:
-            new_productions.append(
-                Production(new_nt,
-                           ProductionRHS([new_nt, sep_ref, gsymbol])))
-        else:
-            new_productions.append(
-                Production(new_nt, ProductionRHS([new_nt, gsymbol])))
-
-        new_productions.append(
-            Production(new_nt, ProductionRHS([gsymbol])))
-
-        return new_productions
-
-    return make_repetition(context, gsymbol, sep_ref, '_1',
-                           'collect' if sep_ref is None else 'collect_sep',
-                           prod_callable)
-
-
-def make_zero_or_more(context, gsymbol, sep_ref=None):
-    def prod_callable(new_nt):
-        new_productions = []
-        one_or_more = make_one_or_more(context, gsymbol, sep_ref)
-        new_productions.append(
-            Production(new_nt, ProductionRHS([one_or_more]), nops=True))
-        new_productions.append(
-            Production(new_nt, ProductionRHS([EMPTY])))
-
-        return new_productions
-
-    def action(_, nodes):
-        if nodes:
-            return nodes[0]
-        else:
-            return []
-
-    return make_repetition(
-        context, gsymbol, sep_ref, '_0', action, prod_callable)
-
-
-def make_optional(context, gsymbol, sep_ref=None):
-    def prod_callable(new_nt):
-        if sep_ref:
-            raise GrammarError(
-                location=gsymbol.location,
-                message='Repetition modifier not allowed for '
-                'optional (?) for symbol "{}".'
-                .format(gsymbol.name))
-        # Optional
-        new_productions = [Production(new_nt, ProductionRHS([gsymbol])),
-                           Production(new_nt, ProductionRHS([EMPTY]))]
-
-        return new_productions
-
-    return make_repetition(
-        context, gsymbol, sep_ref, '_opt', 'optional',
-        prod_callable)
-
-
 def act_gsymbol_reference(context, nodes):
     """Repetition operators (`*`, `+`, `?`) will create additional productions in
     the grammar with name generated from original symbol name and suffixes:
@@ -1461,45 +1525,39 @@ def act_gsymbol_reference(context, nodes):
     """
     symbol_ref, rep_op = nodes
 
-    if not rep_op:
-        return symbol_ref, symbol_ref, MULT_ONE
+    if rep_op:
 
-    if len(rep_op) > 1:
-        rep_op, modifiers = rep_op
-    else:
-        rep_op = rep_op[0]
-        modifiers = None
+        if len(rep_op) > 1:
+            rep_op, modifiers = rep_op
+        else:
+            rep_op = rep_op[0]
+            modifiers = None
 
-    sep_ref = None
-    if modifiers:
-        sep_ref = modifiers[1]
-        sep_ref = Reference(Location(context), sep_ref)
+        sep_ref = None
+        if modifiers:
+            sep_ref = modifiers[1]
+            sep_ref = Reference(Location(context), sep_ref)
+            symbol_ref.separator = sep_ref
 
-    if rep_op == '*':
-        new_nt = make_zero_or_more(context, symbol_ref, sep_ref)
-        multiplicity = MULT_ZERO_OR_MORE
-    elif rep_op == '+':
-        new_nt = make_one_or_more(context, symbol_ref, sep_ref)
-        multiplicity = MULT_ONE_OR_MORE
-    else:
-        new_nt = make_optional(context, symbol_ref, sep_ref)
-        multiplicity = MULT_OPTIONAL
+        if rep_op == '*':
+            symbol_ref.multiplicity = MULT_ZERO_OR_MORE
+        elif rep_op == '+':
+            symbol_ref.multiplicity = MULT_ONE_OR_MORE
+        else:
+            symbol_ref.multiplicity = MULT_OPTIONAL
 
-    return new_nt, symbol_ref, multiplicity
+    return symbol_ref
 
 
 def act_assignment(_, nodes):
-    repeatable_gsymbol = nodes[0]
-    if type(repeatable_gsymbol[0]) in (NonTerminal, Terminal,
-                                       StringRecognizer, Reference):
-        symbol, orig_symbol, multiplicity = repeatable_gsymbol
-        name, op = None, None
-    else:
+    gsymbol_reference = nodes[0]
+    if type(gsymbol_reference) is list:
         # Named match
-        name, op, repeatable_gsymbol = repeatable_gsymbol
-        symbol, orig_symbol, multiplicity = repeatable_gsymbol
+        name, op, gsymbol_reference = gsymbol_reference
+    else:
+        name, op = None, None
 
-    return Assignment(name, op, symbol, orig_symbol, multiplicity)
+    return Assignment(name, op, gsymbol_reference)
 
 
 def act_recognizer_str(context, nodes):
