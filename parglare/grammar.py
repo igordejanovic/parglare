@@ -6,7 +6,8 @@ import re
 import itertools
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError
-from parglare.actions import pass_single, pass_none, collect, collect_sep
+from parglare.actions import pass_single, pass_none, collect, collect_sep, \
+    optional
 from parglare.common import Location
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
@@ -515,7 +516,14 @@ class PGFile(object):
                 nonterminals_by_name[symbol.name] = symbol
                 old_symbol = new_symbol = symbol
             new_symbol.productions.append(production)
-            self._resolve_action(old_symbol, new_symbol)
+
+            # Check grammar actions for rules/symbols.
+            if new_symbol.action_name:
+                if new_symbol.action_name != old_symbol.action_name:
+                    raise GrammarError(
+                        location=new_symbol.location,
+                        message='Multiple different grammar actions for rule "{}".'
+                        .format(new_symbol.name))
 
         self.terminals = set(terminals_by_name.values())
         self.terminals.update([EMPTY, EOF, STOP])
@@ -527,28 +535,6 @@ class PGFile(object):
         self.symbols_by_name['EMPTY'] = EMPTY
         self.symbols_by_name['EOF'] = EOF
         self.symbols_by_name['STOP'] = STOP
-
-    def _resolve_action(self, old_symbol, new_symbol):
-        """
-        Checks and resolves common semantic actions given in the grammar.
-        """
-        # Get/check grammar actions for rules/symbols.
-        if new_symbol.action_name:
-            if new_symbol.action_name != old_symbol.action_name:
-                raise GrammarError(
-                    location=new_symbol.location,
-                    message='Multiple different grammar actions for rule "{}".'
-                    .format(new_symbol.name))
-
-            # Try to find action in built-in actions module
-            # If action is not given we suppose that it is a user defined
-            # action that will be provided during parser instantiation
-            # using `actions` param.
-            import parglare.actions as actmodule
-            if hasattr(actmodule, new_symbol.action_name):
-                new_symbol.action = \
-                    new_symbol.grammar_action = getattr(actmodule,
-                                                        new_symbol.action_name)
 
     def resolve_references(self):
         for production in self.productions:
@@ -690,18 +676,18 @@ class PGFile(object):
                                    ProductionRHS([symbol,
                                                   separator,
                                                   base_symbol])))
-                    symbol.grammar_action = collect_sep
                     symbol.action_name = 'collect_sep'
                 else:
                     productions.append(
                         Production(symbol,
                                    ProductionRHS([symbol,
                                                   base_symbol])))
-                    symbol.grammar_action = collect
                     symbol.action_name = 'collect'
 
                 productions.append(
                     Production(symbol, ProductionRHS([base_symbol])))
+
+                self.register_symbol(symbol)
 
             if mult == MULT_ZERO_OR_MORE:
                 productions = []
@@ -717,6 +703,16 @@ class PGFile(object):
                                                nops=True),
                                     Production(symbol,
                                                ProductionRHS([EMPTY]))])
+
+                def action(_, nodes):
+                    if nodes:
+                        return nodes[0]
+                    else:
+                        return []
+
+                symbol.grammar_action = action
+
+                self.register_symbol(symbol)
 
         else:
             # MULT_OPTIONAL
@@ -735,7 +731,10 @@ class PGFile(object):
                                 Production(symbol,
                                            ProductionRHS([EMPTY]))])
 
-        self.register_symbol(symbol)
+            symbol.action_name = 'optional'
+
+            self.register_symbol(symbol)
+
         return symbol
 
 
@@ -813,6 +812,7 @@ class Grammar(PGFile):
 
         self._enumerate_productions()
         self._fix_keyword_terminals()
+        self._resolve_actions()
 
     def _connect_override_recognizers(self):
         for term in self.terminals:
@@ -870,6 +870,23 @@ class Grammar(PGFile):
                         r'\b{}\b'.format(match),
                         ignore_case=term.recognizer.ignore_case)
                     term.keyword = True
+
+    def _resolve_actions(self):
+        """
+        Checks and resolves common semantic actions given in the grammar.
+        """
+        import parglare.actions as actmodule
+        for symbol in self:
+            # Try to find action in built-in actions module
+            # If action is not given we suppose that it is a user defined
+            # action that will be provided during parser instantiation
+            # using `actions` param.
+            if symbol.action_name and not symbol.action:
+                if hasattr(actmodule, symbol.action_name):
+                    symbol.action = \
+                        symbol.grammar_action = getattr(actmodule,
+                                                        symbol.action_name)
+
 
     def get_terminal(self, name):
         "Returns terminal with the given name."
