@@ -690,14 +690,14 @@ class PGFile(object):
                                    ProductionRHS([symbol,
                                                   separator,
                                                   base_symbol])))
-                    symbol.action = collect_sep
+                    symbol.grammar_action = collect_sep
                     symbol.action_name = 'collect_sep'
                 else:
                     productions.append(
                         Production(symbol,
                                    ProductionRHS([symbol,
                                                   base_symbol])))
-                    symbol.action = collect
+                    symbol.grammar_action = collect
                     symbol.action_name = 'collect'
 
                 productions.append(
