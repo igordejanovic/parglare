@@ -6,8 +6,7 @@ import re
 import itertools
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError
-from parglare.actions import pass_single, pass_none, collect, collect_sep, \
-    optional
+from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.common import Location
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
@@ -457,47 +456,6 @@ class PGFile(object):
                 terminals_by_value[rec.value] = terminal
             terminals_by_name[terminal.name] = terminal
 
-        # Collect inline terminals
-        for production in self.productions:
-            for idx, rhs_elem in enumerate(production.rhs):
-
-                if isinstance(rhs_elem, StringRecognizer):
-                    recognizer = rhs_elem
-                    # First check if the same recognizer already exists.
-                    if recognizer.value in terminals_by_value:
-                        terminal = terminals_by_value[recognizer.value]
-                        if not getattr(terminal, '_inline', False):
-                            raise GrammarError(
-                                location=recognizer.location,
-                                message='Terminal match "{}" defined '
-                                'as explicit terminal "{}" and inline '
-                                'at the same time'.format(recognizer.name,
-                                                          terminal.name))
-                        else:
-                            terminal = terminals_by_value[recognizer.value]
-                    else:
-                        terminal = Terminal(recognizer.name,
-                                            recognizer=recognizer)
-                        terminal._inline = True
-                        terminals_by_name[terminal.name] = terminal
-                        terminals_by_value[recognizer.value] = terminal
-                    production.rhs[idx] = terminal
-
-                elif isinstance(rhs_elem, Terminal):
-                    # RHS might contain terminals if from_struct is used or
-                    # built-in special terminals (STOP, EOF). We just have to
-                    # make sure the same object is used everywhere.
-                    terminal = rhs_elem
-                    if terminal.name not in terminals_by_name:
-                        terminals_by_name[terminal.name] = terminal
-                    else:
-                        if terminal is not terminals_by_name[terminal.name]:
-                            raise GrammarError(
-                                location=terminal.location,
-                                message='Multiple different terminals '
-                                '"{}" used in the grammar.'
-                                .format(terminal.name))
-
         # Collect non-terminals
         for production in self.productions:
             symbol = production.symbol
@@ -522,8 +480,8 @@ class PGFile(object):
                 if new_symbol.action_name != old_symbol.action_name:
                     raise GrammarError(
                         location=new_symbol.location,
-                        message='Multiple different grammar actions for rule "{}".'
-                        .format(new_symbol.name))
+                        message='Multiple different grammar actions '
+                        'for rule "{}".'.format(new_symbol.name))
 
         self.terminals = set(terminals_by_name.values())
         self.terminals.update([EMPTY, EOF, STOP])
@@ -887,7 +845,6 @@ class Grammar(PGFile):
                         symbol.grammar_action = getattr(actmodule,
                                                         symbol.action_name)
 
-
     def get_terminal(self, name):
         "Returns terminal with the given name."
         for t in self.terminals:
@@ -918,12 +875,12 @@ class Grammar(PGFile):
                 return p.prod_id
 
     @staticmethod
-    def from_struct(productions, terminals=None, start_symbol=None,
-                    recognizers=None):
+    def from_struct(productions, start_symbol=None):
         """Used internally to bootstrap grammar file parser."""
-        return Grammar(productions=create_productions(productions),
+        productions, terminals = create_productions_terminals(productions)
+        return Grammar(productions,
                        terminals=terminals,
-                       start_symbol=start_symbol, recognizers=recognizers)
+                       start_symbol=start_symbol)
 
     @staticmethod
     def _parse(parse_fun_name, what_to_parse, recognizers=None,
@@ -938,6 +895,7 @@ class Grammar(PGFile):
         context.debug_colors = debug_colors
         context.classes = {}
         context.imported_files = {}
+        context.inline_terminals = {}
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
         imports, productions, terminals = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
@@ -1016,7 +974,7 @@ class PGFileImport(object):
                 self.pgfile = self.context.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
-                self.context.new_productions = {}
+                self.context.inline_terminals = {}
                 imports, productions, terminals = \
                     get_grammar_parser(
                         self.context.debug,
@@ -1031,7 +989,7 @@ class PGFileImport(object):
         return self.pgfile.resolve(symbol_ref)
 
 
-def create_productions(productions):
+def create_productions_terminals(productions):
     """Creates Production instances from the list of productions given in
     the form:
     [LHS, RHS, optional ASSOC, optional PRIOR].
@@ -1039,6 +997,7 @@ def create_productions(productions):
     symbols from the right-hand side of the production.
     """
     gp = []
+    inline_terminals = {}
     for p in productions:
         assoc = ASSOC_NONE
         prior = DEFAULT_PRIORITY
@@ -1056,11 +1015,18 @@ def create_productions(productions):
         # Convert strings to string recognizers
         for idx, t in enumerate(rhs):
             if isinstance(t, text):
-                rhs[idx] = StringRecognizer(t)
+                if t not in inline_terminals:
+                    inline_terminals[t] = \
+                        Terminal(recognizer=StringRecognizer(t), name=t)
+                rhs[idx] = Reference(location=None, name=t)
+            elif isinstance(t, Terminal):
+                if t.name not in inline_terminals:
+                    inline_terminals[t.name] = t
+                rhs[idx] = Reference(location=None, name=t.name)
 
         gp.append(Production(symbol, rhs, assoc=assoc, prior=prior))
 
-    return gp
+    return gp, list(inline_terminals.values())
 
 
 def make_multiplicity_name(symbol_name, multiplicity=None,
@@ -1293,8 +1259,7 @@ def get_grammar_parser(debug, debug_colors):
     global grammar_parser
     if not grammar_parser:
         from parglare import Parser
-        grammar_parser = Parser(Grammar.from_struct(pg_productions,
-                                                    pg_terminals, PGFILE),
+        grammar_parser = Parser(Grammar.from_struct(pg_productions, PGFILE),
                                 actions=pg_actions,
                                 debug=debug,
                                 debug_colors=debug_colors)
@@ -1311,9 +1276,9 @@ def act_pgfile(context, nodes):
     productions = nodes.pop(0)
     terminals = nodes[1] if len(nodes) > 1 else []
 
-    if hasattr(context, 'new_productions'):
-        for _, (nt, prods) in context.new_productions.items():
-            productions.extend(prods)
+    for terminal in context.inline_terminals.values():
+        terminals.append(terminal)
+
     return [imports, productions, terminals]
 
 
@@ -1566,6 +1531,18 @@ def act_gsymbol_reference(context, nodes):
     return symbol_ref
 
 
+def act_gsymbol_string_recognizer(context, nodes):
+    recognizer = act_recognizer_str(context, nodes)
+
+    terminal_ref = Reference(Location(context), recognizer.name)
+
+    if terminal_ref.name not in context.inline_terminals:
+        context.inline_terminals[terminal_ref.name] = \
+            Terminal(terminal_ref.name, recognizer, location=Location(context))
+
+    return terminal_ref
+
+
 def act_assignment(_, nodes):
     gsymbol_reference = nodes[0]
     if type(gsymbol_reference) is list:
@@ -1625,7 +1602,7 @@ pg_actions = {
 
     'GrammarSymbol': [lambda context, nodes: Reference(Location(context),
                                                        nodes[0]),
-                      act_recognizer_str],
+                      act_gsymbol_string_recognizer],
 
     'Recognizer': [act_recognizer_str, act_recognizer_regex],
     'StrTerm': act_str_regex_term,
