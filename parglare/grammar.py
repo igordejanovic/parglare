@@ -976,6 +976,9 @@ class PGFileImport(object):
             else:
                 # If not found construct new PGFile
                 self.context.inline_terminals = {}
+                self.context.classes = {}
+                self.context.imported_files = {}
+                self.context.file_name = self.file_path
                 imports, productions, terminals = \
                     get_grammar_parser(
                         self.context.debug,
