@@ -571,6 +571,9 @@ class PGFile(object):
         On each resolved symbol productions in the root file are updated.
 
         """
+        if symbol_ref.separator:
+            separator = self.resolve(symbol_ref.separator)
+
         symbol_name = symbol_ref.name
         if '.' in symbol_name:
             import_module_name, name = symbol_name.split('.')
@@ -595,10 +598,8 @@ class PGFile(object):
                 # If multiplicity is used than we are referring to
                 # suggared symbol
 
-                # Resolve separator first if exists.
-                separator = None
-                if symbol_ref.separator:
-                    separator = self.resolve(symbol_ref.separator)
+                separator = symbol_ref.separator \
+                    if symbol_ref.separator else None
 
                 base_symbol = symbol
                 symbol_name = symbol_ref.multiplicity_name
