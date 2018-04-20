@@ -48,7 +48,7 @@ def test_terminals_with_different_names():
 
     assert 'B' in str(e)
     assert 'd' in str(e)
-    assert 'at the same time' in str(e)
+    assert 'match the same string' in str(e)
 
 
 def todo_test_grammar_without_valid_inputs():
