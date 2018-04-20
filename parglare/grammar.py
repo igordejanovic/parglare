@@ -508,7 +508,7 @@ class PGFile(object):
     def register_symbol(self, symbol):
         if self.grammar is not self:
             self.grammar.register_symbol(symbol)
-            self.symbols_by_name[symbol] = symbol
+            self.symbols_by_name[symbol.name] = symbol
         else:
             if symbol.fqn not in self.symbols_by_name:
                 self.symbols_by_name[symbol.fqn] = symbol
