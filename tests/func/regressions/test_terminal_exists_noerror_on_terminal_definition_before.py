@@ -22,4 +22,4 @@ def test_terminal_exists_noerror_on_terminal_definition_before():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'and inline at the same time' in str(e)
+    assert 'match the same string' in str(e)
