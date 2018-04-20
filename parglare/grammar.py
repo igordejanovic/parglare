@@ -446,6 +446,7 @@ class PGFile(object):
         # Check terminal uniqueness in both name and string recognition
         # and collect all terminals from explicit definitions.
         for terminal in self.terminals:
+            terminal.imported_with = self.imported_with
             if terminal.name in terminals_by_name:
                 raise GrammarError(
                     location=terminal.location,
@@ -466,6 +467,7 @@ class PGFile(object):
         # Collect non-terminals
         for production in self.productions:
             symbol = production.symbol
+            symbol.imported_with = self.imported_with
             # Check that there is no terminal defined by the same name.
             if symbol.name in terminals_by_name:
                 raise GrammarError(
