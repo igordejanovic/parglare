@@ -486,10 +486,6 @@ class PGFile(object):
                         message='Multiple different grammar actions '
                         'for rule "{}".'.format(new_symbol.name))
 
-        self.terminals = set(terminals_by_name.values())
-        self.terminals.update([EMPTY, EOF, STOP])
-
-        self.nonterminals = set(nonterminals_by_name.values())
         nonterminals_by_name.update(terminals_by_name)
         self.symbols_by_name = nonterminals_by_name
         # Add special terminals
@@ -506,17 +502,7 @@ class PGFile(object):
                     ref.symbol = self.resolve(ref.symbol)
 
     def register_symbol(self, symbol):
-        if self.grammar is not self:
-            self.grammar.register_symbol(symbol)
-            self.symbols_by_name[symbol.name] = symbol
-        else:
-            if symbol.fqn not in self.symbols_by_name:
-                self.symbols_by_name[symbol.fqn] = symbol
-                if isinstance(symbol, Terminal):
-                    self.terminals.add(symbol)
-                else:
-                    self.nonterminals.add(symbol)
-                self.productions.extend(symbol.productions)
+        self.symbols_by_name[symbol.name] = symbol
 
     def init_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
@@ -766,36 +752,41 @@ class Grammar(PGFile):
         self.productions.insert(
             0,
             Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
-        self.nonterminals.add(AUGSYMBOL)
-        self.symbols_by_name[AUGSYMBOL.name] = AUGSYMBOL
+
+        self._add_all_symbols_productions()
+        self._enumerate_productions()
+        self._fix_keyword_terminals()
+        self._resolve_actions()
 
         # Connect recognizers, override grammar provided
         if not self._no_check_recognizers:
             self._connect_override_recognizers()
 
-        self._enumerate_productions()
-        self._add_all_symbols()
-        self._fix_keyword_terminals()
-        self._resolve_actions()
+    def _add_all_symbols_productions(self):
 
-    def _connect_override_recognizers(self):
-        for term in self.terminals:
-            if self.recognizers and term.name in self.recognizers:
-                term.recognizer = self.recognizers[term.name]
-            else:
-                if term.recognizer is None:
-                    if not self.recognizers:
-                        raise GrammarError(
-                            location=term.location,
-                            message='Terminal "{}" has no recognizer defined '
-                            'and no recognizers are given during grammar '
-                            'construction.'.format(term.name))
+        self.nonterminals = set()
+        for prod in self.productions:
+            self.nonterminals.add(prod.symbol)
+        self.terminals = set([EMPTY, EOF, STOP])
+
+        def add_productions(productions):
+            for production in productions:
+                symbol = production.symbol
+                if symbol not in self.nonterminals:
+                    self.nonterminals.add(symbol)
+                for rhs_elem in production.rhs:
+                    if isinstance(rhs_elem, Terminal):
+                        if rhs_elem not in self.terminals:
+                            self.terminals.add(rhs_elem)
+                    elif isinstance(rhs_elem, NonTerminal):
+                        if rhs_elem not in self.nonterminals:
+                            self.productions.extend(rhs_elem.productions)
+                            add_productions(rhs_elem.productions)
                     else:
-                        if term.name not in self.recognizers:
-                            raise GrammarError(
-                                location=term.location,
-                                message='Terminal "{}" has no recognizer '
-                                'defined.'.format(term.name))
+                        # This should never happen
+                        assert False, "Invalid RHS element type '{}'."\
+                            .format(type(rhs_elem))
+        add_productions(list(self.productions))
 
     def _enumerate_productions(self):
         """
@@ -803,24 +794,11 @@ class Grammar(PGFile):
         (prod_symbol_id).
         """
         idx_per_symbol = {}
-        for idx, s in enumerate(self.productions):
-            s.prod_id = idx
-            s.prod_symbol_id = idx_per_symbol.get(s.symbol, 0)
-            idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 0) + 1
-
-    def _add_all_symbols(self):
-        for production in self.productions:
-            for rhs_elem in production.rhs:
-                if isinstance(rhs_elem, Terminal):
-                    if rhs_elem not in self.terminals:
-                        self.terminals.add(rhs_elem)
-                elif isinstance(rhs_elem, NonTerminal):
-                    if rhs_elem not in self.nonterminals:
-                        self.nonterminals.add(rhs_elem)
-                else:
-                    # This should never happen
-                    assert False, "Invalid RHS element type '{}'."\
-                        .format(type(rhs_elem))
+        for idx, prod in enumerate(self.productions):
+            prod.prod_id = idx
+            prod.prod_symbol_id = idx_per_symbol.get(prod.symbol, 0)
+            idx_per_symbol[prod.symbol] = \
+                idx_per_symbol.get(prod.symbol, 0) + 1
 
     def _fix_keyword_terminals(self):
         """
@@ -864,6 +842,25 @@ class Grammar(PGFile):
                     symbol.action = \
                         symbol.grammar_action = getattr(actmodule,
                                                         symbol.action_name)
+
+    def _connect_override_recognizers(self):
+        for term in self.terminals:
+            if self.recognizers and term.name in self.recognizers:
+                term.recognizer = self.recognizers[term.name]
+            else:
+                if term.recognizer is None:
+                    if not self.recognizers:
+                        raise GrammarError(
+                            location=term.location,
+                            message='Terminal "{}" has no recognizer defined '
+                            'and no recognizers are given during grammar '
+                            'construction.'.format(term.name))
+                    else:
+                        if term.name not in self.recognizers:
+                            raise GrammarError(
+                                location=term.location,
+                                message='Terminal "{}" has no recognizer '
+                                'defined.'.format(term.name))
 
     def get_terminal(self, name):
         "Returns terminal with the given name."
