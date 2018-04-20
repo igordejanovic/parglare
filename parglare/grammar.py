@@ -53,13 +53,13 @@ class GrammarSymbol(object):
     imported_with (PGFileImport): PGFileImport where this symbol is first time
         imported from. Used for FQN calculation.
     """
-    def __init__(self, name, location=None):
+    def __init__(self, name, location=None, imported_with=None):
         self.name = escape(name)
         self.location = location
         self.action_name = None
         self.action = None
         self.grammar_action = None
-        self.imported_with = None
+        self.imported_with = imported_with
         self._hash = hash(name)
 
     @property
@@ -95,8 +95,9 @@ class NonTerminal(GrammarSymbol):
     productions(list of Production): A list of alternative productions for
         this NonTerminal.
     """
-    def __init__(self, name, productions=None, location=None):
-        super(NonTerminal, self).__init__(name, location)
+    def __init__(self, name, productions=None, location=None,
+                 imported_with=None):
+        super(NonTerminal, self).__init__(name, location, imported_with)
         self.productions = productions if productions is not None else []
 
 
@@ -119,14 +120,15 @@ class Terminal(GrammarSymbol):
         stream. Should return a sublist of recognized objects. The sublist
         should be rooted at the given position.
     """
-    def __init__(self, name, recognizer=None, location=None):
+    def __init__(self, name, recognizer=None, location=None,
+                 imported_with=None):
         self.prior = DEFAULT_PRIORITY
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
         self.finish = None
         self.prefer = False
         self.dynamic = False
         self.keyword = False
-        super(Terminal, self).__init__(name, location)
+        super(Terminal, self).__init__(name, location, imported_with)
 
 
 class Reference(object):
@@ -404,6 +406,7 @@ class PGFile(object):
     Attributes:
 
     productions (list of Production): Local productions defined in this file.
+    terminals (list of Terminal):
     imports (dict): Mapping imported module/file local name to PGFile object.
     file_path (str): A full canonic path to the .pg file.
     grammar (PGFile): A root/grammar file.
@@ -411,15 +414,19 @@ class PGFile(object):
         terminal recognizers.
     """
     def __init__(self, productions, terminals=None, imports=None,
-                 file_path=None, grammar=None, recognizers=None):
+                 file_path=None, grammar=None, recognizers=None,
+                 imported_with=None):
         self.productions = productions
         self.terminals = terminals if terminals is not None else set()
+        self.grammar = self if grammar is None else grammar
         if imports:
             self.imports = {i.module_name: i for i in imports}
+            for i in self.imports.values():
+                i.grammar = self.grammar
         else:
             self.imports = {}
         self.file_path = path.realpath(file_path) if file_path else None
-        self.grammar = self if grammar is None else grammar
+        self.imported_with = imported_with
         self.recognizers = recognizers
 
         self.collect_and_unify_symbols()
@@ -571,8 +578,8 @@ class PGFile(object):
         On each resolved symbol productions in the root file are updated.
 
         """
-        if symbol_ref.separator:
-            separator = self.resolve(symbol_ref.separator)
+        if isinstance(symbol_ref.separator, Reference):
+            symbol_ref.separator = self.resolve(symbol_ref.separator)
 
         symbol_name = symbol_ref.name
         if '.' in symbol_name:
@@ -608,11 +615,12 @@ class PGFile(object):
                     # If there is no multiplicity version of the symbol we
                     # will create one at this place
                     symbol = self.make_multiplicity_symbol(
-                        symbol_ref, base_symbol, separator)
+                        symbol_ref, base_symbol, separator, self.imported_with)
 
             return symbol
 
-    def make_multiplicity_symbol(self, symbol_ref, base_symbol, separator):
+    def make_multiplicity_symbol(self, symbol_ref, base_symbol, separator,
+                                 imported_with):
         """
         Creates new NonTerminal for symbol refs using multiplicity and
         separators.
@@ -627,7 +635,8 @@ class PGFile(object):
                 # noqa See: http://www.igordejanovic.net/parglare/grammar_language/#one-or-more_1
                 productions = []
                 symbol = NonTerminal(symbol_name, productions,
-                                     base_symbol.location)
+                                     base_symbol.location,
+                                     imported_with=imported_with)
 
                 if separator:
                     productions.append(
@@ -655,7 +664,8 @@ class PGFile(object):
                     symbol_ref.name, mult,
                     separator.name if separator else None)
                 symbol = NonTerminal(symbol_name, productions,
-                                     base_symbol.location)
+                                     base_symbol.location,
+                                     imported_with=imported_with)
 
                 productions.extend([Production(symbol,
                                                ProductionRHS([symbol_one]),
@@ -684,7 +694,8 @@ class PGFile(object):
             productions = []
             symbol_name = make_multiplicity_name(symbol_ref.name, mult)
             symbol = NonTerminal(symbol_name, productions,
-                                 base_symbol.location)
+                                 base_symbol.location,
+                                 imported_with=imported_with)
             productions.extend([Production(symbol,
                                            ProductionRHS([base_symbol])),
                                 Production(symbol,
@@ -728,7 +739,8 @@ class Grammar(PGFile):
         super(Grammar, self).__init__(productions=productions,
                                       terminals=terminals,
                                       imports=imports,
-                                      file_path=file_path, grammar=self,
+                                      file_path=file_path,
+                                      grammar=self,
                                       recognizers=recognizers)
 
         self._no_check_recognizers = _no_check_recognizers
@@ -897,6 +909,8 @@ class Grammar(PGFile):
         context.classes = {}
         context.imported_files = {}
         context.inline_terminals = {}
+        context.imported_with = None
+        context.grammar = None
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
         imports, productions, terminals = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
@@ -944,10 +958,11 @@ class PGFileImport(object):
     module_name (str): Name of this import. By default is the name of grammar
         file without .pg extension.
     file_path (str): A canonical full path of the imported .pg file.
+    context (Context): The parsing context.
     imported_with (PGFileImport): First import this import is imported from.
         Used for FQN calculation.
-    fqn (str): Fully qualified name by first path of imports.
-    context: Parsing context, used to lazy load the pg file.
+    imported_files(dict): Global registry of all imported files.
+    grammar (Grammar): Grammar object under construction.
     pgfile (PGFile instance or None):
 
     """
@@ -955,7 +970,9 @@ class PGFileImport(object):
         self.module_name = module_name
         self.file_path = file_path
         self.context = context
-        self.imported_with = None
+        self.imported_with = context.imported_with
+        self.imported_files = context.imported_files
+        self.grammar = None
         self.pgfile = None
 
     @property
@@ -971,13 +988,13 @@ class PGFileImport(object):
 
         if self.pgfile is None:
             # First search the global registry of imported files.
-            if self.file_path in self.context.imported_files:
-                self.pgfile = self.context.imported_files[self.file_path]
+            if self.file_path in self.imported_files:
+                self.pgfile = self.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
                 self.context.inline_terminals = {}
                 self.context.classes = {}
-                self.context.imported_files = {}
+                self.context.imported_with = self
                 self.context.file_name = self.file_path
                 imports, productions, terminals = \
                     get_grammar_parser(
@@ -987,8 +1004,10 @@ class PGFileImport(object):
                 self.pgfile = PGFile(productions=productions,
                                      terminals=terminals,
                                      imports=imports,
+                                     grammar=self.grammar,
+                                     imported_with=self,
                                      file_path=self.file_path)
-                self.context.imported_files[self.file_path] = self.pgfile
+                self.imported_files[self.file_path] = self.pgfile
 
         return self.pgfile.resolve(symbol_ref)
 
@@ -1460,7 +1479,8 @@ def act_term_rule(context, nodes):
     recognizer = nodes[2]
 
     check_name(context, name)
-    term = Terminal(name, recognizer, location=Location(context))
+    term = Terminal(name, recognizer, location=Location(context),
+                    imported_with=context.imported_with)
     if len(nodes) > 4:
         _set_term_props(term, nodes[4])
     return term
@@ -1470,7 +1490,8 @@ def act_term_rule_empty_body(context, nodes):
     name = nodes[0]
 
     check_name(context, name)
-    term = Terminal(name, location=Location(context))
+    term = Terminal(name, location=Location(context),
+                    imported_with=context.imported_with)
     term.recognizer = None
     if len(nodes) > 3:
         _set_term_props(term, nodes[3])
@@ -1547,7 +1568,9 @@ def act_gsymbol_string_recognizer(context, nodes):
 
     if terminal_ref.name not in context.inline_terminals:
         context.inline_terminals[terminal_ref.name] = \
-            Terminal(terminal_ref.name, recognizer, location=Location(context))
+            Terminal(terminal_ref.name, recognizer,
+                     location=Location(context),
+                     imported_with=context.imported_with)
 
     return terminal_ref
 
