@@ -1158,6 +1158,7 @@ pg_productions = [
     [PGFILE, [IMPORTS, PRODUCTION_RULES, EOF]],
     [PGFILE, [PRODUCTION_RULES, 'terminals', TERMINAL_RULES, EOF]],
     [PGFILE, [IMPORTS, PRODUCTION_RULES, 'terminals', TERMINAL_RULES, EOF]],
+    [PGFILE, ['terminals', TERMINAL_RULES, EOF]],
     [IMPORTS, [IMPORTS, IMPORT]],
     [IMPORTS, [IMPORT]],
     [IMPORT, ['import', STR_TERM, ';']],
@@ -1269,12 +1270,16 @@ def get_grammar_parser(debug, debug_colors):
 
 
 def act_pgfile(context, nodes):
-    if len(nodes) in [3, 5]:
-        imports = nodes.pop(0)
-    else:
-        imports = []
-    productions = nodes.pop(0)
-    terminals = nodes[1] if len(nodes) > 1 else []
+    imports, productions, terminals = [], [], []
+    while nodes:
+        first = nodes.pop(0)
+        if first and type(first) is list:
+            if type(first[0]) is PGFileImport:
+                imports = first
+            elif type(first[0]) is Production:
+                productions = first
+            elif type(first[0]) is Terminal:
+                terminals = first
 
     for terminal in context.inline_terminals.values():
         terminals.append(terminal)
