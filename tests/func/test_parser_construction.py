@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Grammar, Parser, GLRParser, NonTerminal, Terminal, \
-    EMPTY, STOP
+from parglare import Grammar, Parser, GLRParser, EMPTY, STOP
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 
@@ -41,13 +40,18 @@ def test_first_empty_in_rhs():
 
     first_set = first(g)
 
-    assert EMPTY in first_set[NonTerminal('A')]
-    assert Terminal('B') in first_set[NonTerminal('A')]
+    A = g.get_nonterminal('A')
+    B = g.get_terminal('B')
+    C = g.get_terminal('C')
+    S = g.get_nonterminal('S')
 
-    assert Terminal('B') in first_set[NonTerminal('S')]
+    assert EMPTY in first_set[A]
+    assert B in first_set[A]
+
+    assert B in first_set[S]
 
     # 'A' can derive empty, thus 'C' must be in firsts of 'S'.
-    assert Terminal('C') in first_set[NonTerminal('S')]
+    assert C in first_set[S]
 
 
 def test_follow():
@@ -80,6 +84,9 @@ def test_table_construction():
     g = Grammar.from_string(grammar)
     table = create_table(g)
 
+    c = g.get_terminal('c')
+    d = g.get_terminal('d')
+
     assert len(table.states) == 11
     assert table.states[0].symbol.name == "S'"
     state = table.states[2]
@@ -87,7 +94,7 @@ def test_table_construction():
     assert len(state.kernel_items) == 1
     assert len(state.items) == 3
     assert len(state.actions) == 1
-    assert len(state.actions[Terminal('c')]) == 1
+    assert len(state.actions[c]) == 1
     action = list(state.actions.values())[0][0]
     assert action.action == SHIFT
     assert action.state.state_id == 6
@@ -97,8 +104,8 @@ def test_table_construction():
     assert len(state.kernel_items) == 2
     assert len(state.items) == 4
     assert len(state.actions) == 2
-    assert len(state.actions[Terminal('c')]) == 1
-    assert len(state.actions[Terminal('d')]) == 1
+    assert len(state.actions[c]) == 1
+    assert len(state.actions[d]) == 1
     action = list(state.actions.values())[0][0]
     assert action.action == SHIFT
     assert action.state.state_id == 6

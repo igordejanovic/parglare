@@ -60,7 +60,7 @@ class GrammarSymbol(object):
         self.action = None
         self.grammar_action = None
         self.imported_with = imported_with
-        self._hash = hash(name)
+        self._hash = hash(self.fqn)
 
     @property
     def fqn(self):
@@ -73,19 +73,13 @@ class GrammarSymbol(object):
         return str(self)
 
     def __str__(self):
-        return self.name
+        return self.fqn
 
     def __repr__(self):
         return "{}({})".format(type(self).__name__, str(self))
 
     def __hash__(self):
         return self._hash
-
-    def __eq__(self, other):
-        return self.name == other.name
-
-    def __ne__(self, other):
-        return not self == other
 
 
 class NonTerminal(GrammarSymbol):
