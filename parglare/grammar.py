@@ -774,6 +774,7 @@ class Grammar(PGFile):
             self._connect_override_recognizers()
 
         self._enumerate_productions()
+        self._add_all_symbols()
         self._fix_keyword_terminals()
         self._resolve_actions()
 
@@ -806,6 +807,20 @@ class Grammar(PGFile):
             s.prod_id = idx
             s.prod_symbol_id = idx_per_symbol.get(s.symbol, 0)
             idx_per_symbol[s.symbol] = idx_per_symbol.get(s.symbol, 0) + 1
+
+    def _add_all_symbols(self):
+        for production in self.productions:
+            for rhs_elem in production.rhs:
+                if isinstance(rhs_elem, Terminal):
+                    if rhs_elem not in self.terminals:
+                        self.terminals.add(rhs_elem)
+                elif isinstance(rhs_elem, NonTerminal):
+                    if rhs_elem not in self.nonterminals:
+                        self.nonterminals.add(rhs_elem)
+                else:
+                    # This should never happen
+                    assert False, "Invalid RHS element type '{}'."\
+                        .format(type(rhs_elem))
 
     def _fix_keyword_terminals(self):
         """
