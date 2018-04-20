@@ -19,6 +19,7 @@ def test_repeatable_zero_or_more():
 
     g = Grammar.from_string(grammar)
     assert g.get_nonterminal('b_0')
+    assert g.get_nonterminal('b_1')
 
     p = Parser(g)
 
