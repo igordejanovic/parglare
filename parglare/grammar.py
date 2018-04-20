@@ -712,7 +712,6 @@ class Grammar(PGFile):
     Attributes:
     start_symbol (GrammarSymbol or str): start/root symbol of the grammar or
         its name.
-    files (dict): A global registry of PGFile instances keyed by abs path.
     nonterminals (set of NonTerminal):
     terminals(set of Terminal):
 
@@ -740,9 +739,6 @@ class Grammar(PGFile):
                                       recognizers=recognizers)
 
         self._no_check_recognizers = _no_check_recognizers
-
-        if file_path is not None:
-            self.files = {file_path: self}
 
         # Determine start symbol. If name is provided search for it. If name is
         # not given use the first production LHS symbol as the start symbol.
