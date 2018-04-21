@@ -420,6 +420,8 @@ class PGFile(object):
         else:
             self.imports = {}
         self.file_path = path.realpath(file_path) if file_path else None
+        if self.file_path:
+            self.grammar.imported_files[self.file_path] = self
         self.imported_with = imported_with
         self.recognizers = recognizers
 
@@ -700,6 +702,7 @@ class Grammar(PGFile):
         its name.
     nonterminals (set of NonTerminal):
     terminals(set of Terminal):
+    imported_files(dict): Global registry of all imported files.
 
     """
 
@@ -717,6 +720,9 @@ class Grammar(PGFile):
         _no_check_recognizers (bool, internal): Used by pglr tool to circumvent
              errors for empty recognizers that will be provided in user code.
         """
+
+        self.imported_files = {}
+
         super(Grammar, self).__init__(productions=productions,
                                       terminals=terminals,
                                       imports=imports,
@@ -911,7 +917,6 @@ class Grammar(PGFile):
         context.debug = debug
         context.debug_colors = debug_colors
         context.classes = {}
-        context.imported_files = {}
         context.inline_terminals = {}
         context.imported_with = None
         context.grammar = None
@@ -965,7 +970,6 @@ class PGFileImport(object):
     context (Context): The parsing context.
     imported_with (PGFileImport): First import this import is imported from.
         Used for FQN calculation.
-    imported_files(dict): Global registry of all imported files.
     grammar (Grammar): Grammar object under construction.
     pgfile (PGFile instance or None):
 
@@ -975,7 +979,6 @@ class PGFileImport(object):
         self.file_path = file_path
         self.context = context
         self.imported_with = context.imported_with
-        self.imported_files = context.imported_files
         self.grammar = None
         self.pgfile = None
 
@@ -992,8 +995,8 @@ class PGFileImport(object):
 
         if self.pgfile is None:
             # First search the global registry of imported files.
-            if self.file_path in self.imported_files:
-                self.pgfile = self.imported_files[self.file_path]
+            if self.file_path in self.grammar.imported_files:
+                self.pgfile = self.grammar.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
                 self.context.inline_terminals = {}
@@ -1010,7 +1013,6 @@ class PGFileImport(object):
                                      grammar=self.grammar,
                                      imported_with=self,
                                      file_path=self.file_path)
-                self.imported_files[self.file_path] = self.pgfile
 
         return self.pgfile.resolve(symbol_ref)
 

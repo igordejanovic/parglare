@@ -1,0 +1,16 @@
+import 'base.pg';
+import 'modules.pg';   // Recursive import of module
+
+Component:
+  'component' name=base.ID extends=ComponentExtends? '{'
+      slots=Slot*
+      modules=modules.Module*   // recursive reference to Module
+  '}'
+;
+
+ComponentExtends: 'extends' extends=base.FQN+[base.COMMA];
+
+Slot: SlotIn|SlotOut;
+
+SlotIn: 'in' name=base.ID;
+SlotOut: 'out' name=base.ID;

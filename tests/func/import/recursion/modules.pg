@@ -1,0 +1,6 @@
+import 'components.pg' as c;
+import 'base.pg';
+
+Module: 'module' name=base.ID '{'
+        components=c.Component*
+'}';

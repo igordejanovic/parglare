@@ -1,0 +1,4 @@
+terminals
+ID: /\w+/;
+FQN: /\w+(\.\w+)*/;
+COMMA: ',';
