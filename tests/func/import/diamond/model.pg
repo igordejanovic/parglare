@@ -1,0 +1,7 @@
+import 'packages.pg';
+import 'modules.pg' as m;
+
+Model:
+    packages=packages.Package*
+    modules=m.Module*
+;
