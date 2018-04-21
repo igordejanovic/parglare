@@ -150,7 +150,7 @@ def obj(context, nodes, **attrs):
     This action is used as default action for rules with named matches.
     """
     grammar = context.parser.grammar
-    rule_name = context.production.symbol.name
+    rule_name = context.production.symbol.fqn
 
     cls = grammar.classes[rule_name]
     instance = cls(**attrs)

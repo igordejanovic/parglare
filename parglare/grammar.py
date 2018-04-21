@@ -997,7 +997,6 @@ class PGFileImport(object):
             else:
                 # If not found construct new PGFile
                 self.context.inline_terminals = {}
-                self.context.classes = {}
                 self.context.imported_with = self
                 self.context.file_name = self.file_path
                 imports, productions, terminals = \
@@ -1355,7 +1354,8 @@ def act_production_rule(context, nodes):
 
     check_name(context, name)
 
-    symbol = NonTerminal(name, location=Location(context))
+    symbol = NonTerminal(name, location=Location(context),
+                         imported_with=context.imported_with)
 
     # Collect all productions for this rule
     prods = []
@@ -1426,12 +1426,12 @@ def act_production_rule(context, nodes):
                     return "<parglare:{} instance at {}>"\
                         .format(name, hex(id(self)))
 
-        ParglareClass.__name__ = str(name)
-        if name in context.classes:
+        ParglareClass.__name__ = str(symbol.fqn)
+        if symbol.fqn in context.classes:
             # If rule has multiple definition merge attributes.
-            context.classes[name]._pg_attrs.update(attrs)
+            context.classes[symbol.fqn]._pg_attrs.update(attrs)
         else:
-            context.classes[name] = ParglareClass
+            context.classes[symbol.fqn] = ParglareClass
 
         symbol.action_name = 'obj'
 
