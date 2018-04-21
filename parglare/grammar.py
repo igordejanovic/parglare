@@ -411,7 +411,7 @@ class PGFile(object):
                  file_path=None, grammar=None, recognizers=None,
                  imported_with=None):
         self.productions = productions
-        self.terminals = terminals if terminals is not None else set()
+        self.terminals = set(terminals) if terminals is not None else set()
         self.grammar = self if grammar is None else grammar
         if imports:
             self.imports = {i.module_name: i for i in imports}
@@ -767,7 +767,7 @@ class Grammar(PGFile):
         self.nonterminals = set()
         for prod in self.productions:
             self.nonterminals.add(prod.symbol)
-        self.terminals = set([EMPTY, EOF, STOP])
+        self.terminals.update([EMPTY, EOF, STOP])
 
         def add_productions(productions):
             for production in productions:
