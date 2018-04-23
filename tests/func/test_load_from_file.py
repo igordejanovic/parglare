@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import pytest  # noqa
 import os
 from parglare import Grammar, Parser
-from .calc_actions import actions
+from .calcactions import actions
 
 
 def test_load_from_file():

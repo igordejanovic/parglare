@@ -7,7 +7,7 @@ import itertools
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
-from parglare.common import Location
+from parglare.common import Location, load_python_module
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
 
@@ -427,6 +427,7 @@ class PGFile(object):
 
         self.collect_and_unify_symbols()
         self.resolve_references()
+        self.load_actions()
         self.init_recognizers()
 
     def collect_and_unify_symbols(self):
@@ -504,6 +505,39 @@ class PGFile(object):
     def register_symbol(self, symbol):
         self.symbols_by_name[symbol.name] = symbol
 
+    def load_actions(self):
+        """
+        Loads actions from <grammar_name>_actions.py if the file exists.
+        Actions must be collected with action decorator and the decorator must
+        be called `action`.
+        """
+        actions = None
+        if self.file_path:
+            actions_file = path.join(
+                path.dirname(self.file_path),
+                "{}_actions.py".format(path.splitext(
+                    path.basename(self.file_path))[0]))
+            if path.exists(actions_file):
+                mod_name = "fqn.actions".format(self.imported_with.fqn)
+                actions_module = load_python_module(mod_name, actions_file)
+                if not hasattr(actions_module, 'action'):
+                    raise GrammarError(
+                        Location(file_name=actions_file),
+                        message='Actions file "{}" must have "action" '
+                        'decorator defined.'.format(actions_file))
+                actions = actions_module.action.all
+
+        for symbol in self.symbols_by_name.values():
+            if actions:
+                # Action given by rule name has higher precendence
+                if symbol.name in actions:
+                    action_name = symbol.name
+                else:
+                    action_name = symbol.action_name or symbol.name
+                if action_name in actions:
+                    symbol.action = symbol.grammar_action \
+                                    = actions[action_name]
+
     def init_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
         with provided recognizers.
@@ -515,25 +549,11 @@ class PGFile(object):
                                              path.basename(self.file_path)))
 
             if path.exists(recognizers_file):
-                # noqa See https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
-                mod_name = "{}.recognizers".format()
-                if sys.version_info >= (3, 5):
-                    import importlib.util
-                    spec = importlib.util.spec_from_file_location(
-                        mod_name, recognizers_file)
-                    rec_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(rec_module)
-                elif sys.version_info >= (3, 3):
-                    from importlib.machinery import SourceFileLoader
-                    mod_recognizers = SourceFileLoader(
-                        mod_name, recognizers_file).load_module()
-                else:
-                    import imp
-                    rec_module = imp.load_source(mod_name, recognizers_file)
-                mod_recognizers = rec_module.recognizer.all
+                mod_recognizers = load_python_module(recognizers_file)
+                recognizers = mod_recognizers.recognizer.all
 
                 for symbol_name, symbol in self.symbols_by_name.items():
-                    if symbol_name in mod_recognizers:
+                    if symbol_name in recognizers:
                         if not isinstance(symbol, Terminal):
                             raise GrammarError(
                                 'Recognizer given for non-terminal'
@@ -846,6 +866,8 @@ class Grammar(PGFile):
                     symbol.action = \
                         symbol.grammar_action = getattr(actmodule,
                                                         symbol.action_name)
+            if not symbol.action:
+                symbol.action = symbol.grammar_action
 
     def _connect_override_recognizers(self):
         for term in self.terminals:

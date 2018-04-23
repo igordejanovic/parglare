@@ -52,17 +52,23 @@ class Location(object):
         self.column = None
 
     def __str__(self):
-        from parglare.parser import pos_to_line_col
-        line, col = pos_to_line_col(self.input_str,
-                                    self.start_position)
-        self.line = line
-        self.column = col
-        return _a('{}{}:{}:"{}" => '.format("{}:".format(self.file_name)
-                                            if self.file_name else "",
-                                            line, col,
-                                            position_context(
-                                                self.input_str,
-                                                self.start_position)))
+        if self.input_str and self.start_position is not None:
+            from parglare.parser import pos_to_line_col
+            line, col = pos_to_line_col(self.input_str,
+                                        self.start_position)
+            self.line = line
+            self.column = col
+            return _a('{}{}:{}:"{}" => '
+                      .format("{}:".format(self.file_name)
+                              if self.file_name else "",
+                              line, col,
+                              position_context(
+                                  self.input_str,
+                                  self.start_position)))
+        elif self.file_name:
+            return _a('{} => '.format(self.file_name))
+        else:
+            return "<Unknown location>"
 
 
 def position_context(input_str, position):
@@ -74,3 +80,25 @@ def position_context(input_str, position):
         + text(input_str[position:position+10])
     c = c.replace("\n", "\\n")
     return c
+
+
+def load_python_module(mod_name, mod_path):
+    """
+    Loads Python module from an arbitrary location.
+    See https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
+    """
+    if sys.version_info >= (3, 5):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            mod_name, mod_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    elif sys.version_info >= (3, 3):
+        from importlib.machinery import SourceFileLoader
+        module = SourceFileLoader(
+            mod_name, mod_path).load_module()
+    else:
+        import imp
+        module = imp.load_source(mod_name, mod_path)
+
+    return module
