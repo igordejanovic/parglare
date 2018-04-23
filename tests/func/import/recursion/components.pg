@@ -1,5 +1,5 @@
 import 'base.pg';
-import 'modules.pg';   // Recursive import of module
+import 'modules.pg';   // Recursive import of 'modules'
 
 Component:
   'component' name=base.ID extends=ComponentExtends? '{'

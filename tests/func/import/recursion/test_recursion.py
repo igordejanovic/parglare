@@ -4,7 +4,7 @@ from parglare import Grammar, Parser
 this_folder = os.path.dirname(__file__)
 
 
-def test_recursive_import():
+def test_recursive_grammar_import():
     g = Grammar.from_file(os.path.join(this_folder, 'model.pg'))
     assert g
 

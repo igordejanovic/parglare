@@ -1,4 +1,4 @@
-import 'components.pg' as c;
+import 'components.pg' as c;   // recursive import of 'components'
 import 'base.pg';
 
 Module: 'module' name=base.ID '{'
