@@ -93,15 +93,15 @@ non-terminals and terminals respectively.
 
 ## `action` decorator
 
-You can use a special decorator factory `parglare.actions.action_decorator` to
-create decorator that can be used to collect all actions.
+You can use a special decorator factory `parglare.actions.get_action_decorator`
+to create decorator that can be used to collect all actions.
 
 ```python
-from parglare.actions import action_decorator
+from parglare.actions import get_action_decorator
 
-action = action_decorator()
+action = get_action_decorator()
 
-@action()
+@action
 def number(_, value):
     return float(value)
 
@@ -113,7 +113,7 @@ def sum_act(_, nodes):
 def pass_act_E(_, nodes):
     return nodes[0]
 
-@action()
+@action
 def T(_, nodes):
     if len(nodes) == 3:
         return nodes[0] * nodes[2]
@@ -131,14 +131,14 @@ def pass_act_F(_, nodes):
 p = Parser(grammar, actions=action.all)
 ```
 
-In the previous example `action` decorator is created using `action_decorator`
-factory. This decorator is parametrized where optional parameter is the name of
-the action. If the name is not given the name of the decorated function will be
-used. As you can see in the previous example, same name can be used multiple
-times (e.g. `E` for `sum_act` and `pass_act_E`). If same name is used multiple
-times all action functions will be collected as a list in the order of
-definition. Dictionary holding all actions for the created action decorator is
-`action.all`.
+In the previous example `action` decorator is created using
+`get_action_decorator` factory. This decorator is parametrized where optional
+parameter is the name of the action. If the name is not given the name of the
+decorated function will be used. As you can see in the previous example, same
+name can be used multiple times (e.g. `E` for `sum_act` and `pass_act_E`). If
+same name is used multiple times all action functions will be collected as a
+list in the order of definition. Dictionary holding all actions for the created
+action decorator is `action.all`.
 
 
 ## Time of actions call

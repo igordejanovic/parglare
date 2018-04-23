@@ -1,7 +1,7 @@
 import pytest  # noqa
 from parglare import Grammar, Parser, NodeNonTerm
 from parglare.exceptions import ParserInitError
-from parglare.actions import action_decorator
+from parglare.actions import get_action_decorator
 from .expression_grammar_numbers import get_grammar
 
 
@@ -126,9 +126,9 @@ def test_action_decorator():
     Test collecting actions using action decorator.
     """
 
-    action = action_decorator()
+    action = get_action_decorator()
 
-    @action()
+    @action
     def number(_, value):
         return float(value)
 
@@ -140,7 +140,7 @@ def test_action_decorator():
     def pass_act_E(_, nodes):
         return nodes[0]
 
-    @action()
+    @action
     def T(_, nodes):
         if len(nodes) == 3:
             return nodes[0] * nodes[2]

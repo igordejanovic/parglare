@@ -1,6 +1,12 @@
 """
 Common parsing actions.
 """
+import sys
+
+if sys.version < '3':
+    text = unicode  # NOQA
+else:
+    text = str
 
 
 def pass_none(_, value):
@@ -161,31 +167,40 @@ def obj(context, nodes, **attrs):
     return instance
 
 
-def action_decorator():
+def get_action_decorator():
     """
     Produces action decorator that will collect all decorated actions under
     dictionary attribute `all`.
     """
     all = {}
 
-    def action(act_name=None):
-        an = {0: act_name}
+    class Actions(object):
+        def __call__(self, act_name_or_f=None):
+            """
+            If called with action name return decorator.
+            If called over function apply decorator.
+            """
+            an = {0: act_name_or_f}
 
-        def action_inner(f):
-            if an[0] is None:
-                act_name = f.__name__
-            else:
-                act_name = an[0]
-            actions = all.get(act_name, None)
-            if actions:
-                if type(actions) is list:
-                    actions.append(f)
+            def action_decorator(f):
+                if isinstance(an[0], text):
+                    act_name = an[0]
                 else:
-                    all[act_name] = [actions, f]
+                    act_name = f.__name__
+                actions = all.get(act_name, None)
+                if actions:
+                    if type(actions) is list:
+                        actions.append(f)
+                    else:
+                        all[act_name] = [actions, f]
+                else:
+                    all[act_name] = f
+                return f
+            if act_name_or_f is None or type(act_name_or_f) is text:
+                return action_decorator
             else:
-                all[act_name] = f
-            return f
-        return action_inner
+                return action_decorator(act_name_or_f)
 
-    action.all = all
-    return action
+    actions = Actions()
+    actions.all = all
+    return actions
