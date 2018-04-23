@@ -500,8 +500,6 @@ class PGFile(object):
             for idx, ref in enumerate(production.rhs):
                 if isinstance(ref, Reference):
                     production.rhs[idx] = self.resolve(ref)
-                elif isinstance(ref, Assignment):
-                    ref.symbol = self.resolve(ref.symbol)
 
     def register_symbol(self, symbol):
         self.symbols_by_name[symbol.name] = symbol
