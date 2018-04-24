@@ -102,3 +102,42 @@ def load_python_module(mod_name, mod_path):
         module = imp.load_source(mod_name, mod_path)
 
     return module
+
+
+def get_collector():
+    """
+    Produces action/recognizers collector/decorator that will collect all
+    decorated objects under dictionary attribute `all`.
+    """
+    all = {}
+
+    class Collector(object):
+        def __call__(self, name_or_f=None):
+            """
+            If called with action/recognizer name return decorator.
+            If called over function apply decorator.
+            """
+            an = {0: name_or_f}
+
+            def decorator(f):
+                if isinstance(an[0], text):
+                    name = an[0]
+                else:
+                    name = f.__name__
+                objects = all.get(name, None)
+                if objects:
+                    if type(objects) is list:
+                        objects.append(f)
+                    else:
+                        all[name] = [objects, f]
+                else:
+                    all[name] = f
+                return f
+            if name_or_f is None or type(name_or_f) is text:
+                return decorator
+            else:
+                return decorator(name_or_f)
+
+    objects = Collector()
+    objects.all = all
+    return objects

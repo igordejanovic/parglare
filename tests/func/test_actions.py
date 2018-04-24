@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Grammar, Parser, NodeNonTerm
 from parglare.exceptions import ParserInitError
-from parglare.actions import get_action_decorator
+from parglare import get_collector
 from .expression_grammar_numbers import get_grammar
 
 
@@ -127,7 +127,7 @@ def test_action_decorator():
     Test collecting actions using action decorator.
     """
 
-    action = get_action_decorator()
+    action = get_collector()
 
     @action
     def number(_, value):

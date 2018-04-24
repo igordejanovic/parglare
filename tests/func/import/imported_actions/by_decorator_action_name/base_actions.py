@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
-from parglare.actions import get_action_decorator
+from parglare import get_collector
 
-action = get_action_decorator()
+action = get_collector()
 
 
 @action('number')
