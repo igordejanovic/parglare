@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from parglare.actions import get_action_decorator
 
 action = get_action_decorator()
