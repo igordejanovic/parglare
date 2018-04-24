@@ -120,10 +120,10 @@ class Parser(object):
             symbol.action = None
 
             # Action given by rule name has higher precendence
-            if symbol.name in actions:
-                action_name = symbol.name
+            if symbol.fqn in actions:
+                action_name = symbol.fqn
             else:
-                action_name = symbol.action_name or symbol.name
+                action_name = symbol.action_name or symbol.fqn
             if action_name in actions:
                 symbol.action = actions[action_name]
             else:
