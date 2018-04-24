@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Grammar, Parser, NodeNonTerm
 from parglare.exceptions import ParserInitError
