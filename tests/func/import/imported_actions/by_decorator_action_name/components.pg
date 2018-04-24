@@ -1,0 +1,14 @@
+import 'base.pg';
+
+Component:
+  'component' name=base.ID extends=ComponentExtends? '{'
+      slots=Slot*
+  '}'
+;
+
+ComponentExtends: 'extends' extends=base.FQN+[base.COMMA];
+
+Slot: SlotIn|SlotOut;
+
+SlotIn: 'in' name=base.ID;
+SlotOut: 'out' name=base.ID;
