@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Grammar, Parser
-from parglare.exceptions import ParseError, GrammarError
+from parglare.exceptions import ParseError, ParserInitError, GrammarError
 from parglare.actions import pass_single, pass_nochange, collect
 
 
@@ -31,8 +31,18 @@ def test_parse_list_of_integers():
         'all_less_than_five': collect,
         'int_less_than_five': pass_single
     }
+
+    # Test that `ws` must be set to `None` for non-textual content
     parser = Parser(g, actions=actions)
 
+    ints = [3, 4, 1, 4]
+    with pytest.raises(
+            ParserInitError,
+            match=r'For parsing non-textual content please '
+            'set `ws` to `None`'):
+        parser.parse(ints)
+
+    parser = Parser(g, actions=actions, ws=None)
     ints = [3, 4, 1, 4]
     p = parser.parse(ints)
     assert p == ints
@@ -88,7 +98,7 @@ def test_parse_list_of_integers_lexical_disambiguation():
         'int_less_than_five': pass_single,   # Unpack element for collect
         'ascending': pass_nochange
     }
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=actions, ws=None, debug=True)
 
     ints = [3, 4, 1, 4, 7, 8, 9, 3]
 
@@ -104,7 +114,7 @@ def test_parse_list_of_integers_lexical_disambiguation():
     # consecutive ascending numbers.
     recognizers['ascending'] = ascending_nosingle
     g = Grammar.from_string(grammar, recognizers=recognizers)
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=actions, ws=None, debug=True)
 
     # Parsing now must pass
     p = parser.parse(ints)

@@ -70,6 +70,8 @@ def test_action_list_assigned_to_terminal():
     """
     grammar = '''
     S: A+;
+
+    terminals
     A: 'a';
     '''
     g = Grammar.from_string(grammar)

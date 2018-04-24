@@ -52,8 +52,7 @@ class Parser(object):
                     debug=debug_layout)
 
         self.layout = layout
-        # If user recognizers are registered disable white-space skipping
-        self.ws = ws if not grammar.recognizers else None
+        self.ws = ws
         self.position = position
         self.debug = debug
         self.debug_trace = debug_trace
@@ -500,8 +499,13 @@ class Parser(object):
             position = pos
         elif self.ws:
             old_pos = position
-            while position < in_len and input_str[position] in self.ws:
-                position += 1
+            try:
+                while position < in_len and input_str[position] in self.ws:
+                    position += 1
+            except TypeError:
+                raise ParserInitError(
+                    "For parsing non-textual content please "
+                    "set `ws` to `None`.")
             layout_content = input_str[old_pos:position]
 
         if self.debug:
