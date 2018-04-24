@@ -428,7 +428,7 @@ class PGFile(object):
         self.collect_and_unify_symbols()
         self.resolve_references()
         self.load_actions()
-        self.init_recognizers()
+        self.load_recognizers()
 
     def collect_and_unify_symbols(self):
         """Collect non-terminals and terminals (both explicit and implicit/inline)
@@ -518,7 +518,7 @@ class PGFile(object):
                 "{}_actions.py".format(path.splitext(
                     path.basename(self.file_path))[0]))
             if path.exists(actions_file):
-                mod_name = "fqn.actions".format(self.imported_with.fqn)
+                mod_name = "{}.actions".format(self.imported_with.fqn)
                 actions_module = load_python_module(mod_name, actions_file)
                 if not hasattr(actions_module, 'action'):
                     raise GrammarError(
@@ -538,18 +538,21 @@ class PGFile(object):
                     symbol.action = symbol.grammar_action \
                                     = actions[action_name]
 
-    def init_recognizers(self):
+    def load_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
         with provided recognizers.
 
         """
         if self.file_path:
-            recognizers_file = path.join(path.dirname(self.file_path),
-                                         "{}_recognizers.py".format(
-                                             path.basename(self.file_path)))
+            recognizers_file = path.join(
+                path.dirname(self.file_path),
+                "{}_recognizers.py".format(path.splitext(
+                    path.basename(self.file_path))[0]))
 
             if path.exists(recognizers_file):
-                mod_recognizers = load_python_module(recognizers_file)
+                mod_name = "{}.recognizers".format(self.imported_with.fqn)
+                mod_recognizers = load_python_module(mod_name,
+                                                     recognizers_file)
                 recognizers = mod_recognizers.recognizer.all
 
                 for symbol_name, symbol in self.symbols_by_name.items():
@@ -559,17 +562,7 @@ class PGFile(object):
                                 'Recognizer given for non-terminal'
                                 ' "{}" in file "{}"'.format(symbol.name,
                                                             recognizers_file))
-
-        # Override by recognizers given during instantiation.
-        # TODO: Check that FQN are handled correctly.
-        if self.recognizers:
-            for symbol in self.symbols_by_name.values():
-                if symbol.fqn in self.recognizers:
-                    if not isinstance(symbol, Terminal):
-                        raise GrammarError(
-                            'Recognizer given for non-terminal'
-                            ' "{}" in recognizers parameters.'.format(
-                                symbol.fqn))
+                        symbol.recognizer = recognizers[symbol_name]
 
     def resolve(self, symbol_ref):
         """Resolves given symbol reference.
@@ -871,8 +864,8 @@ class Grammar(PGFile):
 
     def _connect_override_recognizers(self):
         for term in self.terminals:
-            if self.recognizers and term.name in self.recognizers:
-                term.recognizer = self.recognizers[term.name]
+            if self.recognizers and term.fqn in self.recognizers:
+                term.recognizer = self.recognizers[term.fqn]
             else:
                 if term.recognizer is None:
                     if not self.recognizers:
@@ -880,13 +873,13 @@ class Grammar(PGFile):
                             location=term.location,
                             message='Terminal "{}" has no recognizer defined '
                             'and no recognizers are given during grammar '
-                            'construction.'.format(term.name))
+                            'construction.'.format(term.fqn))
                     else:
-                        if term.name not in self.recognizers:
+                        if term.fqn not in self.recognizers:
                             raise GrammarError(
                                 location=term.location,
                                 message='Terminal "{}" has no recognizer '
-                                'defined.'.format(term.name))
+                                'defined.'.format(term.fqn))
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name."
