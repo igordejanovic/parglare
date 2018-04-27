@@ -26,8 +26,8 @@ class Location(object):
         Takes precendence over `input_str` given in `context`.
     """
 
-    __slots__ = ['file_name', 'start_position', 'end_position', 'line',
-                 'column', 'input_str']
+    __slots__ = ['file_name', 'start_position', 'end_position', '_line',
+                 '_column', 'input_str']
 
     def __init__(self, context=None, file_name=None, start_position=None,
                  end_position=None, input_str=None):
@@ -48,20 +48,34 @@ class Location(object):
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting
-        self.line = None
-        self.column = None
+        self._line = None
+        self._column = None
 
-    def __str__(self):
+    @property
+    def line(self):
+        if self._line is None:
+            self.evaluate_line_col()
+        return self._line
+
+    @property
+    def column(self):
+        if self._column is None:
+            self.evaluate_line_col()
+        return self._column
+
+    def evaluate_line_col(self):
         if self.input_str and self.start_position is not None:
             from parglare.parser import pos_to_line_col
-            line, col = pos_to_line_col(self.input_str,
-                                        self.start_position)
-            self.line = line
-            self.column = col
+            self._line, self._column = pos_to_line_col(self.input_str,
+                                                       self.start_position)
+
+    def __str__(self):
+        line, column = self.line, self.column
+        if line is not None:
             return _a('{}{}:{}:"{}" => '
                       .format("{}:".format(self.file_name)
                               if self.file_name else "",
-                              line, col,
+                              line, column,
                               position_context(
                                   self.input_str,
                                   self.start_position)))
