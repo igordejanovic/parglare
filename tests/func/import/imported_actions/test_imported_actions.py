@@ -55,3 +55,20 @@ def test_imported_actions_override():
     }
     model = Parser(g, actions=actions).parse(model_str)
     assert model.modelID == 43
+
+
+def test_imported_actions_override_by_grammar_actions():
+    """
+    Test that actions loaded from `*_actions.py` files can override actions
+    imported from other grammar files.
+    """
+
+    g = Grammar.from_file(os.path.join(this_folder,
+                                       'in_grammar_by_symbol_name/model.pg'))
+    model = Parser(g).parse(model_str)
+    assert model.modelID == 43
+
+    g = Grammar.from_file(os.path.join(this_folder,
+                                       'in_grammar_by_action_name/model.pg'))
+    model = Parser(g).parse(model_str)
+    assert model.modelID == 43

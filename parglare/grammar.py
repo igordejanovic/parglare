@@ -69,6 +69,14 @@ class GrammarSymbol(object):
         else:
             return self.name
 
+    @property
+    def action_fqn(self):
+        if self.action_name:
+            if self.imported_with:
+                return "{}.{}".format(self.imported_with.fqn, self.action_name)
+            else:
+                return self.action_name
+
     def __unicode__(self):
         return str(self)
 
@@ -424,6 +432,7 @@ class PGFile(object):
             self.grammar.imported_files[self.file_path] = self
         self.imported_with = imported_with
         self.recognizers = recognizers
+        self.actions = {}
 
         self.collect_and_unify_symbols()
         self.resolve_references()
@@ -503,7 +512,7 @@ class PGFile(object):
             for production in self.productions:
                 for idx, ref in enumerate(production.rhs):
                     if isinstance(ref, Reference):
-                        production.rhs[idx] = self.resolve(ref, pazz)
+                        production.rhs[idx] = self.resolve_ref(ref, pazz)
 
     def register_symbol(self, symbol):
         self.symbols_by_name[symbol.name] = symbol
@@ -514,7 +523,7 @@ class PGFile(object):
         Actions must be collected with action decorator and the decorator must
         be called `action`.
         """
-        actions = None
+        actions_file = None
         if self.file_path:
             actions_file = path.join(
                 path.dirname(self.file_path),
@@ -530,18 +539,7 @@ class PGFile(object):
                         Location(file_name=actions_file),
                         message='Actions file "{}" must have "action" '
                         'decorator defined.'.format(actions_file))
-                actions = actions_module.action.all
-
-        for symbol in self.symbols_by_name.values():
-            if actions:
-                # Action given by rule name has higher precendence
-                if symbol.name in actions:
-                    action_name = symbol.name
-                else:
-                    action_name = symbol.action_name or symbol.name
-                if action_name in actions:
-                    symbol.action = symbol.grammar_action \
-                                    = actions[action_name]
+                self.actions = actions_module.action.all
 
     def load_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
@@ -571,7 +569,7 @@ class PGFile(object):
                                                             recognizers_file))
                         symbol.recognizer = recognizers[symbol_name]
 
-    def resolve(self, symbol_ref, first_pass=False):
+    def resolve_ref(self, symbol_ref, first_pass=False):
         """Resolves given symbol reference.
 
         For local name search this file, for FQN use imports and delegate to
@@ -585,48 +583,63 @@ class PGFile(object):
 
         """
         if isinstance(symbol_ref.separator, Reference):
-            symbol_ref.separator = self.resolve(symbol_ref.separator)
+            symbol_ref.separator = self.resolve_ref(symbol_ref.separator)
 
         symbol_name = symbol_ref.name
+        symbol = self.resolve_symbol_by_name(symbol_name, symbol_ref.location)
+        if not symbol:
+            if first_pass:
+                return symbol_ref
+            else:
+                raise GrammarError(
+                    location=symbol_ref.location,
+                    message='Unknown symbol "{}"'.format(symbol_name))
+
+        mult = symbol_ref.multiplicity
+        if mult != MULT_ONE:
+            # If multiplicity is used than we are referring to
+            # suggared symbol
+
+            separator = symbol_ref.separator \
+                if symbol_ref.separator else None
+
+            base_symbol = symbol
+            symbol_name = symbol_ref.multiplicity_name
+            symbol = self.resolve_symbol_by_name(symbol_name,
+                                                 symbol_ref.location)
+            if not symbol:
+                # If there is no multiplicity version of the symbol we
+                # will create one at this place
+                symbol = self.make_multiplicity_symbol(
+                    symbol_ref, base_symbol, separator, self.imported_with)
+
+        return symbol
+
+    def resolve_symbol_by_name(self, symbol_name, location=None):
+        """
+        Resolves symbol by fqn.
+        """
         if '.' in symbol_name:
-            import_module_name, name = symbol_name.split('.')
+            import_module_name, name = symbol_name.split('.', 1)
             try:
                 imported_pg_file = self.imports[import_module_name]
             except KeyError:
                 raise GrammarError(
-                    location=symbol_ref.location,
+                    location=location,
                     message='Unexisting module "{}" in reference "{}"'
                     .format(import_module_name, symbol_name))
-            symbol_ref.name = name
-            return imported_pg_file.resolve(symbol_ref)
+            return imported_pg_file.resolve_symbol_by_name(name, location)
         else:
-            symbol = self.symbols_by_name.get(symbol_name)
-            if not symbol:
-                if first_pass:
-                    return symbol_ref
-                else:
-                    raise GrammarError(
-                        location=symbol_ref.location,
-                        message='Unknown symbol "{}"'.format(symbol_name))
+            return self.symbols_by_name.get(symbol_name, None)
 
-            mult = symbol_ref.multiplicity
-            if mult != MULT_ONE:
-                # If multiplicity is used than we are referring to
-                # suggared symbol
-
-                separator = symbol_ref.separator \
-                    if symbol_ref.separator else None
-
-                base_symbol = symbol
-                symbol_name = symbol_ref.multiplicity_name
-                symbol = self.symbols_by_name.get(symbol_name)
-                if not symbol:
-                    # If there is no multiplicity version of the symbol we
-                    # will create one at this place
-                    symbol = self.make_multiplicity_symbol(
-                        symbol_ref, base_symbol, separator, self.imported_with)
-
-            return symbol
+    def resolve_action_by_name(self, action_name):
+        if action_name in self.actions:
+            return self.actions[action_name]
+        elif '.' in action_name:
+            import_module_name, name = action_name.split('.', 1)
+            if import_module_name in self.imports:
+                imported_pg_file = self.imports[import_module_name]
+                return imported_pg_file.resolve_action_by_name(name)
 
     def make_multiplicity_symbol(self, symbol_ref, base_symbol, separator,
                                  imported_with):
@@ -863,16 +876,22 @@ class Grammar(PGFile):
         Checks and resolves common semantic actions given in the grammar.
         """
         import parglare.actions as actmodule
+
         for symbol in self:
-            # Try to find action in built-in actions module
-            # If action is not given we suppose that it is a user defined
-            # action that will be provided during parser instantiation
-            # using `actions` param.
-            if symbol.action_name and not symbol.action:
-                if hasattr(actmodule, symbol.action_name):
-                    symbol.action = \
-                        symbol.grammar_action = getattr(actmodule,
-                                                        symbol.action_name)
+            if not symbol.action:
+                action_name = symbol.action_fqn or symbol.fqn
+                action = self.resolve_action_by_name(action_name)
+                if action is None and symbol.action_name is not None:
+                    # Try to find action in built-in actions module If action
+                    # is not given we suppose that it is a user defined action
+                    # that will be provided during parser instantiation using
+                    # `actions` param.
+                    action_name = symbol.action_name
+                    if hasattr(actmodule, action_name):
+                        action = getattr(actmodule, action_name)
+                if action:
+                    symbol.action = symbol.grammar_action = action
+
             if not symbol.action:
                 symbol.action = symbol.grammar_action
 
@@ -1017,31 +1036,40 @@ class PGFileImport(object):
         else:
             return self.module_name
 
-    def resolve(self, symbol_ref):
+    def load_pgfile(self):
+        # First search the global registry of imported files.
+        if self.file_path in self.grammar.imported_files:
+            self.pgfile = self.grammar.imported_files[self.file_path]
+        else:
+            # If not found construct new PGFile
+            self.context.inline_terminals = {}
+            self.context.imported_with = self
+            self.context.file_name = self.file_path
+            imports, productions, terminals = \
+                get_grammar_parser(
+                    self.context.debug,
+                    self.context.debug_colors).parse_file(
+                        self.file_path, context=self.context)
+            self.pgfile = PGFile(productions=productions,
+                                 terminals=terminals,
+                                 imports=imports,
+                                 grammar=self.grammar,
+                                 imported_with=self,
+                                 file_path=self.file_path)
+
+    def resolve_symbol_by_name(self, symbol_name, location=None):
         "Resolves symbol from the imported file."
 
         if self.pgfile is None:
-            # First search the global registry of imported files.
-            if self.file_path in self.grammar.imported_files:
-                self.pgfile = self.grammar.imported_files[self.file_path]
-            else:
-                # If not found construct new PGFile
-                self.context.inline_terminals = {}
-                self.context.imported_with = self
-                self.context.file_name = self.file_path
-                imports, productions, terminals = \
-                    get_grammar_parser(
-                        self.context.debug,
-                        self.context.debug_colors).parse_file(
-                            self.file_path, context=self.context)
-                self.pgfile = PGFile(productions=productions,
-                                     terminals=terminals,
-                                     imports=imports,
-                                     grammar=self.grammar,
-                                     imported_with=self,
-                                     file_path=self.file_path)
+            self.load_pgfile()
+        return self.pgfile.resolve_symbol_by_name(symbol_name, location)
 
-        return self.pgfile.resolve(symbol_ref)
+    def resolve_action_by_name(self, action_name):
+        "Resolves action from the imported file."
+
+        if self.pgfile is None:
+            self.load_pgfile()
+        return self.pgfile.resolve_action_by_name(action_name)
 
 
 def create_productions_terminals(productions):
