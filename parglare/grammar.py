@@ -521,7 +521,9 @@ class PGFile(object):
                 "{}_actions.py".format(path.splitext(
                     path.basename(self.file_path))[0]))
             if path.exists(actions_file):
-                mod_name = "{}.actions".format(self.imported_with.fqn)
+                mod_name = "{}actions".format(
+                    self.imported_with.fqn
+                    if self.imported_with is not None else "")
                 actions_module = load_python_module(mod_name, actions_file)
                 if not hasattr(actions_module, 'action'):
                     raise GrammarError(
@@ -553,7 +555,9 @@ class PGFile(object):
                     path.basename(self.file_path))[0]))
 
             if path.exists(recognizers_file):
-                mod_name = "{}.recognizers".format(self.imported_with.fqn)
+                mod_name = "{}recognizers".format(
+                    self.imported_with.fqn
+                    if self.imported_with is not None else "")
                 mod_recognizers = load_python_module(mod_name,
                                                      recognizers_file)
                 recognizers = mod_recognizers.recognizer.all
