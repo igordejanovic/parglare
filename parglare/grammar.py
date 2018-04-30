@@ -497,10 +497,13 @@ class PGFile(object):
         self.symbols_by_name['STOP'] = STOP
 
     def resolve_references(self):
-        for production in self.productions:
-            for idx, ref in enumerate(production.rhs):
-                if isinstance(ref, Reference):
-                    production.rhs[idx] = self.resolve(ref)
+        # Two pass resolving to enable referening symbols created during
+        # resolving (e.g. multiplicity symbols).
+        for pazz in [True, False]:
+            for production in self.productions:
+                for idx, ref in enumerate(production.rhs):
+                    if isinstance(ref, Reference):
+                        production.rhs[idx] = self.resolve(ref, pazz)
 
     def register_symbol(self, symbol):
         self.symbols_by_name[symbol.name] = symbol
@@ -564,13 +567,17 @@ class PGFile(object):
                                                             recognizers_file))
                         symbol.recognizer = recognizers[symbol_name]
 
-    def resolve(self, symbol_ref):
+    def resolve(self, symbol_ref, first_pass=False):
         """Resolves given symbol reference.
 
         For local name search this file, for FQN use imports and delegate to
         imported file.
 
         On each resolved symbol productions in the root file are updated.
+
+        If this is first pass do not fail on unexisting reference as there
+        might be new symbols created during resolving (e.g. multiplicity
+        symbols).
 
         """
         if isinstance(symbol_ref.separator, Reference):
@@ -591,9 +598,12 @@ class PGFile(object):
         else:
             symbol = self.symbols_by_name.get(symbol_name)
             if not symbol:
-                raise GrammarError(
-                    location=symbol_ref.location,
-                    message='Unknown symbol "{}"'.format(symbol_name))
+                if first_pass:
+                    return symbol_ref
+                else:
+                    raise GrammarError(
+                        location=symbol_ref.location,
+                        message='Unknown symbol "{}"'.format(symbol_name))
 
             mult = symbol_ref.multiplicity
             if mult != MULT_ONE:
