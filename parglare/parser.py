@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 import codecs
 import sys
-from .grammar import Terminal, EMPTY, EOF, STOP
+from .grammar import EMPTY, EOF, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
@@ -35,7 +35,8 @@ class Parser(object):
         EMPTY.action = pass_none
         EOF.action = pass_none
         if actions:
-            self._resolve_override_builtin_actions(actions)
+            self.grammar._resolve_actions(action_overrides=actions,
+                                          fail_on_no_resolve=True)
 
         self.layout_parser = None
         if not layout:
@@ -108,45 +109,6 @@ class Parser(object):
 
             if unhandled_conflicts:
                 raise RRConflicts(unhandled_conflicts)
-
-    def _resolve_override_builtin_actions(self, actions):
-        """
-        If a user provides `actions` param resolve all grammar symbol
-        actions and override already resolved parglare common actions.
-        """
-        for symbol in self.grammar:
-
-            symbol.action = None
-
-            # Action given by rule name has higher precendence
-            if symbol.fqn in actions:
-                action_name = symbol.fqn
-            else:
-                action_name = symbol.action_name or symbol.fqn
-            if action_name in actions:
-                symbol.action = actions[action_name]
-            else:
-                symbol.action = symbol.grammar_action
-
-            if symbol.action_name and symbol.action is None:
-                raise ParserInitError(
-                    'Action "{}" given for rule "{}" '
-                    'doesn\'t exists in parglare common actions and '
-                    'is not provided using "actions" parameter.'
-                    .format(symbol.action_name, symbol.name))
-
-            # Some sanity checks for actions
-            if type(symbol.action) is list:
-                if type(symbol) is Terminal:
-                    raise ParserInitError(
-                        'Cannot use a list of actions for '
-                        'terminal "{}".'.format(symbol.name))
-                else:
-                    if len(symbol.action) != len(symbol.productions):
-                        raise ParserInitError(
-                            'Lenght of list of actions must match the '
-                            'number of productions for non-terminal '
-                            '"{}".'.format(symbol.name))
 
     def print_debug(self):
         if self.layout and self.debug_layout:

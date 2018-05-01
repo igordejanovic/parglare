@@ -51,7 +51,15 @@ def test_imported_actions_override():
     # Or by action name used in grammar for the given symbol
     g = Grammar.from_file(os.path.join(this_folder, 'by_action_name/model.pg'))
     actions = {
-        'number': lambda _, value: 43
+        'base.number': lambda _, value: 43
+    }
+    model = Parser(g, actions=actions).parse(model_str)
+    assert model.modelID == 43
+
+    # Override by FQN takes precendence
+    g = Grammar.from_file(os.path.join(this_folder, 'by_action_name/model.pg'))
+    actions = {
+        'base.NUMERIC_ID': lambda _, value: 43
     }
     model = Parser(g, actions=actions).parse(model_str)
     assert model.modelID == 43

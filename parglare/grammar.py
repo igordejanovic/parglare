@@ -5,7 +5,7 @@ import sys
 import re
 import itertools
 from parglare.six import add_metaclass
-from parglare.exceptions import GrammarError
+from parglare.exceptions import GrammarError, ParserInitError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.common import Location, load_python_module
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
@@ -871,28 +871,67 @@ class Grammar(PGFile):
                         ignore_case=term.recognizer.ignore_case)
                     term.keyword = True
 
-    def _resolve_actions(self):
+    def _resolve_actions(self, action_overrides=None,
+                         fail_on_no_resolve=False):
         """
-        Checks and resolves common semantic actions given in the grammar.
+        Checks and resolves semantic actions given in the grammar and
+        additional `*_actions.py` module.
+
+        Args:
+            action_overrides(dict): Dict of actions that take precendence. Used
+                for actions supplied during parser construction.
         """
         import parglare.actions as actmodule
 
         for symbol in self:
-            if not symbol.action:
-                action_name = symbol.action_fqn or symbol.fqn
-                action = self.resolve_action_by_name(action_name)
+            # Resolve trying from most specific to least specific
+            # 1. If overrides are given check first there. First for FQN,
+            #    and than for action name.
+            action = None
+            if action_overrides:
+                action = action_overrides.get(symbol.fqn, None)
+                if action is None:
+                    action = action_overrides.get(symbol.action_fqn, None)
+            if action is None:
+                # 2. Fully qualified symbol name
+                action = self.resolve_action_by_name(symbol.fqn)
                 if action is None and symbol.action_name is not None:
-                    # Try to find action in built-in actions module If action
-                    # is not given we suppose that it is a user defined action
-                    # that will be provided during parser instantiation using
-                    # `actions` param.
-                    action_name = symbol.action_name
-                    if hasattr(actmodule, action_name):
-                        action = getattr(actmodule, action_name)
-                if action:
-                    symbol.action = symbol.grammar_action = action
+                    # 3. Fully qualified action name
+                    action = self.resolve_action_by_name(symbol.action_fqn)
+                    if action is None:
+                        # 4. Action name
+                        action = self.resolve_action_by_name(
+                            symbol.action_name)
 
-            if not symbol.action:
+                    if action is None:
+                        # 5. Try to find action in built-in actions module.
+                        action_name = symbol.action_name
+                        if hasattr(actmodule, action_name):
+                            action = getattr(actmodule, action_name)
+
+                    if action is None and fail_on_no_resolve:
+                        raise ParserInitError(
+                            'Action "{}" given for rule "{}" '
+                            'doesn\'t exists in parglare common actions and '
+                            'is not provided using "actions" parameter.'
+                            .format(symbol.action_name, symbol.name))
+
+            if action is not None:
+                symbol.action = action
+
+                # Some sanity checks for actions
+                if type(symbol.action) is list:
+                    if type(symbol) is Terminal:
+                        raise ParserInitError(
+                            'Cannot use a list of actions for '
+                            'terminal "{}".'.format(symbol.name))
+                    else:
+                        if len(symbol.action) != len(symbol.productions):
+                            raise ParserInitError(
+                                'Lenght of list of actions must match the '
+                                'number of productions for non-terminal '
+                                '"{}".'.format(symbol.name))
+            else:
                 symbol.action = symbol.grammar_action
 
     def _connect_override_recognizers(self):
