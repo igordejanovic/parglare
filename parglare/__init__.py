@@ -8,3 +8,5 @@ from parglare.grammar import Grammar, NonTerminal, Terminal, \
     RegExRecognizer, StringRecognizer, EMPTY, EOF, STOP
 from parglare.errors import Error
 from parglare.exceptions import ParseError, GrammarError
+
+__version__ = "0.6.0.dev0"
