@@ -9,3 +9,5 @@ from parglare.grammar import Grammar, NonTerminal, Terminal, \
 from parglare.common import get_collector
 from parglare.errors import Error
 from parglare.exceptions import ParseError, GrammarError
+
+__version__ = "0.6.0.dev0"
