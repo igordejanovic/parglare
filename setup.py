@@ -4,9 +4,16 @@ import os
 import sys
 import codecs
 from setuptools import setup
-import parglare
 
-VERSION = parglare.__version__
+VERSIONFILE = "parglare/__init__.py"
+VERSION = None
+for line in open(VERSIONFILE, "r").readlines():
+    if line.startswith('__version__'):
+        VERSION = line.split('"')[1]
+
+if not VERSION:
+    raise RuntimeError('No version defined in parglare.__init__.py')
+
 
 README = codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst'),
                      'r', encoding='utf-8').read()
