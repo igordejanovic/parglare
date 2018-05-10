@@ -20,7 +20,7 @@ def comma_recognizer(input, pos):
         return input[pos:pos + 1]
 
 
-def test_imported_actions_error_undefined_recognizer():
+def test_imported_recognizers_error_undefined_recognizer():
 
     with pytest.raises(GrammarError,
                        match=r'has no recognizer defined and no recognizers '
@@ -49,10 +49,10 @@ def test_imported_recognizers_connect_from_external_file():
     assert rec_fqn.recognizer.__name__ == 'number'
 
 
-def test_imported_actions_override():
+def test_imported_recognizers_override():
     """
-    Test that actions loaded from `*_recognizers.py` files can be overriden by
-    users actions.
+    Test that recognizers loaded from `*_recognizers.py` files can be
+    overriden by users provided recognizers.
     """
 
     called = [False, False]
@@ -92,3 +92,19 @@ def test_imported_actions_override():
     assert g
     Parser(g).parse(model_str)
     assert called[0]
+
+
+def test_imported_recognizers_override_by_importing_grammar_file():
+    """
+    Test that recognizers loaded from `*_recognizers.py` files can be
+    overriden in importing grammar `*_recognizers.py` file by providing
+    FQN of the imported terminal relative from the importing grammar file.
+    """
+
+    g = Grammar.from_file(os.path.join(this_folder, 'model_override.pg'))
+    assert g
+
+    t = g.get_terminal('base.NUMERIC_ID')
+    assert t is not None
+
+    assert t.recognizer.__doc__ == 'Check override'

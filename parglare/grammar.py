@@ -560,14 +560,16 @@ class PGFile(object):
                                                      recognizers_file)
                 recognizers = mod_recognizers.recognizer.all
 
-                for symbol_name, symbol in self.symbols_by_name.items():
-                    if symbol_name in recognizers:
-                        if not isinstance(symbol, Terminal):
-                            raise GrammarError(
-                                'Recognizer given for non-terminal'
-                                ' "{}" in file "{}"'.format(symbol.name,
-                                                            recognizers_file))
-                        symbol.recognizer = recognizers[symbol_name]
+                for recognizer_name, recognizer in recognizers.items():
+                    symbol = self.resolve_symbol_by_name(
+                        recognizer_name,
+                        location=Location(file_name=recognizers_file))
+                    if not isinstance(symbol, Terminal):
+                        raise GrammarError(
+                            'Recognizer given for non-terminal'
+                            ' "{}" in file "{}"'.format(recognizer_name,
+                                                        recognizers_file))
+                    symbol.recognizer = recognizer
 
     def resolve_ref(self, symbol_ref, first_pass=False):
         """Resolves given symbol reference.
