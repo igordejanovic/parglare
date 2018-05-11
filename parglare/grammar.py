@@ -564,11 +564,17 @@ class PGFile(object):
                     symbol = self.resolve_symbol_by_name(
                         recognizer_name,
                         location=Location(file_name=recognizers_file))
+                    if symbol is None:
+                        raise GrammarError(
+                            location=Location(file_name=recognizers_file),
+                            message='Recognizer given for unknown '
+                            'terminal "{}".'.format(recognizer_name)
+                        )
                     if not isinstance(symbol, Terminal):
                         raise GrammarError(
-                            'Recognizer given for non-terminal'
-                            ' "{}" in file "{}"'.format(recognizer_name,
-                                                        recognizers_file))
+                            location=Location(file_name=recognizers_file),
+                            message='Recognizer given for non-terminal "{}".'
+                            .format(recognizer_name))
                     symbol.recognizer = recognizer
 
     def resolve_ref(self, symbol_ref, first_pass=False):
@@ -1127,9 +1133,10 @@ def create_productions_terminals(productions):
         prior = DEFAULT_PRIORITY
         symbol = p[0]
         if not isinstance(symbol, NonTerminal):
-            raise GrammarError("Invalid production symbol '{}' "
-                               "for production '{}'".format(symbol,
-                                                            text(p)))
+            raise GrammarError(
+                location=None,
+                message="Invalid production symbol '{}' "
+                "for production '{}'".format(symbol, text(p)))
         rhs = ProductionRHS(p[1])
         if len(p) > 2:
             assoc = p[2]
@@ -1413,7 +1420,8 @@ def act_pgfile(context, nodes):
 
 def act_import(context, nodes):
     if not context.file_name:
-        raise GrammarError('Import can be used only for grammars '
+        raise GrammarError(location=Location(context),
+                           message='Import can be used only for grammars '
                            'defined in files.')
     import_path = nodes[1]
     module_name = nodes[3] if len(nodes) > 3 else None
