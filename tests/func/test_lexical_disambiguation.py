@@ -39,20 +39,44 @@ def cf():
 def test_priority(cf):
 
     grammar = """
-    S: First | Second | Third;
+    S: M EOF;
+    M: First | Second  | Third "5";
 
     terminals
-    First: /\d+\.\d+/ {15};
+    First: /\d+\.75/;
     Second: '14.75';
-    Third: /\d+\.75/;
+    Third: /\d+\.\d/ {15};
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=actions, debug=False)
 
     # Priority is used first
     parser.parse('14.75')
-    assert called == [True, False, False]
+    assert called == [False, False, True]
+
+
+def test_priority_lower(cf):
+    """
+    Test that lower priority terminals have lower precendence.
+    """
+
+    grammar = """
+    S: M EOF;
+    M: First | Second  | Third;
+
+    terminals
+    First: /\d+\.75/ {7};
+    Second: /\d+\.\d+/;
+    Third: /foo/;
+    """
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g, actions=actions, debug=False)
+
+    # Second should match as it has higher priority over First
+    parser.parse('14.75')
+    assert called == [False, True, False]
 
 
 def test_most_specific(cf):
