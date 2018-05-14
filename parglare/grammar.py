@@ -900,6 +900,8 @@ class Grammar(PGFile):
                 action = action_overrides.get(symbol.fqn, None)
                 if action is None:
                     action = action_overrides.get(symbol.action_fqn, None)
+                if action is None:
+                    action = action_overrides.get(symbol.action_name, None)
             if action is None:
                 # 2. Fully qualified symbol name
                 action = self.resolve_action_by_name(symbol.fqn)
