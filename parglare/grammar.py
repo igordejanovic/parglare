@@ -964,15 +964,15 @@ class Grammar(PGFile):
                                 'defined.'.format(term.fqn))
 
     def get_terminal(self, name):
-        "Returns terminal with the given fully qualified name."
+        "Returns terminal with the given fully qualified name or name."
         for t in self.terminals:
-            if t.fqn == name:
+            if t.name == name or t.fqn == name:
                 return t
 
     def get_nonterminal(self, name):
-        "Returns non-terminal with the given name."
+        "Returns non-terminal with the given fully qualified name or name."
         for n in self.nonterminals:
-            if n.fqn == name:
+            if n.name == name or n.fqn == name:
                 return n
 
     def get_symbol(self, name):
