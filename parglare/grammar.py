@@ -1183,9 +1183,13 @@ def check_name(context, name):
     """
 
     if name in RESERVED_SYMBOL_NAMES:
-            raise GrammarError(
-                location=Location(context),
-                message='Rule name "{}" is reserved.'.format(name))
+        raise GrammarError(
+            location=Location(context),
+            message='Rule name "{}" is reserved.'.format(name))
+    if '.' in name:
+        raise GrammarError(
+            location=Location(context),
+            message='Using dot in names is not allowed.'.format(name))
 
 
 # Grammar for grammars
@@ -1679,6 +1683,7 @@ def act_gsymbol_string_recognizer(context, nodes):
     terminal_ref = Reference(Location(context), recognizer.name)
 
     if terminal_ref.name not in context.inline_terminals:
+        check_name(context, terminal_ref.name)
         context.inline_terminals[terminal_ref.name] = \
             Terminal(terminal_ref.name, recognizer,
                      location=Location(context),
