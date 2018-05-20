@@ -56,6 +56,10 @@ built-in and there are two type of textual recognizers:
 - string recognizer
 - regular expression recognizer
 
+Terminals are given at the end of the grammar, after production rules following
+the keyword `terminals`.
+
+
 ### String recognizer
 
 String recognizer is defined as a plain string inside of double quotes:
@@ -69,6 +73,8 @@ You can write string recognizing terminal directly in the rule expression or you
 can define terminal separately and reference it by name, like:
 
     my_rule: start other_rule end;
+
+    terminals
     start: "start";
     end: "end";
 
@@ -88,6 +94,14 @@ For example:
 This rule defines terminal symbol `number` which has a regex recognizer and will
 recognize one or more digits as a number.
 
+!!! note
+
+    You cannot write regex recognizers inline like you can do with string
+    recognizers. This constraint is introduced because there is no sane way to
+    deduce terminal name given its regex. Thus, you must write all regex
+    recognizers/terminals in the `terminals` section at the end of the grammar
+    file.
+
 
 ### Custom recognizers
 
@@ -105,7 +119,12 @@ according to the following grammar:
       Numbers: all_less_than_five  ascending  all_less_than_five EOF;
       all_less_than_five: all_less_than_five  int_less_than_five
                         | int_less_than_five;
-      int_less_than_five: ;  // <--- This terminal has no recognizer in the grammar
+
+
+      terminals
+      // These terminals have no recognizers defined in the grammar
+      ascending: ;
+      int_less_than_five: ;
 
 
 So, we should first match all numbers less than five and collect those, than we
@@ -120,16 +139,6 @@ see
 [this test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py).
 
 More on this topic can be found in [a separate section](./recognizers.md).
-
-!!! note
-    You can directly write regex or string recognizer at the place of terminal:
-
-        some_rule: "a" aterm "a";
-        aterm: "a";
-
-    Writting `"a"` in `some_rule` is equivalent to writing terminal reference
-    `aterm`. Rule `aterm` is terminal definition rule. All occurences of `"a"`
-    as well as `aterm` will result in the same terminal in the grammar.
 
 
 ## Usual patterns
@@ -196,6 +205,8 @@ expression syntax.
 `Optional` can be specified using `?`. For example:
 
     S: "2" b? "3"?;
+
+    terminals
     b: "1";
 
 Here, after `2` we might have terminal `b` but it is optional, as well as `3`
@@ -220,12 +231,16 @@ is a string holding grammar from above):
     Syntax equivalence for `optional` operator:
 
         S: b?;
+
+        terminals
         b: "1";
 
     is equivalent to:
 
         S: b_opt;
         b_opt: b | EMPTY;
+
+        terminals
         b: "1";
 
     Behind the scenes parglare will create `b_opt` rule.
@@ -238,6 +253,8 @@ is a string holding grammar from above):
 `One or more` match is specified using `+` operator. For example:
 
     S: "2" c+;
+
+    terminals
     c: "c";
 
 After `2` we expect to see one or more `c` terminals.
@@ -264,6 +281,8 @@ a [parse error](./handling_errors.md) will be raised.
     Syntax equivalence for `one or more`:
 
         S: a+;
+
+        terminals
         a: "a";
 
     is equivalent to:
@@ -271,12 +290,16 @@ a [parse error](./handling_errors.md) will be raised.
         S: a_1;
         @collect
         a_1: a_1 a | a;
+
+        terminals
         a: "a";
 
 
 `+` operator allows repetition modifier for separators. For example:
 
     S: "2" c+[comma];
+
+    terminals
     c: "c";
     comma: ",";
 
@@ -306,6 +329,8 @@ separated by the whatever is matched by the rule given inside `[]`.
     Syntax equivalence `one or more with separator `:
 
         S: a+[comma];
+
+        terminals
         a: "a";
         comma: ",";
 
@@ -314,6 +339,8 @@ separated by the whatever is matched by the rule given inside `[]`.
         S: a_1_comma;
         @collect_sep
         a_1_comma: a_1_comma comma a | a;
+
+        terminals
         a: "a";
         comma: ",";
 
@@ -328,6 +355,8 @@ separated by the whatever is matched by the rule given inside `[]`.
 `Zero or more` match is specified using `*` operator. For example:
 
     S: "2" c*;
+
+    terminals
     c: "c";
 
 This syntactic addition is similar to `+` except that it doesn't require rule to
@@ -350,6 +379,8 @@ empty list. For example:
     Syntax equivalence `zero of more`:
 
         S: a*;
+
+        terminals
         a: "a";
 
     is equivalent to:
@@ -358,14 +389,16 @@ empty list. For example:
         a_0: a_1 {nops} | EMPTY;
         @collect
         a_1: a_1 a | a;
+
+        terminals
         a: "a";
 
     So using of `*` creates both `a_0` and `a_1` rules. Action attached to `a_0`
     returns a list of matched `a` and empty list if no match is found. Please note
     the [usage of `nops`](./disambiguation.md#nops-and-nopse). In case if
-    `prefer_shift` strategy is used using `nops` will perform both REDUCE and SHIFT
-    during GLR parsing in case what follows zero or more might be another element in
-    the sequence. This is most of the time what you need.
+    `prefer_shift` strategy is used using `nops` will perform both REDUCE and
+    SHIFT during GLR parsing in case what follows zero or more might be another
+    element in the sequence. This is most of the time what you need.
 
 Same as `one or more` this operator may use separator modifiers.
 
@@ -373,15 +406,19 @@ Same as `one or more` this operator may use separator modifiers.
     Syntax equivalence `zero or more with separator `:
 
         S: a*[comma];
+
+        terminals
         a: "a";
         comma: ",";
 
     is equivalent to:
 
         S: a_0_comma;
-        a_0_comma: a_1_comma | EMPTY;
+        a_0_comma: a_1_comma {nops} | EMPTY;
         @collect_sep
         a_1_comma: a_1_comma comma a | a;
+
+        terminals
         a: "a";
 
     where action is attached to `a_0_comma` to provide returning a list of
@@ -419,6 +456,8 @@ directly in the grammar.
 For example:
 
     S: first=a second=digit+[comma];
+
+    terminals
     a: "a";
     digit: /\d+/;
 
@@ -453,15 +492,17 @@ Effectively, using named matches enables automatic creation of a nice AST.
 !!! note
 
     You can, of course, override default action either in the grammar
-    using `@` syntax or using rule name in `actions` dict given to the parser.
+    using `@` syntax or using `actions` dict given to the parser.
     See the next section.
 
 
 ## Referencing semantic actions from a grammar
 
 By default [action](./actions.md) with the name same as the rule name will be
-searched in the [`actions` dict](./parser.md#actions). You can override this by
-specifying action name for the rule directly in the grammar using `@` syntax.
+searched in the acommpanying `<grammar>_actions.py` file or [`actions`
+dict](./parser.md#actions). You can override this by specifying action name for
+the rule directly in the grammar using `@` syntax. In that case a name given
+after `@` will be used instead of a rule name.
 
 For example:
 
@@ -471,10 +512,11 @@ some_rule: first second;
 ```
 
 For rule `some_rule` action with the name `myaction` will be searched in the
-`actions` dict or [built-in actions](#built-in-actions) provided by the
-`parglare.actions` module. This is helpful if you have some common action that
-can be used for multiple rules in your grammar. Also this can be used to specify
-built-in action to be used for a rule directly in the grammar.
+`<grammar>_actions.py` module, `actions` dict or [built-in
+actions](#built-in-actions) provided by the `parglare.actions` module. This is
+helpful if you have some common action that can be used for multiple rules in
+your grammar. Also this can be used to specify built-in action to be used for a
+rule directly in the grammar.
 
 
 ## Grammar comments
@@ -503,6 +545,8 @@ but comments also, you can use a special rule `LAYOUT`:
 
       LAYOUT: LayoutItem | LAYOUT LayoutItem;
       LayoutItem: WS | Comment | EMPTY;
+
+      terminals
       WS: /\s+/;
       Comment: /\/\/.*/;
 
@@ -517,10 +561,13 @@ comments like the one used in the grammar language itself:
 
       LAYOUT: LayoutItem | LAYOUT LayoutItem;
       LayoutItem: WS | Comment | EMPTY;
-      WS: /\s+/;
-      Comment: '/*' CorNCs '*/' | /\/\/.*/;
+      Comment: '/*' CorNCs '*/' | LineComment;
       CorNCs: CorNC | CorNCs CorNC | EMPTY;
       CorNC: Comment | NotComment | WS;
+
+      terminals
+      WS: /\s+/;
+      LineComment: /\/\/.*/;
       NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
 
 !!! note
@@ -537,9 +584,11 @@ By default parser will match given string recognizer even if it is part of some
 larger word, i.e. it will not require matching on the word boundary. This is not
 the desired behaviour for language keywords.
 
-For example, lets take this little grammar:
+For example, lets examine this little grammar:
 
     S: "for" name=ID "=" from=INT "to" to=INT EOF;
+
+    terminals
     ID: /\w+/;
     INT: /\d+/;
 
@@ -556,13 +605,15 @@ which is not what we wanted.
 
 parglare allows the definition of a special terminal rule `KEYWORD`. This rule
 must define a [regular expression recognizer](#regular-expression-recognizer).
-Any string recognizer in the grammar that can be recognized by the `KEYWORD`
+Any string recognizer in the grammar that can be also recognized by the `KEYWORD`
 recognizer is treated as a keyword and is changed during grammar construction to
 match only on word boundary.
 
 For example:
 
     S: "for" name=ID "=" from=INT "to" to=INT EOF;
+
+    terminals
     ID: /\w+/;
     INT: /\d+/;
     KEYWORD: /\w+/;
