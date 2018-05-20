@@ -33,21 +33,21 @@ A pure Python LR/GLR parser.
 
 * [**Declarative associativity and priority rules**](./disambiguation.md)
 
-    These problems arise a lot when building expression languages. Even a little
-    arithmetic expression as `3 + 4 * 5 * 2` have multiple interpretation
-    depending on the associativity and priority of operations. In parglare it is
-    easy to specify these rules in the grammar (see the quick intro bellow
-    or
-    [the calc example](https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py)).
+    These problems arise a lot when building expression languages. Even an
+    arithmetic expression as small as `3 + 4 * 5 * 2` have multiple
+    interpretation depending on the associativity and priority of operations. In
+    parglare it is easy to specify these rules in the grammar (see the quick
+    intro bellow or [the calc
+    example](https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py)).
 
 * [**Tracing/debuging, visualization and error reporting**](./debugging.md)
 
     There is an extensive support for grammar checking, debugging, automata
     visualization, and parse tracing. Check out [pglr command](./pglr.md).
 
-* **Parsing arbitrary list of object**
+* **Parsing an arbitrary list of objects**
 
-    parglare is not used only to parse the textual content. It can parse (create
+    parglare is not used only to parse a textual content. It can parse (create
     a tree) of an arbitrary list of objects (numbers, bytes, whatever) based on
     the common parglare grammar. For this you have to
     define [token recognizers](./recognizers.md) for your input stream. The
@@ -63,7 +63,7 @@ A pure Python LR/GLR parser.
 
     - by default parser builds nested lists;
     - you can build a tree using `build_tree=True` parameter to the parser;
-    - call user supplied actions - you write a Python function that is called
+    - call user-supplied actions - you write a Python function that is called
       when the rule matches. You can do whatever you want at this place and the
       result returned is used in parent rules/actions. There are some handy
       build-in actions in the `parglare.actions` module.
@@ -72,11 +72,6 @@ A pure Python LR/GLR parser.
       parsing and the actions are introducing side-effects and you would like to
       avoid those effects created from wrong parsers/trees.
 
-    Besides calling your actions in-line - during the parsing process - you can
-    decide to build the tree first and call custom actions afterwards. This is a
-    good option if you want to evaluate your tree in a multiple ways or if you
-    are using GLR and want to be sure that actions are called only for the
-    surviving tree.
 
 * [**Support for whitespaces/comments**](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
 
@@ -85,7 +80,7 @@ A pure Python LR/GLR parser.
     parameter to the parser constructor which is by default set to `\t\n `. If
     set to `None` no whitespace skipping is provided. If there is a rule
     `LAYOUT` in the grammar this rule is used instead. An additional parser with
-    the layout grammar will be built to handle whitespaces.
+    the grammar defined by the `LAYOUT` rule will be built to handle whitespaces.
 
 * [**Error recovery**](./handling_errors.md#error-recovery)
 
