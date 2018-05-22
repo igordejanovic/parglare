@@ -1,5 +1,17 @@
 # History
 
+- 2018-05-22 Version 0.6.0
+  - New feature: grammar modularization - see the docs:
+    http://www.igordejanovic.net/parglare/grammar_modularization/
+  - Backward incopatibile change: terminals are now specified in a separate
+    section which starts with keyword `terminals`. This section should be
+    defined after production rules. You can still use inline terminals for
+    string matches but not for regex matchers. This change will prevent problems
+    reported on issue #27. See the changes in the docs.
+  - Fixed issue #32 - Conflict between string match and rule with the same name
+  - Various improvements in error reporting, docs and tests.
+  - Support for Python 3.3 dropped.
+
 - 2018-03-25 Version 0.5
   - Added file_name to the parse context.
   - Added `re_flags` param to the `Grammar` class factory methods.
