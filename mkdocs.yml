@@ -18,6 +18,7 @@ pages:
     - Parser: parser.md
     - Actions: actions.md
     - Recognizers: recognizers.md
+    - Modularization: grammar_modularization.md
     - LR parsing and conflicts: lr_parsing.md
     - Disambiguation: disambiguation.md
     - Parse trees: parse_trees.md

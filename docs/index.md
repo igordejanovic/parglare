@@ -72,6 +72,12 @@ A pure Python LR/GLR parser.
       parsing and the actions are introducing side-effects and you would like to
       avoid those effects created from wrong parsers/trees.
 
+* [**Grammar modularization**](./grammar_modularization.md)
+
+    Grammars can be split in multiple files and imported where needed. In
+    addition each grammar file may have an actions and recognizers python file
+    defined. This enable a nice separation of parts of the language with their
+    grammars and accompanying actions and recognizers.
 
 * [**Support for whitespaces/comments**](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
 

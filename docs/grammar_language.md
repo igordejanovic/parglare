@@ -12,7 +12,13 @@ e.g. [PEGs](https://en.wikipedia.org/wiki/Parsing_expression_grammar).
 Ambiguities are dealt with explicitly (see
 the [section on conflicts](./lr_parsing.md#resolving-conflicts)).
 
-Grammar consists of a set of derivation rules where each rule is of the form:
+Each grammar file consists of three parts:
+- zero or more imports of other grammar files. See [grammar
+  modularization](./grammar_modularization.md)
+- one or more derivation/production rules
+- zero or more terminal definitions
+
+Each derivation/production rule is of the form:
 
 ```
 <symbol>: <expression> ;
@@ -36,13 +42,15 @@ defined as a non-terminal. For example:
 Field: QuotedField | FieldContent;
 ```
 
-Or it could be defined as a terminal:
+Or it could be defined as a terminal in terminals section:
 
 ```
+terminals
 Field: /[A-Z]*/;
 ```
 
 This terminal definition uses regular expression recognizer.
+
 
 ## Terminals
 
@@ -56,8 +64,8 @@ built-in and there are two type of textual recognizers:
 - string recognizer
 - regular expression recognizer
 
-Terminals are given at the end of the grammar, after production rules following
-the keyword `terminals`.
+Terminals are given at the end of the grammar file, after production rules,
+following the keyword `terminals`.
 
 
 ### String recognizer
@@ -78,8 +86,13 @@ can define terminal separately and reference it by name, like:
     start: "start";
     end: "end";
 
-Either way it will be the same terminal. You will usually write it as a separate
-terminal if the terminal is used at multiple places in the grammar.
+Either way it will be the same terminal. You can't mix those two approaches for
+a single terminal. If you defined a terminal in the `terminals` section than you
+can't use inline string matches for that terminal.
+
+You will usually write it as a separate terminal if the terminal is used at
+multiple places in the grammar or to provide disambiguation information for a
+terminal (priority, `prefer` etc.).
 
 
 ### Regular expression recognizer
