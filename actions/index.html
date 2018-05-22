@@ -132,6 +132,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="../grammar_modularization/">Modularization</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
         
     </li>
@@ -317,13 +324,13 @@ parser to <code>True</code> the parser will produce a <a href="../parse_trees/">
 elements are instances of <code>NodeNonTerm</code> and <code>NodeTerm</code> classes representing a
 non-terminals and terminals respectively.</p>
 <h2 id="action-decorator"><code>action</code> decorator<a class="headerlink" href="#action-decorator" title="Permanent link">&para;</a></h2>
-<p>You can use a special decorator factory <code>parglare.actions.action_decorator</code> to
+<p>You can use a special decorator/collector factory <code>parglare.get_collector</code> to
 create decorator that can be used to collect all actions.</p>
-<pre><code class="python">from parglare.actions import action_decorator
+<pre><code class="python">from parglare import get_collector
 
-action = action_decorator()
+action = get_collector()
 
-@action()
+@action
 def number(_, value):
     return float(value)
 
@@ -335,7 +342,7 @@ def sum_act(_, nodes):
 def pass_act_E(_, nodes):
     return nodes[0]
 
-@action()
+@action
 def T(_, nodes):
     if len(nodes) == 3:
         return nodes[0] * nodes[2]
@@ -353,7 +360,7 @@ def pass_act_F(_, nodes):
 p = Parser(grammar, actions=action.all)
 </code></pre>
 
-<p>In the previous example <code>action</code> decorator is created using <code>action_decorator</code>
+<p>In the previous example <code>action</code> decorator is created using <code>get_collector</code>
 factory. This decorator is parametrized where optional parameter is the name of
 the action. If the name is not given the name of the decorated function will be
 used. As you can see in the previous example, same name can be used multiple

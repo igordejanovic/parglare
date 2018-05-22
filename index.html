@@ -138,6 +138,13 @@
         
             
     <li class="toctree-l1 ">
+        <a class="" href="grammar_modularization/">Modularization</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
         <a class="" href="lr_parsing/">LR parsing and conflicts</a>
         
     </li>
@@ -268,12 +275,12 @@ trees (a.k.a. "the parse forest").</p>
 </li>
 <li>
 <p><a href="disambiguation/"><strong>Declarative associativity and priority rules</strong></a></p>
-<p>These problems arise a lot when building expression languages. Even a little
-arithmetic expression as <code>3 + 4 * 5 * 2</code> have multiple interpretation
-depending on the associativity and priority of operations. In parglare it is
-easy to specify these rules in the grammar (see the quick intro bellow
-or
-<a href="https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py">the calc example</a>).</p>
+<p>These problems arise a lot when building expression languages. Even an
+arithmetic expression as small as <code>3 + 4 * 5 * 2</code> have multiple
+interpretation depending on the associativity and priority of operations. In
+parglare it is easy to specify these rules in the grammar (see the quick
+intro bellow or <a href="https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py">the calc
+example</a>).</p>
 </li>
 <li>
 <p><a href="debugging/"><strong>Tracing/debuging, visualization and error reporting</strong></a></p>
@@ -281,8 +288,8 @@ or
 visualization, and parse tracing. Check out <a href="pglr/">pglr command</a>.</p>
 </li>
 <li>
-<p><strong>Parsing arbitrary list of object</strong></p>
-<p>parglare is not used only to parse the textual content. It can parse (create
+<p><strong>Parsing an arbitrary list of objects</strong></p>
+<p>parglare is not used only to parse a textual content. It can parse (create
 a tree) of an arbitrary list of objects (numbers, bytes, whatever) based on
 the common parglare grammar. For this you have to
 define <a href="recognizers/">token recognizers</a> for your input stream. The
@@ -298,7 +305,7 @@ output. There are several options:</p>
 <ul>
 <li>by default parser builds nested lists;</li>
 <li>you can build a tree using <code>build_tree=True</code> parameter to the parser;</li>
-<li>call user supplied actions - you write a Python function that is called
+<li>call user-supplied actions - you write a Python function that is called
   when the rule matches. You can do whatever you want at this place and the
   result returned is used in parent rules/actions. There are some handy
   build-in actions in the <code>parglare.actions</code> module.</li>
@@ -307,11 +314,13 @@ output. There are several options:</p>
   parsing and the actions are introducing side-effects and you would like to
   avoid those effects created from wrong parsers/trees.</li>
 </ul>
-<p>Besides calling your actions in-line - during the parsing process - you can
-decide to build the tree first and call custom actions afterwards. This is a
-good option if you want to evaluate your tree in a multiple ways or if you
-are using GLR and want to be sure that actions are called only for the
-surviving tree.</p>
+</li>
+<li>
+<p><a href="grammar_modularization/"><strong>Grammar modularization</strong></a></p>
+<p>Grammars can be split in multiple files and imported where needed. In
+addition each grammar file may have an actions and recognizers python file
+defined. This enable a nice separation of parts of the language with their
+grammars and accompanying actions and recognizers.</p>
 </li>
 <li>
 <p><a href="grammar_language/#handling-whitespaces-and-comments-in-your-language"><strong>Support for whitespaces/comments</strong></a></p>
@@ -320,7 +329,7 @@ surviving tree.</p>
 parameter to the parser constructor which is by default set to <code>\t\n</code>. If
 set to <code>None</code> no whitespace skipping is provided. If there is a rule
 <code>LAYOUT</code> in the grammar this rule is used instead. An additional parser with
-the layout grammar will be built to handle whitespaces.</p>
+the grammar defined by the <code>LAYOUT</code> rule will be built to handle whitespaces.</p>
 </li>
 <li>
 <p><a href="handling_errors/#error-recovery"><strong>Error recovery</strong></a></p>
@@ -483,5 +492,5 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2018-02-08 15:02:17
+Build Date UTC : 2018-05-22 11:11:46
 -->

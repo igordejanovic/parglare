@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -13,73 +13,79 @@
         
     <url>
      <loc>/getting_started/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/grammar_language/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/grammar/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/parser/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/actions/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/recognizers/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/grammar_modularization/</loc>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/lr_parsing/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/disambiguation/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/parse_trees/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/handling_errors/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/pglr/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/debugging/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -89,13 +95,13 @@
         
     <url>
      <loc>/about/CONTRIBUTING/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/about/LICENSE/</loc>
-     <lastmod>2018-02-08</lastmod>
+     <lastmod>2018-05-22</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
