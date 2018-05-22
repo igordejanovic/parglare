@@ -421,20 +421,25 @@ class PGFile(object):
         self.productions = productions
         self.terminals = set(terminals) if terminals is not None else set()
         self.grammar = self if grammar is None else grammar
-        if imports:
-            self.imports = {i.module_name: i for i in imports}
-            for i in self.imports.values():
-                i.grammar = self.grammar
-        else:
-            self.imports = {}
+
         self.file_path = path.realpath(file_path) if file_path else None
-        if self.file_path:
-            self.grammar.imported_files[self.file_path] = self
         self.imported_with = imported_with
         self.recognizers = recognizers
         self.actions = {}
 
         self.collect_and_unify_symbols()
+
+        if self.file_path:
+            self.grammar.imported_files[self.file_path] = self
+
+        if imports:
+            self.imports = {i.module_name: i for i in imports}
+            for i in imports:
+                i.grammar = self.grammar
+                i.load_pgfile()
+        else:
+            self.imports = {}
+
         self.resolve_references()
         self.load_actions()
         self.load_recognizers()
@@ -1086,38 +1091,35 @@ class PGFileImport(object):
             return self.module_name
 
     def load_pgfile(self):
-        # First search the global registry of imported files.
-        if self.file_path in self.grammar.imported_files:
-            self.pgfile = self.grammar.imported_files[self.file_path]
-        else:
-            # If not found construct new PGFile
-            self.context.inline_terminals = {}
-            self.context.imported_with = self
-            self.context.file_name = self.file_path
-            imports, productions, terminals = \
-                get_grammar_parser(
-                    self.context.debug,
-                    self.context.debug_colors).parse_file(
-                        self.file_path, context=self.context)
-            self.pgfile = PGFile(productions=productions,
-                                 terminals=terminals,
-                                 imports=imports,
-                                 grammar=self.grammar,
-                                 imported_with=self,
-                                 file_path=self.file_path)
+        if self.pgfile is None:
+            # First search the global registry of imported files.
+            if self.file_path in self.grammar.imported_files:
+                self.pgfile = self.grammar.imported_files[self.file_path]
+            else:
+                # If not found construct new PGFile
+                self.context.inline_terminals = {}
+                self.context.imported_with = self
+                self.context.file_name = self.file_path
+                imports, productions, terminals = \
+                    get_grammar_parser(
+                        self.context.debug,
+                        self.context.debug_colors).parse_file(
+                            self.file_path, context=self.context)
+                self.pgfile = PGFile(productions=productions,
+                                     terminals=terminals,
+                                     imports=imports,
+                                     grammar=self.grammar,
+                                     imported_with=self,
+                                     file_path=self.file_path)
 
     def resolve_symbol_by_name(self, symbol_name, location=None):
         "Resolves symbol from the imported file."
 
-        if self.pgfile is None:
-            self.load_pgfile()
         return self.pgfile.resolve_symbol_by_name(symbol_name, location)
 
     def resolve_action_by_name(self, action_name):
         "Resolves action from the imported file."
 
-        if self.pgfile is None:
-            self.load_pgfile()
         return self.pgfile.resolve_action_by_name(action_name)
 
 

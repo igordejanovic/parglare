@@ -1,0 +1,6 @@
+import 'C.pg';
+
+BRule: BTerm C.CTerm;
+
+terminals
+BTerm: "dummy";

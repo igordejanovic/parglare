@@ -1,0 +1,4 @@
+SomeRule: dummy;
+
+terminals
+dummy: "dummy";

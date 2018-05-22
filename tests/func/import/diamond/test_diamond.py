@@ -7,11 +7,11 @@ this_folder = os.path.dirname(__file__)
 def test_diamond_import_resolving_and_model_creation():
     g = Grammar.from_file(os.path.join(this_folder, 'model.pg'))
     assert g
-    assert g.get_terminal('packages.base.COMMA')
+    assert g.get_terminal('packages.components.base.COMMA')
     assert g.get_nonterminal('Model')
 
     # First path used for import of Component is going
-    # modules->components->Component
+    # packages->components->Component
     component_nonterminal = g.get_nonterminal('packages.components.Component')
     assert component_nonterminal
 
