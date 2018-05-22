@@ -178,13 +178,15 @@ parameter to `action` decorator:
 
 ### Action search order
 
-Actions are searched starting from a most specific definition.
+Actions are searched in the order of specificity by searching the following (in
+the given order):
 
-First, if `actions` are given using parser parameter action is searched there
-first by FQN and than by plain name.
-
-Than, action is searched for in actions loaded from grammar module. First by FQN
-symbol name, than by plain symbol name and than by action name (name given in
-the grammar using `@` syntax).
-
-At the end, [built-in actions](./actions.md#built-in-actions) are searched.
+1. Actions given using `actions` parameter by FQN of the symbol,
+2. Actions loaded from actions module using FQN of the symbol,
+3. Actions given using `actions` parameter by FQN of the action,
+4. Actions loaded from actions module using FQN of the action,
+5. Actions given using `actions` parameter by symbol name,
+6. Actions loaded from actions module using symbol name,
+7. Actions given using `actions` parameter by action name,
+8. Actions loaded from actions module using action name,
+9. [parglare built-in actions](./actions.md#built-in-actions) using action name.

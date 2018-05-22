@@ -897,39 +897,56 @@ class Grammar(PGFile):
         import parglare.actions as actmodule
 
         for symbol in self:
+
             # Resolve trying from most specific to least specific
-            # 1. If overrides are given check first there. First for FQN,
-            #    and than for action name.
             action = None
-            if action_overrides:
-                action = action_overrides.get(symbol.fqn, None)
+
+            # 1. Resolve by fully qualified symbol name
+            if '.' in symbol.fqn:
+                if action_overrides:
+                    action = action_overrides.get(symbol.fqn, None)
+
                 if action is None:
+                    action = self.resolve_action_by_name(symbol.fqn)
+
+            # 2. Fully qualified action name
+            if action is None and symbol.action_fqn is not None \
+               and '.' in symbol.action_fqn:
+                if action_overrides:
                     action = action_overrides.get(symbol.action_fqn, None)
+
                 if action is None:
-                    action = action_overrides.get(symbol.action_name, None)
-            if action is None:
-                # 2. Fully qualified symbol name
-                action = self.resolve_action_by_name(symbol.fqn)
-                if action is None and symbol.action_name is not None:
-                    # 3. Fully qualified action name
                     action = self.resolve_action_by_name(symbol.action_fqn)
-                    if action is None:
-                        # 4. Action name
-                        action = self.resolve_action_by_name(
-                            symbol.action_name)
 
-                    if action is None:
-                        # 5. Try to find action in built-in actions module.
-                        action_name = symbol.action_name
-                        if hasattr(actmodule, action_name):
-                            action = getattr(actmodule, action_name)
+            # 3. Symbol name
+            if action is None:
+                if action_overrides:
+                    action = action_overrides.get(symbol.name, None)
 
-                    if action is None and fail_on_no_resolve:
-                        raise ParserInitError(
-                            'Action "{}" given for rule "{}" '
-                            'doesn\'t exists in parglare common actions and '
-                            'is not provided using "actions" parameter.'
-                            .format(symbol.action_name, symbol.name))
+                if action is None:
+                    action = self.resolve_action_by_name(symbol.name)
+
+            # 4. Action name
+            if action is None and symbol.action_name is not None:
+                if action_overrides:
+                    action = action_overrides.get(symbol.action_name, None)
+
+                if action is None:
+                    action = self.resolve_action_by_name(symbol.action_name)
+
+                # 5. Try to find action in built-in actions module.
+                if action is None:
+                    action_name = symbol.action_name
+                    if hasattr(actmodule, action_name):
+                        action = getattr(actmodule, action_name)
+
+            if symbol.action_name and action is None \
+               and fail_on_no_resolve:
+                raise ParserInitError(
+                    'Action "{}" given for rule "{}" '
+                    'doesn\'t exists in parglare common actions and '
+                    'is not provided using "actions" parameter.'
+                    .format(symbol.action_name, symbol.name))
 
             if action is not None:
                 symbol.action = action
