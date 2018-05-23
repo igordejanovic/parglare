@@ -558,6 +558,8 @@ class GLRParser(Parser):
                 a_print("Automata loop detected. ",
                         "Rejecting the new head: {}".format(str(new_head)),
                         level=1)
+                if self.debug_trace:
+                    self._trace_step_kill(old_head)
             return
 
         result = self._call_reduce_action(production, subresults, context)
@@ -711,8 +713,9 @@ class GLRParser(Parser):
         self.dot_trace += \
             '{}_killed [shape="diamond" fillcolor="red" label="killed"];\n'\
             .format(from_head.key)
-        self.dot_trace += '{} -> {}_killed [{}];\n'\
-            .format(from_head.key, from_head.key, TRACE_DOT_STEP_STYLE)
+        self.dot_trace += '{} -> {}_killed [label="{}." {}];\n'\
+            .format(from_head.key, from_head.key, self.debug_step,
+                    TRACE_DOT_STEP_STYLE)
 
     @no_colors
     def _trace_step_drop(self, from_head, to_head):
