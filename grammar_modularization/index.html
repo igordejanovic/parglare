@@ -373,13 +373,19 @@ parameter to <code>action</code> decorator:</p>
 only Python absolute module imports inside of it.</p>
 </div>
 <h3 id="action-search-order">Action search order<a class="headerlink" href="#action-search-order" title="Permanent link">&para;</a></h3>
-<p>Actions are searched starting from a most specific definition.</p>
-<p>First, if <code>actions</code> are given using parser parameter action is searched there
-first by FQN and than by plain name.</p>
-<p>Than, action is searched for in actions loaded from grammar module. First by FQN
-symbol name, than by plain symbol name and than by action name (name given in
-the grammar using <code>@</code> syntax).</p>
-<p>At the end, <a href="../actions/#built-in-actions">built-in actions</a> are searched.</p>
+<p>Actions are searched in the order of specificity by searching the following (in
+the given order):</p>
+<ol>
+<li>Actions given using <code>actions</code> parameter by FQN of the symbol,</li>
+<li>Actions loaded from actions module using FQN of the symbol,</li>
+<li>Actions given using <code>actions</code> parameter by FQN of the action,</li>
+<li>Actions loaded from actions module using FQN of the action,</li>
+<li>Actions given using <code>actions</code> parameter by symbol name,</li>
+<li>Actions loaded from actions module using symbol name,</li>
+<li>Actions given using <code>actions</code> parameter by action name,</li>
+<li>Actions loaded from actions module using action name,</li>
+<li><a href="../actions/#built-in-actions">parglare built-in actions</a> using action name.</li>
+</ol>
               
             </div>
           </div>
