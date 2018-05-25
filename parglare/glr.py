@@ -550,7 +550,7 @@ class GLRParser(Parser):
             result = self._call_reduce_action(production, subresults, context)
             old_head.parents.append((old_head, result, True, True))
 
-        if (all_empty or any_empty) and new_head in self.reducing_heads:
+        if all_empty and new_head in self.reducing_heads:
             # Detect automata loop. If we are reducing to the head we already
             # had and the new head is empty we have a loop due to EMPTY
             # reductions.

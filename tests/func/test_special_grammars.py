@@ -121,7 +121,7 @@ def test_cyclic_grammar_1():
     assert len(results) == 1
 
 
-def test_cyclic_grammar_2():
+def todo_test_cyclic_grammar_2():
     """
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
 
