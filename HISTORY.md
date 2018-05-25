@@ -1,5 +1,10 @@
 # History
 
+- 2018-05-24 Version 0.6.1
+  - Fixed issue with actions resolving search order.
+  - Fixed #31 GLR drops valid parses on lexical ambiguity.
+  - Fix in GLR graphical debug trace.
+
 - 2018-05-22 Version 0.6.0
   - New feature: grammar modularization - see the docs:
     http://www.igordejanovic.net/parglare/grammar_modularization/
