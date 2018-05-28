@@ -441,7 +441,7 @@ class PGFile(object):
                 except IOError:
                     raise GrammarError(
                         location=Location(file_name=self.file_path),
-                        message='Cann\'t import file "{}".'.format(
+                        message='Can\'t import file "{}".'.format(
                             i.file_path))
         else:
             self.imports = {}
