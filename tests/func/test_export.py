@@ -19,4 +19,5 @@ def test_dot_export():
     with open(file_name) as f:
         assert 'label' in f.read()
 
+    f.close()
     os.remove(file_name)
