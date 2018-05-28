@@ -436,7 +436,13 @@ class PGFile(object):
             self.imports = {i.module_name: i for i in imports}
             for i in imports:
                 i.grammar = self.grammar
-                i.load_pgfile()
+                try:
+                    i.load_pgfile()
+                except IOError:
+                    raise GrammarError(
+                        location=Location(file_name=self.file_path),
+                        message='Cann\'t import file "{}".'.format(
+                            i.file_path))
         else:
             self.imports = {}
 
