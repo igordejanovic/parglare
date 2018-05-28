@@ -26,10 +26,10 @@ class Parser(object):
     def __init__(self, grammar, start_production=1, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
-                 build_tree=False, tables=LALR, layout=False, position=False,
-                 prefer_shifts=True, prefer_shifts_over_empty=True,
-                 error_recovery=False, dynamic_filter=None,
-                 custom_lexical_disambiguation=None):
+                 build_tree=False, call_actions=False, tables=LALR,
+                 layout=False, position=False, prefer_shifts=True,
+                 prefer_shifts_over_empty=True, error_recovery=False,
+                 dynamic_filter=None, custom_lexical_disambiguation=None):
         self.grammar = grammar
         self.start_production = start_production
         EMPTY.action = pass_none
@@ -62,6 +62,7 @@ class Parser(object):
         self.debug_layout = debug_layout
 
         self.build_tree = build_tree
+        self.call_actions_during_build = call_actions
 
         self.error_recovery = error_recovery
         self.dynamic_filter = dynamic_filter
@@ -545,12 +546,21 @@ class Parser(object):
         Calls registered shift action for the given grammar symbol.
         """
         debug = self.debug
+        sem_action = symbol.action
 
         if self.build_tree:
             # call action for building tree node if tree building is enabled
             if debug:
                 h_print("Building terminal node",
                         "'{}'.".format(symbol.name), level=2)
+
+            # If both build_tree and call_actions_during_build are set to
+            # True, semantic actions will be call but their result will be
+            # discarded. For more info check following issue:
+            # https://github.com/igordejanovic/parglare/issues/44
+            if self.call_actions_during_build and sem_action:
+                sem_action(context, matched_str)
+
             return treebuild_shift_action(context, matched_str)
 
         sem_action = symbol.action
@@ -578,13 +588,17 @@ class Parser(object):
         """
         debug = self.debug
         result = None
+        bt_result = None
 
         if self.build_tree:
             # call action for building tree node if enabled.
             if debug:
                 h_print("Building non-terminal node",
                         "'{}'.".format(production.symbol.name), level=2)
-            return treebuild_reduce_action(context, nodes=subresults)
+
+            bt_result = treebuild_reduce_action(context, nodes=subresults)
+            if not self.call_actions_during_build:
+                return bt_result
 
         sem_action = production.symbol.action
         if sem_action:
@@ -628,7 +642,9 @@ class Parser(object):
                     "type:{} value:{}"
                     .format(type(result), repr(result)), level=1)
 
-        return result
+        # If build_tree is set to True, discard the result of the semantic
+        # action, and return the result of treebuild_reduce_action.
+        return bt_result if bt_result else result
 
     def _lexical_disambiguation(self, tokens):
         """
