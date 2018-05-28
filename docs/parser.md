@@ -38,6 +38,18 @@ used instead and this parameter is ignored.
 A boolean whose default value is `False`. If set to `True` parser will call
 actions that will build the [parse tree](./parse_trees.md).
 
+## call_actions_during_tree_build
+
+By default, this parameter is set to `False`. If set to `True`, parser will call
+actions during the parse tree [parse tree](./parse_trees.md) building process.
+The return value of each action will be discarded, since they directly affect
+the parse tree building process.
+
+!!! note
+
+    Use this parameter with a special care when GLR is used, since actions will
+    be called even on trees that can't be completed (unsuccessful parses).
+
 ## prefer_shifts
 
 By default set to `True` for LR parser and to `False` for GLR parser. In case
