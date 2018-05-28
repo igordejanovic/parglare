@@ -1,6 +1,6 @@
 import pytest  # noqa
 import os
-from tempfile import mkstemp
+import tempfile
 from parglare import Grammar
 from parglare.tables import create_table
 from parglare.export import grammar_pda_export
@@ -12,12 +12,13 @@ def test_dot_export():
 
     table = create_table(g)
 
-    f, file_name = mkstemp()
+    tmp_dir = tempfile.mkdtemp()
+    file_name = os.path.join(tmp_dir, 'testexport.dot')
+
     grammar_pda_export(table, file_name)
 
-    assert os.path.exists(file_name)
     with open(file_name) as f:
         assert 'label' in f.read()
 
-    f.close()
     os.remove(file_name)
+    os.rmdir(tmp_dir)
