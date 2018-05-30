@@ -145,7 +145,7 @@ class Parser(object):
         if self.dynamic_filter:
             if self.debug:
                 prints("\tInitializing dynamic disambiguation.")
-            self.dynamic_filter(None, None, None, None, None)
+            self.dynamic_filter(None, None, None, None, None, context)
 
         state_stack = [StackNode(self.table.states[0], position, 0, None,
                                  None)]
@@ -271,7 +271,7 @@ class Parser(object):
                 for a in acts:
                     if a.action is SHIFT:
                         if self._call_dynamic_filter(
-                                SHIFT, ntok, None, None, cur_state):
+                                SHIFT, ntok, None, None, cur_state, context):
                             dacts.append(a)
                     elif a.action is REDUCE:
                         r_len = len(a.prod.rhs)
@@ -281,7 +281,8 @@ class Parser(object):
                         else:
                             subresults = []
                         if self._call_dynamic_filter(
-                                REDUCE, ntok, a.prod, subresults, cur_state):
+                                REDUCE, ntok, a.prod, subresults, cur_state,
+                                context):
                             dacts.append(a)
                     else:
                         dacts.append(a)
@@ -705,7 +706,7 @@ class Parser(object):
             return error, position + 1, None
 
     def _call_dynamic_filter(self, action, token, production, subresults,
-                             state):
+                             state, context):
         if (action is SHIFT and not token.symbol.dynamic)\
            or (action is REDUCE and not production.dynamic):
             return True
@@ -721,7 +722,7 @@ class Parser(object):
                         if action is REDUCE else ""), level=2)
 
         accepted = self.dynamic_filter(action, token, production, subresults,
-                                       state)
+                                       state, context)
         if self.debug:
             if accepted:
                 a_print("Action accepted.", level=2)

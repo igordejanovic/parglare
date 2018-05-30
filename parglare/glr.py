@@ -87,7 +87,7 @@ class GLRParser(Parser):
         if self.dynamic_filter:
             if self.debug:
                 prints("\tInitializing dynamic disambiguation.")
-            self.dynamic_filter(None, None, None, None, None)
+            self.dynamic_filter(None, None, None, None, None, context)
 
         self.last_position = 0
         self.expected = set()
@@ -322,7 +322,7 @@ class GLRParser(Parser):
             if action and action.action is SHIFT:
                 if self.dynamic_filter and \
                     not self._call_dynamic_filter(
-                            SHIFT, token, None, None, state):
+                            SHIFT, token, None, None, state, context):
                         pass
                 else:
                     self.shift(head, token, action.state, context)
@@ -348,7 +348,8 @@ class GLRParser(Parser):
         if not prod_len:
             if self.dynamic_filter and \
                 not self._call_dynamic_filter(
-                        REDUCE, token_ahead, production, [], head.state):
+                        REDUCE, token_ahead, production, [], head.state,
+                        context):
                     pass
             else:
                 context.end_position = context.start_position
@@ -433,7 +434,7 @@ class GLRParser(Parser):
                 if self.dynamic_filter and \
                     not self._call_dynamic_filter(REDUCE, token_ahead,
                                                   production, subresults,
-                                                  head.state):
+                                                  head.state, context):
                         pass
                 else:
                     new_state = root.state.gotos[production.symbol]
