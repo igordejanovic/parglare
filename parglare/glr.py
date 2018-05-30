@@ -32,7 +32,7 @@ class GLRParser(Parser):
     """
     def __init__(self, grammar, start_production=1, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
-                 debug_colors=False, debug_layout=False, ws='\n\t ',
+                 debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
                  tables=LALR, layout=False, position=False, prefer_shifts=None,
                  prefer_shifts_over_empty=None, error_recovery=False,
