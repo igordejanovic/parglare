@@ -197,7 +197,8 @@ parser = Parser(grammar, dynamic_filter=custom_disambiguation_filter)
 Where resolution function is of the following form:
 
 ```
-def custom_disambiguation_filter(action, token, production, subresults, state):
+def custom_disambiguation_filter(action, token, production, subresults, state,
+                                 context):
     """Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
