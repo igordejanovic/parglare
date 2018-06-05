@@ -106,6 +106,8 @@
                 
                     <li><a class="toctree-l4" href="#build_tree">build_tree</a></li>
                 
+                    <li><a class="toctree-l4" href="#call_actions_during_tree_build">call_actions_during_tree_build</a></li>
+                
                     <li><a class="toctree-l4" href="#prefer_shifts">prefer_shifts</a></li>
                 
                     <li><a class="toctree-l4" href="#prefer_shifts_over_empty">prefer_shifts_over_empty</a></li>
@@ -288,6 +290,16 @@ used instead and this parameter is ignored.</p>
 <h2 id="build_tree">build_tree<a class="headerlink" href="#build_tree" title="Permanent link">&para;</a></h2>
 <p>A boolean whose default value is <code>False</code>. If set to <code>True</code> parser will call
 actions that will build the <a href="../parse_trees/">parse tree</a>.</p>
+<h2 id="call_actions_during_tree_build">call_actions_during_tree_build<a class="headerlink" href="#call_actions_during_tree_build" title="Permanent link">&para;</a></h2>
+<p>By default, this parameter is set to <code>False</code>. If set to <code>True</code>, parser will call
+actions during the parse tree <a href="../parse_trees/">parse tree</a> building process.
+The return value of each action will be discarded, since they directly affect
+the parse tree building process.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use this parameter with a special care when GLR is used, since actions will
+be called even on trees that can't be completed (unsuccessful parses).</p>
+</div>
 <h2 id="prefer_shifts">prefer_shifts<a class="headerlink" href="#prefer_shifts" title="Permanent link">&para;</a></h2>
 <p>By default set to <code>True</code> for LR parser and to <code>False</code> for GLR parser. In case
 of <a href="../lr_parsing/">shift/reduce conflicts</a> this strategy would favor shift

@@ -381,7 +381,8 @@ initialize its state at the beginning it is called with <code>None</code> as par
 </code></pre>
 
 <p>Where resolution function is of the following form:</p>
-<pre><code>def custom_disambiguation_filter(action, token, production, subresults, state):
+<pre><code>def custom_disambiguation_filter(action, token, production, subresults, state,
+                                 context):
     &quot;&quot;&quot;Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
