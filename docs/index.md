@@ -155,6 +155,8 @@ E: E '+' E  {left, 1}
  | E '^' E  {right, 3}
  | '(' E ')'
  | number;
+
+terminals
 number: /\d+(\.\d+)?/;
 """
 
