@@ -30,6 +30,8 @@ The whole expression evaluator is done in under 30 lines of code!
     | E '^' E  {right, 3}
     | '(' E ')'
     | number;
+
+    terminals
     number: /\d+(\.\d+)?/;
     """
 
