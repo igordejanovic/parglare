@@ -191,7 +191,7 @@ class StringRecognizer(Recognizer):
         self.ignore_case = ignore_case
         self.value_cmp = value.lower() if ignore_case else value
 
-    def __call__(self, in_str, pos):
+    def __call__(self, in_str, pos, context):
         if self.ignore_case:
             if in_str[pos:pos+len(self.value)].lower() == self.value_cmp:
                 return self.value
@@ -229,22 +229,22 @@ class RegExRecognizer(Recognizer):
             message = 'Regex compile error in /{}/ (report: "{}")'
             raise GrammarError(message.format(regex, str(ex)))
 
-    def __call__(self, in_str, pos):
+    def __call__(self, in_str, pos, context):
         m = self.regex.match(in_str, pos)
         if m:
             matched = m.group()
             return matched
 
 
-def EMPTY_recognizer(input, pos):
+def EMPTY_recognizer(input, pos, context):
     pass
 
 
-def EOF_recognizer(input, pos):
+def EOF_recognizer(input, pos, context):
     pass
 
 
-def STOP_recognizer(input, pos):
+def STOP_recognizer(input, pos, context):
     pass
 
 
