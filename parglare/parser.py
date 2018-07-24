@@ -162,6 +162,9 @@ class Parser(object):
         context.start_position = position
         context.end_position = position
         context.layout_content = layout_content
+        context.symbol = None
+        context.production = None
+        context.node = None
 
         new_token = True
         ntok = Token()
@@ -201,7 +204,6 @@ class Parser(object):
                                           start_position=position),
                         message=disambiguation_error(e.tokens))
 
-            context.parser = self
             context.start_position = position
             context.end_position = position + len(ntok.value)
             context.layout_content = layout_content

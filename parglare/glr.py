@@ -97,6 +97,12 @@ class GLRParser(Parser):
         context.parser = self
         context.input_str = input_str
         context.file_name = file_name
+        context.start_position = position
+        context.end_position = position
+        context.layout_content = ''
+        context.symbol = None
+        context.production = None
+        context.node = None
 
         position, layout_content = self._skipws(context, input_str, position)
 
@@ -225,7 +231,7 @@ class GLRParser(Parser):
             else:
                 position, layout_content = self._skipws(context, input_str,
                                                         position)
-                tokens = next_tokens(state, input_str, position)
+                tokens = next_tokens(state, input_str, position, context)
                 if debug:
                     self._debug_context(
                         input_str, position, tokens,
@@ -591,10 +597,10 @@ class GLRParser(Parser):
                 self._trace_step(old_head, new_head, root_head,
                                  "R:{}".format(dot_escape(production)))
 
-    def _next_tokens(self, state, input_str, position):
+    def _next_tokens(self, state, input_str, position, context):
         try:
             tok = super(GLRParser, self)._next_token(state, input_str,
-                                                     position)
+                                                     position, context)
             tokens = [tok]
         except DisambiguationError as e:
             # Lexical ambiguity will be handled by GLR
