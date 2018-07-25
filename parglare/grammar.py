@@ -832,9 +832,14 @@ class Grammar(PGFile):
         if self.terminals:
             for terminal in self.terminals:
                 terminal.recognizer._pg_context = False
-                n_args = len(inspect.getargspec(terminal.recognizer).args)
-                if (n_args > 3 or (n_args > 2 and inspect.isfunction(
-                    terminal.recognizer))):
+                if inspect.isfunction(terminal.recognizer):
+                    n_args = len(inspect.getargspec(terminal.recognizer).args)
+                    if (n_args > 2):
+                        terminal.recognizer._pg_context = True
+                else:
+                    n_args = len(inspect.getargspec(
+                        terminal.recognizer.__call__).args)
+                    if (n_args > 3):
                         terminal.recognizer._pg_context = True
 
     def _add_all_symbols_productions(self):
