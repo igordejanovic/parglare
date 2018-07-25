@@ -545,7 +545,10 @@ class Parser(object):
             if symbol.prior < last_prior and tokens:
                 break
             last_prior = symbol.prior
-            tok = symbol.recognizer(input_str, position, context)
+            if symbol.recognizer._pg_context:
+                tok = symbol.recognizer(context, input_str, position)
+            else:
+                tok = symbol.recognizer(input_str, position)
             if tok is not None:
                 tokens.append(Token(symbol, tok))
                 if finish_flags[idx]:

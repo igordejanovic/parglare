@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 from os import path
 import sys
 import re
+import inspect
 import itertools
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError, ParserInitError
@@ -191,7 +192,7 @@ class StringRecognizer(Recognizer):
         self.ignore_case = ignore_case
         self.value_cmp = value.lower() if ignore_case else value
 
-    def __call__(self, in_str, pos, context):
+    def __call__(self, in_str, pos):
         if self.ignore_case:
             if in_str[pos:pos+len(self.value)].lower() == self.value_cmp:
                 return self.value
@@ -229,22 +230,22 @@ class RegExRecognizer(Recognizer):
             message = 'Regex compile error in /{}/ (report: "{}")'
             raise GrammarError(message.format(regex, str(ex)))
 
-    def __call__(self, in_str, pos, context):
+    def __call__(self, in_str, pos):
         m = self.regex.match(in_str, pos)
         if m:
             matched = m.group()
             return matched
 
 
-def EMPTY_recognizer(input, pos, context):
+def EMPTY_recognizer(input, pos):
     pass
 
 
-def EOF_recognizer(input, pos, context):
+def EOF_recognizer(input, pos):
     pass
 
 
-def STOP_recognizer(input, pos, context):
+def STOP_recognizer(input, pos):
     pass
 
 
@@ -824,6 +825,17 @@ class Grammar(PGFile):
         # Connect recognizers, override grammar provided
         if not self._no_check_recognizers:
             self._connect_override_recognizers()
+
+        self._resolve_context_arg_presence_for_recognizers()
+
+    def _resolve_context_arg_presence_for_recognizers(self):
+        if self.terminals:
+            for terminal in self.terminals:
+                terminal.recognizer._pg_context = False
+                n_args = len(inspect.getargspec(terminal.recognizer).args)
+                if (n_args > 3 or (n_args > 2 and inspect.isfunction(
+                    terminal.recognizer))):
+                        terminal.recognizer._pg_context = True
 
     def _add_all_symbols_productions(self):
 
