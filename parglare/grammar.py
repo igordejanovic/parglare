@@ -139,6 +139,7 @@ class Terminal(GrammarSymbol):
     def __init__(self, name, recognizer=None, location=None,
                  imported_with=None):
         self.prior = DEFAULT_PRIORITY
+        self._recognizer = None
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
         self.finish = None
         self.prefer = False
@@ -146,6 +147,19 @@ class Terminal(GrammarSymbol):
         self.keyword = False
         super(Terminal, self).__init__(name, location, imported_with)
 
+    @property
+    def recognizer(self):
+        return self._recognizer
+
+    @recognizer.setter
+    def recognizer(self, value):
+        if value is None:
+            pass
+        elif get_number_of_params(value) > 2:
+            value._pg_context = True
+        else:
+            value._pg_context = False
+        self._recognizer = value
 
 class Reference(object):
     """
@@ -838,16 +852,6 @@ class Grammar(PGFile):
         # Connect recognizers, override grammar provided
         if not self._no_check_recognizers:
             self._connect_override_recognizers()
-
-        self._resolve_context_arg_presence_for_recognizers()
-
-    def _resolve_context_arg_presence_for_recognizers(self):
-        if self.terminals:
-            for terminal in self.terminals:
-                if get_number_of_params(terminal.recognizer) > 2:
-                    terminal.recognizer._pg_context = True
-                else:
-                    terminal.recognizer._pg_context = False
 
     def _add_all_symbols_productions(self):
 
