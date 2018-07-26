@@ -165,6 +165,8 @@ class Parser(object):
         context.symbol = None
         context.production = None
         context.node = None
+        if not hasattr(context, "extra"):
+            context.extra = None
 
         new_token = True
         ntok = Token()
