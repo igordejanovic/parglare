@@ -17,6 +17,19 @@ if sys.version < '3':
 else:
     text = str
 
+try:
+    from inspect import signature
+    def get_number_of_params(func):
+        s = signature(func)
+        return len(s.parameters)
+except ImportError:
+    import inspect
+    def get_number_of_params(func_or_obj):
+        if inspect.isfunction(func_or_obj):
+            return len(inspect.getargspec(func_or_obj).args)
+        else:
+            return len(inspect.getargspec(func_or_obj.__call__).args) - 1
+
 # Associativity
 ASSOC_NONE = 0
 ASSOC_LEFT = 1
@@ -831,16 +844,10 @@ class Grammar(PGFile):
     def _resolve_context_arg_presence_for_recognizers(self):
         if self.terminals:
             for terminal in self.terminals:
-                terminal.recognizer._pg_context = False
-                if inspect.isfunction(terminal.recognizer):
-                    n_args = len(inspect.getargspec(terminal.recognizer).args)
-                    if (n_args > 2):
-                        terminal.recognizer._pg_context = True
+                if get_number_of_params(terminal.recognizer) > 2:
+                    terminal.recognizer._pg_context = True
                 else:
-                    n_args = len(inspect.getargspec(
-                        terminal.recognizer.__call__).args)
-                    if (n_args > 3):
-                        terminal.recognizer._pg_context = True
+                    terminal.recognizer._pg_context = False
 
     def _add_all_symbols_productions(self):
 
