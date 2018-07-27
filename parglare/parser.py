@@ -547,6 +547,9 @@ class Parser(object):
         """
         debug = self.debug
 
+        if hasattr(symbol, "side_effect") and symbol.side_effect:
+            symbol.side_effect(context, matched_str)
+
         if self.build_tree:
             # call action for building tree node if tree building is enabled
             if debug:
@@ -573,22 +576,35 @@ class Parser(object):
 
         return result
 
+    def _do_sem_action(self, sem_action, assgn_results, production, subresults,
+                       context):
+        if type(sem_action) is list:
+            if assgn_results:
+                result = sem_action[production.prod_symbol_id](
+                    context, subresults, **assgn_results)
+            else:
+                result = sem_action[production.prod_symbol_id](context,
+                                                               subresults)
+        else:
+            if assgn_results:
+                result = sem_action(context, subresults, **assgn_results)
+            else:
+                result = sem_action(context, subresults)
+        return result
+
     def _call_reduce_action(self, production, subresults, context):
         """
         Calls registered reduce action for the given grammar symbol.
         """
         debug = self.debug
         result = None
-
-        if self.build_tree:
-            # call action for building tree node if enabled.
-            if debug:
-                h_print("Building non-terminal node",
-                        "'{}'.".format(production.symbol.name), level=2)
-            return treebuild_reduce_action(context, nodes=subresults)
+        assgn_results = None
 
         sem_action = production.symbol.action
-        if sem_action:
+        side_effect = production.symbol.side_effect if hasattr(
+            production.symbol, "side_effect") else None
+
+        if (sem_action and self.build_tree) or side_effect:
             assignments = production.assignments
             if assignments:
                 assgn_results = {}
@@ -598,19 +614,20 @@ class Parser(object):
                     else:
                         assgn_results[a.name] = bool(subresults[a.index])
 
-            if type(sem_action) is list:
-                if assignments:
-                    result = sem_action[production.prod_symbol_id](
-                        context, subresults, **assgn_results)
-                else:
-                    result = sem_action[production.prod_symbol_id](context,
-                                                                   subresults)
-            else:
-                if assignments:
-                    result = sem_action(context, subresults, **assgn_results)
-                else:
-                    result = sem_action(context, subresults)
+        if side_effect:
+            self._do_sem_action(side_effect, assgn_results, production,
+                                subresults, context)
 
+        if self.build_tree:
+            # call action for building tree node if enabled.
+            if debug:
+                h_print("Building non-terminal node",
+                        "'{}'.".format(production.symbol.name), level=2)
+            return treebuild_reduce_action(context, nodes=subresults)
+
+        if sem_action:
+            result = self._do_sem_action(sem_action, assgn_results, production,
+                                         subresults, context)
         else:
             if debug:
                 h_print("No action defined",

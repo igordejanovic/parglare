@@ -767,7 +767,7 @@ class Grammar(PGFile):
                  file_path=None, recognizers=None, start_symbol=None,
                  _no_check_recognizers=False, re_flags=re.MULTILINE,
                  ignore_case=False, debug=False, debug_parse=False,
-                 debug_colors=False):
+                 debug_colors=False, side_effects=None):
         """
         Grammar constructor is not meant to be called directly by the user.
         See `from_str` and `from_file` static methods instead.
@@ -802,9 +802,9 @@ class Grammar(PGFile):
             # By default, first production symbol is the start symbol.
             self.start_symbol = self.productions[0].symbol
 
-        self._init_grammar()
+        self._init_grammar(side_effects=side_effects)
 
-    def _init_grammar(self):
+    def _init_grammar(self, side_effects=None):
         """
         Extracts all grammar symbol (nonterminal and terminal) from the
         grammar, resolves and check references in productions, unify all
@@ -820,6 +820,7 @@ class Grammar(PGFile):
         self._enumerate_productions()
         self._fix_keyword_terminals()
         self._resolve_actions()
+        self._resolve_side_effects(side_effects=side_effects)
 
         # Connect recognizers, override grammar provided
         if not self._no_check_recognizers:
@@ -972,6 +973,51 @@ class Grammar(PGFile):
             else:
                 symbol.action = symbol.grammar_action
 
+    def _resolve_side_effects(self, side_effects=None):
+        for symbol in self:
+
+            # Resolve trying from most specific to least specific
+            action = None
+
+            # 1. Resolve by fully qualified symbol name
+            if '.' in symbol.fqn:
+                if side_effects:
+                    action = side_effects.get(symbol.fqn, None)
+
+            # 2. Fully qualified action name
+            if action is None and symbol.action_fqn is not None \
+               and '.' in symbol.action_fqn:
+                if side_effects:
+                    action = side_effects.get(symbol.action_fqn, None)
+
+            # 3. Symbol name
+            if action is None:
+                if side_effects:
+                    action = side_effects.get(symbol.name, None)
+
+            # 4. Action name
+            if action is None and symbol.action_name is not None:
+                if side_effects:
+                    action = side_effects.get(symbol.action_name, None)
+
+            if action is not None:
+                symbol.side_effect = action
+
+                # Some sanity checks for actions
+                if type(symbol.side_effect) is list:
+                    if type(symbol) is Terminal:
+                        raise ParserInitError(
+                            'Cannot use a list of actions for '
+                            'terminal "{}".'.format(symbol.name))
+                    else:
+                        if len(symbol.side_effect) != len(symbol.productions):
+                            raise ParserInitError(
+                                'Lenght of list of actions must match the '
+                                'number of productions for non-terminal '
+                                '"{}".'.format(symbol.name))
+            else:
+                symbol.side_effect = None
+
     def _connect_override_recognizers(self):
         for term in self.terminals:
             if self.recognizers and term.fqn in self.recognizers:
@@ -1032,7 +1078,7 @@ class Grammar(PGFile):
     def _parse(parse_fun_name, what_to_parse, recognizers=None,
                ignore_case=False, re_flags=re.MULTILINE, debug=False,
                debug_parse=False, debug_colors=False,
-               _no_check_recognizers=False):
+               _no_check_recognizers=False, side_effects=None):
         from .parser import Context
         context = Context()
         context.re_flags = re_flags
@@ -1053,7 +1099,8 @@ class Grammar(PGFile):
                     recognizers=recognizers,
                     file_path=what_to_parse
                     if parse_fun_name == 'parse_file' else None,
-                    _no_check_recognizers=_no_check_recognizers)
+                    _no_check_recognizers=_no_check_recognizers,
+                    side_effects=side_effects)
         g.classes = context.classes
         termui.colors = debug_colors
         if debug:
