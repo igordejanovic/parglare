@@ -604,7 +604,7 @@ class Parser(object):
         side_effect = production.symbol.side_effect if hasattr(
             production.symbol, "side_effect") else None
 
-        if (sem_action and self.build_tree) or side_effect:
+        if (sem_action and not self.build_tree) or side_effect:
             assignments = production.assignments
             if assignments:
                 assgn_results = {}
