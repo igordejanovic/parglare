@@ -29,7 +29,7 @@ class Parser(object):
                  build_tree=False, tables=LALR, layout=False, position=False,
                  prefer_shifts=True, prefer_shifts_over_empty=True,
                  error_recovery=False, dynamic_filter=None,
-                 custom_lexical_disambiguation=None):
+                 custom_lexical_disambiguation=None, side_actions=None):
         self.grammar = grammar
         self.start_production = start_production
         EMPTY.action = pass_none
@@ -37,6 +37,9 @@ class Parser(object):
         if actions:
             self.grammar._resolve_actions(action_overrides=actions,
                                           fail_on_no_resolve=True)
+        if side_actions:
+            self.grammar._resolve_side_actions(
+                side_action_overrides=side_actions)
 
         self.layout_parser = None
         if not layout:
@@ -547,8 +550,8 @@ class Parser(object):
         """
         debug = self.debug
 
-        if hasattr(symbol, "side_effect") and symbol.side_effect:
-            symbol.side_effect(context, matched_str)
+        if hasattr(symbol, "side_action") and symbol.side_action:
+            symbol.side_action(context, matched_str)
 
         if self.build_tree:
             # call action for building tree node if tree building is enabled
@@ -601,10 +604,10 @@ class Parser(object):
         assgn_results = None
 
         sem_action = production.symbol.action
-        side_effect = production.symbol.side_effect if hasattr(
-            production.symbol, "side_effect") else None
+        side_action = production.symbol.side_action if hasattr(
+            production.symbol, "side_action") else None
 
-        if (sem_action and not self.build_tree) or side_effect:
+        if (sem_action and not self.build_tree) or side_action:
             assignments = production.assignments
             if assignments:
                 assgn_results = {}
@@ -614,8 +617,8 @@ class Parser(object):
                     else:
                         assgn_results[a.name] = bool(subresults[a.index])
 
-        if side_effect:
-            self._do_sem_action(side_effect, assgn_results, production,
+        if side_action:
+            self._do_sem_action(side_action, assgn_results, production,
                                 subresults, context)
 
         if self.build_tree:
