@@ -1240,6 +1240,11 @@ class PGFileImport(object):
 
         return self.pgfile.resolve_action_by_name(action_name)
 
+    def resolve_side_action_by_name(self, side_action_name):
+        "Resolves side action from the imported file."
+
+        return self.pgfile.resolve_side_action_by_name(side_action_name)
+
 
 def create_productions_terminals(productions):
     """Creates Production instances from the list of productions given in
