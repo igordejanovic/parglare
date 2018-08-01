@@ -426,6 +426,7 @@ class PGFile(object):
         self.imported_with = imported_with
         self.recognizers = recognizers
         self.actions = {}
+        self.side_actions = {}
 
         self.collect_and_unify_symbols()
 
@@ -448,6 +449,7 @@ class PGFile(object):
 
         self.resolve_references()
         self.load_actions()
+        self.load_side_actions()
         self.load_recognizers()
 
     def collect_and_unify_symbols(self):
@@ -551,6 +553,31 @@ class PGFile(object):
                         message='Actions file "{}" must have "action" '
                         'decorator defined.'.format(actions_file))
                 self.actions = actions_module.action.all
+
+    def load_side_actions(self):
+        """
+        Loads side-effect actions from <grammar_name>_side_actions.py if the 
+        file exists.  Actions must be collected with action decorator and the 
+        decorator must be called `side_action`.
+        """
+        side_actions_file = None
+        if self.file_path:
+            side_actions_file = path.join(
+                path.dirname(self.file_path),
+                "{}_side_actions.py".format(path.splitext(
+                    path.basename(self.file_path))[0]))
+            if path.exists(side_actions_file):
+                mod_name = "{}side_actions".format(
+                    self.imported_with.fqn
+                    if self.imported_with is not None else "")
+                side_actions_module = load_python_module(
+                    mod_name, side_actions_file)
+                if not hasattr(side_actions_module, 'side_action'):
+                    raise GrammarError(
+                        Location(file_name=side_actions_file),
+                        message='Side actions file "{}" must have "side_action"'
+                        ' decorator defined.'.format(side_actions_file))
+                self.side_actions = side_actions_module.side_action.all
 
     def load_recognizers(self):
         """Load recognizers from <grammar_name>_recognizers.py. Override
@@ -659,6 +686,15 @@ class PGFile(object):
             if import_module_name in self.imports:
                 imported_pg_file = self.imports[import_module_name]
                 return imported_pg_file.resolve_action_by_name(name)
+
+    def resolve_side_action_by_name(self, side_action_name):
+        if side_action_name in self.side_actions:
+            return self.side_actions[side_action_name]
+        elif '.' in side_action_name:
+            import_module_name, name = side_action_name.split('.', 1)
+            if import_module_name in self.imports:
+                imported_pg_file = self.imports[import_module_name]
+                return imported_pg_file.resolve_side_action_by_name(name)
 
     def make_multiplicity_symbol(self, symbol_ref, base_symbol, separator,
                                  imported_with):
@@ -984,21 +1020,34 @@ class Grammar(PGFile):
                 if side_action_overrides:
                     action = side_action_overrides.get(symbol.fqn, None)
 
+                if action is None:
+                    action = self.resolve_side_action_by_name(symbol.fqn)
+
             # 2. Fully qualified action name
             if action is None and symbol.action_fqn is not None \
                and '.' in symbol.action_fqn:
                 if side_action_overrides:
                     action = side_action_overrides.get(symbol.action_fqn, None)
 
+                if action is None:
+                    action = self.resolve_side_action_by_name(symbol.action_fqn)
+
             # 3. Symbol name
             if action is None:
                 if side_action_overrides:
                     action = side_action_overrides.get(symbol.name, None)
 
+                if action is None:
+                    action = self.resolve_side_action_by_name(symbol.name)
+
             # 4. Action name
             if action is None and symbol.action_name is not None:
                 if side_action_overrides:
                     action = side_action_overrides.get(symbol.action_name, None)
+
+                if action is None:
+                    action = self.resolve_side_action_by_name(
+                        symbol.action_name)
 
             if action is not None:
                 symbol.side_action = action
