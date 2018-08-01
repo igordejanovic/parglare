@@ -126,16 +126,16 @@ def get_collector():
     all = {}
 
     class Collector(object):
-        def __call__(self, name_or_f=None):
+        def __call__(self, name_or_f):
             """
             If called with action/recognizer name return decorator.
             If called over function apply decorator.
             """
-            an = {0: name_or_f}
+            is_name = type(name_or_f) in [str, text]
 
             def decorator(f):
-                if isinstance(an[0], text):
-                    name = an[0]
+                if is_name:
+                    name = name_or_f
                 else:
                     name = f.__name__
                 objects = all.get(name, None)
@@ -147,7 +147,7 @@ def get_collector():
                 else:
                     all[name] = f
                 return f
-            if name_or_f is None or type(name_or_f) is text:
+            if is_name:
                 return decorator
             else:
                 return decorator(name_or_f)
