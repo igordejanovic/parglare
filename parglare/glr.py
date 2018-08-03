@@ -36,7 +36,7 @@ class GLRParser(Parser):
                  build_tree=False, tables=LALR, layout=False, position=False,
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
-                 custom_lexical_disambiguation=None):
+                 custom_lexical_disambiguation=None, side_actions=None):
 
         # The default for GLR is not to use any strategy preferring shifts
         # over reduce thus investigating all possibilitites.
@@ -54,7 +54,8 @@ class GLRParser(Parser):
             position=position, prefer_shifts=prefer_shifts,
             prefer_shifts_over_empty=prefer_shifts_over_empty,
             error_recovery=error_recovery, dynamic_filter=dynamic_filter,
-            custom_lexical_disambiguation=custom_lexical_disambiguation)
+            custom_lexical_disambiguation=custom_lexical_disambiguation,
+            side_actions=side_actions)
 
     def _check_parser(self):
         """
