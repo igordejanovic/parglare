@@ -76,7 +76,7 @@ def test_associativity_variant_1():
     assert r == result
 
 
-def todo_test_associativity_variant_2():
+def test_associativity_variant_2():
     """
     See https://github.com/igordejanovic/parglare/issues/22
     """
