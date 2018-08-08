@@ -13,7 +13,7 @@ An example of the robot program:
    end
 
 """
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 import os
 from parglare import Grammar, Parser
 from parglare import get_collector
@@ -28,7 +28,7 @@ def INT(_, value):
 
 @action
 def initial(context, nodes, x, y):
-    print(f"Robot initial position set to: {x}, {y}")
+    print("Robot initial position set to: {}, {}".format(x, y))
     context.robot_position = (x, y)
 
 
@@ -40,7 +40,7 @@ def program(context, nodes, commands):
 @action
 def move(context, nodes, direction, steps):
     steps = 1 if steps is None else steps
-    print(f"Moving robot {direction} for {steps} steps.")
+    print("Moving robot {} for {} steps.".format(direction, steps))
 
     move = {
         "up": (0, 1),
@@ -63,7 +63,7 @@ def main(debug=False):
 
     end_position = parser.parse_file(os.path.join(this_folder, 'program.rbt'))
 
-    print(f"Robot stops at position: {end_position}")
+    print("Robot stops at position: {}".format(end_position))
 
 
 if __name__ == "__main__":
