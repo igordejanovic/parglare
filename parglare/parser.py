@@ -158,6 +158,16 @@ class Parser(object):
         debug = self.debug
         layout_content = ''
 
+        context.parser = self
+        context.start_position = position
+        context.end_position = position
+        context.layout_content = layout_content
+        context.symbol = None
+        context.production = None
+        context.node = None
+        if not hasattr(context, "extra"):
+            context.extra = None
+
         new_token = True
         ntok = Token()
 
@@ -187,7 +197,7 @@ class Parser(object):
                             h_print("Layout content:",
                                     "'{}'".format(layout_content), level=1)
 
-                    ntok = next_token(cur_state, input_str, position)
+                    ntok = next_token(cur_state, input_str, position, context)
 
                 except DisambiguationError as e:
                     raise ParseError(
@@ -196,7 +206,6 @@ class Parser(object):
                                           start_position=position),
                         message=disambiguation_error(e.tokens))
 
-            context.parser = self
             context.start_position = position
             context.end_position = position + len(ntok.value)
             context.layout_content = layout_content
@@ -482,7 +491,7 @@ class Parser(object):
 
         return position, layout_content
 
-    def _next_token(self, state, input_str, position):
+    def _next_token(self, state, input_str, position, context):
         """
         For the current position in the input stream and actions in the current
         state find next token.
@@ -509,13 +518,15 @@ class Parser(object):
                     def get_tokens():
                         return self._token_recognition(input_str,
                                                        position, actions,
-                                                       finish_flags)
+                                                       finish_flags,
+                                                       context)
 
                     tokens = self.custom_lexical_disambiguation(
                         symbols, input_str, position, get_tokens)
                 else:
                     tokens = self._token_recognition(input_str, position,
-                                                     actions, finish_flags)
+                                                     actions, finish_flags,
+                                                     context)
             if not tokens:
                 if STOP in actions:
                     ntok = STOP_token
@@ -528,14 +539,18 @@ class Parser(object):
 
         return ntok
 
-    def _token_recognition(self, input_str, position, actions, finish_flags):
+    def _token_recognition(self, input_str, position, actions, finish_flags,
+                           context):
         tokens = []
         last_prior = -1
         for idx, symbol in enumerate(actions):
             if symbol.prior < last_prior and tokens:
                 break
             last_prior = symbol.prior
-            tok = symbol.recognizer(input_str, position)
+            if symbol.recognizer._pg_context:
+                tok = symbol.recognizer(context, input_str, position)
+            else:
+                tok = symbol.recognizer(input_str, position)
             if tok is not None:
                 tokens.append(Token(symbol, tok))
                 if finish_flags[idx]:
