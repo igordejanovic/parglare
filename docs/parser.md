@@ -15,10 +15,9 @@ grammar rule.
 
 ## layout_actions
 
-This parameter is used to specify actions called when the rules
-of
-[layout sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) are
-reduced. This is rarely needed but there are times when you would like to
+This parameter is used to specify actions called when the rules of [layout
+sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
+are reduced. This is rarely needed but there are times when you would like to
 process matched layout (e.g. whitespaces, comments).
 
 It is given in the same format as `actions` parameter, a dict of callables keyed
@@ -27,11 +26,10 @@ by grammar rule names.
 ## ws
 
 This parameter specifies a string whose characters are considered to be
-whitespace. By default its value is `'\n\r\t '`. It is used
-if
-[layout sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) (`LAYOUT`
-grammar rule) is not defined. If `LAYOUT` rule is given in the grammar it is
-used instead and this parameter is ignored.
+whitespace. By default its value is `'\n\r\t '`. It is used if [layout
+sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
+(`LAYOUT` grammar rule) is not defined. If `LAYOUT` rule is given in the grammar
+it is used instead and this parameter is ignored.
 
 ## build_tree
 
@@ -52,11 +50,10 @@ the parse tree building process.
 
 ## prefer_shifts
 
-By default set to `True` for LR parser and to `False` for GLR parser. In case
-of [shift/reduce conflicts](./lr_parsing.md) this strategy would favor shift
-over reduce. You can still
-use [associativity rules](./disambiguation.md#associativity) to decide per
-production.
+By default set to `True` for LR parser and to `False` for GLR parser. In case of
+[shift/reduce conflicts](./lr_parsing.md) this strategy would favor shift over
+reduce. You can still use [associativity
+rules](./disambiguation.md#associativity) to decide per production.
 
 You can disable this rule on per-production basis by using `nops` on the
 production.
