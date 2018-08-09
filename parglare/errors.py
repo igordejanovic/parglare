@@ -10,20 +10,18 @@ class Error(object):
     Instances of this class are used for error reporting in the context
     of error recovery.
     """
-    def __init__(self, position, length, message=None, input_str=None,
-                 expected_symbols=None,):
+    def __init__(self, context, length, message=None, expected_symbols=None):
         """
         Either message should be given or input_str and expected_symbols.
 
-
-        :param position: Position in the stream where the error starts.
-        :param length: The length of the erroneous piece of input.
-        :param message: A message to the user about the error.
-        :param input_str: The input string/list.
-        :param expected_symbols: A set of expected grammar symbols at the
-             location.
+        Args:
+            length: The length of the erroneous piece of input.
+            message: A message to the user about the error.
+            expected_symbols: A set of expected grammar symbols at the
+                location.
         """
-        self.position = position
+        self.position = context.position
+        self.input_str = context.input_str
         self.length = length
         self.message = message
         self.expected_symbols = set(expected_symbols) \
@@ -34,7 +32,7 @@ class Error(object):
             return self.message
         else:
             from parglare import pos_to_line_col
-            line, col = pos_to_line_col(input, self.position)
+            line, col = pos_to_line_col(self.input_str, self.position)
             return "Unexpected input at position {}. Expected: {}"\
                 .format((line, col),
                         expected_symbols_str(self.expected_symbols))

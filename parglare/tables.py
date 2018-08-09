@@ -634,6 +634,9 @@ class LRState(object):
     def __unicode__(self):
         return str(self)
 
+    def __repr__(self):
+        return "<LRState({}:{})>".format(self.state_id, self.symbol.name)
+
     def print_debug(self):
         prints(text(self))
 

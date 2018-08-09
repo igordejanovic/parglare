@@ -29,8 +29,7 @@ g = Grammar.from_string(grammar)
 operations = []
 
 
-def custom_disambiguation_filter(action, token, production, subresults, state,
-                                 context):
+def custom_disambiguation_filter(context, action, subresults):
     """Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
@@ -43,10 +42,10 @@ def custom_disambiguation_filter(action, token, production, subresults, state,
         operations = []
         return
 
-    actions = state.actions[token.symbol]
+    actions = context.state.actions[context.token_ahead.symbol]
 
     # Lookahead operation
-    shift_op = token.symbol
+    shift_op = context.token_ahead.symbol
 
     if action is SHIFT:
         if shift_op not in operations:
@@ -59,7 +58,7 @@ def custom_disambiguation_filter(action, token, production, subresults, state,
     elif action is REDUCE:
 
         # Current reduction operation
-        red_op = production.rhs[1]
+        red_op = context.production.rhs[1]
         if red_op not in operations:
             operations.append(red_op)
 

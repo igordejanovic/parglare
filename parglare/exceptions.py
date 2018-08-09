@@ -38,9 +38,9 @@ class DisambiguationError(Exception):
 
 
 class DynamicDisambiguationConflict(Exception):
-    def __init__(self, state, token, actions):
-        self.state = state
-        self.token = token
+    def __init__(self, context, actions):
+        self.state = state = context.state
+        self.token = token = context.token
         self.actions = actions
 
         from parglare.parser import SHIFT

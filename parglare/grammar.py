@@ -1063,14 +1063,15 @@ class Grammar(PGFile):
                _no_check_recognizers=False):
         from .parser import Context
         context = Context()
-        context.re_flags = re_flags
-        context.ignore_case = ignore_case
-        context.debug = debug
-        context.debug_colors = debug_colors
-        context.classes = {}
-        context.inline_terminals = {}
-        context.imported_with = None
-        context.grammar = None
+        context.extra = extra = GrammarContext()
+        extra.re_flags = re_flags
+        extra.ignore_case = ignore_case
+        extra.debug = debug
+        extra.debug_colors = debug_colors
+        extra.classes = {}
+        extra.inline_terminals = {}
+        extra.imported_with = None
+        extra.grammar = None
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
         imports, productions, terminals = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
@@ -1082,7 +1083,7 @@ class Grammar(PGFile):
                     file_path=what_to_parse
                     if parse_fun_name == 'parse_file' else None,
                     _no_check_recognizers=_no_check_recognizers)
-        g.classes = context.classes
+        g.classes = context.extra.classes
         termui.colors = debug_colors
         if debug:
             g.print_debug()
@@ -1129,7 +1130,7 @@ class PGFileImport(object):
         self.module_name = module_name
         self.file_path = file_path
         self.context = context
-        self.imported_with = context.imported_with
+        self.imported_with = context.extra.imported_with
         self.grammar = None
         self.pgfile = None
 
@@ -1148,13 +1149,13 @@ class PGFileImport(object):
                 self.pgfile = self.grammar.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
-                self.context.inline_terminals = {}
-                self.context.imported_with = self
+                self.context.extra.inline_terminals = {}
+                self.context.extra.imported_with = self
                 self.context.file_name = self.file_path
                 imports, productions, terminals = \
                     get_grammar_parser(
-                        self.context.debug,
-                        self.context.debug_colors).parse_file(
+                        self.context.extra.debug,
+                        self.context.extra.debug_colors).parse_file(
                             self.file_path, context=self.context)
                 self.pgfile = PGFile(productions=productions,
                                      terminals=terminals,
@@ -1243,6 +1244,10 @@ def check_name(context, name):
         raise GrammarError(
             location=Location(context),
             message='Using dot in names is not allowed.'.format(name))
+
+
+class GrammarContext:
+    pass
 
 
 # Grammar for grammars
@@ -1471,7 +1476,7 @@ def act_pgfile(context, nodes):
             elif type(first[0]) is Terminal:
                 terminals = first
 
-    for terminal in context.inline_terminals.values():
+    for terminal in context.extra.inline_terminals.values():
         terminals.append(terminal)
 
     return [imports, productions, terminals]
@@ -1520,7 +1525,7 @@ def act_production_rule(context, nodes):
     check_name(context, name)
 
     symbol = NonTerminal(name, location=Location(context),
-                         imported_with=context.imported_with)
+                         imported_with=context.extra.imported_with)
 
     # Collect all productions for this rule
     prods = []
@@ -1592,11 +1597,11 @@ def act_production_rule(context, nodes):
                         .format(name, hex(id(self)))
 
         ParglareClass.__name__ = str(symbol.fqn)
-        if symbol.fqn in context.classes:
+        if symbol.fqn in context.extra.classes:
             # If rule has multiple definition merge attributes.
-            context.classes[symbol.fqn]._pg_attrs.update(attrs)
+            context.extra.classes[symbol.fqn]._pg_attrs.update(attrs)
         else:
-            context.classes[symbol.fqn] = ParglareClass
+            context.extra.classes[symbol.fqn] = ParglareClass
 
         symbol.action_name = 'obj'
 
@@ -1649,7 +1654,7 @@ def act_term_rule(context, nodes):
 
     check_name(context, name)
     term = Terminal(name, recognizer, location=Location(context),
-                    imported_with=context.imported_with)
+                    imported_with=context.extra.imported_with)
     if len(nodes) > 4:
         _set_term_props(term, nodes[4])
     return term
@@ -1660,7 +1665,7 @@ def act_term_rule_empty_body(context, nodes):
 
     check_name(context, name)
     term = Terminal(name, location=Location(context),
-                    imported_with=context.imported_with)
+                    imported_with=context.extra.imported_with)
     term.recognizer = None
     if len(nodes) > 3:
         _set_term_props(term, nodes[3])
@@ -1735,12 +1740,12 @@ def act_gsymbol_string_recognizer(context, nodes):
 
     terminal_ref = Reference(Location(context), recognizer.name)
 
-    if terminal_ref.name not in context.inline_terminals:
+    if terminal_ref.name not in context.extra.inline_terminals:
         check_name(context, terminal_ref.name)
-        context.inline_terminals[terminal_ref.name] = \
+        context.extra.inline_terminals[terminal_ref.name] = \
             Terminal(terminal_ref.name, recognizer,
                      location=Location(context),
-                     imported_with=context.imported_with)
+                     imported_with=context.extra.imported_with)
 
     return terminal_ref
 
@@ -1763,13 +1768,13 @@ def act_recognizer_str(context, nodes):
                  .replace(r"\\", "\\")\
                  .replace(r"\n", "\n")\
                  .replace(r"\t", "\t")
-    return StringRecognizer(value, ignore_case=context.ignore_case)
+    return StringRecognizer(value, ignore_case=context.extra.ignore_case)
 
 
 def act_recognizer_regex(context, nodes):
     value = nodes[0]
-    return RegExRecognizer(value, re_flags=context.re_flags,
-                           ignore_case=context.ignore_case)
+    return RegExRecognizer(value, re_flags=context.extra.re_flags,
+                           ignore_case=context.extra.ignore_case)
 
 
 def act_str_regex_term(context, value):
