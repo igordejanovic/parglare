@@ -1,0 +1,15 @@
+program: "begin" commands=command* "end";
+command: initial | move;
+initial: INITIAL x=INT "," y=INT;
+move: direction=direction steps=INT?;
+direction: "up" | "down" | "left" | "right";
+
+// Support for C-like comments
+LAYOUT: LayoutItem | LAYOUT LayoutItem;
+LayoutItem: WS | Comment | EMPTY;
+
+terminals
+INT: /\d+/;
+INITIAL: "initial";
+WS: /\s+/;
+Comment: /\/\/.*/;
