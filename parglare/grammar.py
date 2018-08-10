@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 from os import path
 import sys
 import re
+import inspect
 import itertools
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError, ParserInitError
@@ -15,6 +16,19 @@ if sys.version < '3':
     text = unicode  # NOQA
 else:
     text = str
+
+try:
+    from inspect import signature
+    def get_number_of_params(func):
+        s = signature(func)
+        return len(s.parameters)
+except ImportError:
+    import inspect
+    def get_number_of_params(func_or_obj):
+        if inspect.isfunction(func_or_obj):
+            return len(inspect.getargspec(func_or_obj).args)
+        else:
+            return len(inspect.getargspec(func_or_obj.__call__).args) - 1
 
 # Associativity
 ASSOC_NONE = 0
@@ -125,6 +139,7 @@ class Terminal(GrammarSymbol):
     def __init__(self, name, recognizer=None, location=None,
                  imported_with=None):
         self.prior = DEFAULT_PRIORITY
+        self._recognizer = None
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
         self.finish = None
         self.prefer = False
@@ -132,6 +147,19 @@ class Terminal(GrammarSymbol):
         self.keyword = False
         super(Terminal, self).__init__(name, location, imported_with)
 
+    @property
+    def recognizer(self):
+        return self._recognizer
+
+    @recognizer.setter
+    def recognizer(self, value):
+        if value is None:
+            pass
+        elif get_number_of_params(value) > 2:
+            value._pg_context = True
+        else:
+            value._pg_context = False
+        self._recognizer = value
 
 class Reference(object):
     """

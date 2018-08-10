@@ -2,6 +2,7 @@
 from __future__ import print_function, unicode_literals
 import codecs
 from itertools import chain
+from copy import deepcopy
 from parglare import Parser
 from parglare import termui as t
 from .exceptions import DisambiguationError, ParseError, expected_message
@@ -96,6 +97,14 @@ class GLRParser(Parser):
         context.parser = self
         context.input_str = input_str
         context.file_name = file_name
+        context.start_position = position
+        context.end_position = position
+        context.layout_content = ''
+        context.symbol = None
+        context.production = None
+        context.node = None
+        if not hasattr(context, "extra"):
+            context.extra = None
 
         position, layout_content = self._skipws(context, input_str, position)
 
@@ -104,7 +113,7 @@ class GLRParser(Parser):
                              start_position=position,
                              end_position=position,
                              layout_content=layout_content,
-                             number_of_trees=1)
+                             number_of_trees=1, extra=context.extra)
         self.heads_for_reduce = [start_head]
         self.heads_for_shift = []
 
@@ -192,6 +201,7 @@ class GLRParser(Parser):
             state = head.state
             actions = state.actions
             self.expected.update(actions.keys())
+            context.extra = head.extra
 
             lookahead_token = head.token_ahead
 
@@ -224,7 +234,7 @@ class GLRParser(Parser):
             else:
                 position, layout_content = self._skipws(context, input_str,
                                                         position)
-                tokens = next_tokens(state, input_str, position)
+                tokens = next_tokens(state, input_str, position, context)
                 if debug:
                     self._debug_context(
                         input_str, position, tokens,
@@ -307,6 +317,7 @@ class GLRParser(Parser):
             context.start_position = position
             context.layout_content = layout_content
             context.symbol = symbol = token.symbol
+            context.extra = head.extra
             if position > self.last_position:
                 self.last_position = position
 
@@ -358,7 +369,7 @@ class GLRParser(Parser):
                     start_position=context.start_position,
                     end_position=context.start_position,
                     layout_content=context.layout_content,
-                    token_ahead=token_ahead)
+                    token_ahead=token_ahead, extra=deepcopy(context.extra))
 
                 self.merge_create_head(new_head, head, head,
                                        context, [],
@@ -441,7 +452,8 @@ class GLRParser(Parser):
                                        start_position=root.next_position,
                                        end_position=head.end_position,
                                        layout_content=context.layout_content,
-                                       token_ahead=token_ahead)
+                                       token_ahead=token_ahead,
+                                       extra=deepcopy(context.extra))
                     new_head.next_layout_content = head.next_layout_content
                     new_head.next_position = head.next_position
 
@@ -500,7 +512,8 @@ class GLRParser(Parser):
                 state,
                 start_position=context.start_position,
                 end_position=context.end_position,
-                layout_content=context.layout_content)
+                layout_content=context.layout_content,
+                extra=deepcopy(context.extra))
 
             # Cache this shift for further shift of the same symbol on the same
             # position.
@@ -590,10 +603,10 @@ class GLRParser(Parser):
                 self._trace_step(old_head, new_head, root_head,
                                  "R:{}".format(dot_escape(production)))
 
-    def _next_tokens(self, state, input_str, position):
+    def _next_tokens(self, state, input_str, position, context):
         try:
             tok = super(GLRParser, self)._next_token(state, input_str,
-                                                     position)
+                                                     position, context)
             tokens = [tok]
         except DisambiguationError as e:
             # Lexical ambiguity will be handled by GLR
@@ -763,14 +776,15 @@ class GSSNode(object):
     __slots__ = ['state', 'start_position', 'end_position', 'layout_content',
                  'parents', 'token_ahead', 'next_layout_content',
                  'next_position', 'any_empty', 'all_empty', 'number_of_trees',
-                 '_hash']
+                 '_hash', 'extra']
 
     def __init__(self, state, start_position, end_position, layout_content='',
-                 number_of_trees=0, token_ahead=None):
+                 number_of_trees=0, token_ahead=None, extra=None):
         self.state = state
         self.start_position = start_position
         self.end_position = end_position
         self.layout_content = layout_content
+        self.extra = extra
 
         # Initialize to neutral elements
         self.any_empty = False
@@ -850,7 +864,8 @@ class GSSNode(object):
                                self.start_position,
                                self.end_position,
                                self.layout_content,
-                               self.number_of_trees)
+                               self.number_of_trees,
+                               extra=deepcopy(self.extra))
             new_head.parents = list(self.parents)
             new_head.token_ahead = token
             new_head.any_empty = self.any_empty
