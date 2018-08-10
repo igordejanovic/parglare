@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 import codecs
 import sys
-from copy import copy
+from copy import copy, deepcopy
 from .grammar import EMPTY, EOF, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .errors import Error, expected_symbols_str
@@ -154,26 +154,12 @@ class Parser(object):
         next_token = self._next_token
         debug = self.debug
 
-        context = Context() if not context else context
+        context = self._get_init_context(context, input_str, position,
+                                         file_name)
         assert type(context) is Context
 
-        context.state = self.table.states[0]
-        context.input_str = input_str
-        if not hasattr(context, 'file_name') or context.file_name is None:
-            context.file_name = file_name
-        context.parser = self
-        context.position = context.start_position = \
-            context.end_position = position
-        context.token = Token()
-        context.layout_content = ''
-
-        if self.dynamic_filter:
-            if self.debug:
-                prints("\tInitializing dynamic disambiguation.")
-            self.dynamic_filter(context, None, None)
-
+        self._init_dynamic_disambiguation(context)
         self.state_stack = state_stack = [StackNode(context, None)]
-
         context = copy(context)
 
         new_token = True
@@ -201,7 +187,7 @@ class Parser(object):
                                     "'{}'".format(context.layout_content),
                                     level=1)
 
-                    context.token_ahead = next_token(context)
+                    context.token = next_token(context)
 
                 except DisambiguationError as e:
                     raise ParseError(
@@ -213,9 +199,9 @@ class Parser(object):
                 h_print("Tokens expected:",
                         expected_symbols_str(cur_state.actions.keys()),
                         level=1)
-                h_print("Token ahead:", context.token_ahead, level=1)
+                h_print("Token ahead:", context.token, level=1)
 
-            actions = cur_state.actions.get(context.token_ahead.symbol)
+            actions = cur_state.actions.get(context.token.symbol)
 
             if not actions:
 
@@ -232,7 +218,7 @@ class Parser(object):
                         a_print("**Error found. Recovery initiated.**")
 
                     # No actions to execute. Try error recovery.
-                    context.token_ahead, error, context.position = \
+                    context.token, error, context.position = \
                         error_recovery(context, set(actions.keys()))
 
                     # The recovery may either decide to skip erroneous part
@@ -244,7 +230,7 @@ class Parser(object):
                             a_print("Error: ", error, level=1)
                         self.errors.append(error)
 
-                    if not context.token_ahead:
+                    if not context.token:
                         # If token is not recognized we are just droping
                         # current input and advancing position. Thus, stay in
                         # the same state and try to continue.
@@ -258,7 +244,7 @@ class Parser(object):
                         continue
 
                     else:
-                        actions = actions.get(context.token_ahead.symbol)
+                        actions = actions.get(context.token.symbol)
 
             if not actions:
                 raise ParseError(Location(context=context),
@@ -296,7 +282,7 @@ class Parser(object):
                                                 context.position)), level=1)
 
                 context.start_position = context.position
-                context.token = context.token_ahead
+                context.token = context.token
                 context.symbol = context.token.symbol
                 context.end_position = \
                     context.start_position + len(context.token.value)
@@ -428,6 +414,22 @@ class Parser(object):
 
         return inner_call_actions(node)
 
+    def _get_init_context(self, context, input_str, position, file_name):
+
+        context = Context() if not context else context
+
+        context.state = self.table.states[0]
+        context.input_str = input_str
+        if not hasattr(context, 'file_name') or context.file_name is None:
+            context.file_name = file_name
+        context.parser = self
+        context.position = context.start_position = \
+            context.end_position = position
+        context.token = Token()
+        context.layout_content = ''
+
+        return context
+
     def _skipws(self, context):
 
         in_len = len(context.input_str)
@@ -531,6 +533,12 @@ class Parser(object):
                     break
         return tokens
 
+    def _init_dynamic_disambiguation(self, context):
+        if self.dynamic_filter:
+            if self.debug:
+                prints("\tInitializing dynamic disambiguation.")
+            self.dynamic_filter(context, None, None)
+
     def _dynamic_disambiguation(self, context, actions):
 
         dyn_actions = []
@@ -551,6 +559,31 @@ class Parser(object):
             else:
                 dyn_actions.append(a)
         return dyn_actions
+
+    def _call_dynamic_filter(self, context, action, subresults):
+        if (action is SHIFT and not context.token.symbol.dynamic)\
+           or (action is REDUCE and not context.production.dynamic):
+            return True
+
+        if self.debug:
+            h_print("Calling filter for action:",
+                    " {}, token={}{}{}"
+                    .format(
+                        "SHIFT" if action is SHIFT else "REDUCE",
+                        context.token,
+                        ", prod={}".format(context.production)
+                        if action is REDUCE else "",
+                        ", subresults={}".format(subresults)
+                        if action is REDUCE else ""), level=2)
+
+        accepted = self.dynamic_filter(context, action, subresults)
+        if self.debug:
+            if accepted:
+                a_print("Action accepted.", level=2)
+            else:
+                a_print("Action rejected.", level=2)
+
+        return accepted
 
     def _call_shift_action(self, context):
         """
@@ -713,33 +746,21 @@ class Parser(object):
             self.current_error = error
             return None, error, context.position + 1
 
-    def _call_dynamic_filter(self, context, action, subresults):
-        if (action is SHIFT and not context.token_ahead.symbol.dynamic)\
-           or (action is REDUCE and not context.production.dynamic):
-            return True
-
-        if self.debug:
-            h_print("Calling filter for action:",
-                    " {}, token={}{}{}"
-                    .format(
-                        "SHIFT" if action is SHIFT else "REDUCE",
-                        context.token,
-                        ", prod={}".format(context.production)
-                        if action is REDUCE else "",
-                        ", subresults={}".format(subresults)
-                        if action is REDUCE else ""), level=2)
-
-        accepted = self.dynamic_filter(context, action, subresults)
-        if self.debug:
-            if accepted:
-                a_print("Action accepted.", level=2)
-            else:
-                a_print("Action rejected.", level=2)
-
-        return accepted
-
 
 class Context:
+    """
+    Args:
+        state(LRState):
+        file_name(str):
+        position(int):
+        start_position, end_position(int):
+        layout_content(str):
+        token(Token): Token recognized ahead at position in given
+             state. Used with nodes created during reduction. Newly shift
+             created nodes will have token set to None and will do
+             scanning to obtain possible tokens ahead.
+        extra(anything): Used for additional state maintained by the user.
+    """
     __slots__ = ['state',
                  'file_name',
                  'input_str',
@@ -750,9 +771,6 @@ class Context:
                  'production',
                  'symbol',
                  'layout_content',
-                 'next_position',
-                 'next_layout_content',
-                 'token_ahead',
                  'node',
                  'parser',
                  'extra']
@@ -760,6 +778,13 @@ class Context:
     def __init__(self):
         for attr in self.__slots__:
             setattr(self, attr, None)
+
+    def __deepcopy__(self, memo):
+        new_inst = type(self)()
+        for attr in self.__slots__:
+            setattr(new_inst, attr, getattr(self, attr))
+        new_inst.extra = deepcopy(self.extra, memo)
+        return new_inst
 
     def __str__(self):
         if self.symbol:
