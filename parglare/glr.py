@@ -166,25 +166,25 @@ class GLRParser(Parser):
 
         while heads_for_reduce:
             head = heads_for_reduce.pop()
-            context = head.context
             self.reducing_heads.append(head)
             if debug:
                 a_print("Reducing head: ", str(head), new_line=True)
 
+            context = head.context
             position = context.position
+            state = context.state
+            actions = state.actions
+            token = context.token_ahead
+
             if position > self.last_position:
                 self.last_position = position
                 self.expected = set()
 
-            state = context.state
-            actions = state.actions
             self.expected.update(actions.keys())
-
-            token = context.token
 
             if token is not None:
                 if debug:
-                    self._debug_context(context,
+                    self._debug_context(context, token,
                                         expected_symbols=[token.symbol])
 
                 # If this head is reduced it can only continue to be reduced by
@@ -227,7 +227,7 @@ class GLRParser(Parser):
                 symbol_actions = actions.get(symbol, [])
 
                 # Do all reductions for this head and tokens
-                context.token = token
+                context.token_ahead = token
                 reduce_head = head.for_token(token)
                 reduce_actions = [a for a in symbol_actions
                                   if a.action is REDUCE]
@@ -241,7 +241,7 @@ class GLRParser(Parser):
                 elif not reduce_actions:
                     if self.error_recovery:
                         # If this head is not reduced and no shift is possible
-                        # collect if for possible recovery.
+                        # collect it for possible recovery.
                         self.heads_for_recovery.append(reduce_head)
                     elif debug:
                         a_print("** Killing head: ", reduce_head, level=1)
@@ -278,12 +278,11 @@ class GLRParser(Parser):
             context = head.context
 
             if debug:
-                self._debug_context(context, context.token,
-                                    expected_symbols=None)
+                self._debug_context(context, expected_symbols=None)
 
             # First action should be SHIFT if it is possible to shift by this
             # token.
-            action = context.state.actions.get(context.token.symbol,
+            action = context.state.actions.get(context.token_ahead.symbol,
                                                [None])[0]
             if action and action.action is SHIFT:
                 if self.dynamic_filter and \
@@ -326,8 +325,8 @@ class GLRParser(Parser):
             # Find roots of new heads by going backwards for prod_len steps
             # following all possible paths.
             # Collect subresults along the way to be used with semantic actions
-            to_process = [(head, head.start_position, [], prod_len, False,
-                           True)]
+            to_process = [(head, head.context.start_position, [], prod_len,
+                           False, True)]
             if debug:
                 h_print("Calculate reduction paths of length {}, "
                         "choose only non-empty if possible:"
@@ -363,7 +362,7 @@ class GLRParser(Parser):
                             (parent, parent_subres, length,
                              path_has_empty, path_all_empty))
                     else:
-                        roots.append((parent, node.start_position,
+                        roots.append((parent, start_position,
                                       parent_subres, path_has_empty,
                                       path_all_empty))
 
@@ -395,6 +394,7 @@ class GLRParser(Parser):
                 new_context.state = \
                     root.context.state.gotos[production.symbol]
                 new_context.start_position = start_position
+                new_context.position = new_context.end_position
 
                 if self.dynamic_filter and \
                    not self._call_dynamic_filter(context, REDUCE, subresults):
@@ -419,7 +419,7 @@ class GLRParser(Parser):
         last_shifts = self.last_shifts
         debug = self.debug
         context = head.context
-        token = context.token
+        token = context.token_ahead
         context.symbol = token.symbol
 
         shifted_head = last_shifts.get((context.state.state_id,
@@ -450,7 +450,9 @@ class GLRParser(Parser):
             new_context = deepcopy(context)
             new_context.state = state
             new_context.end_position = context.start_position + len(token)
+            new_context.position = new_context.end_position
             new_context.token = token
+            new_context.token_ahead = None
 
             result = self._call_shift_action(new_context)
 
@@ -520,7 +522,7 @@ class GLRParser(Parser):
                     self._trace_step_kill(old_head)
             return
 
-        result = self._call_reduce_action(production, subresults, context)
+        result = self._call_reduce_action(context, subresults)
 
         for head in chain(self.heads_for_reduce,
                           [self.finish_head] if self.finish_head else []):
@@ -619,7 +621,7 @@ class GLRParser(Parser):
                 elif debug:
                     h_print("Introducing token {}", repr(token), level=1)
 
-                head.context.token = token
+                head.context.token_ahead = token
                 self.heads_for_reduce.append(head)
             else:
                 if debug:
@@ -726,7 +728,7 @@ class GSSNode(object):
 
         self._hash = hash((self.context.state.state_id,
                            self.context.start_position,
-                           self.context.token))
+                           self.context.token_ahead))
 
     def less_empty(self, other):
         return (other.all_empty and not self.all_empty) or \
@@ -784,7 +786,7 @@ class GSSNode(object):
         fork and this is done by cloning stack head.
 
         """
-        if self.context.token == token:
+        if self.context.token_ahead == token:
             return self
         else:
             new_head = GSSNode(deepcopy(self.context),
@@ -801,7 +803,7 @@ class GSSNode(object):
         """
         return self.context.state.state_id == other.context.state.state_id \
             and self.context.start_position == other.context.start_position \
-            and self.context.token == other.context.token
+            and self.context.token_ahead == other.context.token_ahead
 
     def __ne__(self, other):
         return not self == other
@@ -812,8 +814,8 @@ class GSSNode(object):
                 self.context.state.state_id, self.context.state.symbol,
                 id(self),
                 self.context.start_position, self.context.end_position,
-                ", token ahead={}".format(self.context.token)
-                if self.context.token is not None else "",
+                ", token ahead={}".format(self.context.token_ahead)
+                if self.context.token_ahead is not None else "",
                 self.any_empty, self.all_empty, len(self.parents),
                 self.number_of_trees)
 

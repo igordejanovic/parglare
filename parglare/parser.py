@@ -170,7 +170,8 @@ class Parser(object):
                 a_print("Current state:", str(cur_state.state_id),
                         new_line=True)
 
-            if new_token or context.token.symbol not in cur_state.actions:
+            if new_token \
+               or context.token_ahead.symbol not in cur_state.actions:
                 # Try to recognize a new token in the input only after
                 # successful SHIFT operation, i.e. when the input position has
                 # moved. REDUCE operation doesn't move position. If the current
@@ -187,7 +188,7 @@ class Parser(object):
                                     "'{}'".format(context.layout_content),
                                     level=1)
 
-                    context.token = next_token(context)
+                    context.token_ahead = next_token(context)
 
                 except DisambiguationError as e:
                     raise ParseError(
@@ -199,9 +200,9 @@ class Parser(object):
                 h_print("Tokens expected:",
                         expected_symbols_str(cur_state.actions.keys()),
                         level=1)
-                h_print("Token ahead:", context.token, level=1)
+                h_print("Token ahead:", context.token_ahead, level=1)
 
-            actions = cur_state.actions.get(context.token.symbol)
+            actions = cur_state.actions.get(context.token_ahead.symbol)
 
             if not actions:
 
@@ -218,7 +219,7 @@ class Parser(object):
                         a_print("**Error found. Recovery initiated.**")
 
                     # No actions to execute. Try error recovery.
-                    context.token, error, context.position = \
+                    context.token_ahead, error, context.position = \
                         error_recovery(context, set(actions.keys()))
 
                     # The recovery may either decide to skip erroneous part
@@ -230,7 +231,7 @@ class Parser(object):
                             a_print("Error: ", error, level=1)
                         self.errors.append(error)
 
-                    if not context.token:
+                    if not context.token_ahead:
                         # If token is not recognized we are just droping
                         # current input and advancing position. Thus, stay in
                         # the same state and try to continue.
@@ -244,7 +245,7 @@ class Parser(object):
                         continue
 
                     else:
-                        actions = actions.get(context.token.symbol)
+                        actions = actions.get(context.token_ahead.symbol)
 
             if not actions:
                 raise ParseError(Location(context=context),
@@ -277,23 +278,27 @@ class Parser(object):
                     a_print("Shift:",
                             "{} \"{}\""
                             .format(cur_state.state_id,
-                                    context.token.value) + " at position " +
+                                    context.token_ahead.value)
+                            + " at position " +
                             str(pos_to_line_col(context.input_str,
                                                 context.position)), level=1)
 
-                context.start_position = context.position
-                context.token = context.token
-                context.symbol = context.token.symbol
-                context.end_position = \
-                    context.start_position + len(context.token.value)
+                new_context = copy(context)
+                new_context.start_position = context.position
+                new_context.token = context.token_ahead
+                new_context.token_ahead = None
+                new_context.symbol = new_context.token.symbol
+                new_context.end_position = \
+                    new_context.start_position + len(new_context.token.value)
 
-                result = self._call_shift_action(context)
+                result = self._call_shift_action(new_context)
 
                 # If in error recovery mode, get out.
                 self.current_error = None
 
-                state_stack.append(StackNode(copy(context), result))
-                context.position = context.end_position
+                state_stack.append(StackNode(new_context, result))
+                context.position = new_context.end_position
+                context.token_ahead = None
                 new_token = True
 
             elif act.action is REDUCE:
@@ -425,7 +430,6 @@ class Parser(object):
         context.parser = self
         context.position = context.start_position = \
             context.end_position = position
-        context.token = Token()
         context.layout_content = ''
 
         return context
@@ -561,7 +565,7 @@ class Parser(object):
         return dyn_actions
 
     def _call_dynamic_filter(self, context, action, subresults):
-        if (action is SHIFT and not context.token.symbol.dynamic)\
+        if (action is SHIFT and not context.token_ahead.symbol.dynamic)\
            or (action is REDUCE and not context.production.dynamic):
             return True
 
@@ -768,6 +772,7 @@ class Context:
                  'start_position',
                  'end_position',
                  'token',
+                 'token_ahead',
                  'production',
                  'symbol',
                  'layout_content',

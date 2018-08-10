@@ -42,9 +42,8 @@ def custom_disambiguation_filter(context, action, subresults):
         operations = []
         return
 
-    actions = context.state.actions[context.token.symbol]
-
-    shift_op = context.token.symbol
+    shift_op = context.token_ahead.symbol
+    actions = context.state.actions[shift_op]
 
     if action is SHIFT:
         if shift_op not in operations:
