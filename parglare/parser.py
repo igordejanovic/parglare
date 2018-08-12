@@ -287,7 +287,6 @@ class Parser(object):
                 new_context.start_position = context.position
                 new_context.token = context.token_ahead
                 new_context.token_ahead = None
-                new_context.symbol = new_context.token.symbol
                 new_context.end_position = \
                     new_context.start_position + len(new_context.token.value)
 
@@ -308,7 +307,6 @@ class Parser(object):
                     if len(actions) > 1:
                         act = actions[1]
                 context.production = production = act.prod
-                context.symbol = production.symbol
 
                 if debug:
                     a_print("Reducing", "by prod '{}'.".format(production),
@@ -360,7 +358,6 @@ class Parser(object):
             context.start_position = node.start_position
             context.end_position = node.end_position
             context.node = node
-            context.symbol = node.symbol
             context.layout_content = node.layout_content
 
         def inner_call_actions(node):
@@ -437,13 +434,13 @@ class Parser(object):
     def _skipws(self, context):
 
         in_len = len(context.input_str)
-        context.layout_content = ''
+        context.layout_content_ahead = ''
 
         if self.layout_parser:
             _, pos = self.layout_parser.parse(
                 context.input_str, context.position, context=copy(context))
             if pos > context.position:
-                context.layout_content = \
+                context.layout_content_ahead = \
                     context.input_str[context.position:pos]
                 context.position = pos
         elif self.ws:
@@ -456,12 +453,12 @@ class Parser(object):
                 raise ParserInitError(
                     "For parsing non-textual content please "
                     "set `ws` to `None`.")
-            context.layout_content = \
+            context.layout_content_ahead = \
                 context.input_str[old_pos:context.position]
 
         if self.debug:
-            content = context.layout_content
-            if type(context.layout_content) is text:
+            content = context.layout_content_ahead
+            if type(context.layout_content_ahead) is text:
                 content = content.replace("\n", "\\n")
             h_print("Skipping whitespaces:",
                     "'{}'".format(content), level=1)
@@ -758,31 +755,46 @@ class Context:
         file_name(str):
         position(int):
         start_position, end_position(int):
-        layout_content(str):
-        token(Token): Token recognized ahead at position in given
-             state. Used with nodes created during reduction. Newly shift
-             created nodes will have token set to None and will do
-             scanning to obtain possible tokens ahead.
+        layout_content(str): Layout content preceeding current token.
+        layout_content_ahead(str): Layout content preceeding token_ahead.
+        token(Token): Token for shift operation.
+        token_ahead(Token): Token recognized ahead at position in given
+             state.
         extra(anything): Used for additional state maintained by the user.
     """
-    __slots__ = ['state',
-                 'file_name',
-                 'input_str',
-                 'position',
-                 'start_position',
-                 'end_position',
-                 'token',
-                 'token_ahead',
-                 'production',
-                 'symbol',
-                 'layout_content',
-                 'node',
-                 'parser',
-                 'extra']
 
-    def __init__(self):
-        for attr in self.__slots__:
-            setattr(self, attr, None)
+    __local = ['state',
+               'position',
+               'start_position',
+               'end_position',
+               'token',
+               'token_ahead',
+               'production',
+               'layout_content',
+               'layout_content_ahead',
+               'node']
+    __t = ['file_name',
+           'input_str',
+           'parser',
+           'extra']
+
+    __slots__ = __local + __t
+
+    def __init__(self, **kwargs):
+        context = kwargs.get('context', None)
+        if context:
+            self.extra = deepcopy(context.extra)
+            self.file_name = context.file_name
+            self.input_str = context.input_str
+            self.parser = context.parser
+        else:
+            self.extra = None
+            self.file_name = None
+            self.input_str = None
+            self.parser = None
+
+        for attr in self.__local:
+            setattr(self, attr, kwargs.get(attr, None))
 
     def __deepcopy__(self, memo):
         new_inst = type(self)()
@@ -927,7 +939,7 @@ EOF_token = Token(EOF)
 
 def treebuild_shift_action(context, value):
     return NodeTerm(context.start_position, context.end_position,
-                    context.symbol, value, context.layout_content)
+                    context.token.symbol, value, context.layout_content)
 
 
 def treebuild_reduce_action(context, nodes):

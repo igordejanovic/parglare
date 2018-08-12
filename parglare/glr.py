@@ -201,10 +201,8 @@ class GLRParser(Parser):
                             self.finish_head = head
                         continue
 
-                symbol = token.symbol
-                symbol_actions = actions.get(symbol, [])
-
                 # Do all reductions for this head
+                symbol_actions = actions.get(token.symbol, [])
                 reduce_actions = [a for a in symbol_actions
                                   if a.action is REDUCE]
                 for action in reduce_actions:
@@ -228,7 +226,6 @@ class GLRParser(Parser):
                             "lookahead token:", token, level=1, new_line=True)
 
             else:
-                context = deepcopy(context)
                 self._skipws(context)
                 # if position > self.last_position:
                 #     self.last_position = position
@@ -248,11 +245,8 @@ class GLRParser(Parser):
                 else:
 
                     for idx, token in enumerate(tokens):
-                        context.token_ahead = token
                         reduce_head = head.for_token(token, context)
                         self.heads_for_reduce.append(reduce_head)
-                        if idx < len(tokens) - 1:
-                            context = deepcopy(context)
                     continue
 
     def _do_shifts(self):
@@ -313,22 +307,28 @@ class GLRParser(Parser):
         prod_len = len(production.rhs)
         roots = []
         if not prod_len:
-            new_context = deepcopy(context)
-            new_context.production = production
-            new_context.end_position = context.start_position
-            new_context.state = context.state.gotos[production.symbol]
+            context = Context(
+                state=context.state.gotos[production.symbol],
+                production=production,
+                start_position=context.start_position,
+                end_position=context.start_position,
+                position=context.position,
+                layout_content=context.layout_content,
+                token_ahead=context.token_ahead,
+                layout_content_ahead=context.layout_content_ahead,
+                context=context)
+
             if self.dynamic_filter and \
-               not self._call_dynamic_filter(new_context, REDUCE, []):
+               not self._call_dynamic_filter(context, REDUCE, []):
                     pass
             else:
-                new_head = GSSNode(new_context)
+                new_head = GSSNode(context)
                 self.merge_create_head(new_head, head, head, [], True, True)
         else:
             # Find roots of new heads by going backwards for prod_len steps
             # following all possible paths.
             # Collect subresults along the way to be used with semantic actions
-            to_process = [(head, head.context.start_position, [], prod_len,
-                           False, True)]
+            to_process = [(head, context, [], prod_len, False, True)]
             if debug:
                 h_print("Calculate reduction paths of length {}, "
                         "choose only non-empty if possible:"
@@ -340,7 +340,7 @@ class GLRParser(Parser):
                                            head.all_empty, prod_len), level=2)
             roots = []
             while to_process:
-                node, start_position, subresults, length, path_has_empty,\
+                node, first_head_context, subresults, length, path_has_empty,\
                     path_all_empty = to_process.pop()
                 length = length - 1
                 if debug:
@@ -361,10 +361,10 @@ class GLRParser(Parser):
                     parent_subres = [res] + subresults
                     if length:
                         to_process.append(
-                            (parent, parent_subres, length,
+                            (parent, node.context, parent_subres, length,
                              path_has_empty, path_all_empty))
                     else:
-                        roots.append((parent, start_position,
+                        roots.append((parent, node.context,
                                       parent_subres, path_has_empty,
                                       path_all_empty))
 
@@ -386,25 +386,29 @@ class GLRParser(Parser):
                     h_print("{}.".format(idx+1), r[0], level=2)
 
             # Create new heads.
-            for idx, (root, start_position, subresults, any_empty, all_empty) \
-                    in enumerate(roots):
+            for idx, (root, first_head_context, subresults,
+                      any_empty, all_empty) in enumerate(roots):
                 if debug:
                     h_print("Reducing path {}:".format(idx + 1),
                             level=1, new_line=True)
 
-                new_context = deepcopy(context)
-                new_context.production = production
-                new_context.state = \
-                    root.context.state.gotos[production.symbol]
-                new_context.start_position = start_position
-                new_context.position = new_context.end_position
+                context = Context(
+                    state=root.context.state.gotos[production.symbol],
+                    production=production,
+                    start_position=first_head_context.start_position,
+                    end_position=context.end_position,
+                    position=context.position,
+                    layout_content=first_head_context.layout_content,
+                    token_ahead=context.token_ahead,
+                    layout_content_ahead=context.layout_content_ahead,
+                    context=context)
 
                 if self.dynamic_filter and \
-                   not self._call_dynamic_filter(new_context, REDUCE,
+                   not self._call_dynamic_filter(context, REDUCE,
                                                  subresults):
                         pass
                 else:
-                    new_head = GSSNode(new_context)
+                    new_head = GSSNode(context)
                     self.merge_create_head(new_head, head, root, subresults,
                                            any_empty, all_empty)
                 if debug:
@@ -447,12 +451,14 @@ class GLRParser(Parser):
                         level=1, new_line=True)
                 self.debug_step += 1
 
-            context = deepcopy(context)
-            context.state = state
-            context.end_position = context.start_position + len(token)
-            context.token = token
-            context.symbol = token.symbol
-            context.token_ahead = None
+            position = context.position + len(token)
+            context = Context(state=state,
+                              token=token,
+                              start_position=context.position,
+                              end_position=position,
+                              layout_content=context.layout_content_ahead,
+                              position=position,
+                              context=context)
 
             result = self._call_shift_action(context)
 
