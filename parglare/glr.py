@@ -91,7 +91,7 @@ class GLRParser(Parser):
 
         self.context = context = self._get_init_context(context, input_str,
                                                         position, file_name)
-        assert type(context) is Context
+        assert isinstance(context, Context)
 
         self._init_dynamic_disambiguation(context)
         self._skipws(context)

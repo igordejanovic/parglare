@@ -156,7 +156,7 @@ class Parser(object):
 
         context = self._get_init_context(context, input_str, position,
                                          file_name)
-        assert type(context) is Context
+        assert isinstance(context, Context)
 
         self._init_dynamic_disambiguation(context)
         self.state_stack = state_stack = [StackNode(context, None)]
@@ -358,7 +358,6 @@ class Parser(object):
         Calls semantic actions for the given tree node.
         """
         self.context = context = context if context else Context()
-        assert type(context) is Context
         context.parser = self
 
         def set_context(context, node):
@@ -809,15 +808,15 @@ class Context:
 
     @property
     def symbol(self):
-        if self.token:
+        if self.token is not None:
             return self.token.symbol
-        elif self.production:
+        elif self.production is not None:
             return self.production.symbol
-        elif self.node:
+        elif self.node is not None:
             return self.node.symbol
 
     def __deepcopy__(self, memo):
-        new_inst = type(self)()
+        new_inst = self.__class__()
         for attr in self.__slots__:
             setattr(new_inst, attr, getattr(self, attr))
         new_inst.extra = deepcopy(self.extra, memo)
