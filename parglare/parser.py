@@ -499,13 +499,12 @@ class Parser(object):
             tokens = []
             if position < in_len:
                 if self.custom_lexical_disambiguation:
-                    symbols = actions.keys()
 
                     def get_tokens():
                         return self._token_recognition(context)
 
                     tokens = self.custom_lexical_disambiguation(
-                        symbols, input_str, position, get_tokens)
+                        context, get_tokens)
                 else:
                     tokens = self._token_recognition(context)
             if not tokens:
