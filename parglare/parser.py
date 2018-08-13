@@ -788,23 +788,31 @@ class Context:
 
     __slots__ = __local + __t
 
-    def __init__(self, **kwargs):
-        context = kwargs.pop('context', None)
+    def __init__(self, state=None, position=None, start_position=None,
+                 end_position=None, token=None, token_ahead=None,
+                 production=None, layout_content=None,
+                 layout_content_ahead=None, node=None, file_name=None,
+                 input_str=None, parser=None, extra=None, context=None):
+        self.state = state
+        self.position = position
+        self.start_position = start_position
+        self.end_position = end_position
+        self.token = token
+        self.token_ahead = token_ahead
+        self.production = production
+        self.layout_content = layout_content
+        self.layout_content_ahead = layout_content_ahead
+        self.node = node
         if context:
             self.extra = deepcopy(context.extra)
             self.file_name = context.file_name
             self.input_str = context.input_str
             self.parser = context.parser
         else:
-            self.extra = None
-            self.file_name = None
-            self.input_str = None
-            self.parser = None
-
-        for attr in self.__local:
-            setattr(self, attr, kwargs.get(attr, None))
-        for attr_name, attr_value in kwargs.items():
-            setattr(self, attr_name, attr_value)
+            self.extra = extra
+            self.file_name = file_name
+            self.input_str = input_str
+            self.parser = parser
 
     @property
     def symbol(self):
