@@ -654,9 +654,9 @@ def first(grammar):
         "grammar parameter should be Grammar instance."
 
     first_sets = {}
-    for t in grammar.terminals:
+    for t in grammar.terminals.values():
         first_sets[t] = set([t])
-    for nt in grammar.nonterminals:
+    for nt in grammar.nonterminals.values():
         first_sets[nt] = set()
 
     additions = True
@@ -698,13 +698,13 @@ def follow(grammar, first_sets=None):
         first_sets = first(grammar)
 
     follow_sets = {}
-    for symbol in grammar.nonterminals:
+    for symbol in grammar.nonterminals.values():
         follow_sets[symbol] = set()
 
     additions = True
     while additions:
         additions = False
-        for symbol in grammar.nonterminals:
+        for symbol in grammar.nonterminals.values():
             for p in grammar.productions:
                 for idx, s in enumerate(p.rhs):
                     if s == symbol:

@@ -452,7 +452,7 @@ class PGFile(object):
                  file_path=None, grammar=None, recognizers=None,
                  imported_with=None):
         self.productions = productions
-        self.terminals = set(terminals) if terminals is not None else set()
+        self.terminals = terminals
         self.classes = classes if classes else {}
         self.grammar = self if grammar is None else grammar
 
@@ -492,12 +492,11 @@ class PGFile(object):
         """
         nonterminals_by_name = {}
         terminals_by_name = {}
-        terminals_by_value = {}
+        terminals_by_str_rec = {}
 
         # Check terminal uniqueness in both name and string recognition
         # and collect all terminals from explicit definitions.
         for terminal in self.terminals:
-            terminal.imported_with = self.imported_with
             if terminal.name in terminals_by_name:
                 raise GrammarError(
                     location=terminal.location,
@@ -505,22 +504,25 @@ class PGFile(object):
                             .format(terminal.name))
             if isinstance(terminal.recognizer, StringRecognizer):
                 rec = terminal.recognizer
-                if rec.value in terminals_by_value:
+                if rec.value in terminals_by_str_rec:
                     raise GrammarError(
                         location=terminal.location,
                         message='Terminals "{}" and "{}" match '
                         'the same string.'
                         .format(terminal.name,
-                                terminals_by_value[rec.value].name))
-                terminals_by_value[rec.value] = terminal
+                                terminals_by_str_rec[rec.value].name))
+                terminals_by_str_rec[rec.value] = terminal
             terminals_by_name[terminal.name] = terminal
+
+        self.terminals = terminals_by_name
+        self.terminals_by_str_rec = terminals_by_str_rec
 
         # Collect non-terminals
         for production in self.productions:
             symbol = production.symbol
             symbol.imported_with = self.imported_with
             # Check that there is no terminal defined by the same name.
-            if symbol.name in terminals_by_name:
+            if symbol.name in self.terminals:
                 raise GrammarError(
                     location=symbol.location,
                     message='Rule "{}" already defined as terminal'
@@ -543,8 +545,10 @@ class PGFile(object):
                         message='Multiple different grammar actions '
                         'for rule "{}".'.format(new_symbol.name))
 
-        nonterminals_by_name.update(terminals_by_name)
-        self.symbols_by_name = nonterminals_by_name
+        self.nonterminals = nonterminals_by_name
+        self.symbols_by_name = dict(nonterminals_by_name)
+        self.symbols_by_name.update(self.terminals)
+
         # Add special terminals
         self.symbols_by_name['EMPTY'] = EMPTY
         self.symbols_by_name['EOF'] = EOF
@@ -862,22 +866,25 @@ class Grammar(PGFile):
 
     def _add_all_symbols_productions(self):
 
-        self.nonterminals = set()
+        self.nonterminals = {}
         for prod in self.productions:
-            self.nonterminals.add(prod.symbol)
-        self.terminals.update([EMPTY, EOF, STOP])
+            self.nonterminals[prod.symbol.fqn] = prod.symbol
+        self.terminals.update([(s.name, s) for s in (EMPTY, EOF, STOP)])
 
         def add_productions(productions):
             for production in productions:
                 symbol = production.symbol
-                if symbol not in self.nonterminals:
-                    self.nonterminals.add(symbol)
-                for rhs_elem in production.rhs:
+                if symbol.fqn not in self.nonterminals:
+                    self.nonterminals[symbol.fqn] = symbol
+                for idx, rhs_elem in enumerate(production.rhs):
                     if isinstance(rhs_elem, Terminal):
-                        if rhs_elem not in self.terminals:
-                            self.terminals.add(rhs_elem)
+                        if rhs_elem.fqn not in self.terminals:
+                            self.terminals[rhs_elem.fqn] = rhs_elem
+                        else:
+                            # Unify terminals
+                            production.rhs[idx] = self.terminals[rhs_elem.fqn]
                     elif isinstance(rhs_elem, NonTerminal):
-                        if rhs_elem not in self.nonterminals:
+                        if rhs_elem.fqn not in self.nonterminals:
                             self.productions.extend(rhs_elem.productions)
                             add_productions(rhs_elem.productions)
                     else:
@@ -916,7 +923,7 @@ class Grammar(PGFile):
 
         # Change each string recognizer corresponding to the KEYWORD
         # regex by the regex recognizer that match on word boundaries.
-        for term in self.terminals:
+        for term in self.terminals.values():
             if isinstance(term.recognizer, StringRecognizer):
                 match = keyword_rec(term.recognizer.value, 0)
                 if match == term.recognizer.value:
@@ -1008,7 +1015,7 @@ class Grammar(PGFile):
                 symbol.action = symbol.grammar_action
 
     def _connect_override_recognizers(self):
-        for term in self.terminals:
+        for term in self.terminals.values():
             if self.recognizers and term.fqn in self.recognizers:
                 term.recognizer = self.recognizers[term.fqn]
             else:
@@ -1028,15 +1035,11 @@ class Grammar(PGFile):
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."
-        for t in self.terminals:
-            if t.name == name or t.fqn == name:
-                return t
+        return self.terminals.get(name)
 
     def get_nonterminal(self, name):
         "Returns non-terminal with the given fully qualified name or name."
-        for n in self.nonterminals:
-            if n.name == name or n.fqn == name:
-                return n
+        return self.nonterminals.get(name)
 
     def get_symbol(self, name):
         "Returns grammar symbol with the given name."
@@ -1046,7 +1049,8 @@ class Grammar(PGFile):
         return s
 
     def __iter__(self):
-        return (s for s in itertools.chain(self.nonterminals, self.terminals)
+        return (s for s in itertools.chain(self.nonterminals.values(),
+                                           self.terminals.values())
                 if s not in [AUGSYMBOL, STOP])
 
     def get_production_id(self, name):
@@ -1755,9 +1759,7 @@ def act_gsymbol_string_recognizer(context, nodes):
     if terminal_ref.name not in context.extra.inline_terminals:
         check_name(context, terminal_ref.name)
         context.extra.inline_terminals[terminal_ref.name] = \
-            Terminal(terminal_ref.name, recognizer,
-                     location=Location(context),
-                     imported_with=context.extra.imported_with)
+            Terminal(terminal_ref.name, recognizer, location=Location(context))
 
     return terminal_ref
 
