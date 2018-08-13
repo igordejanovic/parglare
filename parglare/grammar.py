@@ -3,8 +3,8 @@ from __future__ import unicode_literals, print_function
 from os import path
 import sys
 import re
-import inspect
 import itertools
+from copy import copy
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError, ParserInitError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
@@ -19,11 +19,13 @@ else:
 
 try:
     from inspect import signature
+
     def get_number_of_params(func):
         s = signature(func)
         return len(s.parameters)
 except ImportError:
     import inspect
+
     def get_number_of_params(func_or_obj):
         if inspect.isfunction(func_or_obj):
             return len(inspect.getargspec(func_or_obj).args)
@@ -160,6 +162,7 @@ class Terminal(GrammarSymbol):
         else:
             value._pg_context = False
         self._recognizer = value
+
 
 class Reference(object):
     """
@@ -437,17 +440,20 @@ class PGFile(object):
 
     productions (list of Production): Local productions defined in this file.
     terminals (list of Terminal):
+    classes (dict of ParglareClass): Dynamically created classes. Used by
+        obj action.
     imports (dict): Mapping imported module/file local name to PGFile object.
     file_path (str): A full canonic path to the .pg file.
     grammar (PGFile): A root/grammar file.
     recognizers (dict of callables): A dict of Python callables used as a
         terminal recognizers.
     """
-    def __init__(self, productions, terminals=None, imports=None,
+    def __init__(self, productions, terminals=None, classes=None, imports=None,
                  file_path=None, grammar=None, recognizers=None,
                  imported_with=None):
         self.productions = productions
         self.terminals = set(terminals) if terminals is not None else set()
+        self.classes = classes if classes else {}
         self.grammar = self if grammar is None else grammar
 
         self.file_path = path.realpath(file_path) if file_path else None
@@ -791,11 +797,11 @@ class Grammar(PGFile):
 
     """
 
-    def __init__(self, productions=None, terminals=None, imports=None,
-                 file_path=None, recognizers=None, start_symbol=None,
-                 _no_check_recognizers=False, re_flags=re.MULTILINE,
-                 ignore_case=False, debug=False, debug_parse=False,
-                 debug_colors=False):
+    def __init__(self, productions=None, terminals=None,
+                 classes=None, imports=None, file_path=None, recognizers=None,
+                 start_symbol=None, _no_check_recognizers=False,
+                 re_flags=re.MULTILINE, ignore_case=False, debug=False,
+                 debug_parse=False, debug_colors=False):
         """
         Grammar constructor is not meant to be called directly by the user.
         See `from_str` and `from_file` static methods instead.
@@ -810,6 +816,7 @@ class Grammar(PGFile):
 
         super(Grammar, self).__init__(productions=productions,
                                       terminals=terminals,
+                                      classes=classes,
                                       imports=imports,
                                       file_path=file_path,
                                       grammar=self,
@@ -1073,17 +1080,17 @@ class Grammar(PGFile):
         extra.imported_with = None
         extra.grammar = None
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
-        imports, productions, terminals = \
+        imports, productions, terminals, classes = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
                                                     context=context)
         g = Grammar(productions=productions,
                     terminals=terminals,
+                    classes=classes,
                     imports=imports,
                     recognizers=recognizers,
                     file_path=what_to_parse
                     if parse_fun_name == 'parse_file' else None,
                     _no_check_recognizers=_no_check_recognizers)
-        g.classes = context.extra.classes
         termui.colors = debug_colors
         if debug:
             g.print_debug()
@@ -1149,16 +1156,19 @@ class PGFileImport(object):
                 self.pgfile = self.grammar.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
-                self.context.extra.inline_terminals = {}
-                self.context.extra.imported_with = self
-                self.context.file_name = self.file_path
-                imports, productions, terminals = \
+                from .parser import Context
+                context = Context(extra=self.context.extra,
+                                  file_name=self.file_path)
+                context.extra.inline_terminals = {}
+                context.extra.imported_with = self
+                imports, productions, terminals, classes = \
                     get_grammar_parser(
                         self.context.extra.debug,
                         self.context.extra.debug_colors).parse_file(
-                            self.file_path, context=self.context)
+                            self.file_path, context=context)
                 self.pgfile = PGFile(productions=productions,
                                      terminals=terminals,
+                                     classes=classes,
                                      imports=imports,
                                      grammar=self.grammar,
                                      imported_with=self,
@@ -1247,7 +1257,9 @@ def check_name(context, name):
 
 
 class GrammarContext:
-    pass
+    def __deepcopy__(self, memo):
+        # Use shallow copy for grammar context
+        return copy(self)
 
 
 # Grammar for grammars
@@ -1479,7 +1491,7 @@ def act_pgfile(context, nodes):
     for terminal in context.extra.inline_terminals.values():
         terminals.append(terminal)
 
-    return [imports, productions, terminals]
+    return [imports, productions, terminals, context.extra.classes]
 
 
 def act_import(context, nodes):

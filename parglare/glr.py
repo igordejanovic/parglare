@@ -35,7 +35,7 @@ class GLRParser(Parser):
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, in_layout=False, position=False,
+                 tables=LALR, in_layout=False, return_position=False,
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
                  custom_lexical_disambiguation=None):
@@ -54,7 +54,8 @@ class GLRParser(Parser):
             debug_colors=debug_colors, debug_layout=debug_layout, ws=ws,
             build_tree=build_tree,
             call_actions_during_tree_build=call_actions_during_tree_build,
-            tables=tables, in_layout=in_layout, position=position,
+            tables=tables, in_layout=in_layout,
+            return_position=return_position,
             prefer_shifts=prefer_shifts,
             prefer_shifts_over_empty=prefer_shifts_over_empty,
             error_recovery=error_recovery, dynamic_filter=dynamic_filter,
@@ -113,7 +114,7 @@ class GLRParser(Parser):
             # and we haven't found any final parse, do recovery.
             if self.error_recovery:
                 if not self.heads_for_reduce and not self.finish_head:
-                    self._do_recovery(context)
+                    self._do_recovery()
                 else:
                     # Get out from error recovery mode.
                     self.current_error = None
@@ -196,7 +197,7 @@ class GLRParser(Parser):
                             if self.debug_trace:
                                 self._trace_step_finish(head)
                         if self.finish_head:
-                            self.finish_head.merge(head)
+                            self.finish_head.merge_head(head, self)
                         else:
                             self.finish_head = head
                         continue
@@ -275,7 +276,8 @@ class GLRParser(Parser):
             self.context = context = head.context
 
             if debug:
-                self._debug_context(context, expected_symbols=None)
+                self._debug_context(context, context.token_ahead,
+                                    expected_symbols=None)
 
             # First action should be SHIFT if it is possible to shift by this
             # token.
@@ -426,8 +428,8 @@ class GLRParser(Parser):
         debug = self.debug
         token = context.token_ahead
 
-        shifted_head = last_shifts.get((context.state.state_id,
-                                        context.start_position, token.symbol),
+        shifted_head = last_shifts.get((state.state_id,
+                                        context.position, token.symbol),
                                        None)
         if shifted_head:
             # If this token has already been shifted connect
@@ -446,7 +448,7 @@ class GLRParser(Parser):
                         "\"{}\" to state {} "
                         .format(token.value, context.state.state_id) +
                         "at position " +
-                        str(pos_to_line_col(self.input_str,
+                        str(pos_to_line_col(context.input_str,
                                             context.start_position)),
                         level=1, new_line=True)
                 self.debug_step += 1
@@ -564,15 +566,16 @@ class GLRParser(Parser):
 
         return tokens
 
-    def _do_recovery(self, context):
+    def _do_recovery(self):
         """If recovery is enabled, does error recovery for the heads in
         heads_for_recovery.
 
         """
         debug = self.debug
-        input_str = context.input_str
         for head in self.heads_for_recovery:
-            symbols = head.context.state.actions.keys()
+            context = head.context
+            input_str = context.input_str
+            symbols = context.state.actions.keys()
             if debug:
                 a_print("**Error found. ",
                         "Recovery initiated for head {}.".format(head),
@@ -648,7 +651,7 @@ class GLRParser(Parser):
         layout_content = context.layout_content
         h_print("Position:",
                 pos_to_line_col(input_str, position), level=1)
-        h_print("Context:", position_context(input_str, position), level=1)
+        h_print("Context:", position_context(context), level=1)
         lc = layout_content.replace("\n", "\\n") \
             if type(layout_content) is str else layout_content
         if layout_content:
@@ -819,8 +822,8 @@ class GSSNode(object):
         return not self == other
 
     def __str__(self):
-        return "state={}:{}, id={}, pos={}, endpos={}{}, empty=[{},{}], " \
-            "parents={}, trees={}".format(
+        return "<state={}:{}, id={}, pos={}, endpos={}{}, empty=[{},{}], " \
+            "parents={}, trees={}>".format(
                 self.context.state.state_id, self.context.state.symbol,
                 id(self),
                 self.context.start_position, self.context.end_position,

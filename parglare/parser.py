@@ -28,7 +28,7 @@ class Parser(object):
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, in_layout=False, position=False,
+                 tables=LALR, in_layout=False, return_position=False,
                  prefer_shifts=True, prefer_shifts_over_empty=True,
                  error_recovery=False, dynamic_filter=None,
                  custom_lexical_disambiguation=None):
@@ -49,14 +49,14 @@ class Parser(object):
                     start_production=layout_prod,
                     actions=layout_actions,
                     ws=None, in_layout=True,
-                    position=True,
+                    return_position=True,
                     prefer_shifts=True,
                     prefer_shifts_over_empty=True,
                     debug=debug_layout)
 
         self.in_layout = in_layout
         self.ws = ws
-        self.position = position
+        self.return_position = return_position
         self.debug = debug
         self.debug_trace = debug_trace
         self.debug_colors = debug_colors
@@ -160,27 +160,15 @@ class Parser(object):
 
         self._init_dynamic_disambiguation(context)
         self.state_stack = state_stack = [StackNode(context, None)]
-        context = copy(context)
-
-        new_token = True
 
         while True:
-            context.state = cur_state = state_stack[-1].context.state
+            cur_state = state_stack[-1].context.state
             if debug:
                 a_print("Current state:", str(cur_state.state_id),
                         new_line=True)
 
-            if new_token \
-               or context.token_ahead.symbol not in cur_state.actions:
-                # Try to recognize a new token in the input only after
-                # successful SHIFT operation, i.e. when the input position has
-                # moved. REDUCE operation doesn't move position. If the current
-                # ntok_sym is not in the current actions then try to find new
-                # token. This could happen if old token is not available in the
-                # actions of the current state but EMPTY is and will match
-                # always leading to reduction.
+            if context.token_ahead is None:
                 try:
-
                     if not self.in_layout:
                         self._skipws(context)
                         if self.debug:
@@ -214,18 +202,24 @@ class Parser(object):
                         e = self.current_error
                         context.start_position = e.position
                         raise ParseError(Location(context),
-                                         expected_message(actions.keys()))
+                                         expected_message(e.expected_symbols))
                     if debug:
                         a_print("**Error found. Recovery initiated.**")
 
                     # No actions to execute. Try error recovery.
-                    context.token_ahead, error, context.position = \
-                        error_recovery(context, set(actions.keys()))
+                    token_ahead, error, position = \
+                        error_recovery(context,
+                                       set(context.state.actions.keys()))
 
                     # The recovery may either decide to skip erroneous part
                     # of the input and resume at the place that can
                     # continue or it might decide to fill in/replace
                     # missing/invalid tokens.
+                    assert token_ahead is None or position is None
+                    if position:
+                        context.position = position
+                    context.token_ahead = token_ahead
+
                     if error:
                         if debug:
                             a_print("Error: ", error, level=1)
@@ -241,13 +235,15 @@ class Parser(object):
                                                     context.position),
                                     level=1)
 
-                        new_token = True
                         continue
 
                     else:
+                        actions = cur_state.actions.get(
+                            context.token_ahead.symbol)
                         actions = actions.get(context.token_ahead.symbol)
 
             if not actions:
+                context.start_position = context.position
                 raise ParseError(Location(context=context),
                                  expected_message(cur_state.actions.keys()))
 
@@ -272,7 +268,7 @@ class Parser(object):
             act = actions[0]
 
             if act.action is SHIFT:
-                context.state = cur_state = act.state
+                cur_state = act.state
 
                 if debug:
                     a_print("Shift:",
@@ -283,22 +279,22 @@ class Parser(object):
                             str(pos_to_line_col(context.input_str,
                                                 context.position)), level=1)
 
-                new_context = copy(context)
-                new_context.start_position = context.position
-                new_context.token = context.token_ahead
-                new_context.token_ahead = None
-                new_context.end_position = \
-                    new_context.start_position + len(new_context.token.value)
+                new_position = context.position \
+                    + len(context.token_ahead.value)
+                context = Context(
+                    state=act.state,
+                    start_position=context.position,
+                    end_position=new_position,
+                    token=context.token_ahead,
+                    layout_content=context.layout_content_ahead,
+                    position=new_position,
+                    context=context)
 
-                result = self._call_shift_action(new_context)
+                result = self._call_shift_action(context)
 
                 # If in error recovery mode, get out.
                 self.current_error = None
-
-                state_stack.append(StackNode(new_context, result))
-                context.position = new_context.end_position
-                context.token_ahead = None
-                new_token = True
+                state_stack.append(StackNode(context, result))
 
             elif act.action is REDUCE:
                 # if this is EMPTY reduction try to take another if
@@ -313,35 +309,46 @@ class Parser(object):
                             level=1)
 
                 r_length = len(production.rhs)
+                top_stack_context = state_stack[-1].context
                 if r_length:
-                    top_stack_context = state_stack[-1].context
                     start_reduction_context = state_stack[-r_length].context
-                    context.end_position = top_stack_context.end_position
-                    context.start_position = \
-                        start_reduction_context.start_position
-                    context.layout_content = \
-                        start_reduction_context.layout_content
                     subresults = [x.result for x in state_stack[-r_length:]]
                     del state_stack[-r_length:]
-                    context.state = cur_state = state_stack[-1].context.state
+                    cur_state = state_stack[-1].context.state.gotos[
+                        production.symbol]
+                    context = Context(
+                        state=cur_state,
+                        start_position=start_reduction_context.start_position,
+                        end_position=top_stack_context.end_position,
+                        position=top_stack_context.position,
+                        production=production,
+                        token_ahead=top_stack_context.token_ahead,
+                        layout_content=start_reduction_context.layout_content,
+                        layout_content_ahead=top_stack_context.layout_content_ahead,  # noqa
+                        context=context)
                 else:
                     subresults = []
-                    context.end_position = position
-                    context.start_position = position
-                    context.layout_content = ''
+                    cur_state = cur_state.gotos[production.symbol]
+                    context = Context(
+                        state=cur_state,
+                        start_position=context.end_position,
+                        end_position=context.end_position,
+                        position=context.position,
+                        production=production,
+                        token_ahead=top_stack_context.token_ahead,
+                        layout_content='',
+                        layout_content_ahead=top_stack_context.layout_content_ahead,  # noqa
+                        context=context)
 
                 # Calling reduce action
                 result = self._call_reduce_action(context, subresults)
-
-                context.state = cur_state = cur_state.gotos[production.symbol]
-                state_stack.append(StackNode(copy(context), result))
-                new_token = False
+                state_stack.append(StackNode(context, result))
 
             elif act.action is ACCEPT:
                 if debug:
                     a_print("SUCCESS!!!")
                 assert len(state_stack) == 2
-                if self.position:
+                if self.return_position:
                     return state_stack[1].result, context.position
                 else:
                     return state_stack[1].result
@@ -358,6 +365,8 @@ class Parser(object):
             context.start_position = node.start_position
             context.end_position = node.end_position
             context.node = node
+            context.production = None
+            context.token = None
             context.layout_content = node.layout_content
 
         def inner_call_actions(node):
@@ -607,7 +616,7 @@ class Parser(object):
             if self.call_actions_during_tree_build and sem_action:
                 sem_action(context, token.value)
 
-            return treebuild_shift_action(context, token.value)
+            return treebuild_shift_action(context)
 
         if sem_action:
             result = sem_action(context, token.value)
@@ -741,7 +750,7 @@ class Parser(object):
         if self.current_error:
             self.current_error.length = context.position + 1 \
                                          - self.current_error.position
-            return None, context.position + 1, None
+            return None, None, context.position + 1
         else:
             error = Error(context, 1, expected_symbols=expected_symbols)
             self.current_error = error
@@ -781,7 +790,7 @@ class Context:
     __slots__ = __local + __t
 
     def __init__(self, **kwargs):
-        context = kwargs.get('context', None)
+        context = kwargs.pop('context', None)
         if context:
             self.extra = deepcopy(context.extra)
             self.file_name = context.file_name
@@ -795,6 +804,17 @@ class Context:
 
         for attr in self.__local:
             setattr(self, attr, kwargs.get(attr, None))
+        for attr_name, attr_value in kwargs.items():
+            setattr(self, attr_name, attr_value)
+
+    @property
+    def symbol(self):
+        if self.token:
+            return self.token.symbol
+        elif self.production:
+            return self.production.symbol
+        elif self.node:
+            return self.node.symbol
 
     def __deepcopy__(self, memo):
         new_inst = type(self)()
@@ -820,8 +840,9 @@ class StackNode:
         self.result = result
 
     def __repr__(self):
-        return "<StackNode({}, pos={})>".format(repr(self.context.state),
-                                                self.context.position)
+        return "<StackNode({}, pos=({}-{}))>"\
+            .format(repr(self.context.state),
+                    self.context.start_position, self.context.end_position)
 
 
 class Node(object):
@@ -883,15 +904,22 @@ class NodeNonTerm(Node):
 
 
 class NodeTerm(Node):
-    __slots__ = ['start_position', 'end_position', 'symbol', 'value']
+    __slots__ = ['start_position', 'end_position', 'token']
 
-    def __init__(self, start_position, end_position, symbol, value,
+    def __init__(self, start_position, end_position, token,
                  layout_content=None):
         super(NodeTerm, self).__init__(start_position,
                                        end_position,
                                        layout_content=layout_content)
-        self.value = value
-        self.symbol = symbol
+        self.token = token
+
+    @property
+    def symbol(self):
+        return self.token.symbol
+
+    @property
+    def value(self):
+        return self.token.value
 
     def tree_str(self, depth=0):
         return '{}[{}->{}, "{}"]'.format(self.symbol,
@@ -937,9 +965,9 @@ EMPTY_token = Token(EMPTY)
 EOF_token = Token(EOF)
 
 
-def treebuild_shift_action(context, value):
+def treebuild_shift_action(context):
     return NodeTerm(context.start_position, context.end_position,
-                    context.token.symbol, value, context.layout_content)
+                    context.token, context.layout_content)
 
 
 def treebuild_reduce_action(context, nodes):

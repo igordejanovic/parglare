@@ -67,11 +67,13 @@ def test_glr_recovery_custom_new_position():
     """
     Test that custom recovery that increment position works.
     """
-    error = Error(0, 1, message="Error")
+    errors = []
 
-    def custom_recovery(parser, input_str, position, symbols):
+    def custom_recovery(context, symbols):
         # This recovery will just skip over erroneous part of input '& 89'.
-        return error, position + 4, None
+        error = Error(context, 1, message="Error")
+        errors.append(error)
+        return None, error, context.position + 4
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery,
                        debug=True)
@@ -79,7 +81,7 @@ def test_glr_recovery_custom_new_position():
     results = parser.parse('1 + 5 & 89 - 2')
 
     assert len(parser.errors) == 1
-    assert parser.errors[0] is error
+    assert parser.errors[0] is errors[0]
     assert len(results) == 2
     assert len(set(results)) == 1
     # Calculate results should be '1 + 5 - 2'
@@ -90,11 +92,14 @@ def test_glr_recovery_custom_new_token():
     """
     Test that custom recovery that introduces new token works.
     """
-    error = Error(0, 1, message="Error")
 
-    def custom_recovery(parser, input_str, position, symbols):
+    errors = []
+
+    def custom_recovery(context, symbols):
         # Here we will introduce missing operation token
-        return error, None, Token(g.get_terminal('-'), '-', 0)
+        error = Error(context, 1, message="Error")
+        errors.append(error)
+        return Token(g.get_terminal('-'), '-', 0), error, None
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery,
                        debug=True)
@@ -102,7 +107,7 @@ def test_glr_recovery_custom_new_token():
     results = parser.parse('1 + 5 8 - 2')
 
     assert len(parser.errors) == 1
-    assert parser.errors[0] is error
+    assert parser.errors[0] is errors[0]
     assert len(results) == 5
     assert len(set(results)) == 2
     assert -4 in results

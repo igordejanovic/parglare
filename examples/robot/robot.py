@@ -29,12 +29,13 @@ def INT(_, value):
 @action
 def initial(context, nodes, x, y):
     print("Robot initial position set to: {}, {}".format(x, y))
-    context.robot_position = (x, y)
+    # We use context.extra to keep robot position state.
+    context.extra = (x, y)
 
 
 @action
 def program(context, nodes, commands):
-    return context.robot_position
+    return context.extra
 
 
 @action
@@ -50,8 +51,8 @@ def move(context, nodes, direction, steps):
     }[direction]
 
     # Calculate new robot position
-    x, y = context.robot_position
-    context.robot_position = (x + steps * move[0], y + steps * move[1])
+    x, y = context.extra
+    context.extra = (x + steps * move[0], y + steps * move[1])
 
 
 def main(debug=False):

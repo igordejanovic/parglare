@@ -110,17 +110,17 @@ def test_custom_error_recovery():
 
     called = [False]
 
-    def my_recovery(parser, input, position, expected_symbols):
+    def my_recovery(context, expected_symbols):
         called[0] = True
-        assert isinstance(parser, Parser)
-        assert input == '1 + 2 + * 3 - 5'
-        assert position == 8
+        assert isinstance(context.parser, Parser)
+        assert context.input_str == '1 + 2 + * 3 - 5'
+        assert context.position == 8
         assert type(expected_symbols) is set
         open_par = g.get_terminal('(')
         assert open_par in expected_symbols
         number = g.get_terminal('number')
         assert number in expected_symbols
-        return None, None, position + 1
+        return None, None, context.position + 1
 
     parser = Parser(g, actions=actions, error_recovery=my_recovery, debug=True)
 

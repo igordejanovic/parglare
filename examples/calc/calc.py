@@ -31,10 +31,10 @@ def act_assignment(context, nodes):
     name = nodes[0]
     number = nodes[2]
 
-    if not hasattr(context, 'variables'):
-        context.variables = {}
+    if context.extra is None:
+        context.extra = {}
 
-    context.variables[name] = number
+    context.extra[name] = number
 
 
 actions = {
@@ -48,7 +48,7 @@ actions = {
           pass_single,
           pass_single],
     "Number": lambda _, value: float(value),
-    "VariableRef": lambda context, nodes: context.variables[nodes[0]],
+    "VariableRef": lambda context, nodes: context.extra[nodes[0]],
 }
 
 

@@ -28,7 +28,7 @@ def act_sum(context, nodes):
     assert context.layout_content == '   '
     assert context.start_position == 3
     assert context.end_position == 8
-    if hasattr(context, 'call_actions'):
+    if context.extra:
         assert type(context.node) is NodeNonTerm \
             and context.node.symbol.name == 'E'
         node_exists[0] = True
@@ -89,7 +89,8 @@ def test_parse_context_call_actions():
 
     tree = parser.parse("   1 + 2  ")
     context = Context()
-    context.call_actions = True
+
+    context.extra = True
     parser.call_actions(tree, context=context)
 
     assert all(called)

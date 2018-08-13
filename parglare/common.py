@@ -18,11 +18,12 @@ class Location(object):
     line, column (int):
     """
 
-    __slots__ = ['context', '_line', '_column']
+    __slots__ = ['context', '_file_name', '_line', '_column']
 
-    def __init__(self, context):
+    def __init__(self, context=None, file_name=None):
 
         self.context = context
+        self._file_name = file_name
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting
@@ -43,7 +44,10 @@ class Location(object):
 
     @property
     def file_name(self):
-        return self.context.file_name
+        if self._file_name:
+            return self._file_name
+        else:
+            return self.context.file_name
 
     @property
     def start_position(self):
@@ -63,12 +67,12 @@ class Location(object):
         line, column = self.line, self.column
         if line is not None:
             return _a('{}{}:{}:"{}" => '
-                      .format("{}:".format(self.context.file_name)
-                              if self.context.file_name else "",
+                      .format("{}:".format(self.file_name)
+                              if self.file_name else "",
                               line, column,
                               position_context(self.context)))
         elif self.context.file_name:
-            return _a('{} => '.format(self.context.file_name))
+            return _a('{} => '.format(self.file_name))
         else:
             return "<Unknown location>"
 
