@@ -1,5 +1,31 @@
 # History
 
+- Working version
+  - Rework/cleanup of both LR and GLR parsers. Backward incopatibile changes
+    (see below).
+  - changed `layout` parser param to `in_layout`.
+  - changed `position` parser param to `return_position`.
+  - Added optional first param to recognizers passing in Context object.
+    See https://github.com/igordejanovic/parglare/pull/55
+    Thanks jwcraftsman@GitHub
+  - Context object now uses `__slots__` and has `extra` attribute for user
+    usage. `extra` is shallow copied during LR parser run and deep copied during
+    GLR parser heads split.
+  - `dynamic_filter` params changed from `action, token, production, subresults,
+    state, context` to `context, action, subresults`. To access previous param
+    values use `context.token_ahead` for `token`, `context.production` for
+    `production` and `context.state` for `state`.
+  - `error_recovery` params changed from `parser, input, position,
+    expected_symbols` to `context, expected_symbols`. To access previous param
+    values use `context.parser`, `context.input_str`, `context.position`.
+  - `custom_lexical_disambiguation` parser param changed to
+    `custom_token_recognition`.
+  - `custom_token_recognition` params changed from `symbols, input_str,
+    position, get_tokens` to `context, get_tokens`. To access previous param
+    values use `context.state.actions.keys()` for `symbols`, `context.input_str`
+    and `context.position` for `input_str` and `position`.
+
+
 - 2018-05-24 Version 0.6.1
   - Fixed issue with actions resolving search order.
   - Fixed #31 GLR drops valid parses on lexical ambiguity.
