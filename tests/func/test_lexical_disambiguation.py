@@ -252,8 +252,7 @@ def test_dynamic_lexical_disambiguation():
     g = Grammar.from_string(grammar)
     grammar = [g]
 
-    def custom_lexical_disambiguation(symbols, input_str, position,
-                                      get_tokens):
+    def custom_token_recognition(context, get_tokens):
         """
         Lexical disambiguation should return a single token that is
         recognized at the given place in the input string.
@@ -275,8 +274,8 @@ def test_dynamic_lexical_disambiguation():
                 grammar[0].get_terminal('Baz'),
             ]
             # Try to do fuzzy match at the position
-            elem = input_str[position:position+4]
-            elem_num = input_str[position:]
+            elem = context.input_str[context.position:context.position+4]
+            elem_num = context.input_str[context.position:]
             number_matcher = re.compile('[^\d]*(\d+)')
             number_match = number_matcher.match(elem_num)
             ratios = []
@@ -288,7 +287,7 @@ def test_dynamic_lexical_disambiguation():
                 return [Token(symbols[max_ratio_index], number_match.group())]
 
     parser = Parser(
-        g, custom_lexical_disambiguation=custom_lexical_disambiguation)
+        g, custom_token_recognition=custom_token_recognition)
 
     # Bar and Baz will be recognized by a fuzzy match
     result = parser.parse('bar. 56 Baz 12')

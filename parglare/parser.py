@@ -31,7 +31,7 @@ class Parser(object):
                  tables=LALR, in_layout=False, return_position=False,
                  prefer_shifts=True, prefer_shifts_over_empty=True,
                  error_recovery=False, dynamic_filter=None,
-                 custom_lexical_disambiguation=None):
+                 custom_token_recognition=None):
         self.grammar = grammar
         self.start_production = start_production
         EMPTY.action = pass_none
@@ -68,7 +68,7 @@ class Parser(object):
 
         self.error_recovery = error_recovery
         self.dynamic_filter = dynamic_filter
-        self.custom_lexical_disambiguation = custom_lexical_disambiguation
+        self.custom_token_recognition = custom_token_recognition
 
         from .closure import LR_0, LR_1
         from .tables import create_table
@@ -498,12 +498,12 @@ class Parser(object):
         else:
             tokens = []
             if position < in_len:
-                if self.custom_lexical_disambiguation:
+                if self.custom_token_recognition:
 
                     def get_tokens():
                         return self._token_recognition(context)
 
-                    tokens = self.custom_lexical_disambiguation(
+                    tokens = self.custom_token_recognition(
                         context, get_tokens)
                 else:
                     tokens = self._token_recognition(context)
