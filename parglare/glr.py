@@ -8,6 +8,7 @@ from parglare import termui as t
 from .exceptions import DisambiguationError, ParseError, expected_message
 from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, STOP, Context
 from .common import Location, position_context
+from .common import replace_newlines as _
 from .tables import LALR
 from .export import dot_escape
 from .termui import prints, h_print, a_print
@@ -176,16 +177,37 @@ class GLRParser(Parser):
             actions = context.state.actions
             token = context.token_ahead
 
-            if position > self.last_position:
-                self.last_position = position
-                self.expected = set()
+            if token is None:
+                if debug:
+                    h_print("Finding lookaheads.", level=1)
 
-            self.expected.update(actions.keys())
+                self._skipws(context)
+                if position > self.last_position:
+                    self.last_position = position
+                    self.expected = set()
 
-            if token is not None:
                 if debug:
                     self._debug_context(context, token,
-                                        expected_symbols=[token.symbol])
+                                        expected_symbols=actions.keys())
+
+                tokens = next_tokens(context)
+
+                if debug:
+                    h_print("Token(s) ahead: ", _(str(tokens)), level=1)
+
+                if not tokens:
+                    if debug:
+                        # This head is dying
+                        a_print("***Killing this head.", level=1)
+                        if self.debug_trace:
+                            self._trace_step_kill(head)
+                else:
+                    for idx, token in enumerate(tokens):
+                        reduce_head = head.for_token(token, context)
+                        self.heads_for_reduce.insert(0, reduce_head)
+                    continue
+            else:
+                self.expected.update(actions.keys())
 
                 # If this head is reduced it can only continue to be reduced by
                 # the same token ahead. Check if the head is final.
@@ -223,32 +245,8 @@ class GLRParser(Parser):
                             self._trace_step_kill(head)
 
                 if debug:
-                    h_print("No more reductions for this head and "
-                            "lookahead token:", token, level=1, new_line=True)
-
-            else:
-                self._skipws(context)
-                # if position > self.last_position:
-                #     self.last_position = position
-
-                tokens = next_tokens(context)
-                if debug:
-                    self._debug_context(context, tokens,
-                                        expected_symbols=actions.keys())
-
-                if not tokens:
-                    if debug:
-                        # This head is dying
-                        a_print("***Killing this head.", level=1)
-                        if self.debug_trace:
-                            self._trace_step_kill(head)
-
-                else:
-
-                    for idx, token in enumerate(tokens):
-                        reduce_head = head.for_token(token, context)
-                        self.heads_for_reduce.append(reduce_head)
-                    continue
+                    h_print("No more reductions for this head and lookahead"
+                            " token:", _(str(token)), level=1, new_line=True)
 
     def _do_shifts(self):
         """Perform all shifts.
@@ -445,11 +443,11 @@ class GLRParser(Parser):
 
             if self.debug:
                 a_print("{}. SHIFTING".format(self.debug_step),
-                        "\"{}\" to state {} "
-                        .format(token.value, context.state.state_id) +
-                        "at position " +
-                        str(pos_to_line_col(context.input_str,
-                                            context.start_position)),
+                        _("\"{}\" to state {} "
+                          .format(token.value, context.state.state_id) +
+                          "at position " +
+                          str(pos_to_line_col(context.input_str,
+                                              context.start_position))),
                         level=1, new_line=True)
                 self.debug_step += 1
 
@@ -651,15 +649,14 @@ class GLRParser(Parser):
         layout_content = context.layout_content
         h_print("Position:",
                 pos_to_line_col(input_str, position), level=1)
-        h_print("Context:", position_context(context), level=1)
-        lc = layout_content.replace("\n", "\\n") \
-            if type(layout_content) is str else layout_content
+        h_print("Context:", _(position_context(context)), level=1)
         if layout_content:
-            h_print("Layout: ", "'{}'".format(lc), level=1)
+            h_print("Layout: ", "'{}'".format(_(layout_content)), level=1)
         if expected_symbols:
             h_print("Symbols expected: ",
                     [s.name for s in expected_symbols], level=1)
-        h_print("Token(s) ahead:", lookahead_tokens, level=1)
+        if lookahead_tokens:
+            h_print("Token(s) ahead:", _(str(lookahead_tokens)), level=1)
 
     @no_colors
     def _trace_head(self, new_head, label):
@@ -822,15 +819,15 @@ class GSSNode(object):
         return not self == other
 
     def __str__(self):
-        return "<state={}:{}, id={}, pos={}, endpos={}{}, empty=[{},{}], " \
-            "parents={}, trees={}>".format(
-                self.context.state.state_id, self.context.state.symbol,
-                id(self),
-                self.context.start_position, self.context.end_position,
-                ", token ahead={}".format(self.context.token_ahead)
-                if self.context.token_ahead is not None else "",
-                self.any_empty, self.all_empty, len(self.parents),
-                self.number_of_trees)
+        return _("<state={}:{}, id={}, pos={}, endpos={}{}, empty=[{},{}], "
+                 "parents={}, trees={}>".format(
+                     self.context.state.state_id, self.context.state.symbol,
+                     id(self),
+                     self.context.start_position, self.context.end_position,
+                     ", token ahead={}".format(self.context.token_ahead)
+                     if self.context.token_ahead is not None else "",
+                     self.any_empty, self.all_empty, len(self.parents),
+                     self.number_of_trees))
 
     def __repr__(self):
         return str(self)

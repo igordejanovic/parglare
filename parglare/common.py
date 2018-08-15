@@ -84,8 +84,14 @@ def position_context(context):
     start = max(context.position-10, 0)
     c = text(context.input_str[start:context.position]) + _a("*") \
         + text(context.input_str[context.position:context.position+10])
-    c = c.replace("\n", "\\n")
-    return c
+    return replace_newlines(c)
+
+
+def replace_newlines(in_str):
+    try:
+        return in_str.replace("\n", "\\n")
+    except AttributeError:
+        return in_str
 
 
 def load_python_module(mod_name, mod_path):
