@@ -110,12 +110,12 @@ def test_custom_error_recovery():
 
     called = [False]
 
-    def my_recovery(context, expected_symbols):
+    def my_recovery(context):
+        expected_symbols = context.state.actions.keys()
         called[0] = True
         assert isinstance(context.parser, Parser)
         assert context.input_str == '1 + 2 + * 3 - 5'
         assert context.position == 8
-        assert type(expected_symbols) is set
         open_par = g.get_terminal('(')
         assert open_par in expected_symbols
         number = g.get_terminal('number')

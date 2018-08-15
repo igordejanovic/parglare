@@ -69,7 +69,7 @@ def test_glr_recovery_custom_new_position():
     """
     errors = []
 
-    def custom_recovery(context, symbols):
+    def custom_recovery(context):
         # This recovery will just skip over erroneous part of input '& 89'.
         error = Error(context, 1, message="Error")
         errors.append(error)
@@ -95,7 +95,7 @@ def test_glr_recovery_custom_new_token():
 
     errors = []
 
-    def custom_recovery(context, symbols):
+    def custom_recovery(context):
         # Here we will introduce missing operation token
         error = Error(context, 1, message="Error")
         errors.append(error)

@@ -16,8 +16,9 @@
     values use `context.token_ahead` for `token`, `context.production` for
     `production` and `context.state` for `state`.
   - `error_recovery` params changed from `parser, input, position,
-    expected_symbols` to `context, expected_symbols`. To access previous param
-    values use `context.parser`, `context.input_str`, `context.position`.
+    expected_symbols` to `context`. To access previous param values use
+    `context.parser`, `context.input_str`, `context.position`,
+    `context.state.actions.keys()`.
   - `custom_lexical_disambiguation` parser param changed to
     `custom_token_recognition`.
   - `custom_token_recognition` params changed from `symbols, input_str,

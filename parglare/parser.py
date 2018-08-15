@@ -207,9 +207,7 @@ class Parser(object):
                         a_print("**Error found. Recovery initiated.**")
 
                     # No actions to execute. Try error recovery.
-                    token_ahead, error, position = \
-                        error_recovery(context,
-                                       set(context.state.actions.keys()))
+                    token_ahead, error, position = error_recovery(context)
 
                     # The recovery may either decide to skip erroneous part
                     # of the input and resume at the place that can
@@ -732,19 +730,18 @@ class Parser(object):
 
         raise DisambiguationError(tokens)
 
-    def default_error_recovery(self, context, expected_symbols):
+    def default_error_recovery(self, context):
         """The default recovery strategy is to drop char/object at current position
         and try to continue.
 
         Args:
             context(Context): The parsing context
-            expected_symbols (list of GrammarSymbol): The symbol that are
-                expected at the current location in the current state.
 
         Returns:
             (new Token or None, Error, new position)
 
         """
+        expected_symbols = context.state.actions.keys()
         if self.current_error:
             self.current_error.length = context.position + 1 \
                                          - self.current_error.position
