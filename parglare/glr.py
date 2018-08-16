@@ -152,7 +152,7 @@ class GLRParser(Parser):
             self._debug_active_heads(self.heads_for_reduce)
 
         next_tokens = self._next_tokens
-        reduce = self.reduce
+        reduce = self._reduce
 
         # Reductions
         heads_for_reduce = self.heads_for_reduce
@@ -233,7 +233,7 @@ class GLRParser(Parser):
 
                 symbol_act = symbol_actions[0] if symbol_actions else None
                 if symbol_act and symbol_act.action is SHIFT:
-                    self.add_to_heads_for_shift(head)
+                    self._add_to_heads_for_shift(head)
                 elif not reduce_actions:
                     if self.error_recovery:
                         # If this head is not reduced and no shift is possible
@@ -286,14 +286,14 @@ class GLRParser(Parser):
                    not self._call_dynamic_filter(context, SHIFT, None):
                         pass
                 else:
-                    self.shift(head, action.state, context)
+                    self._shift(head, action.state, context)
             else:
                 # This should never happen as the shift possibility is checked
                 # during reducing and only those heads that can be shifted are
                 # appended to heads_for_shift
                 assert False, "No shift operation possible."
 
-    def reduce(self, head, production):
+    def _reduce(self, head, production):
         """Executes reduce operation for the given head and production.
         """
         debug = self.debug
@@ -323,7 +323,7 @@ class GLRParser(Parser):
                     pass
             else:
                 new_head = GSSNode(context)
-                self.merge_create_head(new_head, head, head, [], True, True)
+                self._merge_create_head(new_head, head, head, [], True, True)
         else:
             # Find roots of new heads by going backwards for prod_len steps
             # following all possible paths.
@@ -409,12 +409,12 @@ class GLRParser(Parser):
                         pass
                 else:
                     new_head = GSSNode(context)
-                    self.merge_create_head(new_head, head, root, subresults,
+                    self._merge_create_head(new_head, head, root, subresults,
                                            any_empty, all_empty)
                 if debug:
                     print()
 
-    def shift(self, head, state, context):
+    def _shift(self, head, state, context):
         """Execute shift operation at the given position to the given state.
 
         Shift token determined by the given state from input at given position
@@ -484,7 +484,7 @@ class GLRParser(Parser):
 
             new_head.create_link(head, result, False, False, self)
 
-    def add_to_heads_for_shift(self, new_head):
+    def _add_to_heads_for_shift(self, new_head):
         """Adds new head for shift or merges if already added."""
         for head in self.heads_for_shift:
             if head == new_head:
@@ -498,8 +498,8 @@ class GLRParser(Parser):
                         level=1, new_line=True)
             self.heads_for_shift.append(new_head)
 
-    def merge_create_head(self, new_head, old_head, root_head, subresults,
-                          any_empty, all_empty):
+    def _merge_create_head(self, new_head, old_head, root_head, subresults,
+                           any_empty, all_empty):
         """Adds new head or merges if already exist on the stack. Executes semantic
         actions. Detects automata looping.
         """
