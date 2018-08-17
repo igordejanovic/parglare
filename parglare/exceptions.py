@@ -24,7 +24,8 @@ class ParseError(LocationError):
 def expected_message(symbols_expected, tokens_ahead=None):
     return (_('Expected: ') + '{}').format(
         _(' or ').join(sorted([s.name for s in symbols_expected]))) \
-        + (_(' but found: {}').format(_(' or ').join(tokens_ahead))
+        + (_(' but found {}').format(
+            _(' or ').join([str(t) for t in tokens_ahead]))
            if tokens_ahead else '')
 
 

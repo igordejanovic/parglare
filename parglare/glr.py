@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 import codecs
-from itertools import chain
+from itertools import chain, takewhile
 from copy import deepcopy
 from parglare import Parser
 from parglare import termui as t
 from .exceptions import DisambiguationError, ParseError, expected_message
-from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, STOP, Context
+from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, STOP, Context, \
+    Token
 from .common import Location, position_context
 from .common import replace_newlines as _
 from .tables import LALR
@@ -86,6 +87,7 @@ class GLRParser(Parser):
 
         self.errors = []
         self.current_error = None
+        self.error_reporting_mode = False
         self.last_position = 0
         self.expected = set()
         self.empty_reductions_results = {}
@@ -108,11 +110,33 @@ class GLRParser(Parser):
 
         # The main loop
         while self.heads_for_reduce:
+
+            self.last_heads_for_reduce = list(self.heads_for_reduce)
+
             self._do_reductions()
             if self.heads_for_shift:
                 self._do_shifts()
-            # If after shifting we don't have any heads for reduce
-            # and we haven't found any final parse, do recovery.
+
+            # If after shifting we don't have any heads for reduce and we
+            # haven't found any final parse do error reporting.
+            if not self.heads_for_reduce and not self.finish_head:
+                self.error_reporting_mode = True
+                try:
+                    if self.debug:
+                        a_print("*** ENTERING ERROR REPORTING MODE.",
+                                new_line=True)
+
+                    self._setup_error_reporting()
+                    self._do_reductions()
+                finally:
+                    self.error_reporting_mode = False
+                    if self.debug:
+                        a_print("*** LEAVING ERROR REPORTING MODE.",
+                                new_line=True)
+                        h_print("Tokens expected:", self.expected, level=1)
+                        h_print("Tokens found:", self.tokens_ahead, level=1)
+
+            # After error reporing do error recovery if enabled.
             if self.error_recovery:
                 if not self.heads_for_reduce and not self.finish_head:
                     self._do_recovery()
@@ -123,7 +147,8 @@ class GLRParser(Parser):
                     if self.debug:
                         for h in self.heads_for_recovery:
                             a_print("{}. Killing head:"
-                                    .format(self.debug_step), h, level=1)
+                                    .format(self.debug_step), h,
+                                    level=1)
                             if self.debug_trace:
                                 self._trace_step_kill(h)
                                 self.debug_step += 1
@@ -164,7 +189,8 @@ class GLRParser(Parser):
         if self.error_recovery:
             # Pairs of (new_position, token) keyed by (position, symbols)
             self.recovery_results = {}
-            self.heads_for_recovery = []
+            if not self.error_reporting_mode:
+                self.heads_for_recovery = []
 
         while heads_for_reduce:
             head = heads_for_reduce.pop()
@@ -203,25 +229,26 @@ class GLRParser(Parser):
                             self._trace_step_kill(head)
                 else:
                     for idx, token in enumerate(tokens):
-                        reduce_head = head.for_token(token, context)
+                        reduce_head = head.for_token(token)
                         self.heads_for_reduce.insert(0, reduce_head)
                     continue
             else:
-                self.expected.update(actions.keys())
-
                 # If this head is reduced it can only continue to be reduced by
                 # the same token ahead. Check if the head is final.
                 if token.symbol is STOP:
                     symbol_action = actions.get(token.symbol, None)
                     if symbol_action and symbol_action[0].action is ACCEPT:
-                        if debug:
-                            a_print("*** SUCCESS!!!!")
-                            if self.debug_trace:
-                                self._trace_step_finish(head)
-                        if self.finish_head:
-                            self.finish_head.merge_head(head, self)
+                        if self.error_reporting_mode:
+                            self.expected.add(token.symbol)
                         else:
-                            self.finish_head = head
+                            if debug:
+                                a_print("*** SUCCESS!!!!")
+                                if self.debug_trace:
+                                    self._trace_step_finish(head)
+                            if self.finish_head:
+                                self.finish_head.merge_head(head, self)
+                            else:
+                                self.finish_head = head
                         continue
 
                 # Do all reductions for this head
@@ -233,8 +260,11 @@ class GLRParser(Parser):
 
                 symbol_act = symbol_actions[0] if symbol_actions else None
                 if symbol_act and symbol_act.action is SHIFT:
-                    self._add_to_heads_for_shift(head)
-                elif not reduce_actions:
+                    if self.error_reporting_mode:
+                        self.expected.add(token.symbol)
+                    else:
+                        self._add_to_heads_for_shift(head)
+                elif not reduce_actions and not self.error_reporting_mode:
                     if self.error_recovery:
                         # If this head is not reduced and no shift is possible
                         # collect it for possible recovery.
@@ -266,7 +296,6 @@ class GLRParser(Parser):
         if self.debug:
             self._debug_active_heads(heads_for_shift)
 
-        heads_for_shift.sort(key=lambda h: h.context.end_position)
         for head in heads_for_shift:
             if debug:
                 a_print("Shifting head: ", head, new_line=True)
@@ -286,7 +315,10 @@ class GLRParser(Parser):
                    not self._call_dynamic_filter(context, SHIFT, None):
                         pass
                 else:
-                    self._shift(head, action.state, context)
+                    if self.error_reporting_mode:
+                        self.expected.add(context.token_ahead.symbol)
+                    else:
+                        self._shift(head, action.state, context)
             else:
                 # This should never happen as the shift possibility is checked
                 # during reducing and only those heads that can be shifted are
@@ -410,7 +442,7 @@ class GLRParser(Parser):
                 else:
                     new_head = GSSNode(context)
                     self._merge_create_head(new_head, head, root, subresults,
-                                           any_empty, all_empty)
+                                            any_empty, all_empty)
                 if debug:
                     print()
 
@@ -563,6 +595,45 @@ class GLRParser(Parser):
             tokens = e.tokens
 
         return tokens
+
+    def _setup_error_reporting(self):
+        """
+        To correctly report what is found ahead and what is expected we shall:
+        - execute all grammar recognizers at the farther position reached in
+          the input by the last shifted heads. This will be part of the error
+          report (what is found ahead if anything can be recognized).
+        - for all last shifted heads, simulate parsing for each of possible
+          lookaheads in the head's state until either SHIFT or ACCEPT is
+          successfuly executed. Collect each possible lookahead where this is
+          achieved for reporting. This will be another part of the error
+          report (what is expected).
+        """
+        # Start with the last shifted heads sorted by position.
+        self.last_heads_for_reduce.sort(key=lambda h: h.context.position,
+                                        reverse=True)
+        context = self.last_heads_for_reduce[0].context
+        farthest_heads = takewhile(
+            lambda h: h.context.position == context.position,
+            self.last_heads_for_reduce)
+
+        # Check what is ahead no matter the current state.
+        # Just check with all recognizers available.
+        tokens = []
+        for terminal in self.grammar.terminals.values():
+            if terminal.recognizer._pg_context:
+                tok = terminal.recognizer(context, context.input_str,
+                                          context.position)
+            else:
+                tok = terminal.recognizer(context.input_str, context.position)
+            if tok is not None:
+                tokens.append(Token(terminal, tok))
+
+        self.tokens_ahead = tokens
+
+        for head in farthest_heads:
+            for possible_lookahead in head.context.state.actions.keys():
+                self.heads_for_reduce.append(
+                    head.for_token(Token(possible_lookahead, [])))
 
     def _do_recovery(self):
         """If recovery is enabled, does error recovery for the heads in
@@ -782,7 +853,7 @@ class GSSNode(object):
             h_print("Creating link \tfrom head:", self, level=2)
             h_print("  to head:", parent, level=4)
 
-    def for_token(self, token, context):
+    def for_token(self, token):
         """Create head for the given token either by returning this head if the
         token is appropriate or making a clone.
 
@@ -797,7 +868,7 @@ class GSSNode(object):
         elif self.context.token_ahead == token:
             return self
         else:
-            context = deepcopy(context)
+            context = deepcopy(self.context)
             context.token_ahead = token
             new_head = GSSNode(context, self.number_of_trees)
             new_head.parents = list(self.parents)
