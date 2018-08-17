@@ -54,9 +54,10 @@ def test_error_recovery_uncomplete():
 
     e = parser.errors[0]
 
-    assert e.position == 8
-    assert e.length == 1
-    assert 'Unexpected input at position (1, 8). Expected' in str(e)
+    assert e.start_position == 8
+    assert e.end_position == 9
+    assert 'Error at 1:6:"1 + 2 + ** 3 & 89 -" => '\
+        'Expected: ( or number but found <*(*)>' in str(e)
 
 
 def test_error_recovery_complete():
@@ -76,15 +77,15 @@ def test_error_recovery_complete():
 
     e1, e2 = parser.errors
 
-    assert e1.position == 8
-    assert e1.length == 1
+    assert e1.start_position == 8
+    assert e1.end_position == 9
 
     # Characters of the second error should be packed as a single error
     # spanning the whole erroneous region. Whitespaces should be included too.
-    assert e2.position == 12
-    assert e2.length == 4
-    assert 'Unexpected input at position (1, 12)' in str(e2)
-
+    assert e2.start_position == 12
+    assert e2.end_position == 16
+    assert 'Error at 1:10:"+ 2 + * 3 *& 89 - 5" => '\
+        'Expected: ) or * or + or - or / or EOF or ^' in str(e2)
 
 def test_error_recovery_parse_error():
     """In this test we have error that can't be recovered from by a simple
@@ -120,7 +121,7 @@ def test_custom_error_recovery():
         assert open_par in expected_symbols
         number = g.get_terminal('number')
         assert number in expected_symbols
-        return None, None, context.position + 1
+        return None, context.position + 1
 
     parser = Parser(g, actions=actions, error_recovery=my_recovery, debug=True)
 

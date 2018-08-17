@@ -142,17 +142,10 @@ class Parser(object):
             a_print("*** PARSING STARTED", new_line=True)
 
         self.errors = []
-        self.current_error = None
-
-        error_recovery = False
-        if type(self.error_recovery) is bool:
-            if self.error_recovery:
-                error_recovery = self.default_error_recovery
-        else:
-            error_recovery = self.error_recovery
 
         next_token = self._next_token
         debug = self.debug
+        self.error_mode = False
 
         context = self._get_init_context(context, input_str, position,
                                          file_name)
@@ -188,55 +181,24 @@ class Parser(object):
 
             if not actions:
 
+                symbols_expected = cur_state.actions.keys()
+                tokens_ahead = self._get_all_possible_tokens_ahead(context)
+
                 if self.error_recovery:
-                    # If we are past end of input error recovery can't be
-                    # successful and the only thing we can do is to throw
-                    # ParserError
-                    if context.position > len(context.input_str):
-                        e = self.current_error
-                        context.start_position = e.position
-                        raise ParseError(Location(context), e.expected_symbols)
-                    if debug:
-                        a_print("**Error found. Recovery initiated.**")
-
-                    # No actions to execute. Try error recovery.
-                    token_ahead, error, position = error_recovery(context)
-
-                    # The recovery may either decide to skip erroneous part
-                    # of the input and resume at the place that can
-                    # continue or it might decide to fill in/replace
-                    # missing/invalid tokens.
-                    assert token_ahead is None or position is None
-                    if position:
-                        context.position = position
-                    context.token_ahead = token_ahead
-
-                    if error:
-                        if debug:
-                            a_print("Error: ", error, level=1)
-                        self.errors.append(error)
-
-                    if not context.token_ahead:
-                        # If token is not recognized we are just droping
-                        # current input and advancing position. Thus, stay in
-                        # the same state and try to continue.
-                        if debug:
-                            h_print("Continuing at position ",
-                                    pos_to_line_col(context.input_str,
-                                                    context.position),
-                                    level=1)
-
+                    self._create_error(context, symbols_expected, tokens_ahead)
+                    if self._do_recovery(context):
+                        self.error_mode = True
                         continue
 
-                    else:
-                        actions = cur_state.actions.get(
-                            context.token_ahead.symbol)
-                        actions = actions.get(context.token_ahead.symbol)
-
             if not actions:
-                context.start_position = context.position
-                raise ParseError(Location(context=context),
-                                 cur_state.actions.keys())
+                if self.errors:
+                    last_error = self.errors[-1]
+                    context.start_position = last_error.start_position
+                    context.end_position = last_error.end_position
+                else:
+                    context.start_position = context.position
+                raise ParseError(Location(context=context), symbols_expected,
+                                 tokens_ahead)
 
             # Dynamic disambiguation
             if self.dynamic_filter:
@@ -282,10 +244,9 @@ class Parser(object):
                     context=context)
 
                 result = self._call_shift_action(context)
-
-                # If in error recovery mode, get out.
-                self.current_error = None
                 state_stack.append(StackNode(context, result))
+
+                self.error_mode = False
 
             elif act.action is REDUCE:
                 # if this is EMPTY reduction try to take another if
@@ -532,6 +493,23 @@ class Parser(object):
                     break
         return tokens
 
+    def _get_all_possible_tokens_ahead(self, context):
+        """
+        Check what is ahead no matter the current state.
+        Just check with all recognizers available.
+        """
+        tokens = []
+        for terminal in self.grammar.terminals.values():
+            if terminal.recognizer._pg_context:
+                tok = terminal.recognizer(context, context.input_str,
+                                          context.position)
+            else:
+                tok = terminal.recognizer(context.input_str, context.position)
+            if tok is not None:
+                tokens.append(Token(terminal, tok))
+        return tokens
+
+
     def _init_dynamic_disambiguation(self, context):
         if self.dynamic_filter:
             if self.debug:
@@ -723,7 +701,42 @@ class Parser(object):
 
         raise DisambiguationError(Location(context), tokens)
 
-    def default_error_recovery(self, context):
+    def _do_recovery(self, context):
+
+        debug = self.debug
+        if debug:
+            a_print("**Recovery initiated.**")
+
+        if type(self.error_recovery) is bool:
+            # Default recovery
+            if debug:
+                prints("\tDoing default error recovery.")
+            token, position = self._default_error_recovery(context)
+        else:
+            # Custom recovery provided during parser construction
+            if debug:
+                prints("\tDoing custom error recovery.")
+            token, position = self.error_recovery(context)
+
+        # The recovery may either decide to skip erroneous part of
+        # the input and resume at the place that can continue or it
+        # might decide to fill in missing tokens.
+        if position:
+            last_error = self.errors[-1]
+            last_error.end_position = position
+            context.position = position
+            if debug:
+                h_print("Advancing position to ",
+                        pos_to_line_col(context.input_str, position),
+                        level=1)
+
+        context.token_ahead = token
+        if token and debug:
+            h_print("Introducing token {}", repr(token), level=1)
+
+        return bool(token or position)
+
+    def _default_error_recovery(self, context):
         """The default recovery strategy is to drop char/object at current position
         and try to continue.
 
@@ -731,18 +744,24 @@ class Parser(object):
             context(Context): The parsing context
 
         Returns:
-            (new Token or None, Error, new position)
+            (None for new Token, new position)
 
         """
-        expected_symbols = context.state.actions.keys()
-        if self.current_error:
-            self.current_error.length = context.position + 1 \
-                                         - self.current_error.position
-            return None, None, context.position + 1
-        else:
-            error = Error(context, 1, expected_symbols=expected_symbols)
-            self.current_error = error
-            return None, error, context.position + 1
+        return None, context.position + 1 \
+            if context.position < len(context.input_str) else None
+
+    def _create_error(self, context, symbols_expected, tokens_ahead):
+        error = Error(context, symbols_expected, tokens_ahead)
+
+        # If error continues previous do not register new object
+        # Its span will be extended by recovery.
+        if self.errors and self.error_mode:
+            return
+
+        if self.debug:
+            a_print("Error: ", error, level=1)
+
+        self.errors.append(error)
 
 
 class Context:

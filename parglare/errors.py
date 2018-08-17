@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 
+from .exceptions import expected_message
+from .common import Location
+
 
 def expected_symbols_str(symbols):
     return " or ".join(sorted([s.name for s in symbols]))
@@ -7,32 +10,27 @@ def expected_symbols_str(symbols):
 
 class Error(object):
     """
-    Instances of this class are used for error reporting in the context
-    of error recovery.
+    Instances of this class are used for error reporting if error recovery
+    is used.
     """
-    def __init__(self, context, length, message=None, expected_symbols=None):
+    def __init__(self, context, expected_symbols, tokens_ahead=None):
         """
-        Either message should be given or input_str and expected_symbols.
 
         Args:
-            length: The length of the erroneous piece of input.
-            message: A message to the user about the error.
+            context (Context): A parsing context.
             expected_symbols: A set of expected grammar symbols at the
                 location.
+            tokens_ahead: A set of recognized but not expected tokens if any at
+                the given location.
         """
-        self.position = context.position
+        self.location = Location(context)
         self.input_str = context.input_str
-        self.length = length
-        self.message = message
-        self.expected_symbols = set(expected_symbols) \
-            if expected_symbols else None
+        self.start_position = context.position
+        self.end_position = context.position
+        self.expected_symbols = expected_symbols
+        self.tokens_ahead = tokens_ahead
+        self.message = "Error at " + str(self.location) \
+            + expected_message(expected_symbols, tokens_ahead)
 
     def __str__(self):
-        if self.message:
-            return self.message
-        else:
-            from parglare import pos_to_line_col
-            line, col = pos_to_line_col(self.input_str, self.position)
-            return "Unexpected input at position {}. Expected: {}"\
-                .format((line, col),
-                        expected_symbols_str(self.expected_symbols))
+        return self.message
