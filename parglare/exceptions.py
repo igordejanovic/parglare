@@ -14,13 +14,18 @@ class GrammarError(LocationError):
 
 
 class ParseError(LocationError):
-    def __init__(self, location, message):
+    def __init__(self, location, symbols_expected, tokens_ahead=None):
+        self.symbols_expected = symbols_expected
+        self.tokens_ahead = tokens_ahead
+        message = expected_message(symbols_expected, tokens_ahead)
         super(ParseError, self).__init__(location, message)
 
 
-def expected_message(symbols):
+def expected_message(symbols_expected, tokens_ahead=None):
     return (_('Expected: ') + '{}').format(
-        _(' or ').join(sorted([s.name for s in symbols])))
+        _(' or ').join(sorted([s.name for s in symbols_expected]))) \
+        + (_(' but found: {}').format(_(' or ').join(tokens_ahead))
+           if tokens_ahead else '')
 
 
 def disambiguation_error(tokens):

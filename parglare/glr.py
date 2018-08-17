@@ -132,7 +132,7 @@ class GLRParser(Parser):
             if self.debug and self.debug_trace:
                 self._export_dot_trace()
             raise ParseError(Location(context=self.context),
-                             message=expected_message(self.expected))
+                             self.expected, self.tokens_ahead)
 
         results = [x[1] for x in self.finish_head.parents]
         if self.debug:

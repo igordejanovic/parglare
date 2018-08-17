@@ -195,8 +195,7 @@ class Parser(object):
                     if context.position > len(context.input_str):
                         e = self.current_error
                         context.start_position = e.position
-                        raise ParseError(Location(context),
-                                         expected_message(e.expected_symbols))
+                        raise ParseError(Location(context), e.expected_symbols)
                     if debug:
                         a_print("**Error found. Recovery initiated.**")
 
@@ -237,7 +236,7 @@ class Parser(object):
             if not actions:
                 context.start_position = context.position
                 raise ParseError(Location(context=context),
-                                 expected_message(cur_state.actions.keys()))
+                                 cur_state.actions.keys())
 
             # Dynamic disambiguation
             if self.dynamic_filter:
