@@ -19,6 +19,8 @@
     expected_symbols` to `context`. To access previous param values use
     `context.parser`, `context.input_str`, `context.position`,
     `context.state.actions.keys()`.
+  - Error recovery function now returns token and position. The error is
+    automatically registered and returned with parsing results.
   - `custom_lexical_disambiguation` parser param changed to
     `custom_token_recognition`.
   - `custom_token_recognition` params changed from `symbols, input_str,

@@ -5,7 +5,8 @@ from itertools import chain, takewhile
 from copy import deepcopy
 from parglare import Parser
 from parglare import termui as t
-from .exceptions import DisambiguationError, ParseError, expected_message
+from .exceptions import DisambiguationError, ParseError
+from .errors import Error
 from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, STOP, Context, \
     Token
 from .common import Location, position_context
@@ -139,7 +140,11 @@ class GLRParser(Parser):
             # After error reporing do error recovery if enabled.
             if self.error_recovery:
                 if not self.heads_for_reduce and not self.finish_head:
-                    self._do_recovery()
+                    if self.heads_for_recovery:
+                        context = self.heads_for_recovery[0].context
+                        self._create_error(context, self.expected,
+                                           self.tokens_ahead)
+                        self._do_recovery()
                 else:
                     # Get out from error recovery mode.
                     self.current_error = None
@@ -186,11 +191,8 @@ class GLRParser(Parser):
         # For automata loop detection
         self.reducing_heads = []
 
-        if self.error_recovery:
-            # Pairs of (new_position, token) keyed by (position, symbols)
-            self.recovery_results = {}
-            if not self.error_reporting_mode:
-                self.heads_for_recovery = []
+        if self.error_recovery and not self.error_reporting_mode:
+            self.heads_for_recovery = []
 
         while heads_for_reduce:
             head = heads_for_reduce.pop()
@@ -616,19 +618,7 @@ class GLRParser(Parser):
             lambda h: h.context.position == context.position,
             self.last_heads_for_reduce)
 
-        # Check what is ahead no matter the current state.
-        # Just check with all recognizers available.
-        tokens = []
-        for terminal in self.grammar.terminals.values():
-            if terminal.recognizer._pg_context:
-                tok = terminal.recognizer(context, context.input_str,
-                                          context.position)
-            else:
-                tok = terminal.recognizer(context.input_str, context.position)
-            if tok is not None:
-                tokens.append(Token(terminal, tok))
-
-        self.tokens_ahead = tokens
+        self.tokens_ahead = self._get_all_possible_tokens_ahead(context)
 
         for head in farthest_heads:
             for possible_lookahead in head.context.state.actions.keys():
@@ -650,56 +640,34 @@ class GLRParser(Parser):
                         "Recovery initiated for head {}.".format(head),
                         level=1, new_line=True)
                 h_print("Symbols expected: ", symbols, level=1)
-            if context.start_position in self.recovery_results:
-                position, token = self.recovery_results[context.start_position]
+            if type(self.error_recovery) is bool:
+                # Default recovery
                 if debug:
-                    prints("\tReusing cached recovery results.")
+                    prints("\tDoing default error recovery.")
+                token, position = self._default_error_recovery(context)
             else:
-                if type(self.error_recovery) is bool:
-                    # Default recovery
-                    if debug:
-                        prints("\tDoing default error recovery.")
-                    token, error, position = self.default_error_recovery(
-                        context)
-                else:
-                    # Custom recovery provided during parser construction
-                    if debug:
-                        prints("\tDoing custom error recovery.")
-                    token, error, position = self.error_recovery(context)
+                # Custom recovery provided during parser construction
+                if debug:
+                    prints("\tDoing custom error recovery.")
+                token, position = self.error_recovery(context)
 
-                if error:
-                    self.errors.append(error)
-                    if debug:
-                        a_print("Error: ", error, level=1)
-                else:
-                    # In GLR multiple heads may initiate recovery at the same
-                    # position. If there is already error created at current
-                    # position update expected symbols.
-                    try:
-                        last_error = self.errors[-1]
-                        if last_error.expected_symbols and symbols:
-                            last_error.expected_symbols.update(symbols)
-                    except IndexError:
-                        pass
-
-                # Cache results
-                self.recovery_results[context.start_position] = position, token
-
-            if (position and position <= len(input_str)) or token is not None:
-                assert not(position and token is not None), \
-                    "Ambiguous recovery! Can't introduce new token and " \
-                    "advance position at the same time."
+            if position or token:
                 if position:
+                    last_error = self.errors[-1]
+                    last_error.end_position = position
                     head.context.position = position
                     if debug:
                         h_print("Advancing position to ",
                                 pos_to_line_col(input_str, position),
                                 level=1)
-                elif debug:
-                    h_print("Introducing token {}", repr(token), level=1)
+                if token:
+                    head.context.token_ahead = token
 
-                head.context.token_ahead = token
+                    if debug:
+                        h_print("Introducing token {}", repr(token), level=1)
+
                 self.heads_for_reduce.append(head)
+
             else:
                 if debug:
                     a_print("Killing head: ", head, level=1)
