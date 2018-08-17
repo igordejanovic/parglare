@@ -25,6 +25,8 @@
     position, get_tokens` to `context, get_tokens`. To access previous param
     values use `context.state.actions.keys()` for `symbols`, `context.input_str`
     and `context.position` for `input_str` and `position`.
+  - Lexical ambiguity results in `DisambiguationError` now instead of
+    `ParseError`for LR parser.
 
 
 - 2018-05-24 Version 0.6.1

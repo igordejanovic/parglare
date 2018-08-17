@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Grammar, Parser
-from parglare.exceptions import ParseError, ParserInitError, GrammarError
+from parglare import Grammar, Parser, ParseError, ParserInitError, \
+    GrammarError, DisambiguationError
 from parglare.actions import pass_single, pass_nochange, collect
 
 
@@ -106,9 +106,8 @@ def test_parse_list_of_integers_lexical_disambiguation():
     # might match just a single int and after parser has saw 3 it will try
     # to disambiguate and fail as the following 4 is recognized by both
     # recognizers.
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(DisambiguationError) as e:
         p = parser.parse(ints)
-    assert 'disambiguate' in str(e)
 
     # Now we change the recognizer for ascending to match at least two
     # consecutive ascending numbers.

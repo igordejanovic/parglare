@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 import pytest  # noqa
 import difflib
 import re
-from parglare import Parser, Grammar, Token, ParseError
+from parglare import Parser, Grammar, Token, ParseError, DisambiguationError
 
 
 called = [False, False, False]
@@ -157,7 +157,7 @@ def test_failed_disambiguation(cf):
     # Both are regexes so longest match will be used.
     # Both have the same length.
 
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(DisambiguationError) as e:
         parser.parse('14.75')
 
     assert 'disambiguate' in str(e)
@@ -254,7 +254,7 @@ def test_dynamic_lexical_disambiguation():
 
     def custom_token_recognition(context, get_tokens):
         """
-        Lexical disambiguation should return a single token that is
+        Custom token recognition should return a single token that is
         recognized at the given place in the input string.
         """
         # Call default token recognition.

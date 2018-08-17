@@ -168,20 +168,14 @@ class Parser(object):
                         new_line=True)
 
             if context.token_ahead is None:
-                try:
-                    if not self.in_layout:
-                        self._skipws(context)
-                        if self.debug:
-                            h_print("Layout content:",
-                                    "'{}'".format(context.layout_content),
-                                    level=1)
+                if not self.in_layout:
+                    self._skipws(context)
+                    if self.debug:
+                        h_print("Layout content:",
+                                "'{}'".format(context.layout_content),
+                                level=1)
 
-                    context.token_ahead = next_token(context)
-
-                except DisambiguationError as e:
-                    raise ParseError(
-                        location=Location(context=context),
-                        message=disambiguation_error(e.tokens))
+                context.token_ahead = next_token(context)
 
             if debug:
                 h_print("Context:", position_context(context), level=1)
@@ -513,7 +507,7 @@ class Parser(object):
             elif len(tokens) == 1:
                 ntok = tokens[0]
             else:
-                ntok = self._lexical_disambiguation(tokens)
+                ntok = self._lexical_disambiguation(context, tokens)
 
         return ntok
 
@@ -697,7 +691,7 @@ class Parser(object):
         # action, and return the result of treebuild_reduce_action.
         return bt_result if bt_result is not None else result
 
-    def _lexical_disambiguation(self, tokens):
+    def _lexical_disambiguation(self, context, tokens):
         """
         For the given list of matched tokens apply disambiguation strategy.
 
@@ -728,7 +722,7 @@ class Parser(object):
             elif len(pref_tokens) > 1:
                 tokens = pref_tokens
 
-        raise DisambiguationError(tokens)
+        raise DisambiguationError(Location(context), tokens)
 
     def default_error_recovery(self, context):
         """The default recovery strategy is to drop char/object at current position

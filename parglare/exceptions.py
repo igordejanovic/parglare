@@ -32,9 +32,11 @@ class ParserInitError(Exception):
     pass
 
 
-class DisambiguationError(Exception):
-    def __init__(self, tokens):
+class DisambiguationError(LocationError):
+    def __init__(self, location, tokens):
         self.tokens = tokens
+        message = disambiguation_error(tokens)
+        super(DisambiguationError, self).__init__(location, message)
 
 
 class DynamicDisambiguationConflict(Exception):
