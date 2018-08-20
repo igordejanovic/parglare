@@ -5,7 +5,7 @@ Property:     '-' ID '=' SemiColon;
 Values:       Value  | Values SemiColon? Value;
 Value:        STRING | INT | FLOAT | GUID | Object | ID;
 
-
+terminals
 STRING: /("(\\"|[^"])*")|(\'(\\\'|[^\'])*\')/;
 
 // INT and FLOAT are ambiguous. Prefer INT if both match are of same length.
