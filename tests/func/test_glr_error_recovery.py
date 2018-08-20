@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import GLRParser, Grammar, Error
+from parglare import GLRParser, Grammar
 from parglare.parser import Token
 from parglare.actions import pass_single, pass_inner
 
