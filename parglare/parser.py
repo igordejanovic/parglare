@@ -861,6 +861,9 @@ class StackNode:
 
 class Node(object):
     """A node of the parse tree."""
+
+    __slots__ = ['start_position', 'end_position', 'layout_content']
+
     def __init__(self, start_position, end_position, layout_content=None):
         self.start_position = start_position
         self.end_position = end_position
@@ -877,7 +880,7 @@ class Node(object):
 
 
 class NodeNonTerm(Node):
-    __slots__ = ['start_position', 'end_position', 'production', 'children']
+    __slots__ = ['production', 'children']
 
     def __init__(self, start_position, end_position, production, children,
                  layout_content=None):
@@ -918,7 +921,7 @@ class NodeNonTerm(Node):
 
 
 class NodeTerm(Node):
-    __slots__ = ['start_position', 'end_position', 'token']
+    __slots__ = ['token']
 
     def __init__(self, start_position, end_position, token,
                  layout_content=None):
