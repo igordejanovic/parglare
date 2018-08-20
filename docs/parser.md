@@ -34,7 +34,7 @@ it is used instead and this parameter is ignored.
 ## build_tree
 
 A boolean whose default value is `False`. If set to `True` parser will call
-actions that will build the [parse tree](./parse_trees.md).
+implicit actions that will build the [parse tree](./parse_trees.md).
 
 ## call_actions_during_tree_build
 
@@ -117,7 +117,7 @@ default.
 The value of this parameter is either `parglare.LALR` or `parglare.SLR` and it
 is used to chose the type of LR tables to create. By default `LALR` tables are
 used with a slight twist to avoid Reduce/Reduce conflicts that may happen with
-pure LALR tables. This parameter should not be used in normal circumstances but
+pure LALR tables. This parameter should not be used in normal circumstances and
 is provided more for experimentation purposes.
 
 
@@ -149,6 +149,6 @@ is a concrete matched terminal from the input stream.
 
 - **symbol** (`Terminal`) - terminal grammar symbol represented by this token,
 
-- **value** (`list` or `str`) - matched part of input stream,
+- **value** (`list` or `str`) - matched part of the input stream,
 
-- **length** (`int`) - length of matched input.
+- **length** (`int`) - length of the matched input.
