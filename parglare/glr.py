@@ -650,7 +650,7 @@ class GLRParser(Parser):
                     prints("\tDoing custom error recovery.")
                 token, position = self.error_recovery(context)
 
-            if position or token:
+            if position is not None or token is not None:
                 if position:
                     last_error = self.errors[-1]
                     last_error.end_position = position
