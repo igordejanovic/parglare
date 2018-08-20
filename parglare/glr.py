@@ -34,10 +34,10 @@ class GLRParser(Parser):
     def __init__(self, grammar, start_production=1, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
-                 build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, layout=False, position=False, prefer_shifts=None,
-                 prefer_shifts_over_empty=None, error_recovery=False,
-                 dynamic_filter=None, custom_lexical_disambiguation=None):
+                 build_tree=False, tables=LALR, layout=False, position=False,
+                 prefer_shifts=None, prefer_shifts_over_empty=None,
+                 error_recovery=False, dynamic_filter=None,
+                 custom_lexical_disambiguation=None, side_actions=None):
 
         # The default for GLR is not to use any strategy preferring shifts
         # over reduce thus investigating all possibilitites.
@@ -51,13 +51,12 @@ class GLRParser(Parser):
             actions=actions, layout_actions=layout_actions,
             debug=debug, debug_trace=debug_trace,
             debug_colors=debug_colors, debug_layout=debug_layout, ws=ws,
-            build_tree=build_tree,
-            call_actions_during_tree_build=call_actions_during_tree_build,
-            tables=tables, layout=layout, position=position,
-            prefer_shifts=prefer_shifts,
+            build_tree=build_tree, tables=tables, layout=layout,
+            position=position, prefer_shifts=prefer_shifts,
             prefer_shifts_over_empty=prefer_shifts_over_empty,
             error_recovery=error_recovery, dynamic_filter=dynamic_filter,
-            custom_lexical_disambiguation=custom_lexical_disambiguation)
+            custom_lexical_disambiguation=custom_lexical_disambiguation,
+            side_actions=side_actions)
 
     def _check_parser(self):
         """

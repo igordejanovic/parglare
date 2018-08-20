@@ -26,10 +26,10 @@ class Parser(object):
     def __init__(self, grammar, start_production=1, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
-                 build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, layout=False, position=False, prefer_shifts=True,
-                 prefer_shifts_over_empty=True, error_recovery=False,
-                 dynamic_filter=None, custom_lexical_disambiguation=None):
+                 build_tree=False, tables=LALR, layout=False, position=False,
+                 prefer_shifts=True, prefer_shifts_over_empty=True,
+                 error_recovery=False, dynamic_filter=None,
+                 custom_lexical_disambiguation=None, side_actions=None):
         self.grammar = grammar
         self.start_production = start_production
         EMPTY.action = pass_none
@@ -37,6 +37,9 @@ class Parser(object):
         if actions:
             self.grammar._resolve_actions(action_overrides=actions,
                                           fail_on_no_resolve=True)
+        if side_actions:
+            self.grammar._resolve_side_actions(
+                side_action_overrides=side_actions)
 
         self.layout_parser = None
         if not layout:
@@ -62,7 +65,6 @@ class Parser(object):
         self.debug_layout = debug_layout
 
         self.build_tree = build_tree
-        self.call_actions_during_tree_build = call_actions_during_tree_build
 
         self.error_recovery = error_recovery
         self.dynamic_filter = dynamic_filter
@@ -562,21 +564,15 @@ class Parser(object):
         Calls registered shift action for the given grammar symbol.
         """
         debug = self.debug
-        sem_action = symbol.action
+
+        if hasattr(symbol, "side_action") and symbol.side_action:
+            symbol.side_action(context, matched_str)
 
         if self.build_tree:
             # call action for building tree node if tree building is enabled
             if debug:
                 h_print("Building terminal node",
                         "'{}'.".format(symbol.name), level=2)
-
-            # If both build_tree and call_actions_during_build are set to
-            # True, semantic actions will be call but their result will be
-            # discarded. For more info check following issue:
-            # https://github.com/igordejanovic/parglare/issues/44
-            if self.call_actions_during_tree_build and sem_action:
-                sem_action(context, matched_str)
-
             return treebuild_shift_action(context, matched_str)
 
         sem_action = symbol.action
@@ -598,26 +594,35 @@ class Parser(object):
 
         return result
 
+    def _do_sem_action(self, sem_action, assgn_results, production, subresults,
+                       context):
+        if type(sem_action) is list:
+            if assgn_results:
+                result = sem_action[production.prod_symbol_id](
+                    context, subresults, **assgn_results)
+            else:
+                result = sem_action[production.prod_symbol_id](context,
+                                                               subresults)
+        else:
+            if assgn_results:
+                result = sem_action(context, subresults, **assgn_results)
+            else:
+                result = sem_action(context, subresults)
+        return result
+
     def _call_reduce_action(self, production, subresults, context):
         """
         Calls registered reduce action for the given grammar symbol.
         """
         debug = self.debug
         result = None
-        bt_result = None
-
-        if self.build_tree:
-            # call action for building tree node if enabled.
-            if debug:
-                h_print("Building non-terminal node",
-                        "'{}'.".format(production.symbol.name), level=2)
-
-            bt_result = treebuild_reduce_action(context, nodes=subresults)
-            if not self.call_actions_during_tree_build:
-                return bt_result
+        assgn_results = None
 
         sem_action = production.symbol.action
-        if sem_action:
+        side_action = production.symbol.side_action if hasattr(
+            production.symbol, "side_action") else None
+
+        if (sem_action and not self.build_tree) or side_action:
             assignments = production.assignments
             if assignments:
                 assgn_results = {}
@@ -627,19 +632,20 @@ class Parser(object):
                     else:
                         assgn_results[a.name] = bool(subresults[a.index])
 
-            if type(sem_action) is list:
-                if assignments:
-                    result = sem_action[production.prod_symbol_id](
-                        context, subresults, **assgn_results)
-                else:
-                    result = sem_action[production.prod_symbol_id](context,
-                                                                   subresults)
-            else:
-                if assignments:
-                    result = sem_action(context, subresults, **assgn_results)
-                else:
-                    result = sem_action(context, subresults)
+        if side_action:
+            self._do_sem_action(side_action, assgn_results, production,
+                                subresults, context)
 
+        if self.build_tree:
+            # call action for building tree node if enabled.
+            if debug:
+                h_print("Building non-terminal node",
+                        "'{}'.".format(production.symbol.name), level=2)
+            return treebuild_reduce_action(context, nodes=subresults)
+
+        if sem_action:
+            result = self._do_sem_action(sem_action, assgn_results, production,
+                                         subresults, context)
         else:
             if debug:
                 h_print("No action defined",
@@ -658,9 +664,7 @@ class Parser(object):
                     "type:{} value:{}"
                     .format(type(result), repr(result)), level=1)
 
-        # If build_tree is set to True, discard the result of the semantic
-        # action, and return the result of treebuild_reduce_action.
-        return bt_result if bt_result is not None else result
+        return result
 
     def _lexical_disambiguation(self, tokens):
         """
