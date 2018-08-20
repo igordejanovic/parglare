@@ -93,10 +93,8 @@ For more information see [Error recovery](./handling_errors.md#error-recovery).
 
 By default the first rule of the grammar is the start rule. If you want to
 change this default behavior — for example you want to create multiple parsers
-from the same grammar with different start production — you can use this
-parameter. The parameter accepts the `id` of the grammar production. To get the
-`id` from the rule name use the `get_production_id(rule_name)` method of the
-grammar.
+from the same grammar with different start productions — you can use this
+parameter. The parameter accepts a fully qualified name of the start rule.
 
 
 ## debug/debug_layout

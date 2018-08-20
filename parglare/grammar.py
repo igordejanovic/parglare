@@ -1056,7 +1056,7 @@ class Grammar(PGFile):
     def get_production_id(self, name):
         "Returns first production id for the given symbol name"
         for p in self.productions:
-            if p.symbol.name == name:
+            if p.symbol.fqn == name:
                 return p.prod_id
 
     @staticmethod

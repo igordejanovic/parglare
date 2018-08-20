@@ -23,7 +23,7 @@ class Parser(object):
     """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, start_production=1, actions=None,
+    def __init__(self, grammar, start_production=None, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
@@ -32,7 +32,10 @@ class Parser(object):
                  error_recovery=False, dynamic_filter=None,
                  custom_token_recognition=None):
         self.grammar = grammar
-        self.start_production = start_production
+        if start_production is not None:
+            self.start_production = grammar.get_production_id(start_production)
+        else:
+            self.start_production = 1
         EMPTY.action = pass_none
         EOF.action = pass_none
         if actions:
@@ -41,11 +44,11 @@ class Parser(object):
 
         self.layout_parser = None
         if not in_layout:
-            layout_prod = grammar.get_production_id('LAYOUT')
+            layout_prod = grammar.get_symbol('LAYOUT')
             if layout_prod:
                 self.layout_parser = Parser(
                     grammar,
-                    start_production=layout_prod,
+                    start_production='LAYOUT',
                     actions=layout_actions,
                     ws=None, in_layout=True,
                     return_position=True,
@@ -77,7 +80,8 @@ class Parser(object):
             itemset_type = LR_1
         self.table = create_table(
             grammar, itemset_type=itemset_type,
-            start_production=start_production, prefer_shifts=prefer_shifts,
+            start_production=self.start_production,
+            prefer_shifts=prefer_shifts,
             prefer_shifts_over_empty=prefer_shifts_over_empty)
 
         self._check_parser()

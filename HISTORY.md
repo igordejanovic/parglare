@@ -1,6 +1,6 @@
 # History
 
-- Working version
+- Development version
   - Rework/cleanup of both LR and GLR parsers. Backward incopatibile changes
     (see below).
   - changed `layout` parser param to `in_layout`.
@@ -29,6 +29,8 @@
     and `context.position` for `input_str` and `position`.
   - Lexical ambiguity results in `DisambiguationError` now instead of
     `ParseError`for LR parser.
+  - `start_production` parser param now accepts a fully qualified rule name
+    instead of id. First production id for the given rule is used.
 
 
 - 2018-05-24 Version 0.6.1

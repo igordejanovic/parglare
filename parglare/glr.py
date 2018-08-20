@@ -33,7 +33,7 @@ class GLRParser(Parser):
     """
     A Tomita-style GLR parser.
     """
-    def __init__(self, grammar, start_production=1, actions=None,
+    def __init__(self, grammar, start_production=None, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,

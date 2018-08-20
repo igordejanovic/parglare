@@ -39,7 +39,10 @@ def test_error_recovery_uncomplete():
     will succeed. In order to prevent partial parse first grammar rule should
     be ended with EOF like in the case of 'Result' rule.
     """
-    parser = Parser(g, start_production=2, actions=actions,
+
+    # By setting start_production to 'E' parser will understand only +
+    # operation
+    parser = Parser(g, actions=actions, start_production='E',
                     error_recovery=True, debug=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
