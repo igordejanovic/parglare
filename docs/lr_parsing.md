@@ -3,8 +3,10 @@
 LR parser operates as a deterministic PDA (Push-down automata). It is a state
 machine which is always in some state during parsing. The state machine must
 deterministically decide what is the next state just based on its current state
-and one token of lookahead. This decision is given by LR tables which are
-precalculated from the grammar before parsing even begins.
+and one token of lookahead (actually, parser could use more than one token of
+lookahead thus being LR(2), LR(3) and so on, but they are not very practical).
+This decision is given by LR tables which are precalculated from the grammar
+before parsing even begins.
 
 For example, let's see what happens if we have a simple expression grammar:
 
@@ -42,8 +44,8 @@ Current position would be (the dot represents the position):
 
 Now the parser sees `+` token ahead and the tables will tell him to reduce the
 number he just saw to `E` (a number is an expression according to the grammar).
-Thus, on the stack the parser will have an expression `E` (actually LR states
-are kept on stack but that's not important for this little analysis). This
+Thus, on the stack the parser will have an expression `E` (actually, LR states
+are kept on the stack but that's not important for this little analysis). This
 reduction will advace PDA to some other state again. Each shift/reduce operation
 change state so I'll not repeat that anymore.
 
@@ -53,7 +55,7 @@ change state so I'll not repeat that anymore.
 
 
 After reduction parser will do shift of `+` token. There is nothing to reduce as
-the sub-expresison on stack is `E +` which can't be reduced as it's not complete.
+the sub-expression on stack is `E +` which can't be reduced as it's not complete.
 So, the only thing we can do is to shift `2` token.
 
 Now, the position is:
