@@ -81,7 +81,7 @@ class GLRParser(Parser):
 
         if self.debug:
             a_print("*** PARSING STARTED\n")
-            self.debug_step = 1
+            self.debug_step = 0
             if self.debug_trace:
                 self.dot_trace = ""
 
@@ -91,6 +91,7 @@ class GLRParser(Parser):
         self.last_position = 0
         self.expected = set()
         self.empty_reductions_results = {}
+        self.file_name = file_name
 
         self.context = context = self._get_init_context(context, input_str,
                                                         position, file_name)
@@ -106,7 +107,8 @@ class GLRParser(Parser):
         self.finish_head = None
 
         if self.debug and self.debug_trace:
-            self._trace_head(start_head, str(start_head.state.state_id))
+            self._trace_head(start_head,
+                             str(start_head.context.state.state_id))
 
         # The main loop
         while self.heads_for_reduce:
@@ -246,7 +248,8 @@ class GLRParser(Parser):
                             self.expected.add(token.symbol)
                         else:
                             if debug:
-                                a_print("*** SUCCESS!!!!")
+                                a_print("*** {}. SUCCESS!!!!", self.debug_step)
+                                self.debug_step += 1
                                 if self.debug_trace:
                                     self._trace_step_finish(head)
                             if self.finish_head:
@@ -579,8 +582,8 @@ class GLRParser(Parser):
                 a_print("New reduced head ", new_head, level=2, new_line=True)
                 if self.debug_trace:
                     self._trace_head(new_head, "{}:{}".format(
-                        new_head.state.state_id,
-                        dot_escape(new_head.state.symbol.name)))
+                        new_head.context.state.state_id,
+                        dot_escape(new_head.context.state.symbol.name)))
             new_head.create_link(root_head, result, any_empty, all_empty, self)
 
             if self.debug and self.debug_trace:

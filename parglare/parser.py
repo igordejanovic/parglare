@@ -148,6 +148,7 @@ class Parser(object):
 
         next_token = self._next_token
         debug = self.debug
+        self.file_name = file_name
         self.in_error_recovery = False
 
         context = self._get_init_context(context, input_str, position,
