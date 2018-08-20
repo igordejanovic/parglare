@@ -6,15 +6,19 @@ GLR parsing.
 
 To get the help on the command run:
 
-    $ pglr --help
+    $ pglr
     Usage: pglr [OPTIONS] COMMAND [ARGS]...
 
       Command line interface for working with parglare grammars.
 
     Options:
-      --debug / --no-debug    Debug/trace output
-      --colors / --no-colors  Output coloring
-      --help                  Show this message and exit.
+      --debug / --no-debug            Debug/trace output
+      --colors / --no-colors          Output coloring
+      --prefer-shifts / --no-prefer-shifts
+                                      Prefer shifts over reductions.
+      --prefer-shifts-over-empty / --no-prefer-shifts-over-empty
+                                      Prefer shifts over empty reductions.
+      --help                          Show this message and exit.
 
     Commands:
       check
@@ -124,10 +128,10 @@ command:
     Use dot viewer (e.g. xdot) or convert to pdf by running 'dot -Tpdf -O calc.pg.dot'
 
 As given in the output you will get a `dot` file which represents LR automata
-visualization. You can see this diagram using dot viewers
-(e.g. [xdot](https://github.com/jrfonseca/xdot.py)) or you can transform it to
-other file formats using the `dot` tool (you'll have to install Graphviz
-software for that).
+visualization. You can see this diagram using dot viewers (e.g.
+[xdot](https://github.com/jrfonseca/xdot.py)) or you can transform it to other
+file formats using the `dot` tool (you'll have to install Graphviz software for
+that).
 
 This is an example of LR automata visualization for the `calc` grammar from the
 quick intro (click on the image to enlarge):
