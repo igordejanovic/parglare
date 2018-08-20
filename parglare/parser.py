@@ -7,8 +7,7 @@ from .grammar import EMPTY, EOF, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
-    DynamicDisambiguationConflict, disambiguation_error, expected_message, \
-    SRConflicts, RRConflicts
+    DynamicDisambiguationConflict, SRConflicts, RRConflicts
 from .common import Location, position_context
 from .actions import pass_none
 from .termui import prints, h_print, a_print
@@ -145,7 +144,7 @@ class Parser(object):
 
         next_token = self._next_token
         debug = self.debug
-        self.error_mode = False
+        self.in_error_recovery = False
 
         context = self._get_init_context(context, input_str, position,
                                          file_name)
@@ -185,9 +184,11 @@ class Parser(object):
                 tokens_ahead = self._get_all_possible_tokens_ahead(context)
 
                 if self.error_recovery:
-                    self._create_error(context, symbols_expected, tokens_ahead)
+                    if not self.errors or not self.in_error_recovery:
+                        self._create_error(context, symbols_expected,
+                                           tokens_ahead)
                     if self._do_recovery(context):
-                        self.error_mode = True
+                        self.in_error_recovery = True
                         continue
 
             if not actions:
@@ -246,7 +247,7 @@ class Parser(object):
                 result = self._call_shift_action(context)
                 state_stack.append(StackNode(context, result))
 
-                self.error_mode = False
+                self.in_error_recovery = False
 
             elif act.action is REDUCE:
                 # if this is EMPTY reduction try to take another if
@@ -509,7 +510,6 @@ class Parser(object):
                 tokens.append(Token(terminal, tok))
         return tokens
 
-
     def _init_dynamic_disambiguation(self, context):
         if self.dynamic_filter:
             if self.debug:
@@ -752,11 +752,6 @@ class Parser(object):
 
     def _create_error(self, context, symbols_expected, tokens_ahead):
         error = Error(context, symbols_expected, tokens_ahead)
-
-        # If error continues previous do not register new object
-        # Its span will be extended by recovery.
-        if self.errors and self.error_mode:
-            return
 
         if self.debug:
             a_print("Error: ", error, level=1)

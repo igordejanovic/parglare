@@ -6,7 +6,6 @@ from copy import deepcopy
 from parglare import Parser
 from parglare import termui as t
 from .exceptions import DisambiguationError, ParseError
-from .errors import Error
 from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, STOP, Context, \
     Token
 from .common import Location, position_context
@@ -87,8 +86,8 @@ class GLRParser(Parser):
                 self.dot_trace = ""
 
         self.errors = []
-        self.current_error = None
-        self.error_reporting_mode = False
+        self.in_error_recovery = None
+        self.in_error_reporting = False
         self.last_position = 0
         self.expected = set()
         self.empty_reductions_results = {}
@@ -121,7 +120,7 @@ class GLRParser(Parser):
             # If after shifting we don't have any heads for reduce and we
             # haven't found any final parse do error reporting.
             if not self.heads_for_reduce and not self.finish_head:
-                self.error_reporting_mode = True
+                self.in_error_reporting = True
                 try:
                     if self.debug:
                         a_print("*** ENTERING ERROR REPORTING MODE.",
@@ -130,7 +129,7 @@ class GLRParser(Parser):
                     self._setup_error_reporting()
                     self._do_reductions()
                 finally:
-                    self.error_reporting_mode = False
+                    self.in_error_reporting = False
                     if self.debug:
                         a_print("*** LEAVING ERROR REPORTING MODE.",
                                 new_line=True)
@@ -141,13 +140,16 @@ class GLRParser(Parser):
             if self.error_recovery:
                 if not self.heads_for_reduce and not self.finish_head:
                     if self.heads_for_recovery:
-                        context = self.heads_for_recovery[0].context
-                        self._create_error(context, self.expected,
-                                           self.tokens_ahead)
-                        self._do_recovery()
+                        if not self.in_error_recovery:
+                            context = self.heads_for_recovery[0].context
+                            self._create_error(context, self.expected,
+                                               self.tokens_ahead)
+                        if self._do_recovery():
+                            self.in_error_recovery = True
+                            continue
                 else:
                     # Get out from error recovery mode.
-                    self.current_error = None
+                    self.in_error_recovery = False
                     # Report dying heads
                     if self.debug:
                         for h in self.heads_for_recovery:
@@ -191,7 +193,7 @@ class GLRParser(Parser):
         # For automata loop detection
         self.reducing_heads = []
 
-        if self.error_recovery and not self.error_reporting_mode:
+        if self.error_recovery and not self.in_error_reporting:
             self.heads_for_recovery = []
 
         while heads_for_reduce:
@@ -240,7 +242,7 @@ class GLRParser(Parser):
                 if token.symbol is STOP:
                     symbol_action = actions.get(token.symbol, None)
                     if symbol_action and symbol_action[0].action is ACCEPT:
-                        if self.error_reporting_mode:
+                        if self.in_error_reporting:
                             self.expected.add(token.symbol)
                         else:
                             if debug:
@@ -262,11 +264,11 @@ class GLRParser(Parser):
 
                 symbol_act = symbol_actions[0] if symbol_actions else None
                 if symbol_act and symbol_act.action is SHIFT:
-                    if self.error_reporting_mode:
+                    if self.in_error_reporting:
                         self.expected.add(token.symbol)
                     else:
                         self._add_to_heads_for_shift(head)
-                elif not reduce_actions and not self.error_reporting_mode:
+                elif not reduce_actions and not self.in_error_reporting:
                     if self.error_recovery:
                         # If this head is not reduced and no shift is possible
                         # collect it for possible recovery.
@@ -317,10 +319,7 @@ class GLRParser(Parser):
                    not self._call_dynamic_filter(context, SHIFT, None):
                         pass
                 else:
-                    if self.error_reporting_mode:
-                        self.expected.add(context.token_ahead.symbol)
-                    else:
-                        self._shift(head, action.state, context)
+                    self._shift(head, action.state, context)
             else:
                 # This should never happen as the shift possibility is checked
                 # during reducing and only those heads that can be shifted are
@@ -660,11 +659,10 @@ class GLRParser(Parser):
                         h_print("Advancing position to ",
                                 pos_to_line_col(input_str, position),
                                 level=1)
-                if token:
-                    head.context.token_ahead = token
+                head.context.token_ahead = token
 
-                    if debug:
-                        h_print("Introducing token {}", repr(token), level=1)
+                if token and debug:
+                    h_print("Introducing token {}", repr(token), level=1)
 
                 self.heads_for_reduce.append(head)
 
@@ -673,6 +671,8 @@ class GLRParser(Parser):
                     a_print("Killing head: ", head, level=1)
                     if self.debug_trace:
                         self._trace_step_kill(head)
+
+        return bool(token or position)
 
     def _debug_active_heads(self, heads):
         h_print("Active heads = ", len(heads))
