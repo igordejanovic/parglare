@@ -82,7 +82,7 @@ def position_context(context):
     Returns position context string.
     """
     start = max(context.position-10, 0)
-    c = text(context.input_str[start:context.position]) + _a("*") \
+    c = text(context.input_str[start:context.position]) + "*" \
         + text(context.input_str[context.position:context.position+10])
     return replace_newlines(c)
 
