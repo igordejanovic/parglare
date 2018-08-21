@@ -49,12 +49,12 @@ def test_glr_recovery_default():
     e1, e2 = parser.errors
 
     # First errors is '*' at position 8 and of length 1
-    assert e1.start_position == 8
-    assert e1.end_position == 9
+    assert e1.location.start_position == 8
+    assert e1.location.end_position == 9
 
     # Second error is '& 89' at position 12 and lenght 4
-    assert e2.start_position == 12
-    assert e2.end_position == 16
+    assert e2.location.start_position == 12
+    assert e2.location.end_position == 16
 
     # There are 5 trees for '1 + 2 + 3 - 5'
     # All results are the same

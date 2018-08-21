@@ -199,8 +199,8 @@ class Parser(object):
             if not actions:
                 if self.errors:
                     last_error = self.errors[-1]
-                    context.start_position = last_error.start_position
-                    context.end_position = last_error.end_position
+                    context.start_position = last_error.location.start_position
+                    context.end_position = last_error.location.end_position
                 else:
                     context.start_position = context.position
                 raise ParseError(Location(context=context), symbols_expected,
@@ -728,7 +728,7 @@ class Parser(object):
         # might decide to fill in missing tokens.
         if position:
             last_error = self.errors[-1]
-            last_error.end_position = position
+            last_error.location.end_position = position
             context.position = position
             if debug:
                 h_print("Advancing position to ",
@@ -756,6 +756,9 @@ class Parser(object):
             if context.position < len(context.input_str) else None
 
     def _create_error(self, context, symbols_expected, tokens_ahead):
+        context = copy(context)
+        context.start_position = context.position
+        context.end_position = context.position
         error = Error(context, symbols_expected, tokens_ahead)
 
         if self.debug:

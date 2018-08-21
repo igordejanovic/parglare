@@ -57,9 +57,9 @@ def test_error_recovery_uncomplete():
 
     e = parser.errors[0]
 
-    assert e.start_position == 8
-    assert e.end_position == 9
-    assert 'Error at 1:6:"1 + 2 + ** 3 & 89 -" => '\
+    assert e.location.start_position == 8
+    assert e.location.end_position == 9
+    assert 'Error at 1:8:"1 + 2 + ** 3 & 89 -" => '\
         'Expected: ( or number but found <*(*)>' in str(e)
 
 
@@ -80,15 +80,16 @@ def test_error_recovery_complete():
 
     e1, e2 = parser.errors
 
-    assert e1.start_position == 8
-    assert e1.end_position == 9
+    assert e1.location.start_position == 8
+    assert e1.location.end_position == 9
 
     # Characters of the second error should be packed as a single error
     # spanning the whole erroneous region. Whitespaces should be included too.
-    assert e2.start_position == 12
-    assert e2.end_position == 16
-    assert 'Error at 1:10:"+ 2 + * 3 *& 89 - 5" => '\
+    assert e2.location.start_position == 12
+    assert e2.location.end_position == 16
+    assert 'Error at 1:12:"+ 2 + * 3 *& 89 - 5" => '\
         'Expected: ) or * or + or - or / or EOF or ^' in str(e2)
+
 
 def test_error_recovery_parse_error():
     """In this test we have error that can't be recovered from by a simple

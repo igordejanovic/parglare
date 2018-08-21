@@ -656,7 +656,7 @@ class GLRParser(Parser):
             if position is not None or token is not None:
                 if position:
                     last_error = self.errors[-1]
-                    last_error.end_position = position
+                    last_error.location.end_position = position
                     head.context.position = position
                     if debug:
                         h_print("Advancing position to ",

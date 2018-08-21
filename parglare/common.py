@@ -18,12 +18,18 @@ class Location(object):
     line, column (int):
     """
 
-    __slots__ = ['context', '_file_name', '_line', '_column']
+    __slots__ = ['input_str', 'start_position', 'end_position', 'file_name',
+                 '_line', '_column']
 
     def __init__(self, context=None, file_name=None):
 
-        self.context = context
-        self._file_name = file_name
+        self.input_str = context.input_str if context else None
+        self.start_position = context.start_position if context else None
+        self.end_position = context.end_position if context else None
+        if file_name:
+            self.file_name = file_name
+        elif context:
+            self.file_name = context.file_name
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting
@@ -43,25 +49,14 @@ class Location(object):
         return self._column
 
     @property
-    def file_name(self):
-        if self._file_name:
-            return self._file_name
-        else:
-            return self.context.file_name
-
-    @property
-    def start_position(self):
-        return self.context.start_position
-
-    @property
-    def end_position(self):
-        return self.context.end_position
+    def position(self):
+        "Duck type this class to be used in position_context"
+        return self.start_position
 
     def evaluate_line_col(self):
         from parglare.parser import pos_to_line_col
         self._line, self._column = \
-            pos_to_line_col(self.context.input_str,
-                            self.context.start_position)
+            pos_to_line_col(self.input_str, self.start_position)
 
     def __str__(self):
         line, column = self.line, self.column
@@ -70,7 +65,7 @@ class Location(object):
                       .format("{}:".format(self.file_name)
                               if self.file_name else "",
                               line, column,
-                              position_context(self.context)))
+                              position_context(self)))
         elif self.context.file_name:
             return _a('{} => '.format(self.file_name))
         else:

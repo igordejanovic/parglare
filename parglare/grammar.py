@@ -439,7 +439,7 @@ class PGFile(object):
     Attributes:
 
     productions (list of Production): Local productions defined in this file.
-    terminals (list of Terminal):
+    terminals (dict of Terminal):
     classes (dict of ParglareClass): Dynamically created classes. Used by
         obj action.
     imports (dict): Mapping imported module/file local name to PGFile object.
