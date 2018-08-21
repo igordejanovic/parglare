@@ -23,7 +23,7 @@ If there is no errors in the grammar you now have the grammar instance. For more
 information see the [section about `Grammar` class](./grammar.md).
 
 
-!!! note
+!!! tip
 
     There is also a handy [pglr command line tool](./pglr.md) that can be
     used for grammar checking, visualization and debugging.

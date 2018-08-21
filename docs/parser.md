@@ -43,7 +43,8 @@ actions during the parse tree [parse tree](./parse_trees.md) building process.
 The return value of each action will be discarded, since they directly affect
 the parse tree building process.
 
-!!! note
+
+!!! warning
 
     Use this parameter with a special care when GLR is used, since actions will
     be called even on trees that can't be completed (unsuccessful parses).
@@ -58,7 +59,8 @@ rules](./disambiguation.md#associativity) to decide per production.
 You can disable this rule on per-production basis by using `nops` on the
 production.
 
-!!! note
+
+!!! warning
 
     Do not use `prefer_shifts` if you don't understand the implications. Try to
     understand [conflicts](./lr_parsing.md) and
@@ -76,7 +78,7 @@ production.
 You can disable this rule on per-production basis by using `nopse` on the
 production.
 
-!!! note
+!!! warning
 
     Do not use `prefer_shifts_over_empty` if you don't understand the
     implications. Try to understand [conflicts](./lr_parsing.md) and
@@ -133,7 +135,7 @@ These two calls accepts the following parameters:
 
 - **position** - the start position to parse from. By default 0.
 
-- **context** - the [context object](./actions.md#the-context-object) to use. By
+- **context** - the [context object](./common.md#the-context-object) to use. By
   default `None` - context object is created by the parser.
 
 - **file_name** - first positional and mandatory parameter only for `parse_file`

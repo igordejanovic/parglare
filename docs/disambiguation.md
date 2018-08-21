@@ -92,7 +92,7 @@ The associativity given in the grammar is either `left` or `right`. Default is
 no associativity, i.e. associativity is not used for disambiguation decision.
 
 
-!!! note
+!!! tip
 
     Alternatively, you can use keyword `shift` instead of `right` and `reduce`
     instead of `left`.
@@ -196,9 +196,8 @@ parser = Parser(grammar, dynamic_filter=custom_disambiguation_filter)
 
 Where resolution function is of the following form:
 
-```
-def custom_disambiguation_filter(action, token, production, subresults, state,
-                                 context):
+```python
+def custom_disambiguation_filter(context, action, subresults):
     """Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
@@ -206,40 +205,37 @@ def custom_disambiguation_filter(action, token, production, subresults, state,
     global operations
 
     # At the start of parsing this function is called with actions set to
-    # None to give a chance for the strategy to initialize.
+    # None to give a change for the strategy to initialize.
     if action is None:
         operations = []
         return
 
-    actions = state.actions[token.symbol]
-
-    # Lookahead operation
-    shift_op = token.symbol
+    op_ahead = context.token_ahead.symbol
+    actions = context.state.actions[op_ahead]
+    if op_ahead not in operations and op_ahead.name != 'STOP':
+        operations.append(op_ahead)
 
     if action is SHIFT:
-        if shift_op not in operations:
-            operations.append(shift_op)
-        if len(actions) == 1:
+        shifts = [a for a in actions if a.action is SHIFT]
+        if not shifts:
+            return False
+
+        reductions = [a for a in actions if a.action is REDUCE]
+        if not reductions:
             return True
-        red_op = [a for a in actions if a.action is REDUCE][0].prod.rhs[1]
-        return operations.index(shift_op) > operations.index(red_op)
+
+        red_op = reductions[0].prod.rhs[1]
+        return operations.index(op_ahead) > operations.index(red_op)
 
     elif action is REDUCE:
 
         # Current reduction operation
-        red_op = production.rhs[1]
-        if red_op not in operations:
-            operations.append(red_op)
+        red_op = context.production.rhs[1]
 
-        if len(actions) == 1:
-            return True
-
-        # If lookahead operation is not processed yet is is of higer priority
-        # so do not reduce.
-        # If lookahead is in operation and its index is higher do not reduce.
-        return (shift_op in operations
-                and (operations.index(shift_op)
-                     <= operations.index(red_op)))
+        # If operation ahead is STOP or is of less or equal priority -> reduce.
+        return ((op_ahead not in operations)
+                or (operations.index(op_ahead)
+                    <= operations.index(red_op)))
 ```
 
 This function is a predicate that will be called for each action for productions
@@ -250,17 +246,12 @@ operation.
 
 Parameters are:
 
+- **context** - [the parsing context object](./common.md#the-context-object).
+
 - **action** - either SHIFT or REDUCE constant from `parglare` module,
-
-- **token (Token)** - a [lookahead token](./parser.md#token),
-
-- **production (Production)** - a [production]() to be reduced. Valid only for
-  REDUCE.
 
 - **subresults (list)** - a sub-results for the reduction. Valid only for
   REDUCE. The length of this list is equal to `len(production.rhs)`.
-
-- **state (LRState)** - current LR parser state.
 
 For details see [test_dynamic_disambiguation_filters.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation_filters.py).
 
@@ -296,19 +287,25 @@ matches of the same length.
 
 For example:
 
-      number = /\d+/ {15};
+```nohighlight
+number = /\d+/ {15};
+```
 
 or:
 
-      number = /\d+/ {prefer};
+```nohighlight
+number = /\d+/ {prefer};
+```
 
 In addition, you can also specify terminal to take a part in dynamic
 disambiguation:
 
-      number = /\d+/ {dynamic};
+```nohighlight
+number = /\d+/ {dynamic};
+```
 
 
-## Custom lexical disambiguation
+## Custom token recognition and lexical disambiguation
 
 In the previous section is explained built-in parglare lexical disambiguation
 strategy. There are use-cases when this strategy is not sufficient. For example,
@@ -317,31 +314,30 @@ position.
 
 parglare solves this problem by enabling you to register a callable during
 parser instantiation that will, during parsing, get all the symbols expected at
-the current location and return a list of tokens (instances
-of [`Token` class](./parser.md#token)) or `None` or empty list if no symbol is
-found at the location.
+the current location and return a list of tokens (instances of [`Token`
+class](./parser.md#token)) or `None` or empty list if no symbol is found at the
+location.
 
 This callable is registered during parser instantiation as the parameter
-`custom_lexical_disambiguation`.
+`custom_token_recognition`.
 
 ```
 parser = Parser(
-    grammar, custom_lexical_disambiguation=custom_lexical_disambiguation)
+    grammar, )
 ```
 
 The callable accepts:
 
-- **symbols** - a list of terminals expected at the current position,
-- **input_str** - input string,
-- **position** - current position in the input string.
+- **context** - [the parsing context object](./common.md#the-context-object).
+
 - **get_tokens** - a callable used to get the tokens recognized using the
   default strategy. Called without parameters. Custom disambiguation might
   decide to return this list if no change is necessary, reduce the list, or
   extend it with new tokens. See the example bellow how to return list with a
   token only if the default recognition doesn't succeed.
 
-**Returns:** a list of `Token` class instances or `None`/empty list if no token
-is found.
+**Returns:** a list of [`Token` class instances](./parser.md#token) or
+`None`/empty list if no token is found.
 
 To instantiate `Token` pass in the symbol and the value of the token. Value of
 the token is usually a sub-string of the input string.
@@ -350,7 +346,8 @@ the token is usually a sub-string of the input string.
 In the following test `Bar` and `Baz` non-terminals are fuzzy matched. The
 non-terminal with the higher score wins but only if the score is above 0.7.
 
-```
+
+```python
 grammar = """
 S: Element+ EOF;
 Element: Bar | Baz | Number;
@@ -362,9 +359,9 @@ Number: /\d+/;
 g = Grammar.from_string(grammar)
 grammar = [g]
 
-def custom_lexical_disambiguation(symbols, input_str, position, get_tokens):
+def custom_token_recognition(context, get_tokens):
     """
-    Lexical disambiguation should return a single token that is
+    Custom token recognition should return a single token that is
     recognized at the given place in the input string.
     """
     # Call default token recognition.
@@ -384,8 +381,8 @@ def custom_lexical_disambiguation(symbols, input_str, position, get_tokens):
             grammar[0].get_terminal('Baz'),
         ]
         # Try to do fuzzy match at the position
-        elem = input_str[position:position+4]
-        elem_num = input_str[position:]
+        elem = context.input_str[context.position:context.position+4]
+        elem_num = context.input_str[context.position:]
         number_matcher = re.compile('[^\d]*(\d+)')
         number_match = number_matcher.match(elem_num)
         ratios = []
@@ -398,7 +395,7 @@ def custom_lexical_disambiguation(symbols, input_str, position, get_tokens):
 
 
 parser = Parser(
-    g, custom_lexical_disambiguation=custom_lexical_disambiguation)
+    g, custom_token_recognition=custom_token_recognition)
 
 # Bar and Baz will be recognized by a fuzzy match
 result = parser.parse('bar. 56 Baz 12')

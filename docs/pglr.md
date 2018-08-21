@@ -6,39 +6,43 @@ GLR parsing.
 
 To get the help on the command run:
 
-    $ pglr
-    Usage: pglr [OPTIONS] COMMAND [ARGS]...
+```nohighlight
+$ pglr
+Usage: pglr [OPTIONS] COMMAND [ARGS]...
 
-      Command line interface for working with parglare grammars.
+  Command line interface for working with parglare grammars.
 
-    Options:
-      --debug / --no-debug            Debug/trace output
-      --colors / --no-colors          Output coloring
-      --prefer-shifts / --no-prefer-shifts
-                                      Prefer shifts over reductions.
-      --prefer-shifts-over-empty / --no-prefer-shifts-over-empty
-                                      Prefer shifts over empty reductions.
-      --help                          Show this message and exit.
+Options:
+  --debug / --no-debug            Debug/trace output
+  --colors / --no-colors          Output coloring
+  --prefer-shifts / --no-prefer-shifts
+                                  Prefer shifts over reductions.
+  --prefer-shifts-over-empty / --no-prefer-shifts-over-empty
+                                  Prefer shifts over empty reductions.
+  --help                          Show this message and exit.
 
-    Commands:
-      check
-      trace
-      viz
+Commands:
+  check
+  trace
+  viz
+```
 
 
 ## Checking the grammar
 
 `check` command is used for grammar checking. To get help on the command run:
 
-    $ pglr check --help
-    Usage: pglr check [OPTIONS] GRAMMAR_FILE
+```nohighlight
+$ pglr check --help
+Usage: pglr check [OPTIONS] GRAMMAR_FILE
 
-    Options:
-      --help  Show this message and exit.
+Options:
+  --help  Show this message and exit.
 
 To check your grammar run:
 
     $ pglr check <grammar_file>
+```
 
 where `<grammar_file>` is the path to your grammar file.
 
@@ -48,58 +52,60 @@ where it is in the grammar.
 
 For example:
 
-    $ pglr check calc.pg
-    Error in the grammar file.
-    Error in file "calc.pg" at position 4,16 => "/' E  left*, 2}\n | E ".
-    Expected: { or | or ; or Name or RegExTerm or StrTerm
-
+```nohighlight
+$ pglr check calc.pg
+Error in the grammar file.
+Error in file "calc.pg" at position 4,16 => "/' E  left*, 2}\n | E ".
+Expected: { or | or ; or Name or RegExTerm or StrTerm
+```
 
 ## Getting detailed information
 
 To get the detailed information on the grammar run `pglr` command in the debug
 mode.
 
+```nohighlight
+$ pglr --debug check calc.pg
 
-   $ pglr --debug check calc.pg
-
-    *** GRAMMAR ***
-    Terminals:
-    number STOP + - ^ EMPTY ) \d+(\.\d+)? ( EOF / *
-    NonTerminals:
-    S' E
-    Productions:
-    0: S' = E STOP
-    1: E = E + E
-    2: E = E - E
-    3: E = E * E
-    4: E = E / E
-    5: E = E ^ E
-    6: E = ( E )
-    7: E = number
-
-
-    *** STATES ***
-
-    State 0
-            0: S' = . E STOP   {}
-            1: E = . E + E   {STOP, -, +, ^, ), /, *}
-            2: E = . E - E   {STOP, -, +, ^, ), /, *}
-            3: E = . E * E   {STOP, -, +, ^, ), /, *}
-            4: E = . E / E   {STOP, -, +, ^, ), /, *}
-            5: E = . E ^ E   {STOP, -, +, ^, ), /, *}
-            6: E = . ( E )   {STOP, -, +, ^, ), /, *}
-            7: E = . number   {STOP, -, +, ^, ), /, *}
+*** GRAMMAR ***
+Terminals:
+number STOP + - ^ EMPTY ) \d+(\.\d+)? ( EOF / *
+NonTerminals:
+S' E
+Productions:
+0: S' = E STOP
+1: E = E + E
+2: E = E - E
+3: E = E * E
+4: E = E / E
+5: E = E ^ E
+6: E = ( E )
+7: E = number
 
 
+*** STATES ***
 
-        GOTO:
-         E->1
+State 0
+        0: S' = . E STOP   {}
+        1: E = . E + E   {STOP, -, +, ^, ), /, *}
+        2: E = . E - E   {STOP, -, +, ^, ), /, *}
+        3: E = . E * E   {STOP, -, +, ^, ), /, *}
+        4: E = . E / E   {STOP, -, +, ^, ), /, *}
+        5: E = . E ^ E   {STOP, -, +, ^, ), /, *}
+        6: E = . ( E )   {STOP, -, +, ^, ), /, *}
+        7: E = . number   {STOP, -, +, ^, ), /, *}
 
-        ACTIONS:
-         (->SHIFT:2, number->SHIFT:3
 
-    ...
 
+    GOTO:
+      E->1
+
+    ACTIONS:
+      (->SHIFT:2, number->SHIFT:3
+
+...
+
+```
 
 This will give enumerated all the productions of your grammars and all the
 states. For each state you get the LR items with lookahead, elements of GOTO
@@ -112,7 +118,9 @@ Reduce/Reduce conflicts which makes much easier to see the exact cause of
 ambiguity and to use [disambiguation rules](./disambiguation.md)
 to resolve the conflicts or to go with GLR if the grammar is not LR(1).
 
-!!! note
+
+!!! tip
+
     You can use `--debug` option with any `pglr` command to put the parser
     in the debug mode and get a detailed output.
 
@@ -122,10 +130,12 @@ to resolve the conflicts or to go with GLR if the grammar is not LR(1).
 To visualize your automata with all the states and possible transitions run the
 command:
 
-    $ pglr viz calc.pg
-    Grammar OK.
-    Generating 'calc.pg.dot' file for the grammar PDA.
-    Use dot viewer (e.g. xdot) or convert to pdf by running 'dot -Tpdf -O calc.pg.dot'
+```nohighlight
+$ pglr viz calc.pg
+Grammar OK.
+Generating 'calc.pg.dot' file for the grammar PDA.
+Use dot viewer (e.g. xdot) or convert to pdf by running 'dot -Tpdf -O calc.pg.dot'
+```
 
 As given in the output you will get a `dot` file which represents LR automata
 visualization. You can see this diagram using dot viewers (e.g.
@@ -148,29 +158,35 @@ provide a way to trace the GSS.
 
 To get a help on the `trace` command run:
 
-    $ pglr trace --help
-    Usage: pglr trace [OPTIONS] GRAMMAR_FILE
+```nohighlight
+$ pglr trace --help
+Usage: pglr trace [OPTIONS] GRAMMAR_FILE
 
-    Options:
-      -f, --input-file PATH  Input file for tracing
-      -i, --input TEXT       Input string for tracing
-      --help                 Show this message and exit.
+Options:
+  -f, --input-file PATH  Input file for tracing
+  -i, --input TEXT       Input string for tracing
+  --help                 Show this message and exit.
+```
 
 You either give your input using file (`-f`) or using string provided in the
 command (`-i`), but not both.
 
 To run the GLR trace for the calc grammar and some input:
 
-    $ pglr trace calc.pg -i "2 + 3 * 5"
+```bash
+$ pglr trace calc.pg -i "2 + 3 * 5"
+```
 
 The `-i` switch tells the command to treat the last parameter as the input
 string to parse.
 
 
-!!! note
+!!! tip
+
     Since the GSS can be quite large and complex for larger inputs the advice is
     to use a minimal input that will exibit the intended behaviour for a
     visualization to be usable.
+
 
 The `trace` sub-command implies `--debug` switch so the parser will run in the
 debug mode and will produce the detailed output on the grammar, LR automata and
@@ -198,7 +214,8 @@ There are also dotted orange arrows (not shown in this example) that shows dropp
 empty reductions. Dropping happens when parser has found a better solution (i.e. a
 solution with fewer empty reductions).
 
-!!! note
+
+!!! tip
 
     To produce GLR parser visual trace from code your must [put the parser in
     debug mode](./debugging.md) by setting `debug` to `True` and enable visual

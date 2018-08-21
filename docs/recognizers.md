@@ -22,24 +22,30 @@ the input stream of objects.
 
 Recognizers are Python callables of the following form:
 
-    def some_recognizer(input, pos):
-       ...
-       ...
-       return part of input starting at pos
+```python
+def some_recognizer(context, input, pos):
+    ...
+    ...
+    return part of input starting at pos
+```
 
+where `context` is the [parsing context object]() and is optional (e.g. you
+don't have to accept it in your recognizers), `input` is the input string or
+list of objects and `position` is the position in the input where match should
+be performed. For example if we have an input stream of objects that are
+comparable (e.g. numbers) and we want to recognize ascending elements starting
+at the given position but such that the recognized token must have at least two
+object from the input. We could write following:
 
-For example if we have an input stream of objects that are comparable (e.g.
-numbers) and we want to recognize ascending elements starting at the given
-position but such that the recognized token must have at least two object from
-the input. We could write following:
-
-    def ascending_nosingle(input, pos):
-        "Match sublist of ascending elements. Matches at least two."
-        last = pos + 1
-        while last < len(input) and input[last] > input[last-1]:
-            last += 1
-        if last - pos >= 2:
-            return input[pos:last]
+```python
+def ascending_nosingle(input, pos):
+    "Match sublist of ascending elements. Matches at least two."
+    last = pos + 1
+    while last < len(input) and input[last] > input[last-1]:
+        last += 1
+    if last - pos >= 2:
+        return input[pos:last]
+```
 
 We register our recognizers during grammar construction. All terminal rules in
 the grammar that don't define string or regex match (i.e. they have empty
@@ -49,20 +55,31 @@ In order to do that, create a Python dict where the key will be a rule name used
 in the grammar references and the value will be recognizer callable. Pass the
 dictionary as a `recognizers` parameter to the parser.
 
+```python
+recognizers = {
+    'ascending': ascending_nosingle
+}
 
-    recognizers = {
-       'ascending': ascending_nosingle
-    }
-
-    grammar = Grammar.from_file('mygrammar.pg', recognizers=recognizers)
+grammar = Grammar.from_file('mygrammar.pg', recognizers=recognizers)
+```
 
 
 In the file `mygrammar.pg` you have to provide a terminal rule with empty body:
 
-    ascending: ;
+```nohighlight
+ascending: ;
+```
 
 
-!!! note
+!!! tip
 
     If you want more information you can investigate
     [test_recognizers.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py) test.
+
+
+!!! tip
+
+    You can also define recognizers in a separate Python file that
+    accompanies your grammar file. In that case, recognizers will be
+    automatically registered on the parser. For more information see [grammar
+    file recognizers](./grammar_modularization.md#grammar-file-recognizers).

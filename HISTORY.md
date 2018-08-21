@@ -1,7 +1,7 @@
 # History
 
 - Development version
-  - Rework/cleanup of both LR and GLR parsers. Backward incopatibile changes
+  - Rework/cleanup of both LR and GLR parsers. Backward incompatible changes
     (see below).
   - changed `layout` parser param to `in_layout`.
   - changed `position` parser param to `return_position`.

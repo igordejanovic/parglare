@@ -49,7 +49,9 @@ are kept on the stack but that's not important for this little analysis). This
 reduction will advace PDA to some other state again. Each shift/reduce operation
 change state so I'll not repeat that anymore.
 
-!!! note
+
+!!! tip
+
     See [pglr command](./pglr.md) which can be used to visualize PDA. Try to
     visualize automata for this grammar.
 
@@ -216,8 +218,11 @@ specified that addition has a priority of 1 and multiplication has a priority of
 `*` instead of reducing addition as the multiplication should be
 reduced/calculated first.
 
+
 !!! note
+
     The default priority for rules is 10.
+
 
 This change in the grammar resolves all ambiguities and our grammar is now
 LR(1).

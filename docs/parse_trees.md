@@ -61,3 +61,10 @@ with `tree_str()`:
     -[10, -]
     E[11]
       number[11, 1]
+
+
+!!! tip
+
+    You can use `tree_str()` on the root of the parse tree to get the string
+    representation of the parse tree. This can be handy to compare multiple
+    trees returned by GLR parser to analyse ambiguity.

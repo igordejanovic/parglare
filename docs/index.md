@@ -185,6 +185,7 @@ print("Result = ", result)
 # Result = 700.8
 ```
 
+
 !!! note
 
     **LR tables calculation**

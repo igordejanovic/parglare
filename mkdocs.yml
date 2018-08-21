@@ -9,7 +9,7 @@ theme: readthedocs
 extra_css: ['style.css']
 strict: true
 
-pages:
+nav:
 - Home: index.md
 - User Guide:
     - Getting started: getting_started.md
@@ -17,6 +17,7 @@ pages:
     - Grammar class: grammar.md
     - Parser: parser.md
     - Actions: actions.md
+    - Common API: common.md
     - Recognizers: recognizers.md
     - Modularization: grammar_modularization.md
     - LR parsing and conflicts: lr_parsing.md
@@ -34,4 +35,4 @@ markdown_extensions:
     - toc:
         permalink: True
 
-copyright: Copyright &copy; 2017 <a href="http://igordejanovic.net/">Igor Dejanović</a>.
+copyright: Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.

@@ -45,12 +45,13 @@ parameters:
 
 ### Attributes
 
-- **terminals** - a set of terminals (instances of [`Terminal`](#terminal));
+- **terminals** - a dict of terminals (instances of [`Terminal`](#terminal))
+  keyed by fully qualified name;
 
-- **nonterminals** - a set of non-terminal (instances
-  of [`NonTerminal`](#nonterminal));
+- **nonterminals** - a dict of non-terminal (instances
+  of [`NonTerminal`](#nonterminal)) keyed by fully qualified name;
 
-- **root_symbol** - a grammar symbol of the start/root rule. By default this is
+- **start_symbol** - a grammar symbol of the start/root rule. By default this is
   the first rule in the grammar;
 
 - **productions** - a list of productions ([`Production`](#production)
@@ -67,14 +68,14 @@ parameters:
 
 - **print_debug()** - prints detailed debug/trace info;
 
-- **get_terminal(name)** - gets the terminal by the given name or `None` if
-  not found;
+- **get_terminal(name)** - gets the terminal by the given fully qualified name
+  or `None` if not found;
 
-- **get_nonterminal(name)** - gets the non-terminal by the given name or `None`
-  if not found;
+- **get_nonterminal(name)** - gets the non-terminal by the given fully qualified
+  name or `None` if not found;
 
 - **get_symbol(name)** - gets either a terminal or non-terminal by the given
-  name or `None` if not found.
+  fully qualified name or `None` if not found.
 
 
 ## GrammarSymbol class
@@ -85,16 +86,26 @@ This is a base class for `Terminal` and `NonTerminal`.
 
 - **name** - the name of the grammar symbol,
 
-- **action_name** - the action name assigned for the symbol. This is given in
-  the grammar using the [`@` syntax](./grammar_language.md#).
+- **fqn** (property) - fully qualified name of the symbol. Qualified by import
+  module names.
 
-- **action** - resolved reference to the action given by the user using
+- **location** - an instance of `parglare.common.Location`. Gives information
+  about location in the file (position and span).
+
+- **action_name** - the action name assigned for the symbol. This is given in
+  the grammar using the [`@` syntax](./grammar_language.md#). If action name is
+  not provided in the grammar symbol name is used.
+
+- **action_fqn** (property) - the fully qualiifed action name for the symbol.
+  Qualified by the names of import modules.
+
+- **action** - resolved reference to the action function given by the user using
   `actions` parameter of the parser. Overrides grammar action if provided. If
   not given will be the same as `grammar_action`.
 
-- **grammar_action** - resolved reference to the action specified in the
-  grammar. Not used if `action` attribute is defined, i.e. `action` overrides
-  `grammar_action`.
+- **grammar_action** - resolved reference to the action function specified in
+  the grammar. Not used if `action` attribute is defined, i.e. `action`
+  overrides `grammar_action`.
 
 
 
@@ -117,7 +128,10 @@ This is a base class for `Terminal` and `NonTerminal`.
 
 ## NonTerminal class
 
-Only inherited from `GrammarSymbol`.
+### Attributes
+
+- **productions (list)** - A list of alternative productions for this
+  non-terminal symbol.
 
 
 ## Production class
@@ -144,3 +158,10 @@ Only inherited from `GrammarSymbol`.
 
 - **prod_symbol_id** - zero-based ordinal of the production for the `symbol`
   grammar symbol, i.e. the ordinal for the alternative choice for this symbol.
+
+
+## ProductionRHS class
+
+Represents right hand side of the production. Inherits list and keeps symbols
+from the production but doesn't count nor returns by index EMPTY symbols in the
+production.
