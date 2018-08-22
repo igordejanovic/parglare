@@ -8,6 +8,8 @@ from parglare.grammar import Grammar, NonTerminal, Terminal, \
     RegExRecognizer, StringRecognizer, EMPTY, EOF, STOP
 from parglare.common import get_collector
 from parglare.errors import Error
-from parglare.exceptions import ParseError, GrammarError
+from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
+    DisambiguationError
+
 
 __version__ = "0.6.1"

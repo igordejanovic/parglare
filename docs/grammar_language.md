@@ -20,7 +20,7 @@ Each grammar file consists of three parts:
 
 Each derivation/production rule is of the form:
 
-```
+```nohighlight
 <symbol>: <expression> ;
 ```
 
@@ -29,7 +29,7 @@ terminals and non-terminals separated by choice operator `|`.
 
 For example:
 
-```
+```nohighlight
 Fields: Field | Fields "," Field;
 ```
 
@@ -38,13 +38,13 @@ single `Field` or, recursively, as `Fields` followed by a string terminal `,`
 and than by another `Field`. It is not given here but `Field` could also be
 defined as a non-terminal. For example:
 
-```
+```nohighlight
 Field: QuotedField | FieldContent;
 ```
 
 Or it could be defined as a terminal in terminals section:
 
-```
+```nohighlight
 terminals
 Field: /[A-Z]*/;
 ```
@@ -72,7 +72,9 @@ following the keyword `terminals`.
 
 String recognizer is defined as a plain string inside of double quotes:
 
-    my_rule: "start" other_rule "end";
+```nohighlight
+my_rule: "start" other_rule "end";
+```
 
 In this example `"start"` and `"end"` will be terminals with string recognizers
 that match exactly the words `start` and `end`.
@@ -80,11 +82,13 @@ that match exactly the words `start` and `end`.
 You can write string recognizing terminal directly in the rule expression or you
 can define terminal separately and reference it by name, like:
 
-    my_rule: start other_rule end;
+```nohighlight
+my_rule: start other_rule end;
 
-    terminals
-    start: "start";
-    end: "end";
+terminals
+start: "start";
+end: "end";
+```
 
 Either way it will be the same terminal. You can't mix those two approaches for
 a single terminal. If you defined a terminal in the `terminals` section than you
@@ -102,7 +106,9 @@ Or regex recognizer for short is a regex pattern written inside slashes
 
 For example:
 
-     number: /\d+/;
+```nohighlight
+number: /\d+/;
+```
 
 This rule defines terminal symbol `number` which has a regex recognizer and will
 recognize one or more digits as a number.
@@ -129,16 +135,17 @@ Lets say that we have a list of integers (real list of Python ints, not a text
 with numbers) and we have some weird requirement to break those numbers
 according to the following grammar:
 
-      Numbers: all_less_than_five  ascending  all_less_than_five EOF;
-      all_less_than_five: all_less_than_five  int_less_than_five
-                        | int_less_than_five;
+```nohighlight
+Numbers: all_less_than_five  ascending  all_less_than_five EOF;
+all_less_than_five: all_less_than_five  int_less_than_five
+                  | int_less_than_five;
 
 
-      terminals
-      // These terminals have no recognizers defined in the grammar
-      ascending: ;
-      int_less_than_five: ;
-
+terminals
+// These terminals have no recognizers defined in the grammar
+ascending: ;
+int_less_than_five: ;
+```
 
 So, we should first match all numbers less than five and collect those, than we
 should match a list of ascending numbers and than list of less than five again.
@@ -161,8 +168,10 @@ a plain BNF notation.
 
 ### One or more
 
-    // sections rule bellow will match one or more section.
-    sections: sections section | section;
+```nohighlight
+// sections rule bellow will match one or more section.
+sections: sections section | section;
+```
 
 In this example `sections` will match one or more `section`. Notice the
 recursive definition of the rule. You can read this as _`sections` is either a
@@ -186,8 +195,10 @@ single section or `sections` and a `section`_.
 
 ### Zero or more
 
-    // sections rule bellow will match zero or more section.
-    sections: sections section | section | EMPTY;
+```nohighlight
+// sections rule bellow will match zero or more section.
+sections: sections section | section | EMPTY;
+```
 
 In this example `sections` will match zero or more `section`. Notice the
 addition of the `EMPTY` choice at the end. This means that matching nothing is a
@@ -197,8 +208,10 @@ Same note from above applies here to.
 
 ### Optional
 
-    document: optheader body;
-    optheader: header | EMPTY;
+```nohighlight
+document: optheader body;
+optheader: header | EMPTY;
+```
 
 In this example `optheader` is either a header or nothing.
 
@@ -217,10 +230,12 @@ expression syntax.
 
 `Optional` can be specified using `?`. For example:
 
-    S: "2" b? "3"?;
+```nohighlight
+S: "2" b? "3"?;
 
-    terminals
-    b: "1";
+terminals
+b: "1";
+```
 
 Here, after `2` we might have terminal `b` but it is optional, as well as `3`
 that follows.
@@ -228,19 +243,22 @@ that follows.
 Lets see what the parser will return for various inputs (the `grammar` variable
 is a string holding grammar from above):
 
-    g = Grammar.from_string(grammar)
-    p = Parser(g)
+```python
+g = Grammar.from_string(grammar)
+p = Parser(g)
 
-    input_str = '2 1 3'
-    result = p.parse(input_str)
-    assert result == ["2", "1", "3"]
+input_str = '2 1 3'
+result = p.parse(input_str)
+assert result == ["2", "1", "3"]
 
-    input_str = '2 3'
-    result = p.parse(input_str)
-    assert result == ["2", None, "3"]
+input_str = '2 3'
+result = p.parse(input_str)
+assert result == ["2", None, "3"]
+```
 
 
 !!! note
+
     Syntax equivalence for `optional` operator:
 
         S: b?;
@@ -265,32 +283,37 @@ is a string holding grammar from above):
 
 `One or more` match is specified using `+` operator. For example:
 
-    S: "2" c+;
+```nohighlight
+S: "2" c+;
 
-    terminals
-    c: "c";
+terminals
+c: "c";
+```
 
 After `2` we expect to see one or more `c` terminals.
 
 Lets see what the parser will return for various inputs (the `grammar` variable
 is a string holding grammar from above):
 
-    g = Grammar.from_string(grammar)
-    p = Parser(g)
+```python
+g = Grammar.from_string(grammar)
+p = Parser(g)
 
-    input_str = '2 c c c'
-    result = p.parse(input_str)
-    assert result == ["2", ["c", "c", "c"]]
+input_str = '2 c c c'
+result = p.parse(input_str)
+assert result == ["2", ["c", "c", "c"]]
 
-    input_str = '2 c'
-    result = p.parse(input_str)
-    assert result == ["2", ["c"]]
+input_str = '2 c'
+result = p.parse(input_str)
+assert result == ["2", ["c"]]
+```
 
 So the sub-expression on the second position (`c+` sub-rule) will by default
 produce a list of matched `c` terminals. If `c` is missing
 a [parse error](./handling_errors.md) will be raised.
 
 !!! note
+
     Syntax equivalence for `one or more`:
 
         S: a+;
@@ -310,11 +333,13 @@ a [parse error](./handling_errors.md) will be raised.
 
 `+` operator allows repetition modifier for separators. For example:
 
-    S: "2" c+[comma];
+```nohighlight
+S: "2" c+[comma];
 
-    terminals
-    c: "c";
-    comma: ",";
+terminals
+c: "c";
+comma: ",";
+```
 
 `c+[comma]` will match one or more `c` terminals separated by whatever is
 matched by the `comma` rule.
@@ -323,22 +348,25 @@ matched by the `comma` rule.
 Lets see what the parser will return for various inputs (the `grammar` variable
 is a string holding grammar from above):
 
-    g = Grammar.from_string(grammar)
-    p = Parser(g)
+```python
+g = Grammar.from_string(grammar)
+p = Parser(g)
 
-    input_str = '2 c, c,  c'
-    result = p.parse(input_str)
-    assert result == ["2", ["c", "c", "c"]]
+input_str = '2 c, c,  c'
+result = p.parse(input_str)
+assert result == ["2", ["c", "c", "c"]]
 
-    input_str = '2 c'
-    result = p.parse(input_str)
-    assert result == ["2", ["c"]]
+input_str = '2 c'
+result = p.parse(input_str)
+assert result == ["2", ["c"]]
+```
 
 As you can see giving a separator modifier allows us to parse a list of items
 separated by the whatever is matched by the rule given inside `[]`.
 
 
 !!! note
+
     Syntax equivalence `one or more with separator `:
 
         S: a+[comma];
@@ -367,28 +395,33 @@ separated by the whatever is matched by the rule given inside `[]`.
 
 `Zero or more` match is specified using `*` operator. For example:
 
-    S: "2" c*;
+```nohighlight
+S: "2" c*;
 
-    terminals
-    c: "c";
+terminals
+c: "c";
+```
 
 This syntactic addition is similar to `+` except that it doesn't require rule to
 match at least once. If there is no match, resulting sub-expression will be an
 empty list. For example:
 
-    g = Grammar.from_string(grammar)
-    p = Parser(g)
+```python
+g = Grammar.from_string(grammar)
+p = Parser(g)
 
-    input_str = '2 c c c'
-    result = p.parse(input_str)
-    assert result == ["2", ["c", "c", "c"]]
+input_str = '2 c c c'
+result = p.parse(input_str)
+assert result == ["2", ["c", "c", "c"]]
 
-    input_str = '2'
-    result = p.parse(input_str)
-    assert result == ["2", []]
+input_str = '2'
+result = p.parse(input_str)
+assert result == ["2", []]
+```
 
 
 !!! note
+
     Syntax equivalence `zero of more`:
 
         S: a*;
@@ -416,6 +449,7 @@ empty list. For example:
 Same as `one or more` this operator may use separator modifiers.
 
 !!! note
+
     Syntax equivalence `zero or more with separator `:
 
         S: a*[comma];
@@ -445,7 +479,8 @@ There are two special rules your can reference in your grammars: `EMPTY` and
 succeed, i.e. it is empty recognition. `EOF` rule will match only at the end of
 the input.
 
-!!! note
+!!! tip
+
     parglare doesn't assume that parse should be complete, i.e. that the whole
     input should be consumed. Thus, if you want to ensure that the whole input
     is consumed you must match `EOF` at the end of your input.
@@ -468,11 +503,13 @@ directly in the grammar.
 
 For example:
 
-    S: first=a second=digit+[comma];
+```nohighlight
+S: first=a second=digit+[comma];
 
-    terminals
-    a: "a";
-    digit: /\d+/;
+terminals
+a: "a";
+digit: /\d+/;
+```
 
 In this example root rule matches one `a` and then one or more digit separated
 by a comma. You can see that the first sub-expression (`a` match) is assigned to
@@ -502,7 +539,7 @@ is an instance of corresponding dynamically created Python class.
 
 Effectively, using named matches enables automatic creation of a nice AST.
 
-!!! note
+!!! tip
 
     You can, of course, override default action either in the grammar
     using `@` syntax or using `actions` dict given to the parser.
@@ -519,7 +556,7 @@ after `@` will be used instead of a rule name.
 
 For example:
 
-```
+```nohighlight
 @myaction
 some_rule: first second;
 ```
@@ -537,13 +574,14 @@ rule directly in the grammar.
 In parglare grammar, comments are available as both line comments and block
 comments:
 
+```nohighlight
+// This is a line comment. Everything from the '//' to the end of line is a comment.
 
-    // This is a line comment. Everything from the '//' to the end of line is a comment.
-
-    /*
-      This is a block comment.
-      Everything in between `/*`  and '*/' is a comment.
-    */
+/*
+  This is a block comment.
+  Everything in between `/*`  and '*/' is a comment.
+*/
+```
 
 
 ## Handling whitespaces and comments in your language
@@ -556,12 +594,14 @@ If you need more control of the layout, i.e. handling of not only whitespaces
 but comments also, you can use a special rule `LAYOUT`:
 
 
-      LAYOUT: LayoutItem | LAYOUT LayoutItem;
-      LayoutItem: WS | Comment | EMPTY;
+```nohighlight
+LAYOUT: LayoutItem | LAYOUT LayoutItem;
+LayoutItem: WS | Comment | EMPTY;
 
-      terminals
-      WS: /\s+/;
-      Comment: /\/\/.*/;
+terminals
+WS: /\s+/;
+Comment: /\/\/.*/;
+```
 
 This will form a separate layout parser that will parse in-between each matched
 tokens. In this example whitespaces and line-comments will be consumed by the
@@ -572,18 +612,22 @@ If this special rule is found in the grammar `ws` parser parameter is ignored.
 Here is another example that gives support for both line comments and block
 comments like the one used in the grammar language itself:
 
-      LAYOUT: LayoutItem | LAYOUT LayoutItem;
-      LayoutItem: WS | Comment | EMPTY;
-      Comment: '/*' CorNCs '*/' | LineComment;
-      CorNCs: CorNC | CorNCs CorNC | EMPTY;
-      CorNC: Comment | NotComment | WS;
+```nohighlight
+LAYOUT: LayoutItem | LAYOUT LayoutItem;
+LayoutItem: WS | Comment | EMPTY;
+Comment: '/*' CorNCs '*/' | LineComment;
+CorNCs: CorNC | CorNCs CorNC | EMPTY;
+CorNC: Comment | NotComment | WS;
 
-      terminals
-      WS: /\s+/;
-      LineComment: /\/\/.*/;
-      NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
+terminals
+WS: /\s+/;
+LineComment: /\/\/.*/;
+NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
+```
 
-!!! note
+
+!!! tip
+
     If `LAYOUT` is provided it *must* match before the first token, between any
     two tokens in the input, and after the last token. If layout cannot be
     empty, the input cannot start or end with a token. If this is not desired,
@@ -599,20 +643,26 @@ the desired behaviour for language keywords.
 
 For example, lets examine this little grammar:
 
-    S: "for" name=ID "=" from=INT "to" to=INT EOF;
+```nohighlight
+S: "for" name=ID "=" from=INT "to" to=INT EOF;
 
-    terminals
-    ID: /\w+/;
-    INT: /\d+/;
+terminals
+ID: /\w+/;
+INT: /\d+/;
+```
 
 
 This grammar is intended to match statement like this one:
 
-    for a=10 to 20
+```nohighlight
+for a=10 to 20
+```
 
 But it will also match:
 
-    fora=10 to20
+```nohighlight
+fora=10 to20
+```
 
 which is not what we wanted.
 
@@ -624,29 +674,37 @@ match only on word boundary.
 
 For example:
 
-    S: "for" name=ID "=" from=INT "to" to=INT EOF;
+```nohighlight
+S: "for" name=ID "=" from=INT "to" to=INT EOF;
 
-    terminals
-    ID: /\w+/;
-    INT: /\d+/;
-    KEYWORD: /\w+/;
+terminals
+ID: /\w+/;
+INT: /\d+/;
+KEYWORD: /\w+/;
+```
 
 
 Now,
 
-    fora=10 to20
+```nohighlight
+fora=10 to20
+```
 
 will not be recognized as the words `for` and `to` are recognized to be keywords
 (they can be matched by the `KEYWORD` rule).
 
 This will be parsed correctly:
 
-    for a=10 to 20
+```nohighlight
+for a=10 to 20
+```
 
 As `=` is not matched by the `KEYWORD` rule and thus doesn't require to be
 separated from the surrounding tokens.
 
+
 !!! note
+
     parglare uses integrated scanner so this example:
 
         for for=10 to 20

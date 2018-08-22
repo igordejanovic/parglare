@@ -24,7 +24,7 @@ Each node of the tree has following attributes:
   [layout](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) that
   preceeds the given tree node. The layout consists of whitespaces/comments.
 
-- **symbol** - a grammar symbol this node is created for.
+- **symbol** (property) - a grammar symbol this node is created for.
 
 
 Additionally, each `NodeTerm` has:
@@ -43,7 +43,7 @@ Each node has a `tree_str()` method which will return a string representation of
 the sub-tree starting from the given node. If called on a root node it will
 return the string representation of the whole tree.
 
-For example, parsing the input `1 + 2 * 3 -1` with the expression grammar from
+For example, parsing the input `1 + 2 * 3 - 1` with the expression grammar from
 the quick start will look like this if printed
 with `tree_str()`:
 
@@ -61,3 +61,10 @@ with `tree_str()`:
     -[10, -]
     E[11]
       number[11, 1]
+
+
+!!! tip
+
+    You can use `tree_str()` on the root of the parse tree to get the string
+    representation of the parse tree. This can be handy to compare multiple
+    trees returned by GLR parser to analyse ambiguity.

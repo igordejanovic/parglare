@@ -29,8 +29,7 @@ g = Grammar.from_string(grammar)
 operations = []
 
 
-def custom_disambiguation_filter(action, token, production, subresults, state,
-                                 context):
+def custom_disambiguation_filter(context, action, subresults):
     """Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
@@ -43,35 +42,32 @@ def custom_disambiguation_filter(action, token, production, subresults, state,
         operations = []
         return
 
-    actions = state.actions[token.symbol]
-
-    # Lookahead operation
-    shift_op = token.symbol
+    op_ahead = context.token_ahead.symbol
+    actions = context.state.actions[op_ahead]
+    if op_ahead not in operations and op_ahead.name != 'STOP':
+        operations.append(op_ahead)
 
     if action is SHIFT:
-        if shift_op not in operations:
-            operations.append(shift_op)
-        if len(actions) == 1:
+        shifts = [a for a in actions if a.action is SHIFT]
+        if not shifts:
+            return False
+
+        reductions = [a for a in actions if a.action is REDUCE]
+        if not reductions:
             return True
-        red_op = [a for a in actions if a.action is REDUCE][0].prod.rhs[1]
-        return operations.index(shift_op) > operations.index(red_op)
+
+        red_op = reductions[0].prod.rhs[1]
+        return operations.index(op_ahead) > operations.index(red_op)
 
     elif action is REDUCE:
 
         # Current reduction operation
-        red_op = production.rhs[1]
-        if red_op not in operations:
-            operations.append(red_op)
+        red_op = context.production.rhs[1]
 
-        if len(actions) == 1:
-            return True
-
-        # If lookahead operation is not processed yet is is of higer priority
-        # so do not reduce.
-        # If lookahead is in operation and its index is higher do not reduce.
-        return (shift_op in operations
-                and (operations.index(shift_op)
-                     <= operations.index(red_op)))
+        # If operation ahead is STOP or is of less or equal priority -> reduce.
+        return ((op_ahead not in operations)
+                or (operations.index(op_ahead)
+                    <= operations.index(red_op)))
 
 
 def test_dynamic_disambiguation():

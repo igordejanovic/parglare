@@ -14,13 +14,19 @@ class GrammarError(LocationError):
 
 
 class ParseError(LocationError):
-    def __init__(self, location, message):
+    def __init__(self, location, symbols_expected, tokens_ahead=None):
+        self.symbols_expected = symbols_expected
+        self.tokens_ahead = tokens_ahead
+        message = expected_message(symbols_expected, tokens_ahead)
         super(ParseError, self).__init__(location, message)
 
 
-def expected_message(symbols):
-    return (_('Expected: ') + '{}').format(
-        _(' or ').join(sorted([s.name for s in symbols])))
+def expected_message(symbols_expected, tokens_ahead=None):
+    return _('Expected: ') \
+        + _(' or ').join(sorted([s.name for s in symbols_expected])) \
+        + ((_(' but found ') +
+            _(' or ').join([str(t) for t in tokens_ahead]))
+           if tokens_ahead else '')
 
 
 def disambiguation_error(tokens):
@@ -32,15 +38,17 @@ class ParserInitError(Exception):
     pass
 
 
-class DisambiguationError(Exception):
-    def __init__(self, tokens):
+class DisambiguationError(LocationError):
+    def __init__(self, location, tokens):
         self.tokens = tokens
+        message = disambiguation_error(tokens)
+        super(DisambiguationError, self).__init__(location, message)
 
 
 class DynamicDisambiguationConflict(Exception):
-    def __init__(self, state, token, actions):
-        self.state = state
-        self.token = token
+    def __init__(self, context, actions):
+        self.state = state = context.state
+        self.token = token = context.token
         self.actions = actions
 
         from parglare.parser import SHIFT

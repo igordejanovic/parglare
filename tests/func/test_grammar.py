@@ -142,7 +142,7 @@ def test_terminal_priority():
 
     g = Grammar.from_string(grammar)
 
-    for t in g.terminals:
+    for t in g.terminals.values():
         if t.name == 'A':
             assert t.prior == 15
         else:

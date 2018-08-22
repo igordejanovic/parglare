@@ -2,12 +2,12 @@
 from __future__ import unicode_literals, print_function
 import codecs
 import sys
+from copy import copy, deepcopy
 from .grammar import EMPTY, EOF, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
-    DynamicDisambiguationConflict, disambiguation_error, expected_message, \
-    SRConflicts, RRConflicts
+    DynamicDisambiguationConflict, SRConflicts, RRConflicts
 from .common import Location, position_context
 from .actions import pass_none
 from .termui import prints, h_print, a_print
@@ -23,15 +23,19 @@ class Parser(object):
     """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, start_production=1, actions=None,
+    def __init__(self, grammar, start_production=None, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, layout=False, position=False, prefer_shifts=True,
-                 prefer_shifts_over_empty=True, error_recovery=False,
-                 dynamic_filter=None, custom_lexical_disambiguation=None):
+                 tables=LALR, in_layout=False, return_position=False,
+                 prefer_shifts=True, prefer_shifts_over_empty=True,
+                 error_recovery=False, dynamic_filter=None,
+                 custom_token_recognition=None):
         self.grammar = grammar
-        self.start_production = start_production
+        if start_production is not None:
+            self.start_production = grammar.get_production_id(start_production)
+        else:
+            self.start_production = 1
         EMPTY.action = pass_none
         EOF.action = pass_none
         if actions:
@@ -39,22 +43,22 @@ class Parser(object):
                                           fail_on_no_resolve=True)
 
         self.layout_parser = None
-        if not layout:
-            layout_prod = grammar.get_production_id('LAYOUT')
+        if not in_layout:
+            layout_prod = grammar.get_symbol('LAYOUT')
             if layout_prod:
                 self.layout_parser = Parser(
                     grammar,
-                    start_production=layout_prod,
+                    start_production='LAYOUT',
                     actions=layout_actions,
-                    ws=None, layout=True,
-                    position=True,
+                    ws=None, in_layout=True,
+                    return_position=True,
                     prefer_shifts=True,
                     prefer_shifts_over_empty=True,
                     debug=debug_layout)
 
-        self.layout = layout
+        self.in_layout = in_layout
         self.ws = ws
-        self.position = position
+        self.return_position = return_position
         self.debug = debug
         self.debug_trace = debug_trace
         self.debug_colors = debug_colors
@@ -66,7 +70,7 @@ class Parser(object):
 
         self.error_recovery = error_recovery
         self.dynamic_filter = dynamic_filter
-        self.custom_lexical_disambiguation = custom_lexical_disambiguation
+        self.custom_token_recognition = custom_token_recognition
 
         from .closure import LR_0, LR_1
         from .tables import create_table
@@ -76,7 +80,8 @@ class Parser(object):
             itemset_type = LR_1
         self.table = create_table(
             grammar, itemset_type=itemset_type,
-            start_production=start_production, prefer_shifts=prefer_shifts,
+            start_production=self.start_production,
+            prefer_shifts=prefer_shifts,
             prefer_shifts_over_empty=prefer_shifts_over_empty)
 
         self._check_parser()
@@ -112,7 +117,7 @@ class Parser(object):
                 raise RRConflicts(unhandled_conflicts)
 
     def print_debug(self):
-        if self.layout and self.debug_layout:
+        if self.in_layout and self.debug_layout:
             a_print('*** LAYOUT parser ***', new_line=True)
         self.table.print_debug()
 
@@ -140,254 +145,169 @@ class Parser(object):
             a_print("*** PARSING STARTED", new_line=True)
 
         self.errors = []
-        self.current_error = None
-
-        if self.dynamic_filter:
-            if self.debug:
-                prints("\tInitializing dynamic disambiguation.")
-            self.dynamic_filter(None, None, None, None, None, context)
-
-        state_stack = [StackNode(self.table.states[0], position, 0, None,
-                                 None)]
-        context = Context() if not context else context
-        context.input_str = input_str
-        if not hasattr(context, 'file_name') or context.file_name is None:
-            context.file_name = file_name
 
         next_token = self._next_token
         debug = self.debug
-        layout_content = ''
+        self.file_name = file_name
+        self.in_error_recovery = False
 
-        context.parser = self
-        context.start_position = position
-        context.end_position = position
-        context.layout_content = layout_content
-        context.symbol = None
-        context.production = None
-        context.node = None
-        if not hasattr(context, "extra"):
-            context.extra = None
+        context = self._get_init_context(context, input_str, position,
+                                         file_name)
+        assert isinstance(context, Context)
 
-        new_token = True
-        ntok = Token()
+        self._init_dynamic_disambiguation(context)
+        self.state_stack = state_stack = [StackNode(context, None)]
 
         while True:
-            cur_state = state_stack[-1].state
+            cur_state = state_stack[-1].context.state
             if debug:
                 a_print("Current state:", str(cur_state.state_id),
                         new_line=True)
 
-            actions = cur_state.actions
+            if context.token_ahead is None:
+                if not self.in_layout:
+                    self._skipws(context)
+                    if self.debug:
+                        h_print("Layout content:",
+                                "'{}'".format(context.layout_content),
+                                level=1)
 
-            if new_token or ntok.symbol not in actions:
-                # Try to recognize a new token in the input only after
-                # successful SHIFT operation, i.e. when the input position has
-                # moved. REDUCE operation doesn't move position. If the current
-                # ntok_sym is not in the current actions then try to find new
-                # token. This could happen if old token is not available in the
-                # actions of the current state but EMPTY is and will match
-                # always leading to reduction.
-                try:
-
-                    if not self.layout:
-                        position, layout_content = self._skipws(context,
-                                                                input_str,
-                                                                position)
-                        if self.debug:
-                            h_print("Layout content:",
-                                    "'{}'".format(layout_content), level=1)
-
-                    ntok = next_token(cur_state, input_str, position, context)
-
-                except DisambiguationError as e:
-                    raise ParseError(
-                        location=Location(file_name=file_name,
-                                          input_str=input_str,
-                                          start_position=position),
-                        message=disambiguation_error(e.tokens))
-
-            context.start_position = position
-            context.end_position = position + len(ntok.value)
-            context.layout_content = layout_content
+                context.token_ahead = next_token(context)
 
             if debug:
-                h_print("Context:",
-                        position_context(input_str, position), level=1)
+                h_print("Context:", position_context(context), level=1)
                 h_print("Tokens expected:",
-                        expected_symbols_str(actions.keys()), level=1)
-                h_print("Token ahead:", ntok, level=1)
+                        expected_symbols_str(cur_state.actions.keys()),
+                        level=1)
+                h_print("Token ahead:", context.token_ahead, level=1)
 
-            acts = actions.get(ntok.symbol)
+            actions = cur_state.actions.get(context.token_ahead.symbol)
 
-            if not acts:
+            if not actions:
+
+                symbols_expected = cur_state.actions.keys()
+                tokens_ahead = self._get_all_possible_tokens_ahead(context)
 
                 if self.error_recovery:
-                    # If we are past end of input error recovery can't be
-                    # successful and the only thing we can do is to throw
-                    # ParserError
-                    if position > len(input_str):
-                        e = self.current_error
-                        raise ParseError(Location(file_name=file_name,
-                                                  input_str=input_str,
-                                                  start_position=e.position),
-                                         expected_message(actions.keys()))
-                    if debug:
-                        a_print("**Error found. Recovery initiated.**")
-
-                    # No actions to execute. Try error recovery.
-                    if type(self.error_recovery) is bool:
-                        # Default recovery
-                        error, position, ntok = self.default_error_recovery(
-                            input_str, position, set(actions.keys()))
-                    else:
-                        # Custom recovery provided during parser construction
-                        ntok, error, position = self.error_recovery(
-                            self, input_str, position, set(actions.keys()))
-
-                    # The recovery may either decide to skip erroneous part
-                    # of the input and resume at the place that can
-                    # continue or it might decide to fill in/replace
-                    # missing/invalid tokens.
-                    if error:
-                        if debug:
-                            a_print("Error: ", error, level=1)
-                        self.errors.append(error)
-
-                    if not ntok:
-                        # If token is not created we are just droping current
-                        # input and advancing position. Thus, stay in the same
-                        # state and try to continue.
-                        if debug:
-                            h_print("Continuing at position ",
-                                    pos_to_line_col(input_str, position),
-                                    level=1)
-
-                        new_token = True
+                    if not self.errors or not self.in_error_recovery:
+                        self._create_error(context, symbols_expected,
+                                           tokens_ahead)
+                    if self._do_recovery(context):
+                        self.in_error_recovery = True
                         continue
 
-                    else:
-                        acts = actions.get(ntok.symbol)
-
-            if not acts:
-                raise ParseError(Location(file_name=file_name,
-                                          input_str=input_str,
-                                          start_position=position),
-                                 expected_message(actions.keys()))
+            if not actions:
+                if self.errors:
+                    last_error = self.errors[-1]
+                    context.start_position = last_error.location.start_position
+                    context.end_position = last_error.location.end_position
+                else:
+                    context.start_position = context.position
+                raise ParseError(Location(context=context), symbols_expected,
+                                 tokens_ahead)
 
             # Dynamic disambiguation
             if self.dynamic_filter:
-                dacts = []
-                for a in acts:
-                    if a.action is SHIFT:
-                        if self._call_dynamic_filter(
-                                SHIFT, ntok, None, None, cur_state, context):
-                            dacts.append(a)
-                    elif a.action is REDUCE:
-                        r_len = len(a.prod.rhs)
-                        if r_len:
-                            subresults = [x.result
-                                          for x in state_stack[-r_len:]]
-                        else:
-                            subresults = []
-                        if self._call_dynamic_filter(
-                                REDUCE, ntok, a.prod, subresults, cur_state,
-                                context):
-                            dacts.append(a)
-                    else:
-                        dacts.append(a)
-
-                acts = dacts
+                actions = self._dynamic_disambiguation(context, actions)
 
                 # If after dynamic disambiguation we still have at least one
                 # shift and non-empty reduction or multiple non-empty
                 # reductions raise exception.
-                if len([a for a in acts
+                if len([a for a in actions
                         if (a.action is SHIFT)
                         or ((a.action is REDUCE) and len(a.prod.rhs))]) > 1:
-                    raise DynamicDisambiguationConflict(cur_state, ntok, acts)
+                    raise DynamicDisambiguationConflict(context, actions)
 
             # If dynamic disambiguation is disabled either globaly by not
             # giving disambiguation function or localy by not marking
-            # any poduction dynamic for this state take the first action.
+            # any production dynamic for this state take the first action.
             # First action is either SHIFT while there might be empty
             # reductions, or it is the only reduction.
             # Otherwise, parser construction should raise an error.
-            act = acts[0]
+            act = actions[0]
 
             if act.action is SHIFT:
-                state = act.state
-                symbol = state.symbol
-                context.symbol = symbol
+                cur_state = act.state
 
                 if debug:
                     a_print("Shift:",
-                            "{} \"{}\"" .format(state.state_id,
-                                                ntok.value) + " at position " +
-                            str(pos_to_line_col(input_str,
-                                                position)), level=1)
+                            "{} \"{}\""
+                            .format(cur_state.state_id,
+                                    context.token_ahead.value)
+                            + " at position " +
+                            str(pos_to_line_col(context.input_str,
+                                                context.position)), level=1)
 
-                result = self._call_shift_action(symbol, ntok.value, context)
+                new_position = context.position \
+                    + len(context.token_ahead.value)
+                context = Context(
+                    state=act.state,
+                    start_position=context.position,
+                    end_position=new_position,
+                    token=context.token_ahead,
+                    layout_content=context.layout_content_ahead,
+                    position=new_position,
+                    context=context)
 
-                # If in error recovery mode, get out.
-                self.current_error = None
+                result = self._call_shift_action(context)
+                state_stack.append(StackNode(context, result))
 
-                state_stack.append(StackNode(state,
-                                             context.start_position,
-                                             context.end_position,
-                                             context.layout_content,
-                                             result))
-                position = context.end_position
-                new_token = True
+                self.in_error_recovery = False
 
             elif act.action is REDUCE:
                 # if this is EMPTY reduction try to take another if
                 # exists.
                 if len(act.prod.rhs) == 0:
-                    if len(acts) > 1:
-                        act = acts[1]
-                production = act.prod
-                symbol = production.symbol
-                context.symbol = symbol
-                context.production = production
+                    if len(actions) > 1:
+                        act = actions[1]
+                context.production = production = act.prod
 
                 if debug:
                     a_print("Reducing", "by prod '{}'.".format(production),
                             level=1)
 
                 r_length = len(production.rhs)
+                top_stack_context = state_stack[-1].context
                 if r_length:
-                    context.end_position = state_stack[-1].end_position
-                    context.start_position = \
-                        state_stack[-r_length].start_position
-                    context.layout_content = \
-                        state_stack[-r_length].layout_content
+                    start_reduction_context = state_stack[-r_length].context
                     subresults = [x.result for x in state_stack[-r_length:]]
                     del state_stack[-r_length:]
-                    cur_state = state_stack[-1].state
+                    cur_state = state_stack[-1].context.state.gotos[
+                        production.symbol]
+                    context = Context(
+                        state=cur_state,
+                        start_position=start_reduction_context.start_position,
+                        end_position=top_stack_context.end_position,
+                        position=top_stack_context.position,
+                        production=production,
+                        token_ahead=top_stack_context.token_ahead,
+                        layout_content=start_reduction_context.layout_content,
+                        layout_content_ahead=top_stack_context.layout_content_ahead,  # noqa
+                        context=context)
                 else:
                     subresults = []
-                    context.end_position = position
-                    context.start_position = position
-                    context.layout_content = ''
+                    cur_state = cur_state.gotos[production.symbol]
+                    context = Context(
+                        state=cur_state,
+                        start_position=context.end_position,
+                        end_position=context.end_position,
+                        position=context.position,
+                        production=production,
+                        token_ahead=top_stack_context.token_ahead,
+                        layout_content='',
+                        layout_content_ahead=top_stack_context.layout_content_ahead,  # noqa
+                        context=context)
 
                 # Calling reduce action
-                result = self._call_reduce_action(production, subresults,
-                                                  context)
-
-                cur_state = cur_state.gotos[production.symbol]
-                state_stack.append(StackNode(cur_state,
-                                             context.start_position,
-                                             context.end_position,
-                                             context.layout_content,
-                                             result))
-                new_token = False
+                result = self._call_reduce_action(context, subresults)
+                state_stack.append(StackNode(context, result))
 
             elif act.action is ACCEPT:
                 if debug:
                     a_print("SUCCESS!!!")
                 assert len(state_stack) == 2
-                if self.position:
-                    return state_stack[1].result, position
+                if self.return_position:
+                    return state_stack[1].result, context.position
                 else:
                     return state_stack[1].result
 
@@ -402,7 +322,8 @@ class Parser(object):
             context.start_position = node.start_position
             context.end_position = node.end_position
             context.node = node
-            context.symbol = node.symbol
+            context.production = None
+            context.token = None
             context.layout_content = node.layout_content
 
         def inner_call_actions(node):
@@ -461,44 +382,67 @@ class Parser(object):
 
         return inner_call_actions(node)
 
-    def _skipws(self, context, input_str, position):
-        in_len = len(input_str)
-        layout_content = ''
+    def _get_init_context(self, context, input_str, position, file_name):
+
+        context = Context() if not context else context
+
+        context.state = self.table.states[0]
+        context.input_str = input_str
+        if not hasattr(context, 'file_name') or context.file_name is None:
+            context.file_name = file_name
+        context.parser = self
+        context.position = context.start_position = \
+            context.end_position = position
+        context.layout_content = ''
+
+        return context
+
+    def _skipws(self, context):
+
+        in_len = len(context.input_str)
+        context.layout_content_ahead = ''
+
         if self.layout_parser:
             _, pos = self.layout_parser.parse(
-                input_str, position, context=context)
-            if pos > position:
-                layout_content = input_str[position:pos]
-            position = pos
+                context.input_str, context.position, context=copy(context))
+            if pos > context.position:
+                context.layout_content_ahead = \
+                    context.input_str[context.position:pos]
+                context.position = pos
         elif self.ws:
-            old_pos = position
+            old_pos = context.position
             try:
-                while position < in_len and input_str[position] in self.ws:
-                    position += 1
+                while context.position < in_len \
+                      and context.input_str[context.position] in self.ws:
+                    context.position += 1
             except TypeError:
                 raise ParserInitError(
                     "For parsing non-textual content please "
                     "set `ws` to `None`.")
-            layout_content = input_str[old_pos:position]
+            context.layout_content_ahead = \
+                context.input_str[old_pos:context.position]
 
         if self.debug:
-            content = layout_content.replace("\n", "\\n") \
-                      if type(layout_content) is text else layout_content
+            content = context.layout_content_ahead
+            if type(context.layout_content_ahead) is text:
+                content = content.replace("\n", "\\n")
             h_print("Skipping whitespaces:",
                     "'{}'".format(content), level=1)
-            h_print("New position:",
-                    pos_to_line_col(input_str, position), level=1)
+            h_print("New position:", pos_to_line_col(context.input_str,
+                                                     context.position),
+                    level=1)
 
-        return position, layout_content
-
-    def _next_token(self, state, input_str, position, context):
+    def _next_token(self, context):
         """
         For the current position in the input stream and actions in the current
         state find next token.
         """
 
+        state = context.state
+        input_str = context.input_str
+        position = context.position
+
         actions = state.actions
-        finish_flags = state.finish_flags
 
         in_len = len(input_str)
 
@@ -512,21 +456,15 @@ class Parser(object):
         else:
             tokens = []
             if position < in_len:
-                if self.custom_lexical_disambiguation:
-                    symbols = actions.keys()
+                if self.custom_token_recognition:
 
                     def get_tokens():
-                        return self._token_recognition(input_str,
-                                                       position, actions,
-                                                       finish_flags,
-                                                       context)
+                        return self._token_recognition(context)
 
-                    tokens = self.custom_lexical_disambiguation(
-                        symbols, input_str, position, get_tokens)
+                    tokens = self.custom_token_recognition(
+                        context, get_tokens)
                 else:
-                    tokens = self._token_recognition(input_str, position,
-                                                     actions, finish_flags,
-                                                     context)
+                    tokens = self._token_recognition(context)
             if not tokens:
                 if STOP in actions:
                     ntok = STOP_token
@@ -535,12 +473,16 @@ class Parser(object):
             elif len(tokens) == 1:
                 ntok = tokens[0]
             else:
-                ntok = self._lexical_disambiguation(tokens)
+                ntok = self._lexical_disambiguation(context, tokens)
 
         return ntok
 
-    def _token_recognition(self, input_str, position, actions, finish_flags,
-                           context):
+    def _token_recognition(self, context):
+        input_str = context.input_str
+        actions = context.state.actions
+        position = context.position
+        finish_flags = context.state.finish_flags
+
         tokens = []
         last_prior = -1
         for idx, symbol in enumerate(actions):
@@ -557,39 +499,107 @@ class Parser(object):
                     break
         return tokens
 
-    def _call_shift_action(self, symbol, matched_str, context):
+    def _get_all_possible_tokens_ahead(self, context):
+        """
+        Check what is ahead no matter the current state.
+        Just check with all recognizers available.
+        """
+        tokens = []
+        for terminal in self.grammar.terminals.values():
+            if terminal.recognizer._pg_context:
+                tok = terminal.recognizer(context, context.input_str,
+                                          context.position)
+            else:
+                tok = terminal.recognizer(context.input_str, context.position)
+            if tok is not None:
+                tokens.append(Token(terminal, tok))
+        return tokens
+
+    def _init_dynamic_disambiguation(self, context):
+        if self.dynamic_filter:
+            if self.debug:
+                prints("\tInitializing dynamic disambiguation.")
+            self.dynamic_filter(context, None, None)
+
+    def _dynamic_disambiguation(self, context, actions):
+
+        dyn_actions = []
+        for a in actions:
+            if a.action is SHIFT:
+                if self._call_dynamic_filter(context, SHIFT, None):
+                    dyn_actions.append(a)
+            elif a.action is REDUCE:
+                r_len = len(a.prod.rhs)
+                if r_len:
+                    subresults = [x.result
+                                  for x in self.state_stack[-r_len:]]
+                else:
+                    subresults = []
+                context.production = a.prod
+                if self._call_dynamic_filter(context, REDUCE, subresults):
+                    dyn_actions.append(a)
+            else:
+                dyn_actions.append(a)
+        return dyn_actions
+
+    def _call_dynamic_filter(self, context, action, subresults):
+        if (action is SHIFT and not context.token_ahead.symbol.dynamic)\
+           or (action is REDUCE and not context.production.dynamic):
+            return True
+
+        if self.debug:
+            h_print("Calling filter for action:",
+                    " {}, token={}{}{}"
+                    .format(
+                        "SHIFT" if action is SHIFT else "REDUCE",
+                        context.token,
+                        ", prod={}".format(context.production)
+                        if action is REDUCE else "",
+                        ", subresults={}".format(subresults)
+                        if action is REDUCE else ""), level=2)
+
+        accepted = self.dynamic_filter(context, action, subresults)
+        if self.debug:
+            if accepted:
+                a_print("Action accepted.", level=2)
+            else:
+                a_print("Action rejected.", level=2)
+
+        return accepted
+
+    def _call_shift_action(self, context):
         """
         Calls registered shift action for the given grammar symbol.
         """
         debug = self.debug
-        sem_action = symbol.action
+        token = context.token
+        sem_action = token.symbol.action
 
         if self.build_tree:
             # call action for building tree node if tree building is enabled
             if debug:
                 h_print("Building terminal node",
-                        "'{}'.".format(symbol.name), level=2)
+                        "'{}'.".format(token.symbol.name), level=2)
 
             # If both build_tree and call_actions_during_build are set to
             # True, semantic actions will be call but their result will be
             # discarded. For more info check following issue:
             # https://github.com/igordejanovic/parglare/issues/44
             if self.call_actions_during_tree_build and sem_action:
-                sem_action(context, matched_str)
+                sem_action(context, token.value)
 
-            return treebuild_shift_action(context, matched_str)
+            return treebuild_shift_action(context)
 
-        sem_action = symbol.action
         if sem_action:
-            result = sem_action(context, matched_str)
+            result = sem_action(context, token.value)
 
         else:
             if debug:
                 h_print("No action defined",
                         "for '{}'. "
-                        "Result is matched string.".format(symbol.name),
+                        "Result is matched string.".format(token.symbol.name),
                         level=1)
-            result = matched_str
+            result = token.value
 
         if debug:
             h_print("Action result = ",
@@ -598,13 +608,14 @@ class Parser(object):
 
         return result
 
-    def _call_reduce_action(self, production, subresults, context):
+    def _call_reduce_action(self, context, subresults):
         """
         Calls registered reduce action for the given grammar symbol.
         """
         debug = self.debug
         result = None
         bt_result = None
+        production = context.production
 
         if self.build_tree:
             # call action for building tree node if enabled.
@@ -662,7 +673,7 @@ class Parser(object):
         # action, and return the result of treebuild_reduce_action.
         return bt_result if bt_result is not None else result
 
-    def _lexical_disambiguation(self, tokens):
+    def _lexical_disambiguation(self, context, tokens):
         """
         For the given list of matched tokens apply disambiguation strategy.
 
@@ -693,82 +704,170 @@ class Parser(object):
             elif len(pref_tokens) > 1:
                 tokens = pref_tokens
 
-        raise DisambiguationError(tokens)
+        raise DisambiguationError(Location(context), tokens)
 
-    def default_error_recovery(self, input, position, expected_symbols):
+    def _do_recovery(self, context):
+
+        debug = self.debug
+        if debug:
+            a_print("**Recovery initiated.**")
+
+        if type(self.error_recovery) is bool:
+            # Default recovery
+            if debug:
+                prints("\tDoing default error recovery.")
+            token, position = self._default_error_recovery(context)
+        else:
+            # Custom recovery provided during parser construction
+            if debug:
+                prints("\tDoing custom error recovery.")
+            token, position = self.error_recovery(context)
+
+        # The recovery may either decide to skip erroneous part of
+        # the input and resume at the place that can continue or it
+        # might decide to fill in missing tokens.
+        if position:
+            last_error = self.errors[-1]
+            last_error.location.end_position = position
+            context.position = position
+            if debug:
+                h_print("Advancing position to ",
+                        pos_to_line_col(context.input_str, position),
+                        level=1)
+
+        context.token_ahead = token
+        if token and debug:
+            h_print("Introducing token {}", repr(token), level=1)
+
+        return bool(token or position)
+
+    def _default_error_recovery(self, context):
         """The default recovery strategy is to drop char/object at current position
         and try to continue.
 
         Args:
-            input (sequence): Input string/stream of objects.
-            position (int): The current position in the input string.
-            expected_symbols (list of GrammarSymbol): The symbol that are
-                expected at the current location in the current state.
+            context(Context): The parsing context
 
         Returns:
-            (Error, new position, new Token or None)
+            (None for new Token, new position)
 
         """
-        if self.current_error:
-            self.current_error.length = position + 1 \
-                                         - self.current_error.position
-            return None, position + 1, None
-        else:
-            error = Error(position, 1,
-                          input_str=input,
-                          expected_symbols=expected_symbols)
-            self.current_error = error
-            return error, position + 1, None
+        return None, context.position + 1 \
+            if context.position < len(context.input_str) else None
 
-    def _call_dynamic_filter(self, action, token, production, subresults,
-                             state, context):
-        if (action is SHIFT and not token.symbol.dynamic)\
-           or (action is REDUCE and not production.dynamic):
-            return True
+    def _create_error(self, context, symbols_expected, tokens_ahead):
+        context = copy(context)
+        context.start_position = context.position
+        context.end_position = context.position
+        error = Error(context, symbols_expected, tokens_ahead)
 
         if self.debug:
-            h_print("Calling filter for action:",
-                    " {}, token={}{}{}"
-                    .format(
-                        "SHIFT" if action is SHIFT else "REDUCE", token,
-                        ", prod={}".format(production)
-                        if action is REDUCE else "",
-                        ", subresults={}".format(subresults)
-                        if action is REDUCE else ""), level=2)
+            a_print("Error: ", error, level=1)
 
-        accepted = self.dynamic_filter(action, token, production, subresults,
-                                       state, context)
-        if self.debug:
-            if accepted:
-                a_print("Action accepted.", level=2)
-            else:
-                a_print("Action rejected.", level=2)
-
-        return accepted
+        self.errors.append(error)
 
 
 class Context:
-    pass
+    """
+    Args:
+        state(LRState):
+        file_name(str):
+        position(int):
+        start_position, end_position(int):
+        layout_content(str): Layout content preceeding current token.
+        layout_content_ahead(str): Layout content preceeding token_ahead.
+        token(Token): Token for shift operation.
+        token_ahead(Token): Token recognized ahead at position in given
+             state.
+        extra(anything): Used for additional state maintained by the user.
+    """
+
+    __local = ['state',
+               'position',
+               'start_position',
+               'end_position',
+               'token',
+               'token_ahead',
+               'production',
+               'layout_content',
+               'layout_content_ahead',
+               'node']
+    __t = ['file_name',
+           'input_str',
+           'parser',
+           'extra']
+
+    __slots__ = __local + __t
+
+    def __init__(self, state=None, position=None, start_position=None,
+                 end_position=None, token=None, token_ahead=None,
+                 production=None, layout_content=None,
+                 layout_content_ahead=None, node=None, file_name=None,
+                 input_str=None, parser=None, extra=None, context=None):
+        self.state = state
+        self.position = position
+        self.start_position = start_position
+        self.end_position = end_position
+        self.token = token
+        self.token_ahead = token_ahead
+        self.production = production
+        self.layout_content = layout_content
+        self.layout_content_ahead = layout_content_ahead
+        self.node = node
+        if context:
+            self.extra = deepcopy(context.extra)
+            self.file_name = context.file_name
+            self.input_str = context.input_str
+            self.parser = context.parser
+        else:
+            self.extra = extra
+            self.file_name = file_name
+            self.input_str = input_str
+            self.parser = parser
+
+    @property
+    def symbol(self):
+        if self.token is not None:
+            return self.token.symbol
+        elif self.production is not None:
+            return self.production.symbol
+        elif self.node is not None:
+            return self.node.symbol
+
+    def __deepcopy__(self, memo):
+        new_inst = self.__class__()
+        for attr in self.__slots__:
+            setattr(new_inst, attr, getattr(self, attr))
+        new_inst.extra = deepcopy(self.extra, memo)
+        return new_inst
+
+    def __str__(self):
+        if self.symbol:
+            return str(self.symbol)
+        elif self.token:
+            return str(self.token)
+        else:
+            return str(self.production)
 
 
 class StackNode:
-    __slots__ = ['state',
-                 'start_position',
-                 'end_position',
-                 'layout_content',
-                 'result']
+    __slots__ = ['context', 'result']
 
-    def __init__(self, state, start_position, end_position, layout_content,
-                 result):
-        self.state = state
-        self.start_position = start_position
-        self.end_position = end_position
-        self.layout_content = layout_content
+    def __init__(self, context, result):
+        self.context = context
         self.result = result
+
+    def __repr__(self):
+        return "<StackNode({}, pos=({}-{}))>"\
+            .format(repr(self.context.state),
+                    self.context.start_position, self.context.end_position)
 
 
 class Node(object):
     """A node of the parse tree."""
+
+    __slots__ = ['start_position', 'end_position', 'layout_content']
+
     def __init__(self, start_position, end_position, layout_content=None):
         self.start_position = start_position
         self.end_position = end_position
@@ -785,7 +884,7 @@ class Node(object):
 
 
 class NodeNonTerm(Node):
-    __slots__ = ['start_position', 'end_position', 'production', 'children']
+    __slots__ = ['production', 'children']
 
     def __init__(self, start_position, end_position, production, children,
                  layout_content=None):
@@ -826,15 +925,22 @@ class NodeNonTerm(Node):
 
 
 class NodeTerm(Node):
-    __slots__ = ['start_position', 'end_position', 'symbol', 'value']
+    __slots__ = ['token']
 
-    def __init__(self, start_position, end_position, symbol, value,
+    def __init__(self, start_position, end_position, token,
                  layout_content=None):
         super(NodeTerm, self).__init__(start_position,
                                        end_position,
                                        layout_content=layout_content)
-        self.value = value
-        self.symbol = symbol
+        self.token = token
+
+    @property
+    def symbol(self):
+        return self.token.symbol
+
+    @property
+    def value(self):
+        return self.token.value
 
     def tree_str(self, depth=0):
         return '{}[{}->{}, "{}"]'.format(self.symbol,
@@ -880,9 +986,9 @@ EMPTY_token = Token(EMPTY)
 EOF_token = Token(EOF)
 
 
-def treebuild_shift_action(context, value):
+def treebuild_shift_action(context):
     return NodeTerm(context.start_position, context.end_position,
-                    context.symbol, value, context.layout_content)
+                    context.token, context.layout_content)
 
 
 def treebuild_reduce_action(context, nodes):

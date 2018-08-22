@@ -39,7 +39,10 @@ def test_error_recovery_uncomplete():
     will succeed. In order to prevent partial parse first grammar rule should
     be ended with EOF like in the case of 'Result' rule.
     """
-    parser = Parser(g, start_production=2, actions=actions,
+
+    # By setting start_production to 'E' parser will understand only +
+    # operation
+    parser = Parser(g, actions=actions, start_production='E',
                     error_recovery=True, debug=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
@@ -54,9 +57,10 @@ def test_error_recovery_uncomplete():
 
     e = parser.errors[0]
 
-    assert e.position == 8
-    assert e.length == 1
-    assert 'Unexpected input at position (1, 8). Expected' in str(e)
+    assert e.location.start_position == 8
+    assert e.location.end_position == 9
+    assert 'Error at 1:8:"1 + 2 + ** 3 & 89 -" => '\
+        'Expected: ( or number but found <*(*)>' in str(e)
 
 
 def test_error_recovery_complete():
@@ -76,14 +80,15 @@ def test_error_recovery_complete():
 
     e1, e2 = parser.errors
 
-    assert e1.position == 8
-    assert e1.length == 1
+    assert e1.location.start_position == 8
+    assert e1.location.end_position == 9
 
     # Characters of the second error should be packed as a single error
     # spanning the whole erroneous region. Whitespaces should be included too.
-    assert e2.position == 12
-    assert e2.length == 4
-    assert 'Unexpected input at position (1, 12)' in str(e2)
+    assert e2.location.start_position == 12
+    assert e2.location.end_position == 16
+    assert 'Error at 1:12:"+ 2 + * 3 *& 89 - 5" => '\
+        'Expected: ) or * or + or - or / or EOF or ^' in str(e2)
 
 
 def test_error_recovery_parse_error():
@@ -110,17 +115,17 @@ def test_custom_error_recovery():
 
     called = [False]
 
-    def my_recovery(parser, input, position, expected_symbols):
+    def my_recovery(context):
+        expected_symbols = context.state.actions.keys()
         called[0] = True
-        assert isinstance(parser, Parser)
-        assert input == '1 + 2 + * 3 - 5'
-        assert position == 8
-        assert type(expected_symbols) is set
+        assert isinstance(context.parser, Parser)
+        assert context.input_str == '1 + 2 + * 3 - 5'
+        assert context.position == 8
         open_par = g.get_terminal('(')
         assert open_par in expected_symbols
         number = g.get_terminal('number')
         assert number in expected_symbols
-        return None, None, position + 1
+        return None, context.position + 1
 
     parser = Parser(g, actions=actions, error_recovery=my_recovery, debug=True)
 

@@ -3,8 +3,8 @@ from __future__ import unicode_literals, print_function
 from os import path
 import sys
 import re
-import inspect
 import itertools
+from copy import copy
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError, ParserInitError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
@@ -19,11 +19,13 @@ else:
 
 try:
     from inspect import signature
+
     def get_number_of_params(func):
         s = signature(func)
         return len(s.parameters)
 except ImportError:
     import inspect
+
     def get_number_of_params(func_or_obj):
         if inspect.isfunction(func_or_obj):
             return len(inspect.getargspec(func_or_obj).args)
@@ -160,6 +162,7 @@ class Terminal(GrammarSymbol):
         else:
             value._pg_context = False
         self._recognizer = value
+
 
 class Reference(object):
     """
@@ -436,18 +439,21 @@ class PGFile(object):
     Attributes:
 
     productions (list of Production): Local productions defined in this file.
-    terminals (list of Terminal):
+    terminals (dict of Terminal):
+    classes (dict of ParglareClass): Dynamically created classes. Used by
+        obj action.
     imports (dict): Mapping imported module/file local name to PGFile object.
     file_path (str): A full canonic path to the .pg file.
     grammar (PGFile): A root/grammar file.
     recognizers (dict of callables): A dict of Python callables used as a
         terminal recognizers.
     """
-    def __init__(self, productions, terminals=None, imports=None,
+    def __init__(self, productions, terminals=None, classes=None, imports=None,
                  file_path=None, grammar=None, recognizers=None,
                  imported_with=None):
         self.productions = productions
-        self.terminals = set(terminals) if terminals is not None else set()
+        self.terminals = terminals
+        self.classes = classes if classes else {}
         self.grammar = self if grammar is None else grammar
 
         self.file_path = path.realpath(file_path) if file_path else None
@@ -486,12 +492,11 @@ class PGFile(object):
         """
         nonterminals_by_name = {}
         terminals_by_name = {}
-        terminals_by_value = {}
+        terminals_by_str_rec = {}
 
         # Check terminal uniqueness in both name and string recognition
         # and collect all terminals from explicit definitions.
         for terminal in self.terminals:
-            terminal.imported_with = self.imported_with
             if terminal.name in terminals_by_name:
                 raise GrammarError(
                     location=terminal.location,
@@ -499,22 +504,25 @@ class PGFile(object):
                             .format(terminal.name))
             if isinstance(terminal.recognizer, StringRecognizer):
                 rec = terminal.recognizer
-                if rec.value in terminals_by_value:
+                if rec.value in terminals_by_str_rec:
                     raise GrammarError(
                         location=terminal.location,
                         message='Terminals "{}" and "{}" match '
                         'the same string.'
                         .format(terminal.name,
-                                terminals_by_value[rec.value].name))
-                terminals_by_value[rec.value] = terminal
+                                terminals_by_str_rec[rec.value].name))
+                terminals_by_str_rec[rec.value] = terminal
             terminals_by_name[terminal.name] = terminal
+
+        self.terminals = terminals_by_name
+        self.terminals_by_str_rec = terminals_by_str_rec
 
         # Collect non-terminals
         for production in self.productions:
             symbol = production.symbol
             symbol.imported_with = self.imported_with
             # Check that there is no terminal defined by the same name.
-            if symbol.name in terminals_by_name:
+            if symbol.name in self.terminals:
                 raise GrammarError(
                     location=symbol.location,
                     message='Rule "{}" already defined as terminal'
@@ -537,8 +545,10 @@ class PGFile(object):
                         message='Multiple different grammar actions '
                         'for rule "{}".'.format(new_symbol.name))
 
-        nonterminals_by_name.update(terminals_by_name)
-        self.symbols_by_name = nonterminals_by_name
+        self.nonterminals = nonterminals_by_name
+        self.symbols_by_name = dict(nonterminals_by_name)
+        self.symbols_by_name.update(self.terminals)
+
         # Add special terminals
         self.symbols_by_name['EMPTY'] = EMPTY
         self.symbols_by_name['EOF'] = EOF
@@ -791,11 +801,11 @@ class Grammar(PGFile):
 
     """
 
-    def __init__(self, productions=None, terminals=None, imports=None,
-                 file_path=None, recognizers=None, start_symbol=None,
-                 _no_check_recognizers=False, re_flags=re.MULTILINE,
-                 ignore_case=False, debug=False, debug_parse=False,
-                 debug_colors=False):
+    def __init__(self, productions=None, terminals=None,
+                 classes=None, imports=None, file_path=None, recognizers=None,
+                 start_symbol=None, _no_check_recognizers=False,
+                 re_flags=re.MULTILINE, ignore_case=False, debug=False,
+                 debug_parse=False, debug_colors=False):
         """
         Grammar constructor is not meant to be called directly by the user.
         See `from_str` and `from_file` static methods instead.
@@ -810,6 +820,7 @@ class Grammar(PGFile):
 
         super(Grammar, self).__init__(productions=productions,
                                       terminals=terminals,
+                                      classes=classes,
                                       imports=imports,
                                       file_path=file_path,
                                       grammar=self,
@@ -855,22 +866,25 @@ class Grammar(PGFile):
 
     def _add_all_symbols_productions(self):
 
-        self.nonterminals = set()
+        self.nonterminals = {}
         for prod in self.productions:
-            self.nonterminals.add(prod.symbol)
-        self.terminals.update([EMPTY, EOF, STOP])
+            self.nonterminals[prod.symbol.fqn] = prod.symbol
+        self.terminals.update([(s.name, s) for s in (EMPTY, EOF, STOP)])
 
         def add_productions(productions):
             for production in productions:
                 symbol = production.symbol
-                if symbol not in self.nonterminals:
-                    self.nonterminals.add(symbol)
-                for rhs_elem in production.rhs:
+                if symbol.fqn not in self.nonterminals:
+                    self.nonterminals[symbol.fqn] = symbol
+                for idx, rhs_elem in enumerate(production.rhs):
                     if isinstance(rhs_elem, Terminal):
-                        if rhs_elem not in self.terminals:
-                            self.terminals.add(rhs_elem)
+                        if rhs_elem.fqn not in self.terminals:
+                            self.terminals[rhs_elem.fqn] = rhs_elem
+                        else:
+                            # Unify terminals
+                            production.rhs[idx] = self.terminals[rhs_elem.fqn]
                     elif isinstance(rhs_elem, NonTerminal):
-                        if rhs_elem not in self.nonterminals:
+                        if rhs_elem.fqn not in self.nonterminals:
                             self.productions.extend(rhs_elem.productions)
                             add_productions(rhs_elem.productions)
                     else:
@@ -909,7 +923,7 @@ class Grammar(PGFile):
 
         # Change each string recognizer corresponding to the KEYWORD
         # regex by the regex recognizer that match on word boundaries.
-        for term in self.terminals:
+        for term in self.terminals.values():
             if isinstance(term.recognizer, StringRecognizer):
                 match = keyword_rec(term.recognizer.value, 0)
                 if match == term.recognizer.value:
@@ -1001,7 +1015,7 @@ class Grammar(PGFile):
                 symbol.action = symbol.grammar_action
 
     def _connect_override_recognizers(self):
-        for term in self.terminals:
+        for term in self.terminals.values():
             if self.recognizers and term.fqn in self.recognizers:
                 term.recognizer = self.recognizers[term.fqn]
             else:
@@ -1021,15 +1035,11 @@ class Grammar(PGFile):
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."
-        for t in self.terminals:
-            if t.name == name or t.fqn == name:
-                return t
+        return self.terminals.get(name)
 
     def get_nonterminal(self, name):
         "Returns non-terminal with the given fully qualified name or name."
-        for n in self.nonterminals:
-            if n.name == name or n.fqn == name:
-                return n
+        return self.nonterminals.get(name)
 
     def get_symbol(self, name):
         "Returns grammar symbol with the given name."
@@ -1039,13 +1049,14 @@ class Grammar(PGFile):
         return s
 
     def __iter__(self):
-        return (s for s in itertools.chain(self.nonterminals, self.terminals)
+        return (s for s in itertools.chain(self.nonterminals.values(),
+                                           self.terminals.values())
                 if s not in [AUGSYMBOL, STOP])
 
     def get_production_id(self, name):
         "Returns first production id for the given symbol name"
         for p in self.productions:
-            if p.symbol.name == name:
+            if p.symbol.fqn == name:
                 return p.prod_id
 
     @staticmethod
@@ -1063,26 +1074,27 @@ class Grammar(PGFile):
                _no_check_recognizers=False):
         from .parser import Context
         context = Context()
-        context.re_flags = re_flags
-        context.ignore_case = ignore_case
-        context.debug = debug
-        context.debug_colors = debug_colors
-        context.classes = {}
-        context.inline_terminals = {}
-        context.imported_with = None
-        context.grammar = None
+        context.extra = extra = GrammarContext()
+        extra.re_flags = re_flags
+        extra.ignore_case = ignore_case
+        extra.debug = debug
+        extra.debug_colors = debug_colors
+        extra.classes = {}
+        extra.inline_terminals = {}
+        extra.imported_with = None
+        extra.grammar = None
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
-        imports, productions, terminals = \
+        imports, productions, terminals, classes = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
                                                     context=context)
         g = Grammar(productions=productions,
                     terminals=terminals,
+                    classes=classes,
                     imports=imports,
                     recognizers=recognizers,
                     file_path=what_to_parse
                     if parse_fun_name == 'parse_file' else None,
                     _no_check_recognizers=_no_check_recognizers)
-        g.classes = context.classes
         termui.colors = debug_colors
         if debug:
             g.print_debug()
@@ -1129,7 +1141,7 @@ class PGFileImport(object):
         self.module_name = module_name
         self.file_path = file_path
         self.context = context
-        self.imported_with = context.imported_with
+        self.imported_with = context.extra.imported_with
         self.grammar = None
         self.pgfile = None
 
@@ -1148,16 +1160,19 @@ class PGFileImport(object):
                 self.pgfile = self.grammar.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
-                self.context.inline_terminals = {}
-                self.context.imported_with = self
-                self.context.file_name = self.file_path
-                imports, productions, terminals = \
+                from .parser import Context
+                context = Context(extra=self.context.extra,
+                                  file_name=self.file_path)
+                context.extra.inline_terminals = {}
+                context.extra.imported_with = self
+                imports, productions, terminals, classes = \
                     get_grammar_parser(
-                        self.context.debug,
-                        self.context.debug_colors).parse_file(
-                            self.file_path, context=self.context)
+                        self.context.extra.debug,
+                        self.context.extra.debug_colors).parse_file(
+                            self.file_path, context=context)
                 self.pgfile = PGFile(productions=productions,
                                      terminals=terminals,
+                                     classes=classes,
                                      imports=imports,
                                      grammar=self.grammar,
                                      imported_with=self,
@@ -1243,6 +1258,12 @@ def check_name(context, name):
         raise GrammarError(
             location=Location(context),
             message='Using dot in names is not allowed.'.format(name))
+
+
+class GrammarContext:
+    def __deepcopy__(self, memo):
+        # Use shallow copy for grammar context
+        return copy(self)
 
 
 # Grammar for grammars
@@ -1471,10 +1492,10 @@ def act_pgfile(context, nodes):
             elif type(first[0]) is Terminal:
                 terminals = first
 
-    for terminal in context.inline_terminals.values():
+    for terminal in context.extra.inline_terminals.values():
         terminals.append(terminal)
 
-    return [imports, productions, terminals]
+    return [imports, productions, terminals, context.extra.classes]
 
 
 def act_import(context, nodes):
@@ -1520,7 +1541,7 @@ def act_production_rule(context, nodes):
     check_name(context, name)
 
     symbol = NonTerminal(name, location=Location(context),
-                         imported_with=context.imported_with)
+                         imported_with=context.extra.imported_with)
 
     # Collect all productions for this rule
     prods = []
@@ -1592,11 +1613,11 @@ def act_production_rule(context, nodes):
                         .format(name, hex(id(self)))
 
         ParglareClass.__name__ = str(symbol.fqn)
-        if symbol.fqn in context.classes:
+        if symbol.fqn in context.extra.classes:
             # If rule has multiple definition merge attributes.
-            context.classes[symbol.fqn]._pg_attrs.update(attrs)
+            context.extra.classes[symbol.fqn]._pg_attrs.update(attrs)
         else:
-            context.classes[symbol.fqn] = ParglareClass
+            context.extra.classes[symbol.fqn] = ParglareClass
 
         symbol.action_name = 'obj'
 
@@ -1649,7 +1670,7 @@ def act_term_rule(context, nodes):
 
     check_name(context, name)
     term = Terminal(name, recognizer, location=Location(context),
-                    imported_with=context.imported_with)
+                    imported_with=context.extra.imported_with)
     if len(nodes) > 4:
         _set_term_props(term, nodes[4])
     return term
@@ -1660,7 +1681,7 @@ def act_term_rule_empty_body(context, nodes):
 
     check_name(context, name)
     term = Terminal(name, location=Location(context),
-                    imported_with=context.imported_with)
+                    imported_with=context.extra.imported_with)
     term.recognizer = None
     if len(nodes) > 3:
         _set_term_props(term, nodes[3])
@@ -1735,12 +1756,10 @@ def act_gsymbol_string_recognizer(context, nodes):
 
     terminal_ref = Reference(Location(context), recognizer.name)
 
-    if terminal_ref.name not in context.inline_terminals:
+    if terminal_ref.name not in context.extra.inline_terminals:
         check_name(context, terminal_ref.name)
-        context.inline_terminals[terminal_ref.name] = \
-            Terminal(terminal_ref.name, recognizer,
-                     location=Location(context),
-                     imported_with=context.imported_with)
+        context.extra.inline_terminals[terminal_ref.name] = \
+            Terminal(terminal_ref.name, recognizer, location=Location(context))
 
     return terminal_ref
 
@@ -1763,13 +1782,13 @@ def act_recognizer_str(context, nodes):
                  .replace(r"\\", "\\")\
                  .replace(r"\n", "\n")\
                  .replace(r"\t", "\t")
-    return StringRecognizer(value, ignore_case=context.ignore_case)
+    return StringRecognizer(value, ignore_case=context.extra.ignore_case)
 
 
 def act_recognizer_regex(context, nodes):
     value = nodes[0]
-    return RegExRecognizer(value, re_flags=context.re_flags,
-                           ignore_case=context.ignore_case)
+    return RegExRecognizer(value, re_flags=context.extra.re_flags,
+                           ignore_case=context.extra.ignore_case)
 
 
 def act_str_regex_term(context, value):

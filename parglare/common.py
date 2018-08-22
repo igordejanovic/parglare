@@ -15,36 +15,21 @@ class Location(object):
 
     Args:
     context(Context): Parsing context used to populate this object.
-    file_name(str): File name where this location is to be found.
-        Takes precendence over `file_name` given in `context`.
-    start_position(int): The beginning of the location.
-        Takes precendence over `start_position` given in `context`.
-    end_position(int): The end of the location.
-        Takes precendence over `end_position` given in `context`.
-    input_str(str): String representing textual content of the file being
-        parsed.
-        Takes precendence over `input_str` given in `context`.
+    line, column (int):
     """
 
-    __slots__ = ['file_name', 'start_position', 'end_position', '_line',
-                 '_column', 'input_str']
+    __slots__ = ['input_str', 'start_position', 'end_position', 'file_name',
+                 '_line', '_column']
 
-    def __init__(self, context=None, file_name=None, start_position=None,
-                 end_position=None, input_str=None):
+    def __init__(self, context=None, file_name=None):
 
-        if not context:
+        self.input_str = context.input_str if context else None
+        self.start_position = context.start_position if context else None
+        self.end_position = context.end_position if context else None
+        if file_name:
             self.file_name = file_name
-            self.start_position = start_position
-            self.end_position = end_position
-            self.input_str = input_str
-        else:
-            self.file_name = file_name if file_name else context.file_name
-            self.start_position = start_position \
-                if start_position is not None else context.start_position
-            self.end_position = end_position \
-                if end_position is not None else context.end_position
-            self.input_str = input_str \
-                if input_str is not None else context.input_str
+        elif context:
+            self.file_name = context.file_name
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting
@@ -63,11 +48,15 @@ class Location(object):
             self.evaluate_line_col()
         return self._column
 
+    @property
+    def position(self):
+        "Duck type this class to be used in position_context"
+        return self.start_position
+
     def evaluate_line_col(self):
-        if self.input_str and self.start_position is not None:
-            from parglare.parser import pos_to_line_col
-            self._line, self._column = pos_to_line_col(self.input_str,
-                                                       self.start_position)
+        from parglare.parser import pos_to_line_col
+        self._line, self._column = \
+            pos_to_line_col(self.input_str, self.start_position)
 
     def __str__(self):
         line, column = self.line, self.column
@@ -76,24 +65,28 @@ class Location(object):
                       .format("{}:".format(self.file_name)
                               if self.file_name else "",
                               line, column,
-                              position_context(
-                                  self.input_str,
-                                  self.start_position)))
-        elif self.file_name:
+                              position_context(self)))
+        elif self.context.file_name:
             return _a('{} => '.format(self.file_name))
         else:
             return "<Unknown location>"
 
 
-def position_context(input_str, position):
+def position_context(context):
     """
     Returns position context string.
     """
-    start = max(position-10, 0)
-    c = text(input_str[start:position]) + _a("*") \
-        + text(input_str[position:position+10])
-    c = c.replace("\n", "\\n")
-    return c
+    start = max(context.position-10, 0)
+    c = text(context.input_str[start:context.position]) + "*" \
+        + text(context.input_str[context.position:context.position+10])
+    return replace_newlines(c)
+
+
+def replace_newlines(in_str):
+    try:
+        return in_str.replace("\n", "\\n")
+    except AttributeError:
+        return in_str
 
 
 def load_python_module(mod_name, mod_path):

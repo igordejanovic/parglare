@@ -77,7 +77,7 @@ def term_b(input, position):
 `recognizer` object is `collector` in this case. It will construct a dictionary
 of all recognizers decorated by it and that dictionary will be provided as
 `recognizer.all`. parglare recognizer loader will implicitly search for
-`recognize.all`.
+`recognizer.all`.
 
 By default, a name of a decorated function will serve as a terminal name this
 recognizer is defined for. But, you can provide different name using a string
@@ -116,7 +116,7 @@ def comma_recognizer(input, pos):
 In this case there is an imported grammar `base` whose terminal `COMMA`
 recognizer has been overriden by `comma_recognizer` recognizer function.
 
-!!! note
+!!! warning
 
     Since the way a recognizer module is imported in Python you **must** use
     only Python absolute module imports inside the recognizer module.
@@ -135,8 +135,8 @@ Similarly to recognizers, actions can be provided in a Python file named `<base
 grammar name>_actions.py` that should be found in the same folder where the
 grammar file is found.
 
-For example, if grammar file is named `mygrammar.pg` than actions module
-should be named `mygrammar_actions.py`.
+For example, if grammar file is named `mygrammar.pg` than actions module should
+be named `mygrammar_actions.py`.
 
 For a parglare to be able to collect all actions defined in a module a
 `collector` is used in very much the same way as it is used for recognizers. It
@@ -170,7 +170,7 @@ this action is defined for. But, you can provide different name using a string
 parameter to `action` decorator:
 
 
-!!! note
+!!! warning
 
     Since the way an action module is imported in Python you **must** use
     only Python absolute module imports inside of it.

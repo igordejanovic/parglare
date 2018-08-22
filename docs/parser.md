@@ -15,10 +15,9 @@ grammar rule.
 
 ## layout_actions
 
-This parameter is used to specify actions called when the rules
-of
-[layout sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) are
-reduced. This is rarely needed but there are times when you would like to
+This parameter is used to specify actions called when the rules of [layout
+sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
+are reduced. This is rarely needed but there are times when you would like to
 process matched layout (e.g. whitespaces, comments).
 
 It is given in the same format as `actions` parameter, a dict of callables keyed
@@ -27,16 +26,15 @@ by grammar rule names.
 ## ws
 
 This parameter specifies a string whose characters are considered to be
-whitespace. By default its value is `'\n\r\t '`. It is used
-if
-[layout sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) (`LAYOUT`
-grammar rule) is not defined. If `LAYOUT` rule is given in the grammar it is
-used instead and this parameter is ignored.
+whitespace. By default its value is `'\n\r\t '`. It is used if [layout
+sub-grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
+(`LAYOUT` grammar rule) is not defined. If `LAYOUT` rule is given in the grammar
+it is used instead and this parameter is ignored.
 
 ## build_tree
 
 A boolean whose default value is `False`. If set to `True` parser will call
-actions that will build the [parse tree](./parse_trees.md).
+implicit actions that will build the [parse tree](./parse_trees.md).
 
 ## call_actions_during_tree_build
 
@@ -45,23 +43,24 @@ actions during the parse tree [parse tree](./parse_trees.md) building process.
 The return value of each action will be discarded, since they directly affect
 the parse tree building process.
 
-!!! note
+
+!!! warning
 
     Use this parameter with a special care when GLR is used, since actions will
     be called even on trees that can't be completed (unsuccessful parses).
 
 ## prefer_shifts
 
-By default set to `True` for LR parser and to `False` for GLR parser. In case
-of [shift/reduce conflicts](./lr_parsing.md) this strategy would favor shift
-over reduce. You can still
-use [associativity rules](./disambiguation.md#associativity) to decide per
-production.
+By default set to `True` for LR parser and to `False` for GLR parser. In case of
+[shift/reduce conflicts](./lr_parsing.md) this strategy would favor shift over
+reduce. You can still use [associativity
+rules](./disambiguation.md#associativity) to decide per production.
 
 You can disable this rule on per-production basis by using `nops` on the
 production.
 
-!!! note
+
+!!! warning
 
     Do not use `prefer_shifts` if you don't understand the implications. Try to
     understand [conflicts](./lr_parsing.md) and
@@ -79,7 +78,7 @@ production.
 You can disable this rule on per-production basis by using `nopse` on the
 production.
 
-!!! note
+!!! warning
 
     Do not use `prefer_shifts_over_empty` if you don't understand the
     implications. Try to understand [conflicts](./lr_parsing.md) and
@@ -96,10 +95,8 @@ For more information see [Error recovery](./handling_errors.md#error-recovery).
 
 By default the first rule of the grammar is the start rule. If you want to
 change this default behavior — for example you want to create multiple parsers
-from the same grammar with different start production — you can use this
-parameter. The parameter accepts the `id` of the grammar production. To get the
-`id` from the rule name use the `get_production_id(rule_name)` method of the
-grammar.
+from the same grammar with different start productions — you can use this
+parameter. The parameter accepts a fully qualified name of the start rule.
 
 
 ## debug/debug_layout
@@ -122,7 +119,7 @@ default.
 The value of this parameter is either `parglare.LALR` or `parglare.SLR` and it
 is used to chose the type of LR tables to create. By default `LALR` tables are
 used with a slight twist to avoid Reduce/Reduce conflicts that may happen with
-pure LALR tables. This parameter should not be used in normal circumstances but
+pure LALR tables. This parameter should not be used in normal circumstances and
 is provided more for experimentation purposes.
 
 
@@ -138,7 +135,7 @@ These two calls accepts the following parameters:
 
 - **position** - the start position to parse from. By default 0.
 
-- **context** - the [context object](./actions.md#the-context-object) to use. By
+- **context** - the [context object](./common.md#the-context-object) to use. By
   default `None` - context object is created by the parser.
 
 - **file_name** - first positional and mandatory parameter only for `parse_file`
@@ -154,6 +151,6 @@ is a concrete matched terminal from the input stream.
 
 - **symbol** (`Terminal`) - terminal grammar symbol represented by this token,
 
-- **value** (`list` or `str`) - matched part of input stream,
+- **value** (`list` or `str`) - matched part of the input stream,
 
-- **length** (`int`) - length of matched input.
+- **length** (`int`) - length of the matched input.

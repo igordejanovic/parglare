@@ -1,5 +1,38 @@
 # History
 
+- Development version
+  - Rework/cleanup of both LR and GLR parsers. Backward incompatible changes
+    (see below).
+  - changed `layout` parser param to `in_layout`.
+  - changed `position` parser param to `return_position`.
+  - Added optional first param to recognizers passing in Context object.
+    See https://github.com/igordejanovic/parglare/pull/55
+    Thanks jwcraftsman@GitHub
+  - Context object now uses `__slots__` and has `extra` attribute for user
+    usage. `extra` is shallow copied during LR parser run and deep copied during
+    GLR parser heads split.
+  - `dynamic_filter` callback params changed from `action, token, production,
+    subresults, state, context` to `context, action, subresults`. To access
+    previous param values use `context.token_ahead` for `token`,
+    `context.production` for `production` and `context.state` for `state`.
+  - `error_recovery` callback params changed from `parser, input, position,
+    expected_symbols` to `context`. To access previous param values use
+    `context.parser`, `context.input_str`, `context.position`,
+    `context.state.actions.keys()`.
+  - Error recovery function now returns token and position. The error is
+    automatically registered and returned with parsing results.
+  - `custom_lexical_disambiguation` parser param/callback changed to
+    `custom_token_recognition`.
+  - `custom_token_recognition` callback params changed from `symbols, input_str,
+    position, get_tokens` to `context, get_tokens`. To access previous param
+    values use `context.state.actions.keys()` for `symbols`, `context.input_str`
+    and `context.position` for `input_str` and `position`.
+  - Lexical ambiguity results in `DisambiguationError` now instead of
+    `ParseError`for LR parser.
+  - `start_production` parser param now accepts a fully qualified rule name
+    instead of id. First production id for the given rule is used.
+
+
 - 2018-05-24 Version 0.6.1
   - Fixed issue with actions resolving search order.
   - Fixed #31 GLR drops valid parses on lexical ambiguity.
