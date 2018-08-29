@@ -161,7 +161,7 @@ def test_no_terminal_associavitity():
     with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Expected: : but found <}(})> or <NotComment(};)>' \
+    assert 'Expected: : but found <NotComment(};)> or <}(})>' \
         in str(e)
 
 

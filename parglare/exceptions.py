@@ -25,13 +25,13 @@ def expected_message(symbols_expected, tokens_ahead=None):
     return _('Expected: ') \
         + _(' or ').join(sorted([s.name for s in symbols_expected])) \
         + ((_(' but found ') +
-            _(' or ').join([str(t) for t in tokens_ahead]))
+            _(' or ').join(sorted([str(t) for t in tokens_ahead])))
            if tokens_ahead else '')
 
 
 def disambiguation_error(tokens):
     return 'Can\'t disambiguate between: {}'.format(
-                _(' or ').join([str(t) for t in tokens]))
+                _(' or ').join(sorted([str(t) for t in tokens])))
 
 
 class ParserInitError(Exception):
