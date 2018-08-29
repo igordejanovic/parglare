@@ -569,6 +569,35 @@ your grammar. Also this can be used to specify built-in action to be used for a
 rule directly in the grammar.
 
 
+## User meta-data
+
+You can supply arbitrary meta-data for the productions and terminals in the
+grammar in the form of key-value pairs. This can be used to augment dynamic
+disambiguation strategies, error reporting etc.
+
+To define meta-data put it inside the `{}` block of either production or
+terminals in the form of `name: value`, where `name` is a valid ID and `value`
+is integer, float, bool (`true` or `false`) or string in single quotes.
+
+For example:
+
+```
+grammar_str = r'''
+MyRule: 'a' {label:'My Label'};
+'''
+
+grammar = Grammar.from_string(grammar_str)
+my_rule = grammar.get_nonterminal('MyRule')
+
+prod = my_rule.productions[0]
+assert prod.label == 'My Label'
+```
+
+In this example, user meta-data `label` with value `My Label` is defined on the
+first production of rule `MyRule`. Please note that user defined meta-data is
+accessed as an ordinary Python attribute.
+
+
 ## Grammar comments
 
 In parglare grammar, comments are available as both line comments and block
