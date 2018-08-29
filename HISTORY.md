@@ -31,6 +31,8 @@
     `ParseError`for LR parser.
   - `start_production` parser param now accepts a fully qualified rule name
     instead of id. First production id for the given rule is used.
+  - Support for arbitrary user meta-data.
+    See issue: https://github.com/igordejanovic/parglare/issues/57
 
 
 - 2018-05-24 Version 0.6.1
