@@ -1279,10 +1279,12 @@ class GrammarContext:
  TERMINAL_RULES,
  TERMINAL_RULE,
  TERMINAL_RULE_WITH_ACTION,
- PROD_DIS_RULE,
- PROD_DIS_RULES,
- TERM_DIS_RULE,
- TERM_DIS_RULES,
+ PROD_META_DATA,
+ PROD_META_DATAS,
+ TERM_META_DATA,
+ TERM_META_DATAS,
+ USER_META_DATA,
+ CONST,
 
  ASSIGNMENT,
  ASSIGNMENTS,
@@ -1316,10 +1318,12 @@ class GrammarContext:
      'TerminalRules',
      'TerminalRule',
      'TerminalRuleWithAction',
-     'ProductionDisambiguationRule',
-     'ProductionDisambiguationRules',
-     'TerminalDisambiguationRule',
-     'TerminalDisambiguationRules',
+     'ProductionMetaData',
+     'ProductionMetaDatas',
+     'TerminalMetaData',
+     'TerminalMetaDatas',
+     'UserMetaData',
+     'Const',
 
      'Assignment',
      'Assignments',
@@ -1345,19 +1349,26 @@ class GrammarContext:
 
 pg_terminals = \
     (NAME,
-     STR_TERM,
      REGEX_TERM,
-     PRIOR,
+     INT_CONST,
+     FLOAT_CONST,
+     BOOL_CONST,
+     STR_CONST,
      ACTION,
      WS,
      COMMENTLINE,
      NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
                     [
-                        ('Name', r'[a-zA-Z0-9_\.]+'),
-                        ('StrTerm', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
-                         r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
+                        ('Name', r'[a-zA-Z_][a-zA-Z0-9_\.]*'),
                         ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
-                        ('Prior', r'\d+'),
+                        ('IntConst', r'\d+'),
+                        ('FloatConst',
+                         r'''[+-]?(\d+(\.\d*)?|\.\d+)
+                         ([eE][+-]?\d+)?
+                         (?<=[\w\.])(?![\w\.])'''),
+                        ('BoolConst', r'true|false'),
+                        ('StrConst', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
+                         r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
                         ('Action', r'@[a-zA-Z0-9_]+'),
                         ('WS', r'\s+'),
                         ('CommentLine', r'\/\/.*'),
@@ -1372,21 +1383,21 @@ pg_productions = [
     [PGFILE, ['terminals', TERMINAL_RULES, EOF]],
     [IMPORTS, [IMPORTS, IMPORT]],
     [IMPORTS, [IMPORT]],
-    [IMPORT, ['import', STR_TERM, ';']],
-    [IMPORT, ['import', STR_TERM, 'as', NAME, ';']],
+    [IMPORT, ['import', STR_CONST, ';']],
+    [IMPORT, ['import', STR_CONST, 'as', NAME, ';']],
     [PRODUCTION_RULES, [PRODUCTION_RULES, PRODUCTION_RULE_WITH_ACTION]],
     [PRODUCTION_RULES, [PRODUCTION_RULE_WITH_ACTION]],
 
     [PRODUCTION_RULE_WITH_ACTION, [ACTION, PRODUCTION_RULE]],
     [PRODUCTION_RULE_WITH_ACTION, [PRODUCTION_RULE]],
     [PRODUCTION_RULE, [NAME, ':', PRODUCTION_RULE_RHS, ';']],
-    [PRODUCTION_RULE, [NAME, '{', PROD_DIS_RULES, '}', ':',
+    [PRODUCTION_RULE, [NAME, '{', PROD_META_DATAS, '}', ':',
                        PRODUCTION_RULE_RHS, ';']],
     [PRODUCTION_RULE_RHS, [PRODUCTION_RULE_RHS, '|', PRODUCTION],
      ASSOC_LEFT, 5],
     [PRODUCTION_RULE_RHS, [PRODUCTION], ASSOC_LEFT, 5],
     [PRODUCTION, [ASSIGNMENTS]],
-    [PRODUCTION, [ASSIGNMENTS, '{', PROD_DIS_RULES, '}']],
+    [PRODUCTION, [ASSIGNMENTS, '{', PROD_META_DATAS, '}']],
 
     [TERMINAL_RULES, [TERMINAL_RULES, TERMINAL_RULE_WITH_ACTION]],
     [TERMINAL_RULES, [TERMINAL_RULE_WITH_ACTION]],
@@ -1394,29 +1405,38 @@ pg_productions = [
     [TERMINAL_RULE_WITH_ACTION, [TERMINAL_RULE]],
     [TERMINAL_RULE, [NAME, ':', RECOGNIZER, ';'], ASSOC_LEFT, 15],
     [TERMINAL_RULE, [NAME, ':', ';'], ASSOC_LEFT, 15],
-    [TERMINAL_RULE, [NAME, ':', RECOGNIZER, '{', TERM_DIS_RULES, '}', ';'],
+    [TERMINAL_RULE, [NAME, ':', RECOGNIZER, '{', TERM_META_DATAS, '}', ';'],
      ASSOC_LEFT, 15],
-    [TERMINAL_RULE, [NAME, ':', '{', TERM_DIS_RULES, '}', ';'],
+    [TERMINAL_RULE, [NAME, ':', '{', TERM_META_DATAS, '}', ';'],
      ASSOC_LEFT, 15],
 
-    [PROD_DIS_RULE, ['left']],
-    [PROD_DIS_RULE, ['reduce']],
-    [PROD_DIS_RULE, ['right']],
-    [PROD_DIS_RULE, ['shift']],
-    [PROD_DIS_RULE, ['dynamic']],
-    [PROD_DIS_RULE, ['nops']],   # no prefer shifts
-    [PROD_DIS_RULE, ['nopse']],  # no prefer shifts over empty
-    [PROD_DIS_RULE, [PRIOR]],
-    [PROD_DIS_RULES, [PROD_DIS_RULES, ',', PROD_DIS_RULE], ASSOC_LEFT],
-    [PROD_DIS_RULES, [PROD_DIS_RULE]],
+    [PROD_META_DATA, ['left']],
+    [PROD_META_DATA, ['reduce']],
+    [PROD_META_DATA, ['right']],
+    [PROD_META_DATA, ['shift']],
+    [PROD_META_DATA, ['dynamic']],
+    [PROD_META_DATA, ['nops']],   # no prefer shifts
+    [PROD_META_DATA, ['nopse']],  # no prefer shifts over empty
+    [PROD_META_DATA, [INT_CONST]],  # priority
+    [PROD_META_DATA, [USER_META_DATA]],
+    [PROD_META_DATAS, [PROD_META_DATAS, ',', PROD_META_DATA], ASSOC_LEFT],
+    [PROD_META_DATAS, [PROD_META_DATA]],
 
-    [TERM_DIS_RULE, ['prefer']],
-    [TERM_DIS_RULE, ['finish']],
-    [TERM_DIS_RULE, ['nofinish']],
-    [TERM_DIS_RULE, ['dynamic']],
-    [TERM_DIS_RULE, [PRIOR]],
-    [TERM_DIS_RULES, [TERM_DIS_RULES, ',', TERM_DIS_RULE]],
-    [TERM_DIS_RULES, [TERM_DIS_RULE]],
+    [TERM_META_DATA, ['prefer']],
+    [TERM_META_DATA, ['finish']],
+    [TERM_META_DATA, ['nofinish']],
+    [TERM_META_DATA, ['dynamic']],
+    [TERM_META_DATA, [INT_CONST]],  # priority
+    [TERM_META_DATA, [USER_META_DATA]],
+    [TERM_META_DATAS, [TERM_META_DATAS, ',', TERM_META_DATA]],
+    [TERM_META_DATAS, [TERM_META_DATA]],
+
+    # User custom meta-data
+    [USER_META_DATA, [NAME, ':', CONST]],
+    [CONST, [INT_CONST]],
+    [CONST, [FLOAT_CONST]],
+    [CONST, [BOOL_CONST]],
+    [CONST, [STR_CONST]],
 
     # Assignments
     [ASSIGNMENT, [PLAIN_ASSIGNMENT]],
@@ -1443,8 +1463,8 @@ pg_productions = [
     [OPT_REP_MODIFIER, [NAME]],
 
     [GSYMBOL, [NAME]],
-    [GSYMBOL, [STR_TERM]],
-    [RECOGNIZER, [STR_TERM]],
+    [GSYMBOL, [STR_CONST]],
+    [RECOGNIZER, [STR_CONST]],
     [RECOGNIZER, [REGEX_TERM]],
 
     # Support for comments,
@@ -1813,8 +1833,8 @@ pg_actions = {
                      act_term_rule_empty_body],
     'TerminalRuleWithAction': act_term_rule_with_action,
 
-    "ProductionDisambiguationRules": collect_sep,
-    "TerminalDisambiguationRules": collect_sep,
+    "ProductionMetaDatas": collect_sep,
+    "TerminalMetaDatas": collect_sep,
 
     "Assignment": act_assignment,
     "Assignments": collect,
@@ -1826,10 +1846,13 @@ pg_actions = {
                       act_gsymbol_string_recognizer],
 
     'Recognizer': [act_recognizer_str, act_recognizer_regex],
-    'StrTerm': act_str_regex_term,
+
+    'StrConst': act_str_regex_term,
     'RegExTerm': act_str_regex_term,
 
-    # Terminals
-    "Prior": lambda _, value: int(value),
+    # Constants
+    'IntConst': lambda _, value: int(value),
+    'FloatConst': lambda _, value: float(value),
+    'BoolConst': lambda _, value: value and value.lower() == 'true',
 
 }
