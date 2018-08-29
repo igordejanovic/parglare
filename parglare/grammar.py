@@ -68,14 +68,17 @@ class GrammarSymbol(object):
     grammar_action(callable): Resolved action given in the grammar.
     imported_with (PGFileImport): PGFileImport where this symbol is first time
         imported from. Used for FQN calculation.
+    user_meta(dict): User meta-data.
     """
-    def __init__(self, name, location=None, imported_with=None):
+    def __init__(self, name, location=None, imported_with=None,
+                 user_meta=None):
         self.name = escape(name)
         self.location = location
         self.action_name = None
         self.action = None
         self.grammar_action = None
         self.imported_with = imported_with
+        self.user_meta = user_meta
         self._hash = hash(self.fqn)
 
     @property
@@ -92,6 +95,18 @@ class GrammarSymbol(object):
                 return "{}.{}".format(self.imported_with.fqn, self.action_name)
             else:
                 return self.action_name
+
+    def add_user_meta_data(self, name, value):
+        if self.user_meta is None:
+            self.user_meta = {}
+        self.user_meta[name] = value
+
+    def __getattr__(self, name):
+        if self.user_meta is not None:
+            attr = self.user_meta.get(name)
+            if attr:
+                return attr
+        raise AttributeError
 
     def __unicode__(self):
         return str(self)
@@ -114,8 +129,9 @@ class NonTerminal(GrammarSymbol):
         this NonTerminal.
     """
     def __init__(self, name, productions=None, location=None,
-                 imported_with=None):
-        super(NonTerminal, self).__init__(name, location, imported_with)
+                 imported_with=None, user_meta=None):
+        super(NonTerminal, self).__init__(name, location, imported_with,
+                                          user_meta)
         self.productions = productions if productions is not None else []
 
 
@@ -133,7 +149,6 @@ class Terminal(GrammarSymbol):
         at the same place and implicit disambiguation doesn't resolve.
     keyword(bool): `True` if this Terminal represents keyword. `False` by
         default.
-    user_meta(dict): User meta-data.
 
     recognizer(callable): Called with input list of objects and position in the
         stream. Should return a sublist of recognized objects. The sublist
@@ -148,8 +163,8 @@ class Terminal(GrammarSymbol):
         self.prefer = False
         self.dynamic = False
         self.keyword = False
-        self.user_meta = None
-        super(Terminal, self).__init__(name, location, imported_with)
+        super(Terminal, self).__init__(name, location, imported_with,
+                                       user_meta=None)
 
     @property
     def recognizer(self):
@@ -165,17 +180,6 @@ class Terminal(GrammarSymbol):
             value._pg_context = False
         self._recognizer = value
 
-    def add_meta_data(self, name, value):
-        if self.user_meta is None:
-            self.user_meta = {}
-        self.user_meta[name] = value
-
-    def __getattr__(self, name):
-        if self.user_meta is not None:
-            attr = self.user_meta.get(name)
-            if attr:
-                return attr
-        raise AttributeError
 
 
 class Reference(object):
@@ -1579,12 +1583,19 @@ def act_production_rule_with_action(_, nodes):
 
 
 def act_production_rule(context, nodes):
-    name, _, rhs_prods, __ = nodes
+    if len(nodes) == 4:
+        # No meta-data
+        name, _, rhs_prods, __ = nodes
+        rule_meta_datas = {}
+    else:
+        name, rule_meta_datas, rhs_prods = nodes[0], nodes[2], nodes[5]
+        rule_meta_datas = get_production_rule_meta_datas(rule_meta_datas)
 
     check_name(context, name)
 
     symbol = NonTerminal(name, location=Location(context),
-                         imported_with=context.extra.imported_with)
+                         imported_with=context.extra.imported_with,
+                         user_meta=rule_meta_datas.get('user_meta', None))
 
     # Collect all productions for this rule
     prods = []
@@ -1596,12 +1607,21 @@ def act_production_rule(context, nodes):
             if a.name:
                 a.index = idx
         gsymbols = (a.symbol for a in assignments)
-        assoc = meta_datas.get('assoc', ASSOC_NONE)
-        prior = meta_datas.get('priority', DEFAULT_PRIORITY)
-        dynamic = meta_datas.get('dynamic', False)
-        nops = meta_datas.get('nops', False)
-        nopse = meta_datas.get('nopse', False)
-        user_meta = meta_datas.get('user_meta')
+        assoc = meta_datas.get('assoc', rule_meta_datas.get('assoc',
+                                                            ASSOC_NONE))
+        prior = meta_datas.get('priority',
+                               rule_meta_datas.get('priority',
+                                                   DEFAULT_PRIORITY))
+        dynamic = meta_datas.get('dynamic',
+                                 rule_meta_datas.get('dynamic', False))
+        nops = meta_datas.get('nops',
+                              rule_meta_datas.get('nops', False))
+        nopse = meta_datas.get('nopse', rule_meta_datas.get('nopse', False))
+
+        # User meta-data if formed by rule-level user meta-data with overrides
+        # from production-level user meta-data.
+        user_meta = dict(rule_meta_datas.get('user_meta', {}))
+        user_meta.update(meta_datas.get('user_meta', {}))
         prods.append(Production(symbol,
                                 ProductionRHS(gsymbols),
                                 assignments=assignments,
@@ -1669,28 +1689,34 @@ def act_production_rule(context, nodes):
     return prods
 
 
+def get_production_rule_meta_datas(raw_meta_datas):
+    meta_datas = {}
+    for meta_data in raw_meta_datas:
+        if meta_data in ['left', 'reduce']:
+            meta_datas['assoc'] = ASSOC_LEFT
+        elif meta_data in ['right', 'shift']:
+            meta_datas['assoc'] = ASSOC_RIGHT
+        elif meta_data == 'dynamic':
+            meta_datas['dynamic'] = True
+        elif meta_data == 'nops':
+            meta_datas['nops'] = True
+        elif meta_data == 'nopse':
+            meta_datas['nopse'] = True
+        elif type(meta_data) is int:
+            meta_datas['priority'] = meta_data
+        else:
+            # User meta-data
+            assert type(meta_data) is list
+            name, _, value = meta_data
+            meta_datas.setdefault('user_meta', {})[name] = value
+    return meta_datas
+
+
 def act_production(_, nodes):
     assignments = nodes[0]
     meta_datas = {}
     if len(nodes) > 1:
-        for meta_data in nodes[2]:
-            if meta_data in ['left', 'reduce']:
-                meta_datas['assoc'] = ASSOC_LEFT
-            elif meta_data in ['right', 'shift']:
-                meta_datas['assoc'] = ASSOC_RIGHT
-            elif meta_data == 'dynamic':
-                meta_datas['dynamic'] = True
-            elif meta_data == 'nops':
-                meta_datas['nops'] = True
-            elif meta_data == 'nopse':
-                meta_datas['nopse'] = True
-            elif type(meta_data) is int:
-                meta_datas['priority'] = meta_data
-            else:
-                # User meta-data
-                assert type(meta_data) is list
-                name, _, value = meta_data
-                meta_datas.setdefault('user_meta', {})[name] = value
+        meta_datas = get_production_rule_meta_datas(nodes[2])
 
     return (assignments, meta_datas)
 
@@ -1702,7 +1728,7 @@ def _set_term_props(term, props):
         elif type(t) is list:
             # User meta-data
             name, _, value = t
-            term.add_meta_data(name, value)
+            term.add_user_meta_data(name, value)
         elif t == 'finish':
             term.finish = True
         elif t == 'nofinish':
