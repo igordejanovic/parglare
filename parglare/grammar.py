@@ -133,6 +133,7 @@ class Terminal(GrammarSymbol):
         at the same place and implicit disambiguation doesn't resolve.
     keyword(bool): `True` if this Terminal represents keyword. `False` by
         default.
+    user_meta(dict): User meta-data.
 
     recognizer(callable): Called with input list of objects and position in the
         stream. Should return a sublist of recognized objects. The sublist
@@ -147,6 +148,7 @@ class Terminal(GrammarSymbol):
         self.prefer = False
         self.dynamic = False
         self.keyword = False
+        self.user_meta = None
         super(Terminal, self).__init__(name, location, imported_with)
 
     @property
@@ -162,6 +164,18 @@ class Terminal(GrammarSymbol):
         else:
             value._pg_context = False
         self._recognizer = value
+
+    def add_meta_data(self, name, value):
+        if self.user_meta is None:
+            self.user_meta = {}
+        self.user_meta[name] = value
+
+    def __getattr__(self, name):
+        if self.user_meta is not None:
+            attr = self.user_meta.get(name)
+            if attr:
+                return attr
+        raise AttributeError
 
 
 class Reference(object):
@@ -306,6 +320,7 @@ class Production(object):
         Only makes sense for GLR parser.
     nopse (bool): Disable prefer_shifts_over_empty strategy for this
         production. Only makes sense for GLR parser.
+    user_meta(dict): User meta-data.
     prod_id (int): Ordinal number of the production.
     prod_symbol_id (int): A zero-based ordinal of alternative choice for this
         production grammar symbol.
@@ -313,7 +328,7 @@ class Production(object):
 
     def __init__(self, symbol, rhs, assignments=None, assoc=ASSOC_NONE,
                  prior=DEFAULT_PRIORITY, dynamic=False, nops=False,
-                 nopse=False):
+                 nopse=False, user_meta=None):
         """
         Args:
         symbol (GrammarSymbol): A grammar symbol on the LHS of the production.
@@ -332,6 +347,7 @@ class Production(object):
         self.dynamic = dynamic
         self.nops = nops
         self.nopse = nopse
+        self.user_meta = user_meta
 
     def __str__(self):
         if hasattr(self, 'prod_id'):
@@ -342,6 +358,13 @@ class Production(object):
 
     def __repr__(self):
         return 'Production({})'.format(str(self.symbol))
+
+    def __getattr__(self, name):
+        if self.user_meta is not None:
+            attr = self.user_meta.get(name)
+            if attr:
+                return attr
+        raise AttributeError
 
 
 class ProductionRHS(list):
@@ -1567,17 +1590,18 @@ def act_production_rule(context, nodes):
     prods = []
     attrs = {}
     for prod in rhs_prods:
-        assignments, disrules = prod
+        assignments, meta_datas = prod
         # Here we know the indexes of assignments
         for idx, a in enumerate(assignments):
             if a.name:
                 a.index = idx
         gsymbols = (a.symbol for a in assignments)
-        assoc = disrules.get('assoc', ASSOC_NONE)
-        prior = disrules.get('priority', DEFAULT_PRIORITY)
-        dynamic = disrules.get('dynamic', False)
-        nops = disrules.get('nops', False)
-        nopse = disrules.get('nopse', False)
+        assoc = meta_datas.get('assoc', ASSOC_NONE)
+        prior = meta_datas.get('priority', DEFAULT_PRIORITY)
+        dynamic = meta_datas.get('dynamic', False)
+        nops = meta_datas.get('nops', False)
+        nopse = meta_datas.get('nopse', False)
+        user_meta = meta_datas.get('user_meta')
         prods.append(Production(symbol,
                                 ProductionRHS(gsymbols),
                                 assignments=assignments,
@@ -1585,7 +1609,8 @@ def act_production_rule(context, nodes):
                                 prior=prior,
                                 dynamic=dynamic,
                                 nops=nops,
-                                nopse=nopse))
+                                nopse=nopse,
+                                user_meta=user_meta))
 
         for a in assignments:
             if a.name:
@@ -1646,30 +1671,38 @@ def act_production_rule(context, nodes):
 
 def act_production(_, nodes):
     assignments = nodes[0]
-    disrules = {}
+    meta_datas = {}
     if len(nodes) > 1:
-        rules = nodes[2]
-        for rule in rules:
-            if rule in ['left', 'reduce']:
-                disrules['assoc'] = ASSOC_LEFT
-            elif rule in ['right', 'shift']:
-                disrules['assoc'] = ASSOC_RIGHT
-            elif rule == 'dynamic':
-                disrules['dynamic'] = True
-            elif rule == 'nops':
-                disrules['nops'] = True
-            elif rule == 'nopse':
-                disrules['nopse'] = True
-            elif type(rule) is int:
-                disrules['priority'] = rule
+        for meta_data in nodes[2]:
+            if meta_data in ['left', 'reduce']:
+                meta_datas['assoc'] = ASSOC_LEFT
+            elif meta_data in ['right', 'shift']:
+                meta_datas['assoc'] = ASSOC_RIGHT
+            elif meta_data == 'dynamic':
+                meta_datas['dynamic'] = True
+            elif meta_data == 'nops':
+                meta_datas['nops'] = True
+            elif meta_data == 'nopse':
+                meta_datas['nopse'] = True
+            elif type(meta_data) is int:
+                meta_datas['priority'] = meta_data
+            else:
+                # User meta-data
+                assert type(meta_data) is list
+                name, _, value = meta_data
+                meta_datas.setdefault('user_meta', {})[name] = value
 
-    return (assignments, disrules)
+    return (assignments, meta_datas)
 
 
 def _set_term_props(term, props):
     for t in props:
         if type(t) is int:
             term.prior = t
+        elif type(t) is list:
+            # User meta-data
+            name, _, value = t
+            term.add_meta_data(name, value)
         elif t == 'finish':
             term.finish = True
         elif t == 'nofinish':
