@@ -106,7 +106,7 @@ def test_parse_list_of_integers_lexical_disambiguation():
     # might match just a single int and after parser has saw 3 it will try
     # to disambiguate and fail as the following 4 is recognized by both
     # recognizers.
-    with pytest.raises(DisambiguationError) as e:
+    with pytest.raises(DisambiguationError):
         p = parser.parse(ints)
 
     # Now we change the recognizer for ascending to match at least two

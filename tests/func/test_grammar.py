@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest
-from parglare import Parser, Grammar, Terminal, NonTerminal
+from parglare import Parser, Grammar
 from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
 from parglare.exceptions import GrammarError, ParseError
 

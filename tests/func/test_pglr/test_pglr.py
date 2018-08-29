@@ -27,7 +27,7 @@ def test_pglr_viz():
     DOT_FILE = os.path.join(CURRENT_DIR, '{}.dot'.format(GRAMMAR_FILE))
     try:
         os.remove(DOT_FILE)
-    except:
+    except Exception:
         pass
     assert not os.path.exists(DOT_FILE)
     result = subprocess.call(['pglr', '--no-colors', 'viz', GRAMMAR_FILE])

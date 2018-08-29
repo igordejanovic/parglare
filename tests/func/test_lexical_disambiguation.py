@@ -276,7 +276,7 @@ def test_dynamic_lexical_disambiguation():
             # Try to do fuzzy match at the position
             elem = context.input_str[context.position:context.position+4]
             elem_num = context.input_str[context.position:]
-            number_matcher = re.compile('[^\d]*(\d+)')
+            number_matcher = re.compile(r'[^\d]*(\d+)')
             number_match = number_matcher.match(elem_num)
             ratios = []
             for matcher in matchers:
