@@ -161,7 +161,7 @@ def test_no_terminal_associavitity():
     with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Expected: Prior or dynamic or finish or nofinish or prefer' \
+    assert 'Expected: : but found <}(})> or <NotComment(};)>' \
         in str(e)
 
 
