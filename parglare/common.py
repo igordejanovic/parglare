@@ -18,14 +18,15 @@ class Location(object):
     line, column (int):
     """
 
-    __slots__ = ['input_str', 'start_position', 'end_position', 'file_name',
-                 '_line', '_column']
+    __slots__ = ['input_str', 'start_position', 'end_position', 'position',
+                 'file_name', '_line', '_column']
 
     def __init__(self, context=None, file_name=None):
 
         self.input_str = context.input_str if context else None
         self.start_position = context.start_position if context else None
         self.end_position = context.end_position if context else None
+        self.position = context.position if context else None
         if file_name:
             self.file_name = file_name
         elif context:
@@ -47,11 +48,6 @@ class Location(object):
         if self._column is None:
             self.evaluate_line_col()
         return self._column
-
-    @property
-    def position(self):
-        "Duck type this class to be used in position_context"
-        return self.start_position
 
     def evaluate_line_col(self):
         from parglare.parser import pos_to_line_col
