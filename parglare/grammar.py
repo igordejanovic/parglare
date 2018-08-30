@@ -181,7 +181,6 @@ class Terminal(GrammarSymbol):
         self._recognizer = value
 
 
-
 class Reference(object):
     """
     A name reference to a GrammarSymbol used for cross-resolving during
