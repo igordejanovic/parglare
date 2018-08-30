@@ -25,15 +25,17 @@ NUMBER: /\d+(.\d+)?/;
 '''
 
 # Grammar could be simplified a bit
-# after https://github.com/igordejanovic/parglare/issues/17
-# is implemented:
-# STMT {left}: STMT ADDOP STMT {1}
-#            | STMT MULOP STMT {2}
-# STMT: "(" STMT ")" | NUMBER;
-# ADDOP {1}: "+" | "-";
-# MULOP {2}: "*" | "/";
-# NUMBER: /\d+(.\d+)?/;
+# with https://github.com/igordejanovic/parglare/issues/17
+grammar_3 = '''
+STMT {left}: STMT ADDOP STMT {1}
+           | STMT MULOP STMT {2};
+STMT: "(" STMT ")" | NUMBER;
+ADDOP {1}: "+" | "-";
+MULOP {2}: "*" | "/";
 
+terminals
+NUMBER: /\d+(.\d+)?/;
+'''
 
 expression = '1 - 2 / (3 - 1 + 5 / 6 - 8 + 8 * 2 - 5)'
 result = 1 - 2 / (3 - 1 + 5 / 6 - 8 + 8 * 2 - 5)
@@ -81,6 +83,18 @@ def test_associativity_variant_2():
     See https://github.com/igordejanovic/parglare/issues/22
     """
     g = Grammar.from_string(grammar_2)
+    parser = Parser(g, actions=action.all)
+    r = parser.parse(expression)
+
+    assert r == result
+
+
+def test_associativity_variant_3():
+    """
+    See https://github.com/igordejanovic/parglare/issues/22
+    Using https://github.com/igordejanovic/parglare/issues/17
+    """
+    g = Grammar.from_string(grammar_3)
     parser = Parser(g, actions=action.all)
     r = parser.parse(expression)
 
