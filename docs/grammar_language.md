@@ -581,7 +581,7 @@ is integer, float, bool (`true` or `false`) or string in single quotes.
 
 For example:
 
-```
+```python
 grammar_str = r'''
 MyRule: 'a' {label:'My Label'};
 '''
@@ -596,6 +596,77 @@ assert prod.label == 'My Label'
 In this example, user meta-data `label` with value `My Label` is defined on the
 first production of rule `MyRule`. Please note that user defined meta-data is
 accessed as an ordinary Python attribute.
+
+User meta-data can be defined at the rule level in which case all production for
+the given rule get the meta-data.
+
+For example:
+
+```python
+grammar_str = r'''
+MyRule {label: 'My Label', nops}: 'a' {left, 1, dynamic};
+'''
+
+grammar = Grammar.from_string(grammar_str)
+my_rule = grammar.get_nonterminal('MyRule')
+
+# User meta-data is accessible on the non-terminal
+assert my_rule.label == 'My Label'
+
+# The production has its own meta-data
+prod = my_rule.productions[0]
+assert prod.assoc == ASSOC_LEFT
+assert prod.prior == 1
+assert prod.dynamic
+
+# Rule-level meta-data are propagated to productions
+assert prod.label == 'My Label'
+```
+
+Meta-data defined on the rule level can be overriden on the production level.
+Also, rule can be specified multiple times. Propagation of each rule meta-data
+is done only to the productions specified in the rule.
+
+For example:
+
+```python
+grammar_str = r'''
+MyRule {label: 'My Label', left}: 'first' {right,
+                                            label: 'My overriden label'}
+                                | 'second';
+
+MyRule {label: 'Other rule'}: 'third' {left}
+                            | 'fourth' {label: 'Fourth prod'};
+'''
+
+grammar = Grammar.from_string(grammar_str)
+my_rule = grammar.get_nonterminal('MyRule')
+
+# User meta-data is accessible on the non-terminal
+# The first value found in the order of the definition will be used.
+assert my_rule.label == 'My Label'
+
+prod1 = my_rule.productions[0]
+# First production overrides meta-data
+assert prod1.label == 'My overriden label'
+assert prod1.assoc == ASSOC_RIGHT
+
+# If not overriden it uses meta-data from the rule.
+prod2 = my_rule.productions[1]
+assert prod2.label == 'My Label'
+assert prod2.assoc == ASSOC_LEFT
+
+# Third and fourth production belongs to the second rule so they
+# inherits its meta-data.
+prod3 = my_rule.productions[2]
+assert prod3.label == 'Other rule'
+assert prod3.assoc == ASSOC_LEFT
+
+prod4 = my_rule.productions[3]
+assert prod4.label == 'Fourth prod'
+assert prod4.assoc == ASSOC_NONE
+```
+
 
 
 ## Grammar comments
