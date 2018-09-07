@@ -33,6 +33,9 @@
     instead of id. First production id for the given rule is used.
   - Support for arbitrary user meta-data.
     See issue: https://github.com/igordejanovic/parglare/issues/57
+  - `ParserError` has now `symbols_expected`, `tokens_ahead` and
+    `symbols_before`. See [Handling errors
+    section](http://www.igordejanovic.net/parglare/handling_errors/).
 
 
 - 2018-05-24 Version 0.6.1

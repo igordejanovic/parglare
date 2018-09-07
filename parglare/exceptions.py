@@ -14,9 +14,11 @@ class GrammarError(LocationError):
 
 
 class ParseError(LocationError):
-    def __init__(self, location, symbols_expected, tokens_ahead=None):
+    def __init__(self, location, symbols_expected, tokens_ahead=None,
+                 symbols_before=None):
         self.symbols_expected = symbols_expected
-        self.tokens_ahead = tokens_ahead
+        self.tokens_ahead = tokens_ahead if tokens_ahead else []
+        self.symbols_before = symbols_before if symbols_before else []
         message = expected_message(symbols_expected, tokens_ahead)
         super(ParseError, self).__init__(location, message)
 

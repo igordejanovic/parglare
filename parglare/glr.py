@@ -165,8 +165,12 @@ class GLRParser(Parser):
         if not self.finish_head:
             if self.debug and self.debug_trace:
                 self._export_dot_trace()
-            raise ParseError(Location(context=self.context),
-                             self.expected, self.tokens_ahead)
+            context = self.context
+            context.start_position = context.end_position = context.position
+            raise ParseError(Location(context=context),
+                             self.expected, self.tokens_ahead,
+                             list({h.context.state.symbol
+                                   for h in self.last_heads_for_reduce}))
 
         results = [x[1] for x in self.finish_head.parents]
         if self.debug:
@@ -751,8 +755,7 @@ class GSSNode(object):
         context(Context): The parsing context.
         any_empty(bool): If some of this node parent links results are empty.
         all_empty(bool): If all of this node parent link results are empty.
-        parents(list): list of (parent GLRStackNode, result, any_empty,
-             all_empty)
+        parents(list): list of (parent GSSNode, result, any_empty, all_empty)
              Each stack node might have multiple parents which represent
              multiple path parse took to reach the current state. Each
              parent link keeps a result of semantic action executed during

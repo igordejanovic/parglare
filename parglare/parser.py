@@ -203,8 +203,10 @@ class Parser(object):
                     context.end_position = last_error.location.end_position
                 else:
                     context.start_position = context.position
-                raise ParseError(Location(context=context), symbols_expected,
-                                 tokens_ahead)
+                raise ParseError(Location(context=context),
+                                 list(symbols_expected),
+                                 tokens_ahead,
+                                 symbols_before=[cur_state.symbol])
 
             # Dynamic disambiguation
             if self.dynamic_filter:
