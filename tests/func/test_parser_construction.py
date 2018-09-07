@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Grammar, Parser, GLRParser, EMPTY, STOP
+from parglare import Grammar, Parser, GLRParser, EMPTY, STOP, EOF
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 
@@ -64,10 +64,10 @@ def test_follow():
     expression_grammar = get_grammar()
     follow_set = follow(expression_grammar)
 
-    assert follow_set[E] == set([CLOSE, PLUS, STOP])
+    assert follow_set[E] == set([CLOSE, PLUS, EOF])
 
     # Follow of T must contain all of follow of E
-    assert follow_set[T] == set([MULT, CLOSE, PLUS, STOP])
+    assert follow_set[T] == set([MULT, CLOSE, PLUS, EOF])
 
 
 def test_table_construction():
