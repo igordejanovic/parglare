@@ -1,6 +1,6 @@
 # Handling errors
 
-When parglare encounter a situation in which no SHIFT or REDUCE operation could
+When parglare encounters a situation in which no SHIFT or REDUCE operation could
 be performed it will report an error by raising an instance of
 `parglare.ParseError` class.
 
@@ -9,12 +9,16 @@ be performed it will report an error by raising an instance of
 - **location** - an instance of the [Location class](./common.md#location-class)
   with information of the position and span of the error.
 
-- **symbols_expected (set)** - a set of expected symbol at the location.
+- **symbols_expected (list)** - a list of expected symbol at the location.
 
-- **tokens_ahead (list)** - list of tokens recognized at the position by trying
-  all terminal symbols recognizers from the grammar. Note that this list might
-  be empty in case nothing can be recognized at the position or it might have
-  more than one element if more recognizers succeeds.
+- **tokens_ahead (list)** - a list of tokens recognized at the position by
+  trying all terminal symbols recognizers from the grammar. Note that this list
+  might be empty in case nothing can be recognized at the position or it might
+  have more than one element if more recognizers succeeds (lexical ambiguity).
+
+- **symbols_before (list)** - a list of last seen symbols. In the case of LR
+  parser it will always be a single element list. In the case of GLR there might
+  be more symbols if there were multiple parser heads.
 
 
 # Error recovery
