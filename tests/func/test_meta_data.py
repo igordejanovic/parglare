@@ -10,7 +10,11 @@ from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, ASSOC_NONE
 def test_production_meta_data():
 
     grammar_str = r'''
-    MyRule: 'a' {left, 1, dynamic, nops, label:'My Label'};
+    MyRule: 'a' {left, 1, dynamic, nops,
+                 label:'My Label',
+                 some_bool: true,
+                 some_int: 3,
+                 some_float: 4.5};
     '''
 
     grammar = Grammar.from_string(grammar_str)
@@ -21,6 +25,9 @@ def test_production_meta_data():
     assert prod.prior == 1
     assert prod.dynamic
     assert prod.label == 'My Label'
+    assert prod.some_bool is True
+    assert prod.some_int == 3
+    assert prod.some_float == 4.5
 
     with pytest.raises(AttributeError):
         prod.non_existing
