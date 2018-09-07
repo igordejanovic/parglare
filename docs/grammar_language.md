@@ -575,30 +575,38 @@ You can supply arbitrary meta-data for the productions and terminals in the
 grammar in the form of key-value pairs. This can be used to augment dynamic
 disambiguation strategies, error reporting etc.
 
-To define meta-data put it inside the `{}` block of either production or
-terminals in the form of `name: value`, where `name` is a valid ID and `value`
-is integer, float, bool (`true` or `false`) or string in single quotes.
+To define meta-data put it inside the `{}` block of either rule, production or
+terminal in the form of `name: value`, where `name` is a valid ID and `value` is
+integer, float, bool (`true` or `false`) or string in single quotes.
 
 For example:
 
 ```python
 grammar_str = r'''
-MyRule: 'a' {label:'My Label'};
+MyRule: 'a' {left, 1, dynamic, nops,
+              some_string:'My Label',
+              some_bool: true,
+              some_int: 3,
+              some_float: 4.5};
 '''
 
 grammar = Grammar.from_string(grammar_str)
 my_rule = grammar.get_nonterminal('MyRule')
 
 prod = my_rule.productions[0]
-assert prod.label == 'My Label'
+assert prod.some_string == 'My Label'
+assert prod.some_bool is True
+assert prod.some_int == 3
+assert prod.some_float == 4.5
 ```
 
-In this example, user meta-data `label` with value `My Label` is defined on the
-first production of rule `MyRule`. Please note that user defined meta-data is
-accessed as an ordinary Python attribute.
+In this example, user meta-data `some_string` with value `My Label` is defined
+on the first production of rule `MyRule`. Please note that user defined
+meta-data is accessed as an ordinary Python attribute. In the example you can
+also see the definition of meta-data of various supported types.
 
 User meta-data can be defined at the rule level in which case all production for
-the given rule get the meta-data.
+the given rule inherit the meta-data.
 
 For example:
 
@@ -643,7 +651,8 @@ grammar = Grammar.from_string(grammar_str)
 my_rule = grammar.get_nonterminal('MyRule')
 
 # User meta-data is accessible on the non-terminal
-# The first value found in the order of the definition will be used.
+# Rule level meta-data are only those defined on the
+# first rule in the order of the definition.
 assert my_rule.label == 'My Label'
 
 prod1 = my_rule.productions[0]
