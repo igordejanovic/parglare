@@ -4,35 +4,39 @@ site_description: A pure Python (G)LR parser with integrated scanner
 site_author: Igor Dejanović
 
 repo_url: https://github.com/igordejanovic/parglare
-google_analytics: ['UA-68681917-1', 'igordejanovic.net']
+google_analytics: [UA-68681917-1, igordejanovic.net]
 theme: readthedocs
-extra_css: ['style.css']
+extra_css: [style.css, css/version-select.css]
 strict: true
 
 nav:
 - Home: index.md
 - User Guide:
-    - Getting started: getting_started.md
-    - Grammar language: grammar_language.md
-    - Grammar class: grammar.md
-    - Parser: parser.md
-    - Actions: actions.md
-    - Common API: common.md
-    - Recognizers: recognizers.md
-    - Modularization: grammar_modularization.md
-    - LR parsing and conflicts: lr_parsing.md
-    - Disambiguation: disambiguation.md
-    - Parse trees: parse_trees.md
-    - Handling errors: handling_errors.md
-    - pglr command: pglr.md
-    - Debugging: debugging.md
+  - Getting started: getting_started.md
+  - Grammar language: grammar_language.md
+  - Grammar class: grammar.md
+  - Parser: parser.md
+  - Actions: actions.md
+  - Common API: common.md
+  - Recognizers: recognizers.md
+  - Modularization: grammar_modularization.md
+  - LR parsing and conflicts: lr_parsing.md
+  - Disambiguation: disambiguation.md
+  - Parse trees: parse_trees.md
+  - Handling errors: handling_errors.md
+  - pglr command: pglr.md
+  - Debugging: debugging.md
+>>>>>>> mike-docs
 - About:
-    - Contributing: about/CONTRIBUTING.md
-    - License: about/LICENSE.md
+  - Contributing: about/CONTRIBUTING.md
+  - License: about/LICENSE.md
 
 markdown_extensions:
-    - admonition:
-    - toc:
-        permalink: True
+- admonition:
+- toc:
+    permalink: true
 
 copyright: Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.
+
+extra_javascript:
+- js/version-select.js
