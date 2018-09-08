@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Igor Dejanović">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Grammar language - parglare</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../style.css" rel="stylesheet">
+  <link href="../css/version-select.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Grammar language";
+    var mkdocs_page_input_path = "grammar_language.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-68681917-1', 'igordejanovic.net');
+      ga('send', 'pageview');
+  </script>
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> parglare</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">User Guide</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../getting_started/">Getting started</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Grammar language</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#the-parglare-grammar-language">The parglare grammar language</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#terminals">Terminals</a></li>
+        
+            <li><a class="toctree-l4" href="#usual-patterns">Usual patterns</a></li>
+        
+            <li><a class="toctree-l4" href="#syntactic-sugar-bnf-extensions">Syntactic sugar - BNF extensions</a></li>
+        
+            <li><a class="toctree-l4" href="#special-built-in-rules">Special built-in rules</a></li>
+        
+            <li><a class="toctree-l4" href="#named-matches-assignments">Named matches (assignments)</a></li>
+        
+            <li><a class="toctree-l4" href="#referencing-semantic-actions-from-a-grammar">Referencing semantic actions from a grammar</a></li>
+        
+            <li><a class="toctree-l4" href="#grammar-comments">Grammar comments</a></li>
+        
+            <li><a class="toctree-l4" href="#handling-whitespaces-and-comments-in-your-language">Handling whitespaces and comments in your language</a></li>
+        
+            <li><a class="toctree-l4" href="#handling-keywords-in-your-language">Handling keywords in your language</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../grammar/">Grammar class</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../parser/">Parser</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../actions/">Actions</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../recognizers/">Recognizers</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../grammar_modularization/">Modularization</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../disambiguation/">Disambiguation</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../parse_trees/">Parse trees</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../handling_errors/">Handling errors</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../pglr/">pglr command</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../debugging/">Debugging</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">About</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../about/CONTRIBUTING/">Contributing</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../about/LICENSE/">License</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">parglare</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>User Guide &raquo;</li>
+        
+      
+    
+    <li>Grammar language</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/grammar_language.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="the-parglare-grammar-language">The parglare grammar language<a class="headerlink" href="#the-parglare-grammar-language" title="Permanent link">&para;</a></h1>
+<p>The parglare grammar specification language is based
+on <a href="https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form">BNF</a>
+with <a href="#syntactic-sugar-bnf-extensions">syntactic sugar extensions</a> which are
+optional and builds on top of a pure BNF. parglare is based
+on
+<a href="https://en.wikipedia.org/wiki/Context-free_grammar">Context-Free Grammars (CFGs)</a> and
+a grammar is written declaratively. You don't have to think about the parsing
+process like in
+e.g. <a href="https://en.wikipedia.org/wiki/Parsing_expression_grammar">PEGs</a>.
+Ambiguities are dealt with explicitly (see
+the <a href="../lr_parsing/#resolving-conflicts">section on conflicts</a>).</p>
+<p>Each grammar file consists of three parts:
+- zero or more imports of other grammar files. See <a href="../grammar_modularization/">grammar
+  modularization</a>
+- one or more derivation/production rules
+- zero or more terminal definitions</p>
+<p>Each derivation/production rule is of the form:</p>
+<pre><code>&lt;symbol&gt;: &lt;expression&gt; ;
+</code></pre>
+
+<p>where <code>&lt;symbol&gt;</code> is grammar non-terminal and <code>&lt;expression&gt;</code> is a sequence of
+terminals and non-terminals separated by choice operator <code>|</code>.</p>
+<p>For example:</p>
+<pre><code>Fields: Field | Fields &quot;,&quot; Field;
+</code></pre>
+
+<p>Here <code>Fields</code> is a non-terminal grammar symbol and it is defined as either a
+single <code>Field</code> or, recursively, as <code>Fields</code> followed by a string terminal <code>,</code>
+and than by another <code>Field</code>. It is not given here but <code>Field</code> could also be
+defined as a non-terminal. For example:</p>
+<pre><code>Field: QuotedField | FieldContent;
+</code></pre>
+
+<p>Or it could be defined as a terminal in terminals section:</p>
+<pre><code>terminals
+Field: /[A-Z]*/;
+</code></pre>
+
+<p>This terminal definition uses regular expression recognizer.</p>
+<h2 id="terminals">Terminals<a class="headerlink" href="#terminals" title="Permanent link">&para;</a></h2>
+<p>Terminal symbols of the grammar define the fundamental or atomic elements of
+your language -- tokens or lexemes (e.g. keywords, numbers). In parglare a
+terminal is connected to the recognizer which is an object used to recognize
+token of a particular type in the input. Most of the time you will do parsing of
+textual content and you will need textual recognizers. These recognizers are
+built-in and there are two type of textual recognizers:</p>
+<ul>
+<li>string recognizer</li>
+<li>regular expression recognizer</li>
+</ul>
+<p>Terminals are given at the end of the grammar file, after production rules,
+following the keyword <code>terminals</code>.</p>
+<h3 id="string-recognizer">String recognizer<a class="headerlink" href="#string-recognizer" title="Permanent link">&para;</a></h3>
+<p>String recognizer is defined as a plain string inside of double quotes:</p>
+<pre><code>my_rule: "start" other_rule "end";
+</code></pre>
+<p>In this example <code>"start"</code> and <code>"end"</code> will be terminals with string recognizers
+that match exactly the words <code>start</code> and <code>end</code>.</p>
+<p>You can write string recognizing terminal directly in the rule expression or you
+can define terminal separately and reference it by name, like:</p>
+<pre><code>my_rule: start other_rule end;
+
+terminals
+start: "start";
+end: "end";
+</code></pre>
+<p>Either way it will be the same terminal. You can't mix those two approaches for
+a single terminal. If you defined a terminal in the <code>terminals</code> section than you
+can't use inline string matches for that terminal.</p>
+<p>You will usually write it as a separate terminal if the terminal is used at
+multiple places in the grammar or to provide disambiguation information for a
+terminal (priority, <code>prefer</code> etc.).</p>
+<h3 id="regular-expression-recognizer">Regular expression recognizer<a class="headerlink" href="#regular-expression-recognizer" title="Permanent link">&para;</a></h3>
+<p>Or regex recognizer for short is a regex pattern written inside slashes
+(<code>/.../</code>).</p>
+<p>For example:</p>
+<pre><code> number: /\d+/;
+</code></pre>
+<p>This rule defines terminal symbol <code>number</code> which has a regex recognizer and will
+recognize one or more digits as a number.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You cannot write regex recognizers inline like you can do with string
+recognizers. This constraint is introduced because there is no sane way to
+deduce terminal name given its regex. Thus, you must write all regex
+recognizers/terminals in the <code>terminals</code> section at the end of the grammar
+file.</p>
+</div>
+<h3 id="custom-recognizers">Custom recognizers<a class="headerlink" href="#custom-recognizers" title="Permanent link">&para;</a></h3>
+<p>If you are parsing arbitrary input (non-textual) you'll have to provide your own
+recognizers. In the grammar, you just have to provide terminal symbol without
+body, i.e. without string or regex recognizer. You will provide missing
+recognizers during grammar instantiation from Python. Although you don't supply
+body of the terminal you can define <a href="../disambiguation/">disambiguation rules</a>
+as usual.</p>
+<p>Lets say that we have a list of integers (real list of Python ints, not a text
+with numbers) and we have some weird requirement to break those numbers
+according to the following grammar:</p>
+<pre><code>  Numbers: all_less_than_five  ascending  all_less_than_five EOF;
+  all_less_than_five: all_less_than_five  int_less_than_five
+                    | int_less_than_five;
+
+
+  terminals
+  // These terminals have no recognizers defined in the grammar
+  ascending: ;
+  int_less_than_five: ;
+</code></pre>
+<p>So, we should first match all numbers less than five and collect those, than we
+should match a list of ascending numbers and than list of less than five again.
+<code>int_less_than_five</code> and <code>ascending</code> are terminals/recognizers that will be
+defined in Python and passed to grammar construction. <code>int_less_than_five</code> will
+recognize Python integer that is, well, less than five. <code>ascending</code> will
+recognize a sublist of integers in ascending order.</p>
+<p>For more details on the usage
+see
+<a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py">this test</a>.</p>
+<p>More on this topic can be found in <a href="../recognizers/">a separate section</a>.</p>
+<h2 id="usual-patterns">Usual patterns<a class="headerlink" href="#usual-patterns" title="Permanent link">&para;</a></h2>
+<p>This section explains how some common grammar patterns can be written using just
+a plain BNF notation.</p>
+<h3 id="one-or-more">One or more<a class="headerlink" href="#one-or-more" title="Permanent link">&para;</a></h3>
+<pre><code>// sections rule bellow will match one or more section.
+sections: sections section | section;
+</code></pre>
+<p>In this example <code>sections</code> will match one or more <code>section</code>. Notice the
+recursive definition of the rule. You can read this as <em><code>sections</code> is either a
+single section or <code>sections</code> and a <code>section</code></em>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please note that you could do the same with this rule:</p>
+<pre><code>sections: section sections | section;
+</code></pre>
+<p>which will give you similar result but the resulting tree will be different.
+Notice the recursive reference is now at the and of the first production.
+Previous example will reduce sections early and than add another section to it,
+thus the tree will be expanding to the left. The example in this note will
+collect all the sections and than start reducing from the end, thus building a
+tree expanding to the right. These are subtle differences that are important
+when you start writing your semantic actions. Most of the time you don't care
+about this so use the first version as it is more efficient and parglare
+provides built-in actions for these common cases.</p>
+</div>
+<h3 id="zero-or-more">Zero or more<a class="headerlink" href="#zero-or-more" title="Permanent link">&para;</a></h3>
+<pre><code>// sections rule bellow will match zero or more section.
+sections: sections section | section | EMPTY;
+</code></pre>
+<p>In this example <code>sections</code> will match zero or more <code>section</code>. Notice the
+addition of the <code>EMPTY</code> choice at the end. This means that matching nothing is a
+valid <code>sections</code> non-terminal.</p>
+<p>Same note from above applies here to.</p>
+<h3 id="optional">Optional<a class="headerlink" href="#optional" title="Permanent link">&para;</a></h3>
+<pre><code>document: optheader body;
+optheader: header | EMPTY;
+</code></pre>
+<p>In this example <code>optheader</code> is either a header or nothing.</p>
+<h2 id="syntactic-sugar-bnf-extensions">Syntactic sugar - BNF extensions<a class="headerlink" href="#syntactic-sugar-bnf-extensions" title="Permanent link">&para;</a></h2>
+<p>Previous section gives the overview of the basic BNF syntax. If you got to use
+various BNF extensions
+(like <a href="https://en.wikipedia.org/wiki/Kleene_star">Kleene star</a>) you might find
+writing patterns in the previous section awkward. Since some of the patterns are
+used frequently in the grammars (zero-or-more, one-or-more etc.) parglare
+provides syntactic sugar for this common idioms using a well known regular
+expression syntax.</p>
+<h3 id="optional_1">Optional<a class="headerlink" href="#optional_1" title="Permanent link">&para;</a></h3>
+<p><code>Optional</code> can be specified using <code>?</code>. For example:</p>
+<pre><code>S: "2" b? "3"?;
+
+terminals
+b: "1";
+</code></pre>
+<p>Here, after <code>2</code> we might have terminal <code>b</code> but it is optional, as well as <code>3</code>
+that follows.</p>
+<p>Lets see what the parser will return for various inputs (the <code>grammar</code> variable
+is a string holding grammar from above):</p>
+<pre><code>g = Grammar.from_string(grammar)
+p = Parser(g)
+
+input_str = '2 1 3'
+result = p.parse(input_str)
+assert result == ["2", "1", "3"]
+
+input_str = '2 3'
+result = p.parse(input_str)
+assert result == ["2", None, "3"]
+</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Syntax equivalence for <code>optional</code> operator:</p>
+<pre><code>S: b?;
+
+terminals
+b: "1";
+</code></pre>
+<p>is equivalent to:</p>
+<pre><code>S: b_opt;
+b_opt: b | EMPTY;
+
+terminals
+b: "1";
+</code></pre>
+<p>Behind the scenes parglare will create <code>b_opt</code> rule.
+All syntactic sugar additions operate by creating additional rules in the
+grammar during table construction.</p>
+</div>
+<h3 id="one-or-more_1">One or more<a class="headerlink" href="#one-or-more_1" title="Permanent link">&para;</a></h3>
+<p><code>One or more</code> match is specified using <code>+</code> operator. For example:</p>
+<pre><code>S: "2" c+;
+
+terminals
+c: "c";
+</code></pre>
+<p>After <code>2</code> we expect to see one or more <code>c</code> terminals.</p>
+<p>Lets see what the parser will return for various inputs (the <code>grammar</code> variable
+is a string holding grammar from above):</p>
+<pre><code>g = Grammar.from_string(grammar)
+p = Parser(g)
+
+input_str = '2 c c c'
+result = p.parse(input_str)
+assert result == ["2", ["c", "c", "c"]]
+
+input_str = '2 c'
+result = p.parse(input_str)
+assert result == ["2", ["c"]]
+</code></pre>
+<p>So the sub-expression on the second position (<code>c+</code> sub-rule) will by default
+produce a list of matched <code>c</code> terminals. If <code>c</code> is missing
+a <a href="../handling_errors/">parse error</a> will be raised.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Syntax equivalence for <code>one or more</code>:</p>
+<pre><code>S: a+;
+
+terminals
+a: "a";
+</code></pre>
+<p>is equivalent to:</p>
+<pre><code>S: a_1;
+@collect
+a_1: a_1 a | a;
+
+terminals
+a: "a";
+</code></pre>
+</div>
+<p><code>+</code> operator allows repetition modifier for separators. For example:</p>
+<pre><code>S: "2" c+[comma];
+
+terminals
+c: "c";
+comma: ",";
+</code></pre>
+<p><code>c+[comma]</code> will match one or more <code>c</code> terminals separated by whatever is
+matched by the <code>comma</code> rule.</p>
+<p>Lets see what the parser will return for various inputs (the <code>grammar</code> variable
+is a string holding grammar from above):</p>
+<pre><code>g = Grammar.from_string(grammar)
+p = Parser(g)
+
+input_str = '2 c, c,  c'
+result = p.parse(input_str)
+assert result == ["2", ["c", "c", "c"]]
+
+input_str = '2 c'
+result = p.parse(input_str)
+assert result == ["2", ["c"]]
+</code></pre>
+<p>As you can see giving a separator modifier allows us to parse a list of items
+separated by the whatever is matched by the rule given inside <code>[]</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Syntax equivalence <code>one or more with separator</code>:</p>
+<pre><code>S: a+[comma];
+
+terminals
+a: "a";
+comma: ",";
+</code></pre>
+<p>is equivalent to:</p>
+<pre><code>S: a_1_comma;
+@collect_sep
+a_1_comma: a_1_comma comma a | a;
+
+terminals
+a: "a";
+comma: ",";
+</code></pre>
+<p>Making the name of the separator rule a suffix of the additional rule
+name makes sure that only one additional rule will be added to the
+grammar for all instances of <code>a+[comma]</code>, i.e. same base rule with the
+same separator.</p>
+</div>
+<h3 id="zero-or-more_1">Zero or more<a class="headerlink" href="#zero-or-more_1" title="Permanent link">&para;</a></h3>
+<p><code>Zero or more</code> match is specified using <code>*</code> operator. For example:</p>
+<pre><code>S: "2" c*;
+
+terminals
+c: "c";
+</code></pre>
+<p>This syntactic addition is similar to <code>+</code> except that it doesn't require rule to
+match at least once. If there is no match, resulting sub-expression will be an
+empty list. For example:</p>
+<pre><code>g = Grammar.from_string(grammar)
+p = Parser(g)
+
+input_str = '2 c c c'
+result = p.parse(input_str)
+assert result == ["2", ["c", "c", "c"]]
+
+input_str = '2'
+result = p.parse(input_str)
+assert result == ["2", []]
+</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Syntax equivalence <code>zero of more</code>:</p>
+<pre><code>S: a*;
+
+terminals
+a: "a";
+</code></pre>
+<p>is equivalent to:</p>
+<pre><code>S: a_0;
+a_0: a_1 {nops} | EMPTY;
+@collect
+a_1: a_1 a | a;
+
+terminals
+a: "a";
+</code></pre>
+<p>So using of <code>*</code> creates both <code>a_0</code> and <code>a_1</code> rules. Action attached to <code>a_0</code>
+returns a list of matched <code>a</code> and empty list if no match is found. Please note
+the <a href="../disambiguation/#nops-and-nopse">usage of <code>nops</code></a>. In case if
+<code>prefer_shift</code> strategy is used using <code>nops</code> will perform both REDUCE and
+SHIFT during GLR parsing in case what follows zero or more might be another
+element in the sequence. This is most of the time what you need.</p>
+</div>
+<p>Same as <code>one or more</code> this operator may use separator modifiers.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Syntax equivalence <code>zero or more with separator</code>:</p>
+<pre><code>S: a*[comma];
+
+terminals
+a: "a";
+comma: ",";
+</code></pre>
+<p>is equivalent to:</p>
+<pre><code>S: a_0_comma;
+a_0_comma: a_1_comma {nops} | EMPTY;
+@collect_sep
+a_1_comma: a_1_comma comma a | a;
+
+terminals
+a: "a";
+</code></pre>
+<p>where action is attached to <code>a_0_comma</code> to provide returning a list of
+matched <code>a</code> and empty list if no match is found.</p>
+</div>
+<h2 id="special-built-in-rules">Special built-in rules<a class="headerlink" href="#special-built-in-rules" title="Permanent link">&para;</a></h2>
+<p>There are two special rules your can reference in your grammars: <code>EMPTY</code> and
+<code>EOF</code>. <code>EMPTY</code> rule will reduce without consuming any input and will always
+succeed, i.e. it is empty recognition. <code>EOF</code> rule will match only at the end of
+the input.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>parglare doesn't assume that parse should be complete, i.e. that the whole
+input should be consumed. Thus, if you want to ensure that the whole input
+is consumed you must match <code>EOF</code> at the end of your input.</p>
+<p>Example:</p>
+<pre><code>MyFile: SomeRootRule EOF;
+SomeRootRule: ...
+</code></pre>
+</div>
+<h2 id="named-matches-assignments">Named matches (<em>assignments</em>)<a class="headerlink" href="#named-matches-assignments" title="Permanent link">&para;</a></h2>
+<p>In section on <a href="../actions/">actions</a> you can see that semantic action (Python
+callable) connected to a rule will be called with two parameters: a context and
+a list of sub-expressions evaluation results. This require you to use positional
+access in the list of sub-expressions.</p>
+<p><code>Named matches</code> (a.k.a <code>assignments</code>) enable giving a name to the sub-expression
+directly in the grammar.</p>
+<p>For example:</p>
+<pre><code>S: first=a second=digit+[comma];
+
+terminals
+a: "a";
+digit: /\d+/;
+</code></pre>
+<p>In this example root rule matches one <code>a</code> and then one or more digit separated
+by a comma. You can see that the first sub-expression (<code>a</code> match) is assigned to
+<code>first</code> while the second sub-expression <code>digit+[comma]</code> is assigned to <code>second</code>.</p>
+<p><code>first</code> and <code>second</code> will now be an additional keyword parameters passed to the
+semantic action. The values passed in using these parameters will be the results
+of evaluation of the rules referenced by the assignments.</p>
+<p>There are two kind of assignments:</p>
+<ul>
+<li>plain assignment (<code>=</code>) -- will collect RHS and pass it to the action under the
+  names given by LHS,</li>
+<li>bool assignment (<code>?=</code>) -- will pass <code>True</code> if the match return non-empty
+  result. If the result of RHS is empty the assignment will result in <code>False</code>
+  being passed to the action.</li>
+</ul>
+<p>Each rule using named matches result in a dynamically created Python class named
+after the rule. These classes are kept in a dictionary <code>grammar.classes</code> and
+used to instantiate Python objects during parsing by an implicitly
+set <a href="../actions/#built-in-actions">built-in <code>obj</code> action</a>.</p>
+<p>Thus, for rules using named matches, default action is to create object with
+attributes whose names are those of LHS of the assignments and values are from
+RHS of the assignments (or boolean values for <code>bool</code> assignments). Each object
+is an instance of corresponding dynamically created Python class.</p>
+<p>Effectively, using named matches enables automatic creation of a nice AST.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can, of course, override default action either in the grammar
+using <code>@</code> syntax or using <code>actions</code> dict given to the parser.
+See the next section.</p>
+</div>
+<h2 id="referencing-semantic-actions-from-a-grammar">Referencing semantic actions from a grammar<a class="headerlink" href="#referencing-semantic-actions-from-a-grammar" title="Permanent link">&para;</a></h2>
+<p>By default <a href="../actions/">action</a> with the name same as the rule name will be
+searched in the acommpanying <code>&lt;grammar&gt;_actions.py</code> file or <a href="../parser/#actions"><code>actions</code>
+dict</a>. You can override this by specifying action name for
+the rule directly in the grammar using <code>@</code> syntax. In that case a name given
+after <code>@</code> will be used instead of a rule name.</p>
+<p>For example:</p>
+<pre><code>@myaction
+some_rule: first second;
+</code></pre>
+
+<p>For rule <code>some_rule</code> action with the name <code>myaction</code> will be searched in the
+<code>&lt;grammar&gt;_actions.py</code> module, <code>actions</code> dict or <a href="#built-in-actions">built-in
+actions</a> provided by the <code>parglare.actions</code> module. This is
+helpful if you have some common action that can be used for multiple rules in
+your grammar. Also this can be used to specify built-in action to be used for a
+rule directly in the grammar.</p>
+<h2 id="grammar-comments">Grammar comments<a class="headerlink" href="#grammar-comments" title="Permanent link">&para;</a></h2>
+<p>In parglare grammar, comments are available as both line comments and block
+comments:</p>
+<pre><code>// This is a line comment. Everything from the '//' to the end of line is a comment.
+
+/*
+  This is a block comment.
+  Everything in between `/*`  and '*/' is a comment.
+*/
+</code></pre>
+<h2 id="handling-whitespaces-and-comments-in-your-language">Handling whitespaces and comments in your language<a class="headerlink" href="#handling-whitespaces-and-comments-in-your-language" title="Permanent link">&para;</a></h2>
+<p>By default parser will skip whitespaces. Whitespace skipping is controlled
+by <a href="../parser/#ws"><code>ws</code> parameter to the parser</a> which is by default set to
+<code>'\n\t '</code>.</p>
+<p>If you need more control of the layout, i.e. handling of not only whitespaces
+but comments also, you can use a special rule <code>LAYOUT</code>:</p>
+<pre><code>  LAYOUT: LayoutItem | LAYOUT LayoutItem;
+  LayoutItem: WS | Comment | EMPTY;
+
+  terminals
+  WS: /\s+/;
+  Comment: /\/\/.*/;
+</code></pre>
+<p>This will form a separate layout parser that will parse in-between each matched
+tokens. In this example whitespaces and line-comments will be consumed by the
+layout parser.</p>
+<p>If this special rule is found in the grammar <code>ws</code> parser parameter is ignored.</p>
+<p>Here is another example that gives support for both line comments and block
+comments like the one used in the grammar language itself:</p>
+<pre><code>  LAYOUT: LayoutItem | LAYOUT LayoutItem;
+  LayoutItem: WS | Comment | EMPTY;
+  Comment: '/*' CorNCs '*/' | LineComment;
+  CorNCs: CorNC | CorNCs CorNC | EMPTY;
+  CorNC: Comment | NotComment | WS;
+
+  terminals
+  WS: /\s+/;
+  LineComment: /\/\/.*/;
+  NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
+</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code>LAYOUT</code> is provided it <em>must</em> match before the first token, between any
+two tokens in the input, and after the last token. If layout cannot be
+empty, the input cannot start or end with a token. If this is not desired,
+make sure to include <code>EMPTY</code> in the layout as one of its alternatives like
+in the previous examples.</p>
+</div>
+<h2 id="handling-keywords-in-your-language">Handling keywords in your language<a class="headerlink" href="#handling-keywords-in-your-language" title="Permanent link">&para;</a></h2>
+<p>By default parser will match given string recognizer even if it is part of some
+larger word, i.e. it will not require matching on the word boundary. This is not
+the desired behaviour for language keywords.</p>
+<p>For example, lets examine this little grammar:</p>
+<pre><code>S: "for" name=ID "=" from=INT "to" to=INT EOF;
+
+terminals
+ID: /\w+/;
+INT: /\d+/;
+</code></pre>
+<p>This grammar is intended to match statement like this one:</p>
+<pre><code>for a=10 to 20
+</code></pre>
+<p>But it will also match:</p>
+<pre><code>fora=10 to20
+</code></pre>
+<p>which is not what we wanted.</p>
+<p>parglare allows the definition of a special terminal rule <code>KEYWORD</code>. This rule
+must define a <a href="#regular-expression-recognizer">regular expression recognizer</a>.
+Any string recognizer in the grammar that can be also recognized by the <code>KEYWORD</code>
+recognizer is treated as a keyword and is changed during grammar construction to
+match only on word boundary.</p>
+<p>For example:</p>
+<pre><code>S: "for" name=ID "=" from=INT "to" to=INT EOF;
+
+terminals
+ID: /\w+/;
+INT: /\d+/;
+KEYWORD: /\w+/;
+</code></pre>
+<p>Now,</p>
+<pre><code>fora=10 to20
+</code></pre>
+<p>will not be recognized as the words <code>for</code> and <code>to</code> are recognized to be keywords
+(they can be matched by the <code>KEYWORD</code> rule).</p>
+<p>This will be parsed correctly:</p>
+<pre><code>for a=10 to 20
+</code></pre>
+<p>As <code>=</code> is not matched by the <code>KEYWORD</code> rule and thus doesn't require to be
+separated from the surrounding tokens.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>parglare uses integrated scanner so this example:</p>
+<pre><code>for for=10 to 20
+</code></pre>
+<p>will be correctly parsed. <code>for</code> in <code>for=10</code> will be recognized as <code>ID</code> and
+not as a keyword <code>for</code>, i.e. there is no lexical ambiguity due to tokenizer
+separation.</p>
+</div>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../grammar/" class="btn btn-neutral float-right" title="Grammar class">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../getting_started/" class="btn btn-neutral" title="Getting started"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>Copyright &copy; 2017 <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/igordejanovic/parglare/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../getting_started/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../grammar/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../js/version-select.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
