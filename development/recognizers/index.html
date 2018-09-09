@@ -211,13 +211,15 @@ the input stream of objects.</p>
     return part of input starting at pos
 </code></pre>
 
-<p>where <code>context</code> is the <a href="">parsing context object</a> and is optional (e.g. you
-don't have to accept it in your recognizers), <code>input</code> is the input string or
-list of objects and <code>position</code> is the position in the input where match should
-be performed. For example if we have an input stream of objects that are
-comparable (e.g. numbers) and we want to recognize ascending elements starting
-at the given position but such that the recognized token must have at least two
-object from the input. We could write following:</p>
+<p>where <code>context</code> is the <a href="../common/#the-context-object">parsing context object</a>
+and is optional (e.g. you don't have to accept it in your recognizers), <code>input</code>
+is the input string or list of objects and <code>position</code> is the position in the
+input where match should be performed. The recognizer should return the part of
+the input that is recognized or <code>None</code> if it can't recognized at the current
+position. For example, if we have an input stream of objects that are comparable
+(e.g. numbers) and we want to recognize ascending elements starting at the given
+position but such that the recognized token must have at least two object from
+the input, we could write the following:</p>
 <pre><code class="python">def ascending_nosingle(input, pos):
     &quot;Match sublist of ascending elements. Matches at least two.&quot;
     last = pos + 1
@@ -246,15 +248,15 @@ grammar = Grammar.from_file('mygrammar.pg', recognizers=recognizers)
 
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>If you want more information you can investigate
-<a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py">test_recognizers.py</a> test.</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
 <p>You can also define recognizers in a separate Python file that
 accompanies your grammar file. In that case, recognizers will be
 automatically registered on the parser. For more information see <a href="../grammar_modularization/#grammar-file-recognizers">grammar
 file recognizers</a>.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you want more information you can investigate
+<a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py">test_recognizers.py</a> test.</p>
 </div>
               
             </div>
