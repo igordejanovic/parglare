@@ -29,13 +29,15 @@ def some_recognizer(context, input, pos):
     return part of input starting at pos
 ```
 
-where `context` is the [parsing context object]() and is optional (e.g. you
-don't have to accept it in your recognizers), `input` is the input string or
-list of objects and `position` is the position in the input where match should
-be performed. For example if we have an input stream of objects that are
-comparable (e.g. numbers) and we want to recognize ascending elements starting
-at the given position but such that the recognized token must have at least two
-object from the input. We could write following:
+where `context` is the [parsing context object](./common.md#the-context-object)
+and is optional (e.g. you don't have to accept it in your recognizers), `input`
+is the input string or list of objects and `position` is the position in the
+input where match should be performed. The recognizer should return the part of
+the input that is recognized or `None` if it can't recognized at the current
+position. For example, if we have an input stream of objects that are comparable
+(e.g. numbers) and we want to recognize ascending elements starting at the given
+position but such that the recognized token must have at least two object from
+the input, we could write the following:
 
 ```python
 def ascending_nosingle(input, pos):
@@ -63,7 +65,6 @@ recognizers = {
 grammar = Grammar.from_file('mygrammar.pg', recognizers=recognizers)
 ```
 
-
 In the file `mygrammar.pg` you have to provide a terminal rule with empty body:
 
 ```nohighlight
@@ -73,13 +74,13 @@ ascending: ;
 
 !!! tip
 
-    If you want more information you can investigate
-    [test_recognizers.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py) test.
-
-
-!!! tip
-
     You can also define recognizers in a separate Python file that
     accompanies your grammar file. In that case, recognizers will be
     automatically registered on the parser. For more information see [grammar
     file recognizers](./grammar_modularization.md#grammar-file-recognizers).
+
+
+!!! tip
+
+    If you want more information you can investigate
+    [test_recognizers.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py) test.
