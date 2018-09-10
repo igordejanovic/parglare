@@ -57,13 +57,13 @@ class Location(object):
     def __str__(self):
         line, column = self.line, self.column
         if line is not None:
-            return _a('{}{}:{}:"{}" => '
+            return _a('{}{}:{}:"{}"'
                       .format("{}:".format(self.file_name)
                               if self.file_name else "",
                               line, column,
                               position_context(self)))
         elif self.context.file_name:
-            return _a('{} => '.format(self.file_name))
+            return _a(self.file_name)
         else:
             return "<Unknown location>"
 

@@ -5,9 +5,9 @@ import sys
 from copy import copy, deepcopy
 from .grammar import EMPTY, EOF, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
-from .errors import Error, expected_symbols_str
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
-    DynamicDisambiguationConflict, SRConflicts, RRConflicts
+    DynamicDisambiguationConflict, SRConflicts, RRConflicts, \
+    expected_symbols_str
 from .common import Location, position_context
 from .actions import pass_none
 from .termui import prints, h_print, a_print
@@ -185,28 +185,22 @@ class Parser(object):
 
             if not actions:
 
-                symbols_expected = cur_state.actions.keys()
+                symbols_expected = list(cur_state.actions.keys())
                 tokens_ahead = self._get_all_possible_tokens_ahead(context)
+                if not self.in_error_recovery:
+                    error = self._create_error(
+                        context, symbols_expected,
+                        tokens_ahead,
+                        symbols_before=[cur_state.symbol])
+                else:
+                    error = self.errors[-1]
 
                 if self.error_recovery:
-                    if not self.errors or not self.in_error_recovery:
-                        self._create_error(context, symbols_expected,
-                                           tokens_ahead)
                     if self._do_recovery(context):
                         self.in_error_recovery = True
                         continue
 
-            if not actions:
-                if self.errors:
-                    last_error = self.errors[-1]
-                    context.start_position = last_error.location.start_position
-                    context.end_position = last_error.location.end_position
-                else:
-                    context.start_position = context.position
-                raise ParseError(Location(context=context),
-                                 list(symbols_expected),
-                                 tokens_ahead,
-                                 symbols_before=[cur_state.symbol])
+                raise error
 
             # Dynamic disambiguation
             if self.dynamic_filter:
@@ -757,16 +751,22 @@ class Parser(object):
         return None, context.position + 1 \
             if context.position < len(context.input_str) else None
 
-    def _create_error(self, context, symbols_expected, tokens_ahead):
+    def _create_error(self, context, symbols_expected, tokens_ahead,
+                      symbols_before):
         context = copy(context)
         context.start_position = context.position
         context.end_position = context.position
-        error = Error(context, symbols_expected, tokens_ahead)
+        error = ParseError(Location(context=context),
+                           symbols_expected,
+                           tokens_ahead,
+                           symbols_before=symbols_before)
 
         if self.debug:
             a_print("Error: ", error, level=1)
 
         self.errors.append(error)
+
+        return error
 
 
 class Context:

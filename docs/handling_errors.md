@@ -33,15 +33,8 @@ error recovery strategy that will simply drop characther/object at the place of
 the error and try to continue. All errors will be collected as an `errors` list
 on the parser instance.
 
-Each error is an instance of `parglare.Error` class. This class has the
-following attributes:
-
-- **location** - the [location object](./common.md#location-class) with the
-  information where the error occured.
-- **expected_symbols** - A set of grammar symbols expected at the location.
-- **tokens_ahead** - a list of tokens recognized at the location by trying each
-  recognizer of the grammar terminals.
-- **message** - the error message,
+Each error is an instance of [`ParseError` class](#handling-errors). In case no
+recovery is possible last `ParseError` will be raised.
 
 
 ## Custom recovery strategy

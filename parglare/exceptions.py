@@ -5,7 +5,8 @@ from parglare.termui import s_header as _
 class LocationError(Exception):
     def __init__(self, location, message):
         self.location = location
-        super(LocationError, self).__init__(str(location) + message)
+        super(LocationError, self).__init__(
+            "Error at {} => {}".format(location, message))
 
 
 class GrammarError(LocationError):
@@ -29,6 +30,10 @@ def expected_message(symbols_expected, tokens_ahead=None):
         + ((_(' but found ') +
             _(' or ').join(sorted([str(t) for t in tokens_ahead])))
            if tokens_ahead else '')
+
+
+def expected_symbols_str(symbols):
+    return " or ".join(sorted([s.name for s in symbols]))
 
 
 def disambiguation_error(tokens):

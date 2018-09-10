@@ -144,8 +144,11 @@ class GLRParser(Parser):
                     if self.heads_for_recovery:
                         if not self.in_error_recovery:
                             context = self.heads_for_recovery[0].context
-                            self._create_error(context, self.expected,
-                                               self.tokens_ahead)
+                            self._create_error(
+                                context, self.expected,
+                                self.tokens_ahead,
+                                list({h.context.state.symbol
+                                      for h in self.last_heads_for_reduce}))
                         if self._do_recovery():
                             self.in_error_recovery = True
                             continue
