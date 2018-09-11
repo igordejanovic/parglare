@@ -60,3 +60,10 @@ target/
 
 # pyenv python configuration file
 .python-version
+
+# Other
+*.dot
+.pytest_cache
+site
+issues-temp
+tests/perf/*.pstats
