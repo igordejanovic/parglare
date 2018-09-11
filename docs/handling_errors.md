@@ -46,7 +46,8 @@ function. This function should have the following signature:
         ...
 
 
-- **context** - the [context object] at the place where error occured.
+- **context** - the [context object](./common.md#the-context-object) at the
+  place where error occured.
 - **error** - [`ParseError` instance](#handling-errors).
 
 Using the context object you can query the state of the parser. E.g. to get the
