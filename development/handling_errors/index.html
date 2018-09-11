@@ -231,42 +231,36 @@ construction</a> to <code>True</code>. This will enable implicit
 error recovery strategy that will simply drop characther/object at the place of
 the error and try to continue. All errors will be collected as an <code>errors</code> list
 on the parser instance.</p>
-<p>Each error is an instance of <code>parglare.Error</code> class. This class has the
-following attributes:</p>
-<ul>
-<li><strong>location</strong> - the <a href="../common/#location-class">location object</a> with the
-  information where the error occured.</li>
-<li><strong>expected_symbols</strong> - A set of grammar symbols expected at the location.</li>
-<li><strong>tokens_ahead</strong> - a list of tokens recognized at the location by trying each
-  recognizer of the grammar terminals.</li>
-<li><strong>message</strong> - the error message,</li>
-</ul>
+<p>Each error is an instance of <a href="#handling-errors"><code>ParseError</code> class</a>. In case no
+recovery is possible last <code>ParseError</code> will be raised.</p>
 <h2 id="custom-recovery-strategy">Custom recovery strategy<a class="headerlink" href="#custom-recovery-strategy" title="Permanent link">&para;</a></h2>
 <p>To provide a custom strategy for error recovery set <code>error_recovery</code> to a Python
 function. This function should have the following signature:</p>
-<pre><code>def error_recovery_strategy(context):
+<pre><code>def error_recovery_strategy(context, error):
     ...
 </code></pre>
 <ul>
 <li><strong>context</strong> - the [context object] at the place where error occured.</li>
+<li><strong>error</strong> - <a href="#handling-errors"><code>ParseError</code> instance</a>.</li>
 </ul>
 <p>Using the context object you can query the state of the parser. E.g. to get the
 position use <code>context.position</code>, to get the parser state use <code>context.state</code>, to
-get expected symbols in this state use <code>context.parser.actions.keys()</code>, to get
-expected symbols at this position for which parser can succesfully continue use
-<code>context.parser.expected_symbols</code>.</p>
+get expected symbols in this state use <code>context.state.actions.keys()</code>.</p>
+<p>To get information about the error use <code>error</code> object. E.g. to get expected
+symbols at this position for which parser can succesfully continue use
+<code>error.symbols_expected</code>.</p>
 <p>The recovery function should return the tuple <code>(token, position)</code>. <code>position</code>
 should be a new position where the parser should continue or <code>None</code> if position
 should not change. <code>token</code> should be a new token introduced at the given
 position or <code>None</code> if no new token is introduced. If both <code>token</code> and <code>position</code>
 are <code>None</code> error recovery didn't succeed.</p>
-<p>The <code>token</code> symbol should be from the <code>expected_symbols</code> for the parser to
+<p>The <code>token</code> symbol should be from the <code>error.symbols_expected</code> for the parser to
 recover successfully. <code>token</code> should be an instance of
 <a href="../parser/#token"><code>parser.Token</code></a>. This class constructor accepts <code>symbol</code>,
-<code>value</code> and <code>length</code>. <code>symbol</code> should a grammar symbol from <code>expected_symbols</code>,
-<code>value</code> should be a matched part of the input (actually, in the context of error
-recovery this value is a made-up value) and length is the length of the token.
-For introduced tokens, length should be set to 0.</p>
+<code>value</code> and <code>length</code>. <code>symbol</code> should be a grammar symbol from
+<code>expected_symbols</code>, <code>value</code> should be a matched part of the input (actually, in
+the context of error recovery this value is a made-up value) and length is the
+length of the token. For introduced tokens, length should be set to 0.</p>
               
             </div>
           </div>
