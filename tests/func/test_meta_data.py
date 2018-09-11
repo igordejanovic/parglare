@@ -11,7 +11,7 @@ def test_production_meta_data():
 
     grammar_str = r'''
     MyRule: 'a' {left, 1, dynamic, nops,
-                 some_string:'My Label',
+                 some_string:'My Label with \\ and \' end',
                  some_bool: true,
                  some_int: 3,
                  some_float: 4.5};
@@ -24,7 +24,7 @@ def test_production_meta_data():
     assert prod.assoc == ASSOC_LEFT
     assert prod.prior == 1
     assert prod.dynamic
-    assert prod.some_string == 'My Label'
+    assert prod.some_string == r"My Label with \ and ' end"
     assert prod.some_bool is True
     assert prod.some_int == 3
     assert prod.some_float == 4.5

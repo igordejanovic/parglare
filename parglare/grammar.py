@@ -1868,7 +1868,10 @@ def act_recognizer_regex(context, nodes):
 
 
 def act_str_regex_term(context, value):
-    return value[1:-1]
+    value = value[1:-1]
+    value = value.replace(r"\\", "\\")
+    value = value.replace(r"\'", "'")
+    return value
 
 
 pg_actions = {
