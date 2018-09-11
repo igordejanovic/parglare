@@ -102,7 +102,7 @@ Initial layout/content of this package was created with `Cookiecutter
    :target: https://coveralls.io/github/igordejanovic/parglare?branch=master
 
 .. |docs| image:: https://img.shields.io/badge/docs-latest-green.svg
-   :target: http://igordejanovic.net/parglare/development/
+   :target: http://igordejanovic.net/parglare/latest/
 
 .. |status| image:: https://img.shields.io/pypi/status/parglare.svg
 
