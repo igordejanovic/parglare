@@ -1867,11 +1867,15 @@ def act_recognizer_regex(context, nodes):
                            ignore_case=context.extra.ignore_case)
 
 
-def act_str_regex_term(context, value):
+def act_str_term(context, value):
     value = value[1:-1]
     value = value.replace(r"\\", "\\")
     value = value.replace(r"\'", "'")
     return value
+
+
+def act_regex_term(context, value):
+    return value[1:-1]
 
 
 pg_actions = {
@@ -1906,8 +1910,8 @@ pg_actions = {
 
     'Recognizer': [act_recognizer_str, act_recognizer_regex],
 
-    'StrConst': act_str_regex_term,
-    'RegExTerm': act_str_regex_term,
+    'StrConst': act_str_term,
+    'RegExTerm': act_regex_term,
 
     # Constants
     'IntConst': lambda _, value: int(value),
