@@ -3,8 +3,6 @@
 - Development version
   - Rework/cleanup of both LR and GLR parsers. Backward incompatible changes
     (see below).
-  - changed `layout` parser param to `in_layout`.
-  - changed `position` parser param to `return_position`.
   - Added optional first param to recognizers passing in Context object.
     See https://github.com/igordejanovic/parglare/pull/55
     Thanks jwcraftsman@GitHub
@@ -13,12 +11,16 @@
     GLR parser heads split.
   - `dynamic_filter` callback params changed from `action, token, production,
     subresults, state, context` to `context, action, subresults`. To access
-    previous param values use `context.token_ahead` for `token`,
+    previous param values use `context.tokens_ahead` for `token`,
     `context.production` for `production` and `context.state` for `state`.
-  - `error_recovery` callback params changed from `parser, input, position,
-    expected_symbols` to `context`. To access previous param values use
-    `context.parser`, `context.input_str`, `context.position`,
-    `context.state.actions.keys()`.
+  - `error_recovery` callback params changed from `(parser, input, position,
+    expected_symbols)` to `(context, error)`. To access previous param values
+    use `context.parser`, `context.input_str`, `context.position`,
+    `error.symbols_expected`. The other way to access expected symbols is
+    `context.state.actions.keys()` but in the context of GLR
+    `error.symbols_expected` will give a subset of all possible symbols in the
+    given state for which parser is guaranteed to continue (e.g. to execute
+    SHIFT).
   - Error recovery function now returns token and position. The error is
     automatically registered and returned with parsing results.
   - `custom_lexical_disambiguation` parser param/callback changed to

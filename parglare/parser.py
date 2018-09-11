@@ -196,7 +196,7 @@ class Parser(object):
                     error = self.errors[-1]
 
                 if self.error_recovery:
-                    if self._do_recovery(context):
+                    if self._do_recovery(context, error):
                         self.in_error_recovery = True
                         continue
 
@@ -702,7 +702,7 @@ class Parser(object):
 
         raise DisambiguationError(Location(context), tokens)
 
-    def _do_recovery(self, context):
+    def _do_recovery(self, context, error):
 
         debug = self.debug
         if debug:
@@ -717,7 +717,7 @@ class Parser(object):
             # Custom recovery provided during parser construction
             if debug:
                 prints("\tDoing custom error recovery.")
-            token, position = self.error_recovery(context)
+            token, position = self.error_recovery(context, error)
 
         # The recovery may either decide to skip erroneous part of
         # the input and resume at the place that can continue or it

@@ -68,7 +68,7 @@ def test_glr_recovery_custom_new_position():
     Test that custom recovery that increment position works.
     """
 
-    def custom_recovery(context):
+    def custom_recovery(context, error):
         # This recovery will just skip over erroneous part of input '& 89'.
         return None, context.position + 4
 
@@ -89,7 +89,7 @@ def test_glr_recovery_custom_new_token():
     Test that custom recovery that introduces new token works.
     """
 
-    def custom_recovery(context):
+    def custom_recovery(context, error):
         # Here we will introduce missing operation token
         return Token(g.get_terminal('-'), '-', 0), None
 

@@ -115,7 +115,7 @@ def test_custom_error_recovery():
 
     called = [False]
 
-    def my_recovery(context):
+    def my_recovery(context, error):
         expected_symbols = context.state.actions.keys()
         called[0] = True
         assert isinstance(context.parser, Parser)

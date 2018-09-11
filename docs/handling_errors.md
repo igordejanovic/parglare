@@ -42,17 +42,20 @@ recovery is possible last `ParseError` will be raised.
 To provide a custom strategy for error recovery set `error_recovery` to a Python
 function. This function should have the following signature:
 
-    def error_recovery_strategy(context):
+    def error_recovery_strategy(context, error):
         ...
 
 
 - **context** - the [context object] at the place where error occured.
+- **error** - [`ParseError` instance](#handling-errors).
 
 Using the context object you can query the state of the parser. E.g. to get the
 position use `context.position`, to get the parser state use `context.state`, to
-get expected symbols in this state use `context.parser.actions.keys()`, to get
-expected symbols at this position for which parser can succesfully continue use
-`context.parser.expected_symbols`.
+get expected symbols in this state use `context.state.actions.keys()`.
+
+To get information about the error use `error` object. E.g. to get expected
+symbols at this position for which parser can succesfully continue use
+`error.symbols_expected`.
 
 The recovery function should return the tuple `(token, position)`. `position`
 should be a new position where the parser should continue or `None` if position
@@ -60,10 +63,10 @@ should not change. `token` should be a new token introduced at the given
 position or `None` if no new token is introduced. If both `token` and `position`
 are `None` error recovery didn't succeed.
 
-The `token` symbol should be from the `expected_symbols` for the parser to
+The `token` symbol should be from the `error.symbols_expected` for the parser to
 recover successfully. `token` should be an instance of
 [`parser.Token`](./parser.md#token). This class constructor accepts `symbol`,
-`value` and `length`. `symbol` should a grammar symbol from `expected_symbols`,
-`value` should be a matched part of the input (actually, in the context of error
-recovery this value is a made-up value) and length is the length of the token.
-For introduced tokens, length should be set to 0.
+`value` and `length`. `symbol` should be a grammar symbol from
+`expected_symbols`, `value` should be a matched part of the input (actually, in
+the context of error recovery this value is a made-up value) and length is the
+length of the token. For introduced tokens, length should be set to 0.

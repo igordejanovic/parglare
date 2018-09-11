@@ -144,12 +144,14 @@ class GLRParser(Parser):
                     if self.heads_for_recovery:
                         if not self.in_error_recovery:
                             context = self.heads_for_recovery[0].context
-                            self._create_error(
+                            error = self._create_error(
                                 context, self.expected,
                                 self.tokens_ahead,
                                 list({h.context.state.symbol
                                       for h in self.last_heads_for_reduce}))
-                        if self._do_recovery():
+                        else:
+                            error = self.errors[-1]
+                        if self._do_recovery(error):
                             self.in_error_recovery = True
                             continue
                 else:
@@ -634,7 +636,7 @@ class GLRParser(Parser):
                 self.heads_for_reduce.append(
                     head.for_token(Token(possible_lookahead, [])))
 
-    def _do_recovery(self):
+    def _do_recovery(self, error):
         """If recovery is enabled, does error recovery for the heads in
         heads_for_recovery.
 
@@ -658,7 +660,7 @@ class GLRParser(Parser):
                 # Custom recovery provided during parser construction
                 if debug:
                     prints("\tDoing custom error recovery.")
-                token, position = self.error_recovery(context)
+                token, position = self.error_recovery(context, error)
 
             if position is not None or token is not None:
                 if position:
