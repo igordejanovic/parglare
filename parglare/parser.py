@@ -714,7 +714,7 @@ class Parser(object):
             # Default recovery
             if debug:
                 prints("\tDoing default error recovery.")
-            token, position = self._default_error_recovery(context)
+            token, position = self.default_error_recovery(context)
         else:
             # Custom recovery provided during parser construction
             if debug:
@@ -739,7 +739,7 @@ class Parser(object):
 
         return bool(token or position)
 
-    def _default_error_recovery(self, context):
+    def default_error_recovery(self, context):
         """The default recovery strategy is to drop char/object at current position
         and try to continue.
 
