@@ -19,7 +19,7 @@
     `context.state.actions.keys()` but in the context of GLR
     `error.symbols_expected` will give a subset of all possible symbols in the
     given state for which parser is guaranteed to continue (e.g. to execute
-    SHIFT).
+    SHIFT). error_recovery now returns (token, position) tuple.
   - Error recovery function now returns token and position. The error is
     automatically registered and returned with parsing results.
   - `custom_lexical_disambiguation` parser param/callback changed to
