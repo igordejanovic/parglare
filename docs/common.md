@@ -45,8 +45,8 @@ Following attributes are available on the context object:
 - **parser** - is the reference to the parser instance. You should use this only
   to investigate parser configuration not to alter its state.
 
-- **extra** - this attribute can store arbitrary user information. This
-  information is deepcopied during stack node creation so use with care.
+- **extra** - this attribute can store arbitrary user information for state
+  tracking. If not given during initial context creation `dict` is used.
 
 
 ## Location class

@@ -7,8 +7,7 @@
     See https://github.com/igordejanovic/parglare/pull/55
     Thanks jwcraftsman@GitHub
   - Context object now uses `__slots__` and has `extra` attribute for user
-    usage. `extra` is shallow copied during LR parser run and deep copied during
-    GLR parser heads split.
+    usage. `extra`.
   - `dynamic_filter` callback params changed from `action, token, production,
     subresults, state, context` to `context, action, subresults`. To access
     previous param values use `context.tokens_ahead` for `token`,

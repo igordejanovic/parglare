@@ -784,6 +784,7 @@ class Context:
         token_ahead(Token): Token recognized ahead at position in given
              state.
         extra(anything): Used for additional state maintained by the user.
+             If not given empty dict is used.
     """
 
     __local = ['state',
@@ -819,12 +820,12 @@ class Context:
         self.layout_content_ahead = layout_content_ahead
         self.node = node
         if context:
-            self.extra = deepcopy(context.extra)
+            self.extra = context.extra
             self.file_name = context.file_name
             self.input_str = context.input_str
             self.parser = context.parser
         else:
-            self.extra = extra
+            self.extra = extra if extra is not None else {}
             self.file_name = file_name
             self.input_str = input_str
             self.parser = parser
@@ -837,13 +838,6 @@ class Context:
             return self.production.symbol
         elif self.node is not None:
             return self.node.symbol
-
-    def __deepcopy__(self, memo):
-        new_inst = self.__class__()
-        for attr in self.__slots__:
-            setattr(new_inst, attr, getattr(self, attr))
-        new_inst.extra = deepcopy(self.extra, memo)
-        return new_inst
 
     def __str__(self):
         if self.symbol:

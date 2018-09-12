@@ -2,7 +2,7 @@
 from __future__ import print_function, unicode_literals
 import codecs
 from itertools import chain, takewhile
-from copy import deepcopy
+from copy import copy
 from parglare import Parser
 from parglare import termui as t
 from .exceptions import DisambiguationError, ParseError
@@ -847,7 +847,7 @@ class GSSNode(object):
         elif self.context.token_ahead == token:
             return self
         else:
-            context = deepcopy(self.context)
+            context = copy(self.context)
             context.token_ahead = token
             new_head = GSSNode(context, self.number_of_trees)
             new_head.parents = list(self.parents)
