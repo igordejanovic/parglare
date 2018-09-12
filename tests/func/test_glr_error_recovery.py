@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import GLRParser, Grammar
+from parglare import GLRParser, Grammar, ParseError
 from parglare.parser import Token
 from parglare.actions import pass_single, pass_inner
 
@@ -93,8 +93,7 @@ def test_glr_recovery_custom_new_token():
         # Here we will introduce missing operation token
         return Token(g.get_terminal('-'), '-', 0), None
 
-    parser = GLRParser(g, actions=actions, error_recovery=custom_recovery,
-                       debug=True)
+    parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 
     results = parser.parse('1 + 5 8 - 2')
 
@@ -103,3 +102,20 @@ def test_glr_recovery_custom_new_token():
     assert len(set(results)) == 2
     assert -4 in results
     assert 0 in results
+
+
+def test_glr_recovery_custom_unsuccessful():
+    """
+    Test unsuccessful error recovery.
+    """
+
+    def custom_recovery(context, error):
+        return None, None
+
+    parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
+
+    with pytest.raises(ParseError) as e:
+        parser.parse('1 + 5 8 - 2')
+
+    error = e.value
+    assert error.location.start_position == 6

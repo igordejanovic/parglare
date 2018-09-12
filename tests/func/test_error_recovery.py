@@ -43,7 +43,7 @@ def test_error_recovery_uncomplete():
     # By setting start_production to 'E' parser will understand only +
     # operation
     parser = Parser(g, actions=actions, start_production='E',
-                    error_recovery=True, debug=True)
+                    error_recovery=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
 
@@ -99,7 +99,7 @@ def test_error_recovery_parse_error():
     error that couldn't be recovered from.
 
     """
-    parser = Parser(g, actions=actions, error_recovery=True, debug=True)
+    parser = Parser(g, actions=actions, error_recovery=True)
 
     with pytest.raises(ParseError) as einfo:
         parser.parse("1 + 2 + * 3 + & -")
@@ -135,3 +135,20 @@ def test_custom_error_recovery():
 
     # Assert that recovery handler is called.
     assert called[0]
+
+
+def test_recovery_custom_unsuccessful():
+    """
+    Test unsuccessful error recovery.
+    """
+
+    def custom_recovery(context, error):
+        return None, None
+
+    parser = Parser(g, actions=actions, error_recovery=custom_recovery)
+
+    with pytest.raises(ParseError) as e:
+        parser.parse('1 + 5 8 - 2')
+
+    error = e.value
+    assert error.location.start_position == 6
