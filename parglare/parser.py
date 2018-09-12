@@ -501,14 +501,16 @@ class Parser(object):
         Just check with all recognizers available.
         """
         tokens = []
-        for terminal in self.grammar.terminals.values():
-            if terminal.recognizer._pg_context:
-                tok = terminal.recognizer(context, context.input_str,
-                                          context.position)
-            else:
-                tok = terminal.recognizer(context.input_str, context.position)
-            if tok is not None:
-                tokens.append(Token(terminal, tok))
+        if context.position < len(context.input_str):
+            for terminal in self.grammar.terminals.values():
+                if terminal.recognizer._pg_context:
+                    tok = terminal.recognizer(context, context.input_str,
+                                              context.position)
+                else:
+                    tok = terminal.recognizer(context.input_str,
+                                              context.position)
+                if tok is not None:
+                    tokens.append(Token(terminal, tok))
         return tokens
 
     def _init_dynamic_disambiguation(self, context):
