@@ -304,7 +304,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         finish_flags.reverse()
         state.finish_flags = finish_flags
 
-    table = LRTable(states, first_sets, follow_sets, grammar)
+    table = LRTable(states)
     table.calc_conflicts()
     return table
 
@@ -359,12 +359,8 @@ def check_table(states, all_actions, all_goto, first_sets, follow_sets):
 
 
 class LRTable(object):
-    def __init__(self, states, first_sets=None, follow_sets=None,
-                 grammar=None):
+    def __init__(self, states, grammar=None):
         self.states = states
-        self.first_sets = first_sets
-        self.follow_sets = follow_sets
-        self.grammar = grammar
 
     def calc_conflicts(self):
         """
