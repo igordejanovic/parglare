@@ -2,11 +2,12 @@ from __future__ import print_function, unicode_literals
 import sys
 from collections import OrderedDict
 from itertools import chain
-from .grammar import ProductionRHS, AUGSYMBOL, ASSOC_LEFT, ASSOC_RIGHT, STOP, \
-    StringRecognizer, RegExRecognizer, Grammar, EMPTY, NonTerminal
-from .exceptions import GrammarError, SRConflict, RRConflict
-from .closure import closure, LR_1
-from .termui import prints, s_header, h_print, a_print, s_emph
+from parglare.grammar import ProductionRHS, AUGSYMBOL, \
+    ASSOC_LEFT, ASSOC_RIGHT, STOP, StringRecognizer, RegExRecognizer, \
+    Grammar, EMPTY, NonTerminal
+from parglare.exceptions import GrammarError, SRConflict, RRConflict
+from parglare.closure import closure, LR_1
+from parglare.termui import prints, s_header, h_print, a_print, s_emph
 if sys.version < '3':
     text = unicode  # NOQA
 else:

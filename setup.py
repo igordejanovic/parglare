@@ -46,6 +46,7 @@ setup(
     url='https://github.com/igordejanovic/parglare',
     packages=[
         'parglare',
+        'parglare.tables'
     ],
     package_dir={'parglare':
                  'parglare'},
