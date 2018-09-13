@@ -305,7 +305,6 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         state.finish_flags = finish_flags
 
     table = LRTable(states)
-    table.calc_conflicts()
     return table
 
 
@@ -361,10 +360,11 @@ def check_table(states, all_actions, all_goto, first_sets, follow_sets):
 class LRTable(object):
     def __init__(self, states, grammar=None):
         self.states = states
+        self.calc_conflicts_and_dynamic_terminals()
 
-    def calc_conflicts(self):
+    def calc_conflicts_and_dynamic_terminals(self):
         """
-        Determine S/R and R/R conflicts.
+        Determine S/R and R/R conflicts and states dynamic terminals.
         """
         self.sr_conflicts = []
         self.rr_conflicts = []
