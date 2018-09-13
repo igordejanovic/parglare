@@ -39,7 +39,7 @@
     See issue: https://github.com/igordejanovic/parglare/issues/57
   - `ParseError` now has `symbols_expected`, `tokens_ahead` and
     `symbols_before` attributes. See [Handling errors
-    section](http://www.igordejanovic.net/parglare/handling_errors/).
+    section](http://www.igordejanovic.net/parglare/0.7/handling_errors/).
 
 
 - 2018-05-24 Version 0.6.1
