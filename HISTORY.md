@@ -6,8 +6,9 @@
   - Added optional first param to recognizers passing in Context object.
     See https://github.com/igordejanovic/parglare/pull/55
     Thanks jwcraftsman@GitHub
-  - Context object now uses `__slots__` and has `extra` attribute for user
-    usage. `extra`.
+  - `Context` object now uses `__slots__` and has `extra` attribute for user
+    usage. By default `extra` is initialized to an empty dict if context object
+    is not created by the user.
   - `dynamic_filter` callback params changed from `action, token, production,
     subresults, state, context` to `context, action, subresults`. To access
     previous param values use `context.tokens_ahead` for `token`,
@@ -19,7 +20,7 @@
     `context.state.actions.keys()` but in the context of GLR
     `error.symbols_expected` will give a subset of all possible symbols in the
     given state for which parser is guaranteed to continue (e.g. to execute
-    SHIFT). error_recovery now returns (token, position) tuple.
+    SHIFT).
   - Error recovery function now returns token and position. The error is
     automatically registered and returned with parsing results.
   - `custom_lexical_disambiguation` parser param/callback changed to
@@ -34,8 +35,8 @@
     instead of id. First production id for the given rule is used.
   - Support for arbitrary user meta-data.
     See issue: https://github.com/igordejanovic/parglare/issues/57
-  - `ParserError` has now `symbols_expected`, `tokens_ahead` and
-    `symbols_before`. See [Handling errors
+  - `ParseError` now has `symbols_expected`, `tokens_ahead` and
+    `symbols_before` attributes. See [Handling errors
     section](http://www.igordejanovic.net/parglare/handling_errors/).
 
 
