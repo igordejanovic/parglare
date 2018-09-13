@@ -267,43 +267,6 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                                          if x.action is not REDUCE]
                                     actions[terminal].append(new_reduce)
 
-    # Scanning optimization. Preorder actions based on terminal priority and
-    # specificity. Set _finish flags.
-    def act_order(act_item):
-        """Priority is the strongest property. After that honor string
-        recognizer over other types of recognizers.
-
-        """
-        symbol, act = act_item
-        return symbol.prior * 1000000 + (500000 +
-                                         (len(symbol.recognizer.value)
-                                          if type(symbol.recognizer) is
-                                          StringRecognizer else 0) +
-                                         # Account for `\b` at the beginning
-                                         # and end of keyword regex
-                                         ((len(symbol.recognizer._regex) - 4)
-                                          if type(symbol.recognizer) is
-                                          RegExRecognizer and symbol.keyword
-                                          else 0))
-    for state in states:
-        finish_flags = []
-        state.actions = OrderedDict(sorted(state.actions.items(),
-                                           key=act_order, reverse=True))
-        # Finish flags
-        prior = None
-        for symbol, act in reversed(list(state.actions.items())):
-            if symbol.finish is not None:
-                finish_flags.append(symbol.finish)
-            else:
-                finish_flags.append(
-                    (symbol.prior > prior if prior else False)
-                    or type(symbol.recognizer) is StringRecognizer
-                    or symbol.keyword)
-            prior = symbol.prior
-
-        finish_flags.reverse()
-        state.finish_flags = finish_flags
-
     table = LRTable(states)
     return table
 
@@ -358,9 +321,52 @@ def check_table(states, all_actions, all_goto, first_sets, follow_sets):
 
 
 class LRTable(object):
-    def __init__(self, states, grammar=None):
+    def __init__(self, states, calc_finish_flags=True):
         self.states = states
+        if calc_finish_flags:
+            self.calc_finish_flags()
         self.calc_conflicts_and_dynamic_terminals()
+
+    def calc_finish_flags(self):
+        """
+        Scanning optimization. Preorder actions based on terminal priority
+        and specificity. Set _finish flags.
+        """
+
+        def act_order(act_item):
+            """Priority is the strongest property. After that honor string
+            recognizer over other types of recognizers.
+
+            """
+            symbol, act = act_item
+            return symbol.prior * 1000000 \
+                + (500000 + (len(symbol.recognizer.value)
+                             if type(symbol.recognizer) is
+                             StringRecognizer else 0) +
+                   # Account for `\b` at the beginning and end of keyword regex
+                   ((len(symbol.recognizer._regex) - 4)
+                    if type(symbol.recognizer) is
+                    RegExRecognizer and symbol.keyword
+                    else 0))
+
+        for state in self.states:
+            finish_flags = []
+            state.actions = OrderedDict(sorted(state.actions.items(),
+                                               key=act_order, reverse=True))
+            # Finish flags
+            prior = None
+            for symbol, act in reversed(list(state.actions.items())):
+                if symbol.finish is not None:
+                    finish_flags.append(symbol.finish)
+                else:
+                    finish_flags.append(
+                        (symbol.prior > prior if prior else False)
+                        or type(symbol.recognizer) is StringRecognizer
+                        or symbol.keyword)
+                prior = symbol.prior
+
+            finish_flags.reverse()
+            state.finish_flags = finish_flags
 
     def calc_conflicts_and_dynamic_terminals(self):
         """
