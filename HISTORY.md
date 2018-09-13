@@ -33,6 +33,8 @@
     `ParseError`for LR parser.
   - `start_production` parser param now accepts a fully qualified rule name
     instead of id. First production id for the given rule is used.
+  - `NodeTerm` keeps a reference to the token. `value` is now a read-only
+    property that proxies `token.value`.
   - Support for arbitrary user meta-data.
     See issue: https://github.com/igordejanovic/parglare/issues/57
   - `ParseError` now has `symbols_expected`, `tokens_ahead` and
