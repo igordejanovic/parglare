@@ -1,6 +1,6 @@
 # History
 
-- Development version
+- 2018-09-13 Version 0.7.0
   - Rework/cleanup of both LR and GLR parsers. Backward incompatible changes
     (see below).
   - Added optional first param to recognizers passing in Context object.
