@@ -303,23 +303,6 @@ def merge_states(old_state, new_state):
     return True
 
 
-def check_table(states, all_actions, all_goto, first_sets, follow_sets):
-    """
-    Return a list of errors for the given table.
-    """
-
-    errors = []
-    # Check for states with GOTO links but without SHIFT links.
-    # This is invalid as the GOTO link will never be traversed.
-    for nt, firsts in first_sets.items():
-        if nt.name != 'S\'' and not firsts:
-            errors.append(
-                'First set empty for grammar symbol "{}". '
-                'An infinite recursion on the grammar symbol.'.format(nt))
-
-    return errors
-
-
 class LRTable(object):
     def __init__(self, states, calc_finish_flags=True):
         self.states = states
