@@ -555,7 +555,7 @@ class LRState(object):
     items(list of LRItem):
     actions(OrderedDict): Keys are grammar terminal symbols, values are
         lists of Action instances.
-    goto(OrderedDict): Keys are grammar non-terminal symbols, values are
+    gotos(OrderedDict): Keys are grammar non-terminal symbols, values are
         instances of LRState.
     dynamic(set of terminal symbols): If terminal symbol is in set dynamic
         ambiguity strategy callable is called for the terminal symbol
@@ -567,7 +567,7 @@ class LRState(object):
                  'actions', 'gotos', 'dynamic', 'finish_flags',
                  '_per_next_symbol', '_max_prior_per_symbol']
 
-    def __init__(self, grammar, state_id, symbol, items):
+    def __init__(self, grammar, state_id, symbol, items=None):
         self.grammar = grammar
         self.state_id = state_id
         self.symbol = symbol
