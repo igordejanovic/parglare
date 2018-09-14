@@ -73,12 +73,12 @@ class Parser(object):
         self.custom_token_recognition = custom_token_recognition
 
         from .closure import LR_0, LR_1
-        from .tables import create_table
+        from .tables import create_load_table
         if tables == SLR:
             itemset_type = LR_0
         else:
             itemset_type = LR_1
-        self.table = create_table(
+        self.table = create_load_table(
             grammar, itemset_type=itemset_type,
             start_production=self.start_production,
             prefer_shifts=prefer_shifts,

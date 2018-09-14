@@ -46,6 +46,7 @@ def test_save_load_table():
         os.utime(variable_file, None)
     parser = Parser(grammar)
     assert parser.parse(input_str) == input_str_result
+    # We verify that the table file is newer.
     assert last_mtime < os.path.getmtime(table_file)
 
 

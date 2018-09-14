@@ -1,5 +1,6 @@
 from __future__ import print_function, unicode_literals
 import sys
+import os
 from collections import OrderedDict
 from itertools import chain
 from parglare.grammar import ProductionRHS, AUGSYMBOL, \
@@ -8,6 +9,7 @@ from parglare.grammar import ProductionRHS, AUGSYMBOL, \
 from parglare.exceptions import GrammarError, SRConflict, RRConflict
 from parglare.closure import closure, LR_1
 from parglare.termui import prints, s_header, h_print, a_print, s_emph
+from parglare.tables.persist import load_table, save_table
 if sys.version < '3':
     text = unicode  # NOQA
 else:
@@ -21,6 +23,40 @@ ACCEPT = 2
 # Tables construction algorithms
 SLR = 0
 LALR = 1
+
+
+def create_load_table(grammar, itemset_type=LR_1, start_production=1,
+                      prefer_shifts=False, prefer_shifts_over_empty=True):
+    """
+    Construct table by loading from file if present and newer than the grammar.
+    If table file is older than the grammar or non-existent calculate the table
+    and save to file.
+    """
+
+    create_table_file = True
+    table_file_name = None
+    if grammar.file_path:
+        file_basename, _ = os.path.splitext(grammar.file_path)
+        table_file_name = "{}.pgt".format(file_basename)
+
+        if os.path.exists(table_file_name):
+            create_table_file = False
+            table_mtime = os.path.getmtime(table_file_name)
+            # Check if older than any of the grammar files
+            for g_file_name in grammar.imported_files.keys():
+                if os.path.getmtime(g_file_name) > table_mtime:
+                    create_table_file = True
+                    break
+
+    if create_table_file:
+        table = create_table(grammar, itemset_type, start_production,
+                             prefer_shifts, prefer_shifts_over_empty)
+        if table_file_name:
+            save_table(table_file_name, table)
+    else:
+        table = load_table(table_file_name, grammar)
+
+    return table
 
 
 def create_table(grammar, itemset_type=LR_1, start_production=1,
