@@ -66,7 +66,10 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
         table = create_table(grammar, itemset_type, start_production,
                              prefer_shifts, prefer_shifts_over_empty)
         if table_file_name:
-            save_table(table_file_name, table)
+            try:
+                save_table(table_file_name, table)
+            except (IOError, PermissionError):
+                pass
     else:
         table = load_table(table_file_name, grammar)
 
