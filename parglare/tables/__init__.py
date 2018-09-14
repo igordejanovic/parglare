@@ -23,17 +23,11 @@ SLR = 0
 LALR = 1
 
 
-def create_table(grammar, first_sets=None, follow_sets=None,
-                 itemset_type=LR_1, start_production=1,
+def create_table(grammar, itemset_type=LR_1, start_production=1,
                  prefer_shifts=False, prefer_shifts_over_empty=True):
     """
     Arguments:
     grammar (Grammar):
-    first_sets(dict of sets): keyed by GrammarSymbol. sets contain Terminal
-        instances. If not given it is calculated from the grammar.
-    follow_sets(dict of sets): keyed by NonTerminal. sets contain Terminal
-        instances that can follow given NonTerminal. If not given it is
-        calculated from the grammar.
     itemset_type(int) - SRL=0 LR_1=1. By default LR_1.
     start_production(int) - The production which defines start state.
         By default 1 - first production from the grammar.
@@ -44,7 +38,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
         `True` this param is ignored.
     """
 
-    first_sets = first_sets if first_sets else first(grammar)
+    first_sets = first(grammar)
 
     # Check for states with GOTO links but without SHIFT links.
     # This is invalid as the GOTO link will never be traversed.
@@ -56,7 +50,7 @@ def create_table(grammar, first_sets=None, follow_sets=None,
                         'An infinite recursion on the '
                         'grammar symbol.'.format(nt))
 
-    follow_sets = follow_sets if follow_sets else follow(grammar, first_sets)
+    follow_sets = follow(grammar, first_sets)
 
     start_prod_symbol = grammar.productions[start_production].symbol
     grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
