@@ -13,7 +13,7 @@ def test_pglr_check():
     """
     Test pglr command for grammar checking.
     """
-    result = subprocess.call(['pglr', 'check', GRAMMAR_FILE])
+    result = subprocess.call(['pglr', 'compile', GRAMMAR_FILE])
     assert result == 0
 
 
