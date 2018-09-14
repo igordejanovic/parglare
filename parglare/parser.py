@@ -30,7 +30,7 @@ class Parser(object):
                  tables=LALR, in_layout=False, return_position=False,
                  prefer_shifts=True, prefer_shifts_over_empty=True,
                  error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None):
+                 custom_token_recognition=None, force_load_table=False):
         self.grammar = grammar
         if start_production is not None:
             self.start_production = grammar.get_production_id(start_production)
@@ -82,7 +82,8 @@ class Parser(object):
             grammar, itemset_type=itemset_type,
             start_production=self.start_production,
             prefer_shifts=prefer_shifts,
-            prefer_shifts_over_empty=prefer_shifts_over_empty)
+            prefer_shifts_over_empty=prefer_shifts_over_empty,
+            force_load=force_load_table)
 
         self._check_parser()
         if debug:

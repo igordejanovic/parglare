@@ -49,9 +49,13 @@ def test_save_load_table():
     # We verify that the table file is newer.
     assert last_mtime < os.path.getmtime(table_file)
 
-
-def test_save_load_table_force():
-    """
-    Test that if always_calculate_table is True table is always created and
-    persisted.
-    """
+    # Now we test that force_load_table will load table even if not
+    # newer than the grammar.
+    time.sleep(1)
+    with open(variable_file, 'a'):
+        os.utime(variable_file, None)
+    last_mtime = os.path.getmtime(table_file)
+    parser = Parser(grammar, force_load_table=True)
+    assert last_mtime == os.path.getmtime(table_file)
+    parser = Parser(grammar)
+    assert last_mtime < os.path.getmtime(table_file)

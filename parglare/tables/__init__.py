@@ -27,7 +27,7 @@ LALR = 1
 
 def create_load_table(grammar, itemset_type=LR_1, start_production=1,
                       prefer_shifts=False, prefer_shifts_over_empty=True,
-                      force_create=False):
+                      force_create=False, force_load=False):
     """
     Construct table by loading from file if present and newer than the grammar.
     If table file is older than the grammar or non-existent calculate the table
@@ -38,6 +38,9 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
 
     force_create(bool): If set to True table will be created even if table file
         exists.
+    force_load(bool): If set to True table will be loaded if exists even if
+        it's not newer than the grammar, i.e. modification time will not be
+        checked.
 
     """
 
@@ -48,7 +51,7 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
 
     create_table_file = True
 
-    if not force_create:
+    if not force_create and not force_load:
         if grammar.file_path:
             file_basename, _ = os.path.splitext(grammar.file_path)
             table_file_name = "{}.pgt".format(file_basename)
@@ -62,7 +65,7 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
                         create_table_file = True
                         break
 
-    if create_table_file or force_create:
+    if (create_table_file or force_create) and not force_load:
         table = create_table(grammar, itemset_type, start_production,
                              prefer_shifts, prefer_shifts_over_empty)
         if table_file_name:
