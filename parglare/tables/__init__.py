@@ -41,8 +41,13 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
 
     """
 
-    create_table_file = True
     table_file_name = None
+    if grammar.file_path:
+        file_basename, _ = os.path.splitext(grammar.file_path)
+        table_file_name = "{}.pgt".format(file_basename)
+
+    create_table_file = True
+
     if not force_create:
         if grammar.file_path:
             file_basename, _ = os.path.splitext(grammar.file_path)
