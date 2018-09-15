@@ -10,10 +10,16 @@ from parglare.exceptions import GrammarError, SRConflict, RRConflict
 from parglare.closure import closure, LR_1
 from parglare.termui import prints, s_header, h_print, a_print, s_emph
 from parglare.tables.persist import load_table, save_table
-if sys.version < '3':
-    text = unicode  # NOQA
-else:
+
+try:
+    text = unicode  # noqa
+except:  # noqa
     text = str
+
+try:
+    ioerror = PermissionError
+except:  # noqa
+    ioerror = IOError
 
 
 SHIFT = 0
@@ -71,7 +77,7 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
         if table_file_name:
             try:
                 save_table(table_file_name, table)
-            except (IOError, PermissionError):
+            except ioerror:
                 pass
     else:
         table = load_table(table_file_name, grammar)
