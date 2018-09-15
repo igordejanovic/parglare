@@ -65,13 +65,17 @@ def load_table(file_name, grammar):
 
 
 def _dump_state(state):
-    s = {}
+    s = OrderedDict()
     s['state_id'] = state.state_id
     s['symbol'] = state.symbol.fqn
+    action_items = list(state.actions.items())
+    action_items.sort(key=lambda o: o[0].fqn)
     s['actions'] = [[terminal.fqn, _dump_actions(action)]
-                    for terminal, action in state.actions.items()]
-    s['gotos'] = [[nonterminal.fqn, state.state_id]
-                  for nonterminal, state in state.gotos.items()]
+                    for terminal, action in action_items]
+    goto_items = list(state.gotos.items())
+    goto_items.sort(key=lambda o: o[0].fqn)
+    s['gotos'] = [[nonterminal.fqn, st.state_id]
+                  for nonterminal, st in goto_items]
     s['finish_flags'] = state.finish_flags
 
     return s
@@ -80,7 +84,7 @@ def _dump_state(state):
 def _dump_actions(actions):
     alist = []
     for action in actions:
-        a = {}
+        a = OrderedDict()
         a['action'] = action.action
         if action.state is not None:
             a['state_id'] = action.state.state_id
