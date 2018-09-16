@@ -126,9 +126,9 @@
     
         <ul>
         
-            <li><a class="toctree-l4" href="#checking-the-grammar">Checking the grammar</a></li>
+            <li><a class="toctree-l4" href="#compiling-the-grammar">Compiling the grammar</a></li>
         
-            <li><a class="toctree-l4" href="#getting-detailed-information">Getting detailed information</a></li>
+            <li><a class="toctree-l4" href="#getting-detailed-information-about-the-grammar">Getting detailed information about the grammar</a></li>
         
             <li><a class="toctree-l4" href="#visualizing-lr-automata">Visualizing LR automata</a></li>
         
@@ -220,39 +220,58 @@ Options:
   --help                          Show this message and exit.
 
 Commands:
-  check
+  compile
   trace
   viz
 </code></pre>
 
-<h2 id="checking-the-grammar">Checking the grammar<a class="headerlink" href="#checking-the-grammar" title="Permanent link">&para;</a></h2>
-<p><code>check</code> command is used for grammar checking. To get help on the command run:</p>
-<pre><code class="nohighlight">$ pglr check --help
-Usage: pglr check [OPTIONS] GRAMMAR_FILE
+<h2 id="compiling-the-grammar">Compiling the grammar<a class="headerlink" href="#compiling-the-grammar" title="Permanent link">&para;</a></h2>
+<p><code>compile</code> command is used for checking the grammar, reporting conflicts and
+producing LR table <code>.pgt</code> files. It is not mandatory to compile the grammar as
+parglare will calculate table during parser construction if <code>.pgt</code> file doesn't
+exist or is not newer than all of the grammar files. But it is recommended to
+use this command during development to investigate possible conflicts and
+calculate table in advance.</p>
+<p>To get help on the command run:</p>
+<pre><code class="nohighlight">$ pglr compile --help
+Usage: pglr compile [OPTIONS] GRAMMAR_FILE
 
 Options:
   --help  Show this message and exit.
 
-To check your grammar run:
+To compile and check your grammar run:
 
-    $ pglr check &lt;grammar_file&gt;
+    $ pglr compile &lt;grammar_file&gt;
 </code></pre>
 
 <p>where <code>&lt;grammar_file&gt;</code> is the path to your grammar file.</p>
 <p>If there is no error in the grammar you will get <code>Grammar OK.</code> message. In case
-of error you will get error message with the information what is the error and
-where it is in the grammar.</p>
+of LR conflicts you will get a detailed information on all Shift/Reduce and
+Reduce/Reduce conflicts which makes much easier to see the exact cause of
+ambiguity and to use <a href="../disambiguation/">disambiguation rules</a> to resolve the
+conflicts or to go with GLR if the grammar is not LR(1).</p>
+<p>In case of error you will get error message with the information what is the
+error and where it is in the grammar.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">$ pglr check calc.pg
+<pre><code class="nohighlight">$ pglr compile calc.pg
 Error in the grammar file.
 Error in file &quot;calc.pg&quot; at position 4,16 =&gt; &quot;/' E  left*, 2}\n | E &quot;.
 Expected: { or | or ; or Name or RegExTerm or StrTerm
 </code></pre>
 
-<h2 id="getting-detailed-information">Getting detailed information<a class="headerlink" href="#getting-detailed-information" title="Permanent link">&para;</a></h2>
-<p>To get the detailed information on the grammar run <code>pglr</code> command in the debug
-mode.</p>
-<pre><code class="nohighlight">$ pglr --debug check calc.pg
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Be sure to deploy <code>.pgt</code> file to production as you will avoid unnecessary
+table calculation on the first run. Furthermore, if parglare can't write to
+<code>.pgt</code> file due to permission it will resort to calculating LR table
+whenever started.</p>
+</div>
+<h2 id="getting-detailed-information-about-the-grammar">Getting detailed information about the grammar<a class="headerlink" href="#getting-detailed-information-about-the-grammar" title="Permanent link">&para;</a></h2>
+<p>If there is a conflict in the LR table, by default, you get the information about
+the state in which conflict occurs, lookaheads and actions.</p>
+<p>To get the full information about the grammar you can run <code>pglr</code> command in the
+debug mode.</p>
+<pre><code class="nohighlight">$ pglr --debug compile calc.pg
 
 *** GRAMMAR ***
 Terminals:
@@ -299,10 +318,6 @@ states. For each state you get the LR items with lookahead, elements of GOTO
 table and elements of ACTIONS table. In the previous example state 0 will have a
 transition to state 1 when <code>E</code> is reduced, transition to state 2 if <code>(</code> can
 be shifted and transition to state 3 if <code>number</code> can be shifted.</p>
-<p>In addition you will get a detailed information on all Shift/Reduce and
-Reduce/Reduce conflicts which makes much easier to see the exact cause of
-ambiguity and to use <a href="../disambiguation/">disambiguation rules</a>
-to resolve the conflicts or to go with GLR if the grammar is not LR(1).</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>You can use <code>--debug</code> option with any <code>pglr</code> command to put the parser

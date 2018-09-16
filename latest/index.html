@@ -304,21 +304,7 @@ that will either skip input or introduce non-existing but expected tokens.</p>
 </ul>
 <h2 id="todoplaned">TODO/Planed<a class="headerlink" href="#todoplaned" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p><strong>Table caching</strong></p>
-<p>At the moment parser tables are constructed on-the-fly which might be slow
-for larger grammars. This is usually a problem only for parsers which need
-to be instantiated before each parse (e.g. when called from CLI). For
-long-running processes this is not a problem as parser instance can be kept
-and reused. In the future, tables will be recalculated only if the grammar
-has changed and loaded from cache otherwise.</p>
-</li>
-<li>
-<p><strong>GLR performance optimization</strong></p>
-<p>The GLR parsing has a lot of overhead compared to LR which makes it slower.
-There are some technique that could be used to cut on this difference in
-speed.</p>
-</li>
+<li>For a detailed list see <a href="https://github.com/igordejanovic/parglare/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement">here</a></li>
 </ul>
 <h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
 <ul>
@@ -454,5 +440,5 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 
 <!--
 MkDocs version : 1.0.3
-Build Date UTC : 2018-09-13 09:33:28
+Build Date UTC : 2018-09-16 12:01:16
 -->
