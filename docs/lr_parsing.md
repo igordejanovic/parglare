@@ -107,7 +107,7 @@ possibilities.
 
 When we run:
 
-    $ pglr -d check expr.pg
+    $ pglr compile expr.pg
 
 where in `expr.pg` we have the above grammar, we get the following output at the
 end:

@@ -104,20 +104,7 @@ A pure Python LR/GLR parser.
 
 ## TODO/Planed
 
-* **Table caching**
-
-    At the moment parser tables are constructed on-the-fly which might be slow
-    for larger grammars. This is usually a problem only for parsers which need
-    to be instantiated before each parse (e.g. when called from CLI). For
-    long-running processes this is not a problem as parser instance can be kept
-    and reused. In the future, tables will be recalculated only if the grammar
-    has changed and loaded from cache otherwise.
-
-* **GLR performance optimization**
-
-    The GLR parsing has a lot of overhead compared to LR which makes it slower.
-    There are some technique that could be used to cut on this difference in
-    speed.
+* For a detailed list see [here](https://github.com/igordejanovic/parglare/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
 
 ## Install

@@ -22,50 +22,72 @@ Options:
   --help                          Show this message and exit.
 
 Commands:
-  check
+  compile
   trace
   viz
 ```
 
 
-## Checking the grammar
+## Compiling the grammar
 
-`check` command is used for grammar checking. To get help on the command run:
+`compile` command is used for checking the grammar, reporting conflicts and
+producing LR table `.pgt` files. It is not mandatory to compile the grammar as
+parglare will calculate table during parser construction if `.pgt` file doesn't
+exist or is not newer than all of the grammar files. But it is recommended to
+use this command during development to investigate possible conflicts and
+calculate table in advance.
+
+To get help on the command run:
 
 ```nohighlight
-$ pglr check --help
-Usage: pglr check [OPTIONS] GRAMMAR_FILE
+$ pglr compile --help
+Usage: pglr compile [OPTIONS] GRAMMAR_FILE
 
 Options:
   --help  Show this message and exit.
 
-To check your grammar run:
+To compile and check your grammar run:
 
-    $ pglr check <grammar_file>
+    $ pglr compile <grammar_file>
 ```
 
 where `<grammar_file>` is the path to your grammar file.
 
 If there is no error in the grammar you will get `Grammar OK.` message. In case
-of error you will get error message with the information what is the error and
-where it is in the grammar.
+of LR conflicts you will get a detailed information on all Shift/Reduce and
+Reduce/Reduce conflicts which makes much easier to see the exact cause of
+ambiguity and to use [disambiguation rules](./disambiguation.md) to resolve the
+conflicts or to go with GLR if the grammar is not LR(1).
+
+In case of error you will get error message with the information what is the
+error and where it is in the grammar.
 
 For example:
 
 ```nohighlight
-$ pglr check calc.pg
+$ pglr compile calc.pg
 Error in the grammar file.
 Error in file "calc.pg" at position 4,16 => "/' E  left*, 2}\n | E ".
 Expected: { or | or ; or Name or RegExTerm or StrTerm
 ```
 
-## Getting detailed information
+!!! tip
+    Be sure to deploy `.pgt` file to production as you will avoid unnecessary
+    table calculation on the first run. Furthermore, if parglare can't write to
+    `.pgt` file due to permission it will resort to calculating LR table
+    whenever started.
 
-To get the detailed information on the grammar run `pglr` command in the debug
-mode.
+
+## Getting detailed information about the grammar
+
+If there is a conflict in the LR table, by default, you get the information about
+the state in which conflict occurs, lookaheads and actions.
+
+To get the full information about the grammar you can run `pglr` command in the
+debug mode.
 
 ```nohighlight
-$ pglr --debug check calc.pg
+$ pglr --debug compile calc.pg
 
 *** GRAMMAR ***
 Terminals:
@@ -112,12 +134,6 @@ states. For each state you get the LR items with lookahead, elements of GOTO
 table and elements of ACTIONS table. In the previous example state 0 will have a
 transition to state 1 when `E` is reduced, transition to state 2 if `(` can
 be shifted and transition to state 3 if `number` can be shifted.
-
-In addition you will get a detailed information on all Shift/Reduce and
-Reduce/Reduce conflicts which makes much easier to see the exact cause of
-ambiguity and to use [disambiguation rules](./disambiguation.md)
-to resolve the conflicts or to go with GLR if the grammar is not LR(1).
-
 
 !!! tip
 
