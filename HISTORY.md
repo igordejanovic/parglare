@@ -8,9 +8,9 @@
     https://github.com/igordejanovic/parglare/issues/20
 
     parglare will store calculated LR table in `<grammar_file_name>.pgt` file.
-    If the file exists and is newer than all of imported grammar file it will
-    load table from the file. Use `pglr compile` command to produce `.pgt` file
-    in advance. See the docs on `pglr compile` command.
+    If the file exists and is newer than all of imported grammar files it will
+    load table from the cached table file. Use `pglr compile` command to produce
+    `.pgt` file in advance. See the docs on `pglr compile` command.
   - `force_load_table` parser param added that will load parser table if exists
     without checking modification time.
   - `pglr check` command changed to `pglr compile` which checks the grammar and
