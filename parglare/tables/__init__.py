@@ -378,15 +378,17 @@ class LRTable(object):
 
             """
             symbol, act = act_item
-            return symbol.prior * 1000000 \
-                + (500000 + (len(symbol.recognizer.value)
-                             if type(symbol.recognizer) is
-                             StringRecognizer else 0) +
+            cmp_str = "{:010d}{:500s}".format(
+                symbol.prior * 1000
+                + (500 + (len(symbol.recognizer.value)
+                          if type(symbol.recognizer) is
+                          StringRecognizer else 0) +
                    # Account for `\b` at the beginning and end of keyword regex
                    ((len(symbol.recognizer._regex) - 4)
                     if type(symbol.recognizer) is
                     RegExRecognizer and symbol.keyword
-                    else 0))
+                    else 0)), symbol.fqn)
+            return cmp_str
 
         for state in self.states:
             finish_flags = []

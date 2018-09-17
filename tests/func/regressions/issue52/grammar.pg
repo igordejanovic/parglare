@@ -1,0 +1,73 @@
+PROG: EXPR+ EOF;
+
+///// SIMPLE EXPRESSIONS /////
+
+EXPR: BUILTIN '(' EXPR* ')' {800}
+    | 'if' '(' EXPR_PAIR+ EXPR ')' {800}
+    | 'switch' '(' EXPR EXPR_PAIR+ EXPR ')' {800}
+    | '[' EXPR 'for' KVP+ ']'
+    | OOO_PAREN EXPR ')'
+    | EXPR F_PAREN EXPR+ KVP* ')' {left, 700}
+    | EXPR DOT POST_DOT {left, 700}
+    | EXPR '%' EXPR {left, 600}
+    | EXPR '^' EXPR {left, 600}
+    | EXPR '+' EXPR {left, 500}
+    | EXPR '/' EXPR {left, 500}
+    | EXPR '\\' EXPR {left, 500}
+    // logical operators on string expressions
+    // lower precedence than string-string operators,
+    // higher than pure logic operators
+    | EXPR '==' EXPR {left, 450}
+    | EXPR '=~' EXPR {left, 450}
+    // logical operators, which can't really be chained with string operators
+    // (even if a nonzero-length string can evaluate to "true"):
+    // !a.b.c+e.f makes no sense as !(a.b.c)+e.f -> (false)+e.f
+    // so they will have lower precedence
+    | '!' EXPR {right, 400}
+    | EXPR '&&' EXPR {left, 300}
+    | EXPR '||' EXPR {left, 250}
+    | LITERAL {200}
+    | VAR {100};
+
+POST_DOT: MODIFIER '(' EXPR* ')' {1000}
+        | VAR {100};
+
+////// COMPOUND EXPRESSIONS //////
+
+KVP: VAR '=' EXPR;
+EXPR_PAIR: EXPR ':' EXPR;
+
+///// MODIFIERS /////
+
+MODIFIER: 'strip' | 'lower' | 'pre' | 'post' | 'regex' | 'wrap';
+
+///// BUILTINS /////
+
+BUILTIN: 'chmod' | 'dynamic' | 'table' | 'sha256' | 'cat';
+
+///// LITERALS /////
+
+LITERAL: FUNC | DICT | LIST | STRING | INT | BOOL | PUKE | NULL;
+FUNC: '{' VAR+ KVP* '->' EXPR '}';
+DICT: '<' KVP* '>';
+BOOL: 'true' | 'false';
+STRING: DQSTRING | SQSTRING;
+LIST: '[' LIST_ELEM* ']';
+LIST_ELEM: EXPR | EXPAND | SKIP;
+EXPAND: '*' EXPR;
+
+///// TERMINALS /////
+
+terminals
+// F_PAREN is a paren that must be a function call
+F_PAREN: /(?<=[a-zA-Z_0-9)}])\(/;
+// OOO_PAREN is a parent that must not be a function call
+OOO_PAREN: /(?<![a-zA-Z_0-9)}])\(/;
+VAR: /[a-zA-Z_][a-zA-Z_0-9]*/;
+INT: /\d+/;
+DOT: '.';
+PUKE: 'puke';
+NULL: 'null';
+SKIP: 'skip';
+DQSTRING: /"[^"\\]*(?:\\.[^"\\]*)*"/;
+SQSTRING: /'[^'\\]*(?:\\.[^'\\]*)*'/;
