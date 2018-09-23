@@ -33,7 +33,7 @@ LALR = 1
 
 def create_load_table(grammar, itemset_type=LR_1, start_production=1,
                       prefer_shifts=False, prefer_shifts_over_empty=True,
-                      force_create=False, force_load=False):
+                      force_create=False, force_load=False, in_layout=False):
     """
     Construct table by loading from file if present and newer than the grammar.
     If table file is older than the grammar or non-existent calculate the table
@@ -49,6 +49,13 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
         checked.
 
     """
+
+    if in_layout:
+        # For layout grammars always calculate table.
+        # This are usually very small grammars so there is no point in
+        # using cached tables.
+        return create_table(grammar, itemset_type, start_production,
+                            prefer_shifts, prefer_shifts_over_empty)
 
     table_file_name = None
     if grammar.file_path:

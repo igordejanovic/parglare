@@ -82,7 +82,8 @@ class Parser(object):
             start_production=self.start_production,
             prefer_shifts=prefer_shifts,
             prefer_shifts_over_empty=prefer_shifts_over_empty,
-            force_load=force_load_table)
+            force_load=force_load_table,
+            in_layout=self.in_layout)
 
         self._check_parser()
         if debug:
