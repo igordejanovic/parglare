@@ -4,7 +4,6 @@
 
 A pure Python LR/GLR parser.
 
-
 ## Feature highlights
 
 * **Integrated scanner**
@@ -12,18 +11,18 @@ A pure Python LR/GLR parser.
     There is no lexing as a separate phase. There is no separate lexer grammar.
     The parser will try to reconize token during parsing at the given location.
     This brings more parsing power as there are no lexical ambiguities
-    introduced by a separate lexing stage. You want variable names in your
-    language to be allowed to be like some of the keywords? No problem.
+    introduced by a separate lexing stage. You want variables in your language
+    to be named like some of the keywords? No problem.
 
 * **Generalized parsing - GLR**
 
     parglare gives you powerful tools to see where non-determinism in your
-    grammar lies (the notorious shift-reduce and reduce-reduce conflicts) and
-    gives detailed info on why that happened. In case your language needs
-    non-deterministic parsing — either it needs additional lookahead to decide
-    or your language is inherently ambiguous — you can resort to the GLR
-    algorithm by a simple change of the parser class. The grammar stays the
-    same.
+    grammar lies (the notorious [shift-reduce and reduce-reduce
+    conflicts](./lr_parsing.md)) and gives detailed info on why that happened.
+    In case your language needs non-deterministic parsing — either it needs
+    additional lookahead to decide or your language is inherently ambiguous —
+    you can resort to the GLR algorithm by a simple change of the parser class.
+    The grammar stays the same.
 
     In the case of non-determinism (unability for a parser to deterministically
     decide what to do) the parser will fork and investigate each possibility.
@@ -47,13 +46,13 @@ A pure Python LR/GLR parser.
 
 * **Parsing an arbitrary list of objects**
 
-    parglare is not used only to parse a textual content. It can parse (create
-    a tree) of an arbitrary list of objects (numbers, bytes, whatever) based on
-    the common parglare grammar. For this you have to
-    define [token recognizers](./recognizers.md) for your input stream. The
-    built-in recognizers are string and regex recognizers for parsing textual
-    inputs. See `recognizers` parameter to grammar construction in
-    the [test_recognizers.py test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py).
+    parglare is not used only to parse a textual content. It can parse (create a
+    tree) of an arbitrary list of objects (numbers, bytes, whatever) based on a
+    common parglare grammar. For this you have to define [token
+    recognizers](./recognizers.md) for your input stream. The built-in
+    recognizers are string and regex recognizers for parsing textual inputs. See
+    `recognizers` parameter to grammar construction in the [test_recognizers.py
+    test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py).
 
 * [**Flexible actions calling strategies**](./actions.md)
 
@@ -66,7 +65,8 @@ A pure Python LR/GLR parser.
     - call user-supplied actions - you write a Python function that is called
       when the rule matches. You can do whatever you want at this place and the
       result returned is used in parent rules/actions. There are some handy
-      build-in actions in the `parglare.actions` module.
+      build-in actions in the [`parglare.actions`
+      module](./actions.md#built-in-actions).
     - User actions may be postponed and called on the parse tree - this is handy
       if you want to process your tree in multiple ways, or you are using GLR
       parsing and the actions are introducing side-effects and you would like to
@@ -75,9 +75,11 @@ A pure Python LR/GLR parser.
 * [**Grammar modularization**](./grammar_modularization.md)
 
     Grammars can be split in multiple files and imported where needed. In
-    addition each grammar file may have an actions and recognizers python file
-    defined. This enable a nice separation of parts of the language with their
-    grammars and accompanying actions and recognizers.
+    addition each grammar file may have an
+    [actions](./grammar_modularization.md#grammar-file-actions) and
+    [recognizers](./grammar_modularization.md#grammar-file-recognizers) python
+    file defined. This enable a nice separation of parts of the language with
+    their grammars and accompanying actions and recognizers.
 
 * [**Support for whitespaces/comments**](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
 
@@ -93,13 +95,21 @@ A pure Python LR/GLR parser.
     This is something that often lacks in parsing libraries. More often than not
     you will want your parser to recover from an error, report it, and continue
     parsing. parglare has a built-in error recovery strategy which is currently
-    a simplistic one -- it will skip current character and try to continue --
-    but gives you possibility to provide your own. You will write a strategy
-    that will either skip input or introduce non-existing but expected tokens.
+    a simplistic one -- it will skip current character until it is able to
+    continue -- but gives you possibility to provide your own. You will write a
+    strategy that will either skip input or introduce non-existing but expected
+    tokens.
 
 * **Test coverage**
 
     Test coverage is high and I'll try to keep it that way.
+
+
+!!! tip
+
+    This documentation is versioned. In the upper left corner choose your
+    version. `latest` is the version that follows `master` branch from the git
+    repo.
 
 
 ## TODO/Planed
@@ -181,7 +191,9 @@ print("Result = ", result)
     LALR is modified to avoid REDUCE/REDUCE conflicts on state merging. Although
     not proven, this should enable handling of all LR(1) grammars with reduced set
     of states and without conflicts. For grammars that are not LR(1) a GLR parsing
-    is provided.
+    is provided. If a grammar is loaded from file, its table will be peristed
+    between runs in `.pgt` file. To generate `.pgt` file explicitelly use [pglr
+    compile](./pglr.md#compiling-the-grammar) command.
 
 
 ## What does `parglare` mean?
