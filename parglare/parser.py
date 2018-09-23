@@ -27,11 +27,12 @@ class Parser(object):
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, in_layout=False, return_position=False,
+                 tables=LALR, return_position=False,
                  prefer_shifts=True, prefer_shifts_over_empty=True,
                  error_recovery=False, dynamic_filter=None,
                  custom_token_recognition=None, force_load_table=False):
         self.grammar = grammar
+        self.in_layout = (start_production == 'LAYOUT')
         if start_production is not None:
             self.start_production = grammar.get_production_id(start_production)
         else:
@@ -43,20 +44,18 @@ class Parser(object):
                                           fail_on_no_resolve=True)
 
         self.layout_parser = None
-        if not in_layout:
-            layout_prod = grammar.get_symbol('LAYOUT')
-            if layout_prod:
+        if not self.in_layout:
+            layout_symbol = grammar.get_symbol('LAYOUT')
+            if layout_symbol:
                 self.layout_parser = Parser(
                     grammar,
                     start_production='LAYOUT',
                     actions=layout_actions,
-                    ws=None, in_layout=True,
-                    return_position=True,
+                    ws=None, return_position=True,
                     prefer_shifts=True,
                     prefer_shifts_over_empty=True,
                     debug=debug_layout)
 
-        self.in_layout = in_layout
         self.ws = ws
         self.return_position = return_position
         self.debug = debug

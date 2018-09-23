@@ -37,7 +37,7 @@ class GLRParser(Parser):
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, in_layout=False, return_position=False,
+                 tables=LALR, return_position=False,
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
                  custom_token_recognition=None, force_load_table=False):
@@ -56,8 +56,7 @@ class GLRParser(Parser):
             debug_colors=debug_colors, debug_layout=debug_layout, ws=ws,
             build_tree=build_tree,
             call_actions_during_tree_build=call_actions_during_tree_build,
-            tables=tables, in_layout=in_layout,
-            return_position=return_position,
+            tables=tables, return_position=return_position,
             prefer_shifts=prefer_shifts,
             prefer_shifts_over_empty=prefer_shifts_over_empty,
             error_recovery=error_recovery, dynamic_filter=dynamic_filter,
