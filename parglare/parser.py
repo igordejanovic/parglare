@@ -486,10 +486,10 @@ class Parser(object):
             if symbol.prior < last_prior and tokens:
                 break
             last_prior = symbol.prior
-            if symbol.recognizer._pg_context:
-                tok = symbol.recognizer(context, input_str, position)
-            else:
+            try:
                 tok = symbol.recognizer(input_str, position)
+            except TypeError:
+                tok = symbol.recognizer(context, input_str, position)
             if tok is not None:
                 tokens.append(Token(symbol, tok))
                 if finish_flags[idx]:
@@ -504,11 +504,11 @@ class Parser(object):
         tokens = []
         if context.position < len(context.input_str):
             for terminal in self.grammar.terminals.values():
-                if terminal.recognizer._pg_context:
-                    tok = terminal.recognizer(context, context.input_str,
-                                              context.position)
-                else:
+                try:
                     tok = terminal.recognizer(context.input_str,
+                                              context.position)
+                except TypeError:
+                    tok = terminal.recognizer(context, context.input_str,
                                               context.position)
                 if tok is not None:
                     tokens.append(Token(terminal, tok))

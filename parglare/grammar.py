@@ -17,21 +17,6 @@ if sys.version < '3':
 else:
     text = str
 
-try:
-    from inspect import signature
-
-    def get_number_of_params(func):
-        s = signature(func)
-        return len(s.parameters)
-except ImportError:
-    import inspect
-
-    def get_number_of_params(func_or_obj):
-        if inspect.isfunction(func_or_obj):
-            return len(inspect.getargspec(func_or_obj).args)
-        else:
-            return len(inspect.getargspec(func_or_obj.__call__).args) - 1
-
 # Associativity
 ASSOC_NONE = 0
 ASSOC_LEFT = 1
@@ -172,12 +157,6 @@ class Terminal(GrammarSymbol):
 
     @recognizer.setter
     def recognizer(self, value):
-        if value is None:
-            pass
-        elif get_number_of_params(value) > 2:
-            value._pg_context = True
-        else:
-            value._pg_context = False
         self._recognizer = value
 
 
