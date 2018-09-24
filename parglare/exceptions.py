@@ -11,6 +11,7 @@ class LocationError(Exception):
 
 class GrammarError(LocationError):
     def __init__(self, location, message):
+        location.position = location.start_position
         super(GrammarError, self).__init__(location, message)
 
 
