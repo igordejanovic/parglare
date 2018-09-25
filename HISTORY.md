@@ -1,6 +1,6 @@
 # History
 
-- Development version
+- 2018-09-25 Version 0.8.0
   - Implemented table caching.
     See:
     https://github.com/igordejanovic/parglare/issues/36
@@ -15,6 +15,9 @@
     without checking modification time.
   - `pglr check` command changed to `pglr compile` which checks the grammar and
     produces table file `<grammar_file_name>.pgt`.
+  - Fixes:
+    - Recognizer context passing made more robust.
+    - Fixing location message bug in GrammarError
 
 - 2018-09-13 Version 0.7.0
   - Rework/cleanup of both LR and GLR parsers. Backward incompatible changes
