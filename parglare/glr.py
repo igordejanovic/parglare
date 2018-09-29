@@ -91,6 +91,13 @@ class GLRParser(Parser):
         self.last_position = 0
         self.expected = set()
         self.empty_reductions_results = {}
+        self.heads_for_recovery = []
+        self.last_heads_for_reduce = []
+        self.last_shifts = {}
+        self.reducing_heads = []
+        self.heads_for_shift = []
+        self.finish_head = None
+
         self.file_name = file_name
 
         self.context = context = self._get_init_context(context, input_str,
@@ -103,8 +110,6 @@ class GLRParser(Parser):
         # We start with a single parser head in state 0.
         start_head = GSSNode(context, number_of_trees=1)
         self.heads_for_reduce = [start_head]
-        self.heads_for_shift = []
-        self.finish_head = None
 
         if self.debug and self.debug_trace:
             self._trace_head(start_head,
@@ -172,12 +177,15 @@ class GLRParser(Parser):
                 self._export_dot_trace()
             context = self.context
             context.start_position = context.end_position = context.position
+            last_heads_for_reduce = self.last_heads_for_reduce
+            self._remove_transient_state()
             raise ParseError(Location(context=context),
                              self.expected, self.tokens_ahead,
                              list({h.context.state.symbol
-                                   for h in self.last_heads_for_reduce}))
+                                   for h in last_heads_for_reduce}))
 
         results = [x[1] for x in self.finish_head.parents]
+        self._remove_transient_state()
         if self.debug:
             a_print("*** {} sucessful parse(s).".format(len(results)))
             if self.debug_trace:
@@ -685,6 +693,20 @@ class GLRParser(Parser):
                         self._trace_step_kill(head)
 
         return bool(token or position)
+
+    def _remove_transient_state(self):
+        """
+        Delete references to transient parser objects to lower memory
+        consumption.
+        """
+        del self.finish_head
+        del self.empty_reductions_results
+        del self.heads_for_recovery
+        del self.heads_for_reduce
+        del self.heads_for_shift
+        del self.last_heads_for_reduce
+        del self.last_shifts
+        del self.reducing_heads
 
     def _debug_active_heads(self, heads):
         h_print("Active heads = ", len(heads))
