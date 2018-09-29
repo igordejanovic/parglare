@@ -674,12 +674,12 @@ class GLRParser(Parser):
                 if position:
                     last_error = self.errors[-1]
                     last_error.location.end_position = position
-                    head.context.position = position
+                    context.position = position
                     if debug:
                         h_print("Advancing position to ",
                                 pos_to_line_col(input_str, position),
                                 level=1)
-                head.context.token_ahead = token
+                context.token_ahead = token
 
                 if token and debug:
                     h_print("Introducing token {}", repr(token), level=1)
