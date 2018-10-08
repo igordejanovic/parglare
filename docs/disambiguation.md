@@ -323,7 +323,7 @@ This callable is registered during parser instantiation as the parameter
 
 ```
 parser = Parser(
-    grammar, )
+    grammar, custom_token_recognition=custom_token_recognition)
 ```
 
 The callable accepts:
