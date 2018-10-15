@@ -36,7 +36,7 @@ A pure Python LR/GLR parser.
     arithmetic expression as small as `3 + 4 * 5 * 2` have multiple
     interpretation depending on the associativity and priority of operations. In
     parglare it is easy to specify these rules in the grammar (see the quick
-    intro bellow or [the calc
+    intro below or [the calc
     example](https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py)).
 
 * [**Tracing/debuging, visualization and error reporting**](./debugging.md)

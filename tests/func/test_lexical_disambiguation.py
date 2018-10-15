@@ -300,7 +300,7 @@ def test_dynamic_lexical_disambiguation():
     assert result == [['Ba. 34', 'baz 56'], None]
 
     # But if Bar/Baz are too different from the correct pattern
-    # we get ParseError. In this case `bza` score is bellow 0.7
+    # we get ParseError. In this case `bza` score is below 0.7
     # for both Bar and Baz symbols.
     with pytest.raises(ParseError):
         parser.parse('Bar. 34 bza 56')
