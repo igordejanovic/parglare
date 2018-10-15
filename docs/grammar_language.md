@@ -422,7 +422,7 @@ assert result == ["2", []]
 
 !!! note
 
-    Syntax equivalence `zero of more`:
+    Syntax equivalence `zero or more`:
 
         S: a*;
 
