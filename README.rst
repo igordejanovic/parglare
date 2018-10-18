@@ -54,7 +54,7 @@ The whole expression evaluator is done in under 30 lines of code!
     print("Result = ", result)
 
     # Output
-    # -- Debuging/tracing output with detailed info about grammar, productions,
+    # -- Debugging/tracing output with detailed info about grammar, productions,
     # -- terminals and nonterminals, DFA states, parsing progress,
     # -- and at the end of the output:
     # Result = 700.8

@@ -39,7 +39,7 @@ A pure Python LR/GLR parser.
     intro below or [the calc
     example](https://github.com/igordejanovic/parglare/blob/master/examples/calc/calc.py)).
 
-* [**Tracing/debuging, visualization and error reporting**](./debugging.md)
+* [**Tracing/debugging, visualization and error reporting**](./debugging.md)
 
     There is an extensive support for grammar checking, debugging, automata
     visualization, and parse tracing. Check out [pglr command](./pglr.md).
@@ -176,7 +176,7 @@ result = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
 print("Result = ", result)
 
 # Output
-# -- Debuging/tracing output with detailed info about grammar, productions,
+# -- Debugging/tracing output with detailed info about grammar, productions,
 # -- terminals and nonterminals, DFA states, parsing progress,
 # -- and at the end of the output:
 # Result = 700.8

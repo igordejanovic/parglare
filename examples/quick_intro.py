@@ -32,7 +32,7 @@ result = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
 print("Result = ", result)
 
 # Output
-# -- Debuging/tracing output with detailed info about grammar, productions,
+# -- Debugging/tracing output with detailed info about grammar, productions,
 # -- terminals and nonterminals, DFA states, parsing progress,
 # -- and at the end of the output:
 # Result = 700.8
