@@ -463,7 +463,7 @@ location.</p>
 <p><strong>get_tokens</strong> - a callable used to get the tokens recognized using the
   default strategy. Called without parameters. Custom disambiguation might
   decide to return this list if no change is necessary, reduce the list, or
-  extend it with new tokens. See the example bellow how to return list with a
+  extend it with new tokens. See the example below how to return list with a
   token only if the default recognition doesn't succeed.</p>
 </li>
 </ul>
@@ -533,7 +533,7 @@ result = parser.parse('Ba. 34 baz 56')
 assert result == [['Ba. 34', 'baz 56'], None]
 
 # But if Bar/Baz are too different from the correct pattern
-# we get ParseError. In this case `bza` score is bellow 0.7
+# we get ParseError. In this case `bza` score is below 0.7
 # for both Bar and Baz symbols.
 with pytest.raises(ParseError):
     parser.parse('Bar. 34 bza 56')

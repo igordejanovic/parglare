@@ -339,7 +339,7 @@ see
 <p>This section explains how some common grammar patterns can be written using just
 a plain BNF notation.</p>
 <h3 id="one-or-more">One or more<a class="headerlink" href="#one-or-more" title="Permanent link">&para;</a></h3>
-<pre><code class="nohighlight">// sections rule bellow will match one or more section.
+<pre><code class="nohighlight">// sections rule below will match one or more section.
 sections: sections section | section;
 </code></pre>
 
@@ -362,7 +362,7 @@ about this so use the first version as it is more efficient and parglare
 provides built-in actions for these common cases.</p>
 </div>
 <h3 id="zero-or-more">Zero or more<a class="headerlink" href="#zero-or-more" title="Permanent link">&para;</a></h3>
-<pre><code class="nohighlight">// sections rule bellow will match zero or more section.
+<pre><code class="nohighlight">// sections rule below will match zero or more section.
 sections: sections section | section | EMPTY;
 </code></pre>
 
@@ -544,7 +544,7 @@ assert result == [&quot;2&quot;, []]
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Syntax equivalence <code>zero of more</code>:</p>
+<p>Syntax equivalence <code>zero or more</code>:</p>
 <pre><code>S: a*;
 
 terminals
