@@ -169,7 +169,7 @@ a plain BNF notation.
 ### One or more
 
 ```nohighlight
-// sections rule bellow will match one or more section.
+// sections rule below will match one or more section.
 sections: sections section | section;
 ```
 
@@ -196,7 +196,7 @@ single section or `sections` and a `section`_.
 ### Zero or more
 
 ```nohighlight
-// sections rule bellow will match zero or more section.
+// sections rule below will match zero or more section.
 sections: sections section | section | EMPTY;
 ```
 
@@ -422,7 +422,7 @@ assert result == ["2", []]
 
 !!! note
 
-    Syntax equivalence `zero of more`:
+    Syntax equivalence `zero or more`:
 
         S: a*;
 

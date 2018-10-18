@@ -173,7 +173,7 @@
       parsing location.
   - Declarative associativity and priority based conflict resolution for
     productions
-    - See the `calc` example, or the quick intro bellow.
+    - See the `calc` example, or the quick intro below.
   - Lexical disambiguation strategy.
     - The default strategy is longest-match first and then `str` over `regex`
       match (i.e. the most specific match). Terminal priority can be provided
