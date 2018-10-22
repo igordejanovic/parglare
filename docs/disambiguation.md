@@ -14,7 +14,7 @@ interpretation for each valid input. We want to define unambiguous language.
 
 To constrain our grammar and make it define unambiguous language we use so
 called _disambiguation filters_. These filters are in charge of choosing the
-right interpretation/tree when there is ambiguity in the our grammar.
+right interpretation/tree when there is ambiguity in the grammar.
 
 Even in the simple expression grammar there is ambiguity. For example,
 `2 + 3 * 4` expression — in case we know nothing about priorities of arithmetic
