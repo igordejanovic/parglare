@@ -1626,7 +1626,7 @@ def act_production_rule(context, nodes):
 
         @add_metaclass(ParglareMetaClass)
         class ParglareClass(object):
-            """Dynamicaly created class. Each parglare rule that uses named
+            """Dynamically created class. Each parglare rule that uses named
             matches by default uses this action that will create Python object
             of this class.
 
