@@ -117,7 +117,7 @@ default.
 ## tables
 
 The value of this parameter is either `parglare.LALR` or `parglare.SLR` and it
-is used to chose the type of LR tables to create. By default `LALR` tables are
+is used to choose the type of LR tables to create. By default `LALR` tables are
 used with a slight twist to avoid Reduce/Reduce conflicts that may happen with
 pure LALR tables. This parameter should not be used in normal circumstances and
 is provided more for experimentation purposes.
