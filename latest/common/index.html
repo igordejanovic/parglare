@@ -198,16 +198,16 @@
               
                 <h1 id="common-classes-and-functions">Common classes and functions<a class="headerlink" href="#common-classes-and-functions" title="Permanent link">&para;</a></h1>
 <h2 id="the-context-object">The Context object<a class="headerlink" href="#the-context-object" title="Permanent link">&para;</a></h2>
-<p>The most part of the parser state are kept in the context object. This object is
+<p>Most of the parser state is kept in the context object. This object is
 passed to various callback functions (actions, recognizers, error recovery etc.).</p>
-<p>Following attributes are available on the context object:</p>
+<p>The following attributes are available on the context object:</p>
 <ul>
 <li>
 <p><strong>start_position/end_position</strong> - the beginning and the end in the input
-  stream where the match occured. <code>start_position</code> is the location of the first
+  stream where the match occurred. <code>start_position</code> is the location of the first
   element/character in the input while the <code>end_position</code> is one past the last
   element/character of the match. Thus <code>end_position - start_position</code> will give
-  the lenght of the match including the layout. You can use
+  the length of the match including the layout. You can use
   <code>parglare.pos_to_line_col(input, position)</code> function to get line and column of
   the position. This function returns a tuple <code>(line, column)</code>.</p>
 </li>
@@ -270,7 +270,7 @@ passed to various callback functions (actions, recognizers, error recovery etc.)
 </li>
 <li>
 <p><strong>start_position/end_position</strong> - an absolute position in the input where the
-  error occured,</p>
+  error occurred,</p>
 </li>
 <li>
 <p><strong>line</strong>/<strong>column</strong> (properites) - line and column where the error starts.</p>
