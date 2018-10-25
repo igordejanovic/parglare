@@ -11,7 +11,7 @@ The following attributes are available on the context object:
   stream where the match occurred. `start_position` is the location of the first
   element/character in the input while the `end_position` is one past the last
   element/character of the match. Thus `end_position - start_position` will give
-  the lenght of the match including the layout. You can use
+  the length of the match including the layout. You can use
   `parglare.pos_to_line_col(input, position)` function to get line and column of
   the position. This function returns a tuple `(line, column)`.
 

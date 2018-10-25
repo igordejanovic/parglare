@@ -113,14 +113,14 @@ def test_invalid_number_of_actions():
         'S': [some_action]
     }
     with pytest.raises(ParserInitError,
-                       match=r'Lenght of list of actions must match.*'):
+                       match=r'Length of list of actions must match.*'):
         Parser(g, actions=actions)
 
     actions = {
         'S': [some_action, some_action, some_action]
     }
     with pytest.raises(ParserInitError,
-                       match=r'Lenght of list of actions must match.*'):
+                       match=r'Length of list of actions must match.*'):
         Parser(g, actions=actions)
 
 

@@ -52,7 +52,7 @@ def test_glr_recovery_default():
     assert e1.location.start_position == 8
     assert e1.location.end_position == 9
 
-    # Second error is '& 89' at position 12 and lenght 4
+    # Second error is '& 89' at position 12 and length 4
     assert e2.location.start_position == 12
     assert e2.location.end_position == 16
 
