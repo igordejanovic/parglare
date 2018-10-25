@@ -5,7 +5,7 @@
 Most of the parser state is kept in the context object. This object is
 passed to various callback functions (actions, recognizers, error recovery etc.).
 
-Following attributes are available on the context object:
+The following attributes are available on the context object:
 
 - **start_position/end_position** - the beginning and the end in the input
   stream where the match occured. `start_position` is the location of the first
