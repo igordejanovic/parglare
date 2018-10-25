@@ -2,16 +2,16 @@
 
 ## The Context object
 
-The most part of the parser state are kept in the context object. This object is
+Most of the parser state is kept in the context object. This object is
 passed to various callback functions (actions, recognizers, error recovery etc.).
 
-Following attributes are available on the context object:
+The following attributes are available on the context object:
 
 - **start_position/end_position** - the beginning and the end in the input
-  stream where the match occured. `start_position` is the location of the first
+  stream where the match occurred. `start_position` is the location of the first
   element/character in the input while the `end_position` is one past the last
   element/character of the match. Thus `end_position - start_position` will give
-  the lenght of the match including the layout. You can use
+  the length of the match including the layout. You can use
   `parglare.pos_to_line_col(input, position)` function to get line and column of
   the position. This function returns a tuple `(line, column)`.
 
@@ -62,7 +62,7 @@ Used at various places in parglare to define location and span in the files
   is parsed),
 
 - **start_position/end_position** - an absolute position in the input where the
-  error occured,
+  error occurred,
 
 - **line**/**column** (properites) - line and column where the error starts.
 

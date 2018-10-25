@@ -72,7 +72,7 @@ parameter.
 
 Each action callable receive two parameters. The first is the context object
 which gives [parsing context information](./common.md#the-context-object) (like
-the start and end position where the match occured, the parser instance etc.).
+the start and end position where the match occurred, the parser instance etc.).
 The second parameters `nodes` is a list of actual results of sub-expressions
 given in the order defined in the grammar.
 

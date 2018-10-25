@@ -102,5 +102,5 @@ def test_keyword_preferred_over_regexes():
     # 'for' is ambiguous as it can be keyword or ID(name)
     # ParseError could be thrown but parglare will prefer
     # StringRecognizer and keywords over RegExRecognizer for
-    # the match of the same lenght (i.e. "more specific match")
+    # the match of the same length (i.e. "more specific match")
     parser.parse("for = 10 to 100")

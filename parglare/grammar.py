@@ -1013,7 +1013,7 @@ class Grammar(PGFile):
                     else:
                         if len(symbol.action) != len(symbol.productions):
                             raise ParserInitError(
-                                'Lenght of list of actions must match the '
+                                'Length of list of actions must match the '
                                 'number of productions for non-terminal '
                                 '"{}".'.format(symbol.name))
             else:
