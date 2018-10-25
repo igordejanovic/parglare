@@ -8,7 +8,7 @@ passed to various callback functions (actions, recognizers, error recovery etc.)
 The following attributes are available on the context object:
 
 - **start_position/end_position** - the beginning and the end in the input
-  stream where the match occured. `start_position` is the location of the first
+  stream where the match occurred. `start_position` is the location of the first
   element/character in the input while the `end_position` is one past the last
   element/character of the match. Thus `end_position - start_position` will give
   the lenght of the match including the layout. You can use
@@ -62,7 +62,7 @@ Used at various places in parglare to define location and span in the files
   is parsed),
 
 - **start_position/end_position** - an absolute position in the input where the
-  error occured,
+  error occurred,
 
 - **line**/**column** (properites) - line and column where the error starts.
 
