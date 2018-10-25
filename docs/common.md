@@ -2,7 +2,7 @@
 
 ## The Context object
 
-The most part of the parser state are kept in the context object. This object is
+Most of the parser state is kept in the context object. This object is
 passed to various callback functions (actions, recognizers, error recovery etc.).
 
 Following attributes are available on the context object:
