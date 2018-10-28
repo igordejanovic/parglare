@@ -1365,7 +1365,7 @@ pg_terminals = \
      NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
                     [
                         ('Name', r'[a-zA-Z_][a-zA-Z0-9_\.]*'),
-                        ('RegExTerm', r'''\/((\\/)|[^/])*\/'''),
+                        ('RegExTerm', r'\/(\\.|[^\/\\])*\/'),
                         ('IntConst', r'\d+'),
                         ('FloatConst',
                          r'''[+-]?(\d+\.\d*|\.\d+)([eE][+-]?\d+)?(?<=[\w\.])(?![\w\.])'''),  # noqa
