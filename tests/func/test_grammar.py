@@ -185,6 +185,19 @@ def test_terminal_empty_body():
     assert b.recognizer is None
 
 
+def test_terminal_regexp_with_backslash():
+    """Regexp terminals can contain (escaped) backslash."""
+    grammar = Grammar.from_string(r"""
+    start: t1 t2;
+    terminals
+    t1: /\\/;
+    t2: /a/;
+    """)
+    t1 = grammar.get_terminal('t1')
+    assert t1.recognizer._regex == '\\\\'
+    assert t1.recognizer('\\', 0) == '\\'
+
+
 def test_builtin_grammar_action():
     """
     Builtin actions can be referenced from a grammar.
