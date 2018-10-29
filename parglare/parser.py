@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 import codecs
 import sys
-from copy import copy, deepcopy
+from copy import copy
 from .grammar import EMPTY, EOF, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
