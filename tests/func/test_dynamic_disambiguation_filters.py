@@ -3,7 +3,7 @@ from parglare import GLRParser, Grammar, Parser, SHIFT, REDUCE
 from parglare.exceptions import SRConflicts
 
 
-grammar = """
+grammar = r"""
 E: E op_sum E {dynamic}
  | E op_mul E {dynamic}
  | number;

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Grammar, Parser, GLRParser, EMPTY, STOP, EOF
+from parglare import Grammar, Parser, GLRParser, EMPTY, EOF
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
 

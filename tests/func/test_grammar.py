@@ -93,7 +93,7 @@ def test_assoc_prior():
     terminals.
     """
 
-    grammar = """
+    grammar = r"""
     E: E '+' E {left, 1};
     E: E '*' E {2, left};
     E: E '^' E {right};
@@ -112,7 +112,7 @@ def test_assoc_prior():
     assert g.productions[3].prior == DEFAULT_PRIORITY
 
     # Repeat the same but for alternative keywords "shift" and "reduce"
-    grammar = """
+    grammar = r"""
     E: E '+' E {reduce, 1};
     E: E '*' E {2, reduce};
     E: E '^' E {shift};
@@ -479,7 +479,7 @@ def test_case_insensitive_parsing():
     sensitivity.
     """
 
-    grammar = """
+    grammar = r"""
     S: "one" "Two" Astart;
 
     terminals

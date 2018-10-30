@@ -132,7 +132,7 @@ def test_obj_position():
     """
     Test that object start/end position is set properly.
     """
-    grammar = """
+    grammar = r"""
     S: "first" seconds=Second+;
     Second: value=digits;
 

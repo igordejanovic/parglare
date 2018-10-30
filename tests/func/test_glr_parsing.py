@@ -7,7 +7,7 @@ from parglare.exceptions import SRConflicts
 
 def test_lr2_grammar():
 
-    grammar = """
+    grammar = r"""
     Model: Prods EOF;
     Prods: Prod | Prods Prod;
     Prod: ID "=" ProdRefs;
@@ -125,7 +125,7 @@ def test_expressions():
 
     # This grammar is highly ambiguous if priorities and
     # associativities are not defined to disambiguate.
-    grammar = """
+    grammar = r"""
     E: E "+" E | E "*" E | "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -157,7 +157,7 @@ def test_expressions():
     # If we rise priority for multiplication operation we reduce ambiguity.
     # Default production priority is 10. Here we will raise it to 15 for
     # multiplication.
-    grammar = """
+    grammar = r"""
     E: E "+" E | E "*" E {15}| "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -174,7 +174,7 @@ def test_expressions():
 
     # If we define associativity for both + and * we have resolved all
     # ambiguities in the grammar.
-    grammar = """
+    grammar = r"""
     E: E "+" E {left}| E "*" E {left, 15}| "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -189,7 +189,7 @@ def test_expressions():
 
 def test_epsilon_grammar():
 
-    grammar = """
+    grammar = r"""
     Model: Prods EOF;
     Prods: Prod | Prods Prod | EMPTY;
     Prod: ID "=" ProdRefs;
@@ -221,7 +221,7 @@ def test_non_eof_grammar_nonempty():
     result in multiple trees that are produced by sucessful
     parses of the incomplete input.
     """
-    grammar_nonempty = """
+    grammar_nonempty = r"""
     Model: Prods;
     Prods: Prod | Prods Prod;
     Prod: ID "=" ProdRefs;
@@ -254,7 +254,7 @@ def test_non_eof_grammar_empty():
     result in multiple trees that are produced by sucessful
     parses of the incomplete input.
     """
-    grammar_empty = """
+    grammar_empty = r"""
     Model: Prods;
     Prods: Prod | Prods Prod | EMPTY;
     Prod: ID "=" ProdRefs;
