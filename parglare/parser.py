@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 import codecs
+import logging
 import sys
 from copy import copy
 from .grammar import EMPTY, EOF, STOP
@@ -19,6 +20,9 @@ else:
     text = str
 
 
+logger = logging.getLogger(__name__)
+
+
 class Parser(object):
     """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
@@ -28,15 +32,13 @@ class Parser(object):
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
                  tables=LALR, return_position=False,
-                 prefer_shifts=True, prefer_shifts_over_empty=True,
+                 prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, force_load_table=False):
+                 custom_token_recognition=None, force_load_table=False,
+                 table=None):
         self.grammar = grammar
         self.in_layout = (start_production == 'LAYOUT')
-        if start_production is not None:
-            self.start_production = grammar.get_production_id(start_production)
-        else:
-            self.start_production = 1
+
         EMPTY.action = pass_none
         EOF.action = pass_none
         if actions:
@@ -71,19 +73,48 @@ class Parser(object):
         self.dynamic_filter = dynamic_filter
         self.custom_token_recognition = custom_token_recognition
 
-        from .closure import LR_0, LR_1
-        from .tables import create_load_table
-        if tables == SLR:
-            itemset_type = LR_0
+        if table is None:
+            from .closure import LR_0, LR_1
+            from .tables import create_load_table
+
+            if start_production is not None:
+                start_production = grammar.get_production_id(
+                    start_production,
+                )
+            else:
+                start_production = 1
+
+            if tables == SLR:
+                itemset_type = LR_0
+            else:
+                itemset_type = LR_1
+
+            if prefer_shifts is None:
+                prefer_shifts = True
+            if prefer_shifts_over_empty is None:
+                prefer_shifts_over_empty = True
+
+            self.table = create_load_table(
+                grammar, itemset_type=itemset_type,
+                start_production=start_production,
+                prefer_shifts=prefer_shifts,
+                prefer_shifts_over_empty=prefer_shifts_over_empty,
+                force_load=force_load_table,
+                in_layout=self.in_layout)
         else:
-            itemset_type = LR_1
-        self.table = create_load_table(
-            grammar, itemset_type=itemset_type,
-            start_production=self.start_production,
-            prefer_shifts=prefer_shifts,
-            prefer_shifts_over_empty=prefer_shifts_over_empty,
-            force_load=force_load_table,
-            in_layout=self.in_layout)
+            self.table = table
+
+            # warn about overriden parameters
+            for name, value, default in [
+                ('tables', tables, LALR),
+                ('start_production', start_production, None),
+                ('prefer_shifts', prefer_shifts, None),
+                ('prefer_shifts_over_empty', prefer_shifts_over_empty, None),
+                ('force_load_table', force_load_table, False),
+            ]:
+                if value is not default:
+                    logger.warn("Precomputed table overrides value of "
+                                "parameter %s", name)
 
         self._check_parser()
         if debug:
