@@ -46,7 +46,7 @@ class GLRParser(Parser):
         if table is None:
             # The default for GLR is not to use any strategy preferring shifts
             # over reduce thus investigating all possibilitites.
-            # This settings are only applicable if prase table is not computed
+            # These settings are only applicable if parse table is not computed
             # yet. If it is, then leave None values to avoid
             # "parameter overriden" warnings.
             prefer_shifts = False \
