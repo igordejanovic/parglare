@@ -223,3 +223,10 @@ def test_precomputed_table():
     else:
         parser = GLRParser(grammar, table=table)
     parser.parse('id+id')
+
+
+@pytest.mark.skip
+def test_empty_eof_grammar():
+    grammar = Grammar.from_string('s: EMPTY EOF;')
+    parser = Parser(grammar)
+    parser.parse('')
