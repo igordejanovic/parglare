@@ -116,6 +116,8 @@
         
             <li><a class="toctree-l4" href="#force_load_table">force_load_table</a></li>
         
+            <li><a class="toctree-l4" href="#table">table</a></li>
+        
         </ul>
     
 
@@ -325,6 +327,20 @@ in a way that will change file modification times which would trigger table
 calculation you can set <code>force_load_table</code> to <code>True</code>. If this flag is set no
 modification check will be performed and table calculation will happen only if
 <code>.pgt</code> file doesn't exist.</p>
+<h2 id="table">table<a class="headerlink" href="#table" title="Permanent link">&para;</a></h2>
+<p>You can pass precomputed parsing table here. This is useful for implementing
+custom parse table caching. <code>None</code> value for this parameter (the default)
+instructs parser to build (or fetch from cache) it's own tables internally.</p>
+<p>Example flow for custom caching is shown in
+<a href="https://github.com/igordejanovic/parglare/tree/master/examples/custom_table_caching">an example</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Be careful to provide parse tables compatibile with parser type. Passing
+tables containing conflicts to <code>Parser</code> class will propably result in an
+error, but passing tables with automatically resolved conflicts
+(<code>prefer_shifts=True</code>) to <code>GLRParser</code> will result in parser which may skip
+proper parses.</p>
+</div>
 <h1 id="parse-and-parse_file-calls"><code>parse</code> and <code>parse_file</code> calls<a class="headerlink" href="#parse-and-parse_file-calls" title="Permanent link">&para;</a></h1>
 <p><code>parse</code> call is used to parse input string or list of objects. For parsing of
 textual file <code>parse_file</code> is used.</p>
