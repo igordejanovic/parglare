@@ -13,7 +13,8 @@ def test_examples():
     # Filter out __init__.py
     examples = [f for f in glob.glob(examples_pat)
                 if not any([x in f for x in ['__init__.py',
-                                             'molecular']])]
+                                             'molecular',
+                                             'custom_table_caching']])]
     for e in examples:
         example_dir = os.path.dirname(e)
         sys.path.insert(0, example_dir)
