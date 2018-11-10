@@ -140,7 +140,7 @@ custom parse table caching. `None` value for this parameter (the default)
 instructs parser to build (or fetch from cache) it's own tables internally.
 
 Example flow for custom caching is shown in
-[an example](/examples/custom_table_caching).
+[an example](https://github.com/igordejanovic/parglare/tree/master/examples/custom_table_caching).
 
 !!! warning
 
