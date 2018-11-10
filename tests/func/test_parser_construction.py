@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import sys
-HAS_MOCK = sys.version_info[0] >= 3
-if HAS_MOCK:
-    from unittest.mock import patch
 import pytest  # noqa
 from parglare import Grammar, Parser, GLRParser, EMPTY, EOF
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
 from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
+
+HAS_MOCK = sys.version_info[0] >= 3
+if HAS_MOCK:
+    from unittest.mock import patch
 
 
 def test_first():
