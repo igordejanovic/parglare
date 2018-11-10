@@ -2,26 +2,30 @@ import json
 from collections import OrderedDict
 
 
-def save_table(file_name, table):
-
+def table_to_serializable(table):
+    """Convert table object to serializable representation composed of
+    lists and dicts."""
     # states
     states = []
     for state in table.states:
         states.append(_dump_state(state))
 
+    return states
+
+
+def save_table(file_name, table):
     with open(file_name, 'w') as f:
-        json.dump(states, f)
+        json.dump(table_to_serializable(table), f)
 
 
-def load_table(file_name, grammar):
+def table_from_serializable(serialized_states, grammar):
+    """Convert serializable representation of a parsing table into
+    LRTable object."""
     from parglare.tables import LRState, LRTable, Action
-
-    with open(file_name) as f:
-        json_states = json.load(f)
 
     states = []
     states_dict = {}
-    for json_state in json_states:
+    for json_state in serialized_states:
         state = LRState(grammar, json_state['state_id'],
                         grammar.get_symbol(json_state['symbol']))
         states_dict[state.state_id] = state
@@ -62,6 +66,11 @@ def load_table(file_name, grammar):
     table = LRTable(states, calc_finish_flags=False)
 
     return table
+
+
+def load_table(file_name, grammar):
+    with open(file_name) as f:
+        return table_from_serializable(json.load(f), grammar)
 
 
 def _dump_state(state):

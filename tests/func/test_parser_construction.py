@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import sys
+HAS_MOCK = sys.version_info[0] >= 3
+if HAS_MOCK:
+    from unittest.mock import patch
 import pytest  # noqa
 from parglare import Grammar, Parser, GLRParser, EMPTY, EOF
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
@@ -203,3 +207,17 @@ def test_prefer_shifts_over_empty_reductions():
     Test strategy that will choose SHIFT when in conflict with EMPTY reduction.
     """
     # TODO
+
+
+def test_precomputed_table():
+    """If parser is initialized with a `table` parameter then this table
+    should be used, and no call to create_table should be made."""
+    grammar = get_grammar()
+    table = create_table(grammar)
+    if HAS_MOCK:
+        with patch('parglare.tables.create_table') as mocked_create_table:
+            parser = GLRParser(grammar, table=table)
+            assert not mocked_create_table.called
+    else:
+        parser = GLRParser(grammar, table=table)
+    parser.parse('id+id')

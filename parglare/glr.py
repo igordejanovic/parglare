@@ -40,14 +40,20 @@ class GLRParser(Parser):
                  tables=LALR, return_position=False,
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, force_load_table=False):
+                 custom_token_recognition=None, force_load_table=False,
+                 table=None):
 
-        # The default for GLR is not to use any strategy preferring shifts
-        # over reduce thus investigating all possibilitites.
-        prefer_shifts = False \
-            if prefer_shifts is None else prefer_shifts
-        prefer_shifts_over_empty = False \
-            if prefer_shifts_over_empty is None else prefer_shifts_over_empty
+        if table is None:
+            # The default for GLR is not to use any strategy preferring shifts
+            # over reduce thus investigating all possibilitites.
+            # These settings are only applicable if parse table is not computed
+            # yet. If it is, then leave None values to avoid
+            # "parameter overriden" warnings.
+            prefer_shifts = False \
+                if prefer_shifts is None else prefer_shifts
+            prefer_shifts_over_empty = False \
+                if prefer_shifts_over_empty is None \
+                else prefer_shifts_over_empty
 
         super(GLRParser, self).__init__(
             grammar=grammar, start_production=start_production,
@@ -61,7 +67,7 @@ class GLRParser(Parser):
             prefer_shifts_over_empty=prefer_shifts_over_empty,
             error_recovery=error_recovery, dynamic_filter=dynamic_filter,
             custom_token_recognition=custom_token_recognition,
-            force_load_table=force_load_table)
+            force_load_table=force_load_table, table=table)
 
     def _check_parser(self):
         """

@@ -133,6 +133,22 @@ calculation you can set `force_load_table` to `True`. If this flag is set no
 modification check will be performed and table calculation will happen only if
 `.pgt` file doesn't exist.
 
+## table
+
+You can pass precomputed parsing table here. This is useful for implementing
+custom parse table caching. `None` value for this parameter (the default)
+instructs parser to build (or fetch from cache) it's own tables internally.
+
+Example flow for custom caching is shown in
+[an example](/examples/custom_table_caching).
+
+!!! warning
+
+    Be careful to provide parse tables compatibile with parser type. Passing
+    tables containing conflicts to `Parser` class will propably result in an
+    error, but passing tables with automatically resolved conflicts
+    (`prefer_shifts=True`) to `GLRParser` will result in parser which may skip
+    proper parses.
 
 # `parse` and `parse_file` calls
 
