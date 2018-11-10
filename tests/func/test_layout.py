@@ -60,7 +60,7 @@ def test_layout_simple_comments(parser_class):
 
 @parsers
 def test_layout_nested_comments(parser_class):
-    grammar = """
+    grammar = r"""
     S: K EOF;
     K: 'a' B | 'a' C;
     B: 'b' | B 'b';

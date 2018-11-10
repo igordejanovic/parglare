@@ -1,6 +1,6 @@
 from parglare import Grammar, Parser, get_collector
 
-grammar_1 = '''
+grammar_1 = r'''
 STMT : STMT ADDOP STMT {left, 1}
      | STMT MULOP STMT {left, 1}
      | "(" STMT ")" | NUMBER;
@@ -13,7 +13,7 @@ terminals
 NUMBER: /\d+(.\d+)?/;
 '''
 
-grammar_2 = '''
+grammar_2 = r'''
 STMT : STMT "+" STMT {left, 1}
      | STMT "-" STMT {left, 1}
      | STMT "*" STMT {left, 2}
@@ -26,7 +26,7 @@ NUMBER: /\d+(.\d+)?/;
 
 # Grammar could be simplified a bit
 # with https://github.com/igordejanovic/parglare/issues/17
-grammar_3 = '''
+grammar_3 = r'''
 STMT {left}: STMT ADDOP STMT {1}
            | STMT MULOP STMT {2};
 STMT: "(" STMT ")" | NUMBER;

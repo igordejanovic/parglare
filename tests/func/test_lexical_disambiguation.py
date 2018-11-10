@@ -38,7 +38,7 @@ def cf():
 
 def test_priority(cf):
 
-    grammar = """
+    grammar = r"""
     S: M EOF;
     M: First | Second  | Third "5";
 
@@ -61,7 +61,7 @@ def test_priority_lower(cf):
     Test that lower priority terminals have lower precendence.
     """
 
-    grammar = """
+    grammar = r"""
     S: M EOF;
     M: First | Second  | Third;
 
@@ -81,7 +81,7 @@ def test_priority_lower(cf):
 
 def test_most_specific(cf):
 
-    grammar = """
+    grammar = r"""
     S: First | Second | Third;
 
     terminals
@@ -100,7 +100,7 @@ def test_most_specific(cf):
 
 def test_most_specific_longest_match(cf):
 
-    grammar = """
+    grammar = r"""
     S: First | Second | Third;
 
     terminals
@@ -121,7 +121,7 @@ def test_most_specific_longest_match(cf):
 
 def test_longest_match(cf):
 
-    grammar = """
+    grammar = r"""
     S: First | Second | Third;
 
     terminals
@@ -141,7 +141,7 @@ def test_longest_match(cf):
 
 def test_failed_disambiguation(cf):
 
-    grammar = """
+    grammar = r"""
     S: First | Second | Third;
 
     terminals
@@ -168,7 +168,7 @@ def test_failed_disambiguation(cf):
 
 def test_longest_match_prefer(cf):
 
-    grammar = """
+    grammar = r"""
     S: First | Second | Third;
 
     terminals
@@ -197,7 +197,7 @@ def test_nofinish(cf):
 
     # In rare circumstances `finish` scanning optimization may lead to a
     # problem. This grammar demonstrates the problem.
-    grammar = """
+    grammar = r"""
     S: First | Second | Third;
 
     terminals
@@ -219,7 +219,7 @@ def test_nofinish(cf):
     # match. To do this we should set `nofinish` flag on Second terminal which
     # will make parglare doesn't use short-circuit and try other possibilities
     # also.
-    grammar = """
+    grammar = r"""
     S: First | Second | Third;
 
     terminals
@@ -239,7 +239,7 @@ def test_dynamic_lexical_disambiguation():
     Dynamic disambiguation enables us to choose right token from the
     tokens posible to appear at given place in the input.
     """
-    grammar = """
+    grammar = r"""
     S: Element+ EOF;
     Element: Bar | Baz | Number;
 
