@@ -5,7 +5,7 @@ from itertools import chain, takewhile
 from copy import copy
 from parglare import Parser
 from parglare import termui as t
-from .exceptions import DisambiguationError, ParseError
+from .exceptions import ParseError
 from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, STOP, Context, \
     Token
 from .common import Location, position_context
@@ -615,16 +615,6 @@ class GLRParser(Parser):
             if self.debug and self.debug_trace:
                 self._trace_step(old_head, new_head, root_head,
                                  "R:{}".format(dot_escape(context.production)))
-
-    def _next_tokens(self, context):
-        try:
-            tok = super(GLRParser, self)._next_token(context)
-            tokens = [tok]
-        except DisambiguationError as e:
-            # Lexical ambiguity will be handled by GLR
-            tokens = e.tokens
-
-        return tokens
 
     def _setup_error_reporting(self):
         """

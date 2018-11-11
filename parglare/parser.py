@@ -34,7 +34,7 @@ class Parser(object):
                  tables=LALR, return_position=False,
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, lexical_disambiguation=None,
+                 custom_token_recognition=None, lexical_disambiguation=True,
                  force_load_table=False, table=None):
         self.grammar = grammar
         self.in_layout = in_layout
@@ -75,6 +75,7 @@ class Parser(object):
         self.error_recovery = error_recovery
         self.dynamic_filter = dynamic_filter
         self.custom_token_recognition = custom_token_recognition
+        self.lexical_disambiguation = lexical_disambiguation
 
         if table is None:
             from .closure import LR_0, LR_1
@@ -89,8 +90,6 @@ class Parser(object):
                 prefer_shifts = True
             if prefer_shifts_over_empty is None:
                 prefer_shifts_over_empty = True
-            if lexical_disambiguation is None:
-                lexical_disambiguation = True
 
             self.table = create_load_table(
                 grammar, itemset_type=itemset_type,
@@ -109,7 +108,6 @@ class Parser(object):
                 ('prefer_shifts', prefer_shifts, None),
                 ('prefer_shifts_over_empty', prefer_shifts_over_empty, None),
                 ('force_load_table', force_load_table, False),
-                ('lexical_disambiguation', lexical_disambiguation, None),
             ]:
                 if value is not default:
                     logger.warn("Precomputed table overrides value of "
@@ -460,9 +458,23 @@ class Parser(object):
                     level=1)
 
     def _next_token(self, context):
+        tokens = self._next_tokens(context)
+        if len(tokens) == 0:
+            # We have to return something.
+            # Returning EMPTY token is not a lie (EMPTY can always be matched)
+            # and will cause proper parse error to be raised.
+            return EMPTY_token
+        if len(tokens) == 1:
+            return tokens[0]
+        else:
+            raise DisambiguationError(Location(context), tokens)
+
+    def _next_tokens(self, context):
         """
         For the current position in the input stream and actions in the current
-        state find next token.
+        state find next tokens. This function must return only tokens that
+        are relevant to specified context - ie it mustn't return a token
+        if it's not expected by any action in given state.
         """
 
         state = context.state
@@ -473,36 +485,32 @@ class Parser(object):
 
         in_len = len(input_str)
 
-        # Find the next token in the input
-        if position == in_len and EMPTY not in actions \
-           and STOP not in actions:
-            # Execute EOF action at end of input only if EMPTY and
-            # STOP terminals are not in actions as this might call
-            # for reduction.
-            ntok = EOF_token
+        tokens = []
+
+        # add special tokens (EMPTY, STOP and EOF) if the are applicable
+        if EMPTY in actions:
+            tokens.append(EMPTY_token)
+        if STOP in actions:
+            tokens.append(STOP_token)
+        if position == in_len:
+            tokens.append(EOF_token)
+
+        # Get tokens by trying recognizers
+        if self.custom_token_recognition:
+            def get_tokens():
+                return self._token_recognition(context)
+
+            tokens.extend(self.custom_token_recognition(
+                context, get_tokens,
+            ))
         else:
-            tokens = []
-            if position < in_len:
-                if self.custom_token_recognition:
+            tokens.extend(self._token_recognition(context))
 
-                    def get_tokens():
-                        return self._token_recognition(context)
+        # do lexical disambiguation if it is enabled
+        if self.lexical_disambiguation:
+            tokens = self._lexical_disambiguation(context, tokens)
 
-                    tokens = self.custom_token_recognition(
-                        context, get_tokens)
-                else:
-                    tokens = self._token_recognition(context)
-            if not tokens:
-                if STOP in actions:
-                    ntok = STOP_token
-                else:
-                    ntok = EMPTY_token
-            elif len(tokens) == 1:
-                ntok = tokens[0]
-            else:
-                ntok = self._lexical_disambiguation(context, tokens)
-
-        return ntok
+        return tokens
 
     def _token_recognition(self, context):
         input_str = context.input_str
@@ -714,6 +722,16 @@ class Parser(object):
             h_print("Lexical disambiguation.",
                     " Tokens: {}".format([x for x in tokens]), level=1)
 
+        if len(tokens) <= 1:
+            return tokens
+
+        # prefer STOP over EMPTY and EOF
+        if STOP_token in tokens:
+            tokens = [t for t in tokens if t not in (EMPTY_token, EOF_token)]
+        # prefer EMTPY over EOF
+        if EMPTY_token in tokens:
+            tokens = [t for t in tokens if t != EOF_token]
+
         # Longest-match strategy.
         max_len = max((len(x.value) for x in tokens))
         tokens = [x for x in tokens if len(x.value) == max_len]
@@ -721,19 +739,14 @@ class Parser(object):
             h_print("Disambiguation by longest-match strategy.",
                     "Tokens: {}".format([x for x in tokens]), level=1)
         if len(tokens) == 1:
-            return tokens[0]
-        else:
-            # Finally try to find preferred token.
-            pref_tokens = [x for x in tokens if x.symbol.prefer]
-            if len(pref_tokens) == 1:
-                if self.debug:
-                    h_print("Preferring token {}.".format(pref_tokens[0]),
-                            level=1)
-                return pref_tokens[0]
-            elif len(pref_tokens) > 1:
-                tokens = pref_tokens
+            return tokens
 
-        raise DisambiguationError(Location(context), tokens)
+        # try to find preferred token.
+        pref_tokens = [x for x in tokens if x.symbol.prefer]
+        if len(pref_tokens) > 0:
+            return pref_tokens
+
+        return tokens
 
     def _do_recovery(self, context, error):
 

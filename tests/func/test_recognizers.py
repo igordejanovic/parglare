@@ -18,6 +18,8 @@ def test_parse_list_of_integers():
     """
 
     def int_less_than_five(input, pos):
+        if len(input) <= pos:
+            return None
         if input[pos] < 5:
             return [input[pos]]
 
@@ -57,6 +59,8 @@ def test_parse_list_of_integers():
 def test_parse_list_of_integers_lexical_disambiguation():
 
     def int_less_than_five(input, pos):
+        if len(input) <= pos:
+            return None
         if input[pos] < 5:
             return [input[pos]]
 
