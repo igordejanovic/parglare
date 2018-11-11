@@ -1,4 +1,5 @@
 from __future__ import print_function, unicode_literals
+import logging
 import os
 from collections import OrderedDict
 from itertools import chain
@@ -21,6 +22,9 @@ except:  # noqa
     ioerror = IOError
 
 
+logger = logging.getLogger(__name__)
+
+
 SHIFT = 0
 REDUCE = 1
 ACCEPT = 2
@@ -32,7 +36,8 @@ LALR = 1
 
 def create_load_table(grammar, itemset_type=LR_1, start_production=1,
                       prefer_shifts=False, prefer_shifts_over_empty=True,
-                      force_create=False, force_load=False, in_layout=False):
+                      force_create=False, force_load=False, in_layout=False,
+                      **kwargs):
     """
     Construct table by loading from file if present and newer than the grammar.
     If table file is older than the grammar or non-existent calculate the table
@@ -79,7 +84,8 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
 
     if (create_table_file or force_create) and not force_load:
         table = create_table(grammar, itemset_type, start_production,
-                             prefer_shifts, prefer_shifts_over_empty)
+                             prefer_shifts, prefer_shifts_over_empty,
+                             **kwargs)
         if table_file_name:
             try:
                 save_table(table_file_name, table)
@@ -92,7 +98,8 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
 
 
 def create_table(grammar, itemset_type=LR_1, start_production=1,
-                 prefer_shifts=False, prefer_shifts_over_empty=True):
+                 prefer_shifts=False, prefer_shifts_over_empty=True,
+                 **kwargs):
     """
     Arguments:
     grammar (Grammar):
@@ -329,7 +336,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                                          if x.action is not REDUCE]
                                     actions[terminal].append(new_reduce)
 
-    table = LRTable(states)
+    table = LRTable(states, **kwargs)
     return table
 
 
@@ -366,10 +373,25 @@ def merge_states(old_state, new_state):
 
 
 class LRTable(object):
-    def __init__(self, states, calc_finish_flags=True):
+    def __init__(
+        self, states, calc_finish_flags=True,
+        # lexical_disambiguation defaults to True, when
+        # calc_finish_flags is set
+        lexical_disambiguation=None,
+    ):
         self.states = states
         if calc_finish_flags:
-            self.calc_finish_flags()
+            if lexical_disambiguation is None:
+                lexical_disambiguation = True
+            if lexical_disambiguation:
+                self.calc_finish_flags()
+            else:
+                for state in self.states:
+                    state.finish_flags = [False] * len(state.actions)
+        else:
+            if lexical_disambiguation is not None:
+                logger.warn('lexical_disambiguation flag ignored '
+                            'because calc_finish_flags is not set')
         self.calc_conflicts_and_dynamic_terminals()
 
     def calc_finish_flags(self):

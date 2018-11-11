@@ -34,8 +34,8 @@ class Parser(object):
                  tables=LALR, return_position=False,
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, force_load_table=False,
-                 table=None):
+                 custom_token_recognition=None, lexical_disambiguation=None,
+                 force_load_table=False, table=None):
         self.grammar = grammar
         self.in_layout = in_layout
 
@@ -89,12 +89,15 @@ class Parser(object):
                 prefer_shifts = True
             if prefer_shifts_over_empty is None:
                 prefer_shifts_over_empty = True
+            if lexical_disambiguation is None:
+                lexical_disambiguation = True
 
             self.table = create_load_table(
                 grammar, itemset_type=itemset_type,
                 start_production=start_production,
                 prefer_shifts=prefer_shifts,
                 prefer_shifts_over_empty=prefer_shifts_over_empty,
+                lexical_disambiguation=lexical_disambiguation,
                 force_load=force_load_table,
                 in_layout=self.in_layout)
         else:
@@ -106,6 +109,7 @@ class Parser(object):
                 ('prefer_shifts', prefer_shifts, None),
                 ('prefer_shifts_over_empty', prefer_shifts_over_empty, None),
                 ('force_load_table', force_load_table, False),
+                ('lexical_disambiguation', lexical_disambiguation, None),
             ]:
                 if value is not default:
                     logger.warn("Precomputed table overrides value of "
