@@ -331,3 +331,21 @@ def test_terminal_collision():
     p.parse("2 A")
     p.parse("1 B")
     p.parse("1 A")
+
+
+def test_lexical_ambiguity():
+    g = Grammar.from_string("""
+    expression: a "x" EOF
+              | b EOF
+              ;
+
+    a: "x";
+    b: "xx";
+    """)
+
+    p = GLRParser(g)
+
+    assert sorted(p.parse("xx")) == [
+        ['x', ['x'], None],
+        ['xx', None],
+    ]
