@@ -312,3 +312,22 @@ def test_empty_recognizer():
     p = GLRParser(g)
     with pytest.raises(ParseError):
         p.parse("a")
+
+
+def test_terminal_collision():
+    g = Grammar.from_string("""
+    expression: "1" s letter EOF
+              | "2" s "A" EOF
+              ;
+
+    s: " ";
+
+    terminals
+    letter: /[A-Z]/;
+    """)
+
+    p = GLRParser(g, ws='')
+
+    p.parse("2 A")
+    p.parse("1 B")
+    p.parse("1 A")
