@@ -119,7 +119,7 @@ For example:
 
 This disambiguation filter is applicable to terminal productions only. It will
 be used to choose the right recognizer/terminal in case
-of [lexical ambiguity](#lexical-ambiguity).
+of [lexical ambiguity](#lexical-ambiguities).
 
 For example:
 
