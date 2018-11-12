@@ -15,7 +15,7 @@ def table_to_serializable(table):
 
 def save_table(file_name, table):
     with open(file_name, 'w') as f:
-        json.dump(table_to_serializable(table), f)
+        json.dump(table_to_serializable(table), f, sort_keys=True)
 
 
 def table_from_serializable(serialized_states, grammar):
@@ -74,7 +74,7 @@ def load_table(file_name, grammar):
 
 
 def _dump_state(state):
-    s = OrderedDict()
+    s = {}
     s['state_id'] = state.state_id
     s['symbol'] = state.symbol.fqn
     action_items = list(state.actions.items())
@@ -91,7 +91,7 @@ def _dump_state(state):
 def _dump_actions(actions):
     alist = []
     for action in actions:
-        a = OrderedDict()
+        a = {}
         a['action'] = action.action
         if action.state is not None:
             a['state_id'] = action.state.state_id
