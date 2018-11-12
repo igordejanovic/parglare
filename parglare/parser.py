@@ -744,6 +744,9 @@ class Parser(object):
         # try to find preferred token.
         pref_tokens = [x for x in tokens if x.symbol.prefer]
         if len(pref_tokens) > 0:
+            if self.debug:
+                h_print("Preferring tokens {}.".format(pref_tokens),
+                        level=1)
             return pref_tokens
 
         return tokens
