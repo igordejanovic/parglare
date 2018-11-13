@@ -256,6 +256,17 @@ def test_non_eof_grammar_nonempty():
     # 8. everyting parsed
     assert len(results) == 8
 
+    # With lexical disambiguation turned on there are only 3 parses,
+    # because regular tokens are preferred over STOP stop tokens.
+    # So STOP token gets fed to the parser head only if there is nothing else.
+    # This is the situation when head parsing ProdRefs encounters "=".
+    # Namely the three parses are:
+    # 1. First = One Two three Second
+    # 2. ... Second = Foo Bar Third
+    # 3. everything parsed
+    disambig_p = GLRParser(g_nonempty, lexical_disambiguation=True)
+    assert len(disambig_p.parse(txt)) == 3
+
 
 def test_non_eof_grammar_empty():
     """
@@ -356,5 +367,11 @@ def test_lexical_ambiguity():
 
     assert sorted(p.parse("xx")) == [
         ['x', 'x', None],
+        ['xx', None],
+    ]
+
+    disambig_p = GLRParser(g, lexical_disambiguation=True)
+
+    assert sorted(disambig_p.parse("xx")) == [
         ['xx', None],
     ]
