@@ -285,8 +285,6 @@ def test_dynamic_lexical_disambiguation():
             max_ratio_index = ratios.index(max(ratios))
             if ratios[max_ratio_index] > 0.7 and number_match.group(1):
                 return [Token(symbols[max_ratio_index], number_match.group())]
-            else:
-                return []
 
     parser = Parser(
         g, custom_token_recognition=custom_token_recognition)

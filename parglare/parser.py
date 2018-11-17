@@ -459,12 +459,12 @@ class Parser(object):
 
     def _next_token(self, context):
         tokens = self._next_tokens(context)
-        if len(tokens) == 0:
+        if not tokens:
             # We have to return something.
             # Returning EMPTY token is not a lie (EMPTY can always be matched)
             # and will cause proper parse error to be raised.
             return EMPTY_token
-        if len(tokens) == 1:
+        elif len(tokens) == 1:
             return tokens[0]
         else:
             raise DisambiguationError(Location(context), tokens)
@@ -487,7 +487,7 @@ class Parser(object):
 
         tokens = []
 
-        # add special tokens (EMPTY, STOP and EOF) if the are applicable
+        # add special tokens (EMPTY, STOP and EOF) if they are applicable
         if EMPTY in actions:
             tokens.append(EMPTY_token)
         if STOP in actions:
@@ -500,9 +500,11 @@ class Parser(object):
             def get_tokens():
                 return self._token_recognition(context)
 
-            tokens.extend(self.custom_token_recognition(
+            custom_tokens = self.custom_token_recognition(
                 context, get_tokens,
-            ))
+            )
+            if custom_tokens is not None:
+                tokens.extend(custom_tokens)
         else:
             tokens.extend(self._token_recognition(context))
 
@@ -743,7 +745,7 @@ class Parser(object):
 
         # try to find preferred token.
         pref_tokens = [x for x in tokens if x.symbol.prefer]
-        if len(pref_tokens) > 0:
+        if pref_tokens:
             if self.debug:
                 h_print("Preferring tokens {}.".format(pref_tokens),
                         level=1)
