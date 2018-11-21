@@ -286,7 +286,7 @@ def test_empty_terminal():
     start: a EOF;
     a: a t | t;
     terminals
-    t: /.*/;
+    t: /b*/;
     """)
     p = GLRParser(g)
     with pytest.raises(ParseError):
