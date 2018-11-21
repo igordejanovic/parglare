@@ -279,3 +279,15 @@ def test_non_eof_grammar_empty():
 
     results = p.parse("")
     assert len(results) == 1
+
+
+def test_empty_terminal():
+    g = Grammar.from_string("""
+    start: a EOF;
+    a: a t | t;
+    terminals
+    t: /.*/;
+    """)
+    p = GLRParser(g)
+    with pytest.raises(ParseError):
+        p.parse("a")
