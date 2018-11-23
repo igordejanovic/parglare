@@ -476,15 +476,11 @@ class Parser(object):
         are relevant to specified context - ie it mustn't return a token
         if it's not expected by any action in given state.
         """
-
         state = context.state
         input_str = context.input_str
         position = context.position
-
         actions = state.actions
-
         in_len = len(input_str)
-
         tokens = []
 
         # add special tokens (EMPTY, STOP and EOF) if they are applicable
@@ -494,19 +490,21 @@ class Parser(object):
             tokens.append(STOP_token)
         if position == in_len:
             tokens.append(EOF_token)
-
-        # Get tokens by trying recognizers
-        if self.custom_token_recognition:
-            def get_tokens():
-                return self._token_recognition(context)
-
-            custom_tokens = self.custom_token_recognition(
-                context, get_tokens,
-            )
-            if custom_tokens is not None:
-                tokens.extend(custom_tokens)
         else:
-            tokens.extend(self._token_recognition(context))
+
+            # Get tokens by trying recognizers - but only if we are not at
+            # the end, because token cannot be empty
+            if self.custom_token_recognition:
+                def get_tokens():
+                    return self._token_recognition(context)
+
+                custom_tokens = self.custom_token_recognition(
+                    context, get_tokens,
+                )
+                if custom_tokens is not None:
+                    tokens.extend(custom_tokens)
+            else:
+                tokens.extend(self._token_recognition(context))
 
         # do lexical disambiguation if it is enabled
         if self.lexical_disambiguation:
@@ -731,7 +729,7 @@ class Parser(object):
         if STOP_token in tokens:
             tokens = [t for t in tokens if t not in (EMPTY_token, EOF_token)]
         # prefer EMTPY over EOF
-        if EMPTY_token in tokens:
+        elif EMPTY_token in tokens:
             tokens = [t for t in tokens if t != EOF_token]
 
         # Longest-match strategy.
