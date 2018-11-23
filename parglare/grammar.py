@@ -258,9 +258,8 @@ class RegExRecognizer(Recognizer):
 
     def __call__(self, in_str, pos):
         m = self.regex.match(in_str, pos)
-        if m:
-            matched = m.group()
-            return matched
+        if m and m.group():
+            return m.group()
 
 
 def EMPTY_recognizer(input, pos):
