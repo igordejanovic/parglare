@@ -27,7 +27,7 @@ class Parser(object):
     """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, start_production=None, actions=None,
+    def __init__(self, grammar, in_layout=False, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
@@ -37,7 +37,7 @@ class Parser(object):
                  custom_token_recognition=None, force_load_table=False,
                  table=None):
         self.grammar = grammar
-        self.in_layout = (start_production == 'LAYOUT')
+        self.in_layout = in_layout
 
         EMPTY.action = pass_none
         EOF.action = pass_none
@@ -46,12 +46,15 @@ class Parser(object):
                                           fail_on_no_resolve=True)
 
         self.layout_parser = None
-        if not self.in_layout:
+        if self.in_layout:
+            start_production = grammar.get_production_id('LAYOUT')
+        else:
+            start_production = 1
             layout_symbol = grammar.get_symbol('LAYOUT')
             if layout_symbol:
                 self.layout_parser = Parser(
                     grammar,
-                    start_production='LAYOUT',
+                    in_layout=True,
                     actions=layout_actions,
                     ws=None, return_position=True,
                     prefer_shifts=True,
@@ -77,13 +80,6 @@ class Parser(object):
             from .closure import LR_0, LR_1
             from .tables import create_load_table
 
-            if start_production is not None:
-                start_production = grammar.get_production_id(
-                    start_production,
-                )
-            else:
-                start_production = 1
-
             if tables == SLR:
                 itemset_type = LR_0
             else:
@@ -107,7 +103,6 @@ class Parser(object):
             # warn about overriden parameters
             for name, value, default in [
                 ('tables', tables, LALR),
-                ('start_production', start_production, None),
                 ('prefer_shifts', prefer_shifts, None),
                 ('prefer_shifts_over_empty', prefer_shifts_over_empty, None),
                 ('force_load_table', force_load_table, False),

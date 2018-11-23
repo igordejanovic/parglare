@@ -40,10 +40,20 @@ def test_error_recovery_uncomplete():
     be ended with EOF like in the case of 'Result' rule.
     """
 
-    # By setting start_production to 'E' parser will understand only +
-    # operation
-    parser = Parser(g, actions=actions, start_production='E',
-                    error_recovery=True)
+    # expression grammar, but not terminated with EOF
+    grammar = Grammar.from_string(r"""
+    E: E '+' E  {left, 1}
+     | E '-' E  {left, 1}
+     | E '*' E  {left, 2}
+     | E '/' E  {left, 2}
+     | E '^' E  {right, 3}
+     | '(' E ')'
+     | number;
+
+    terminals
+    number: /\d+(\.\d+)?/;
+    """)
+    parser = Parser(grammar, actions=actions, error_recovery=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
 

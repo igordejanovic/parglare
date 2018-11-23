@@ -33,7 +33,7 @@ class GLRParser(Parser):
     """
     A Tomita-style GLR parser.
     """
-    def __init__(self, grammar, start_production=None, actions=None,
+    def __init__(self, grammar, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
@@ -41,7 +41,7 @@ class GLRParser(Parser):
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
                  custom_token_recognition=None, force_load_table=False,
-                 table=None):
+                 table=None, **kwargs):
 
         if table is None:
             # The default for GLR is not to use any strategy preferring shifts
@@ -56,7 +56,7 @@ class GLRParser(Parser):
                 else prefer_shifts_over_empty
 
         super(GLRParser, self).__init__(
-            grammar=grammar, start_production=start_production,
+            grammar=grammar,
             actions=actions, layout_actions=layout_actions,
             debug=debug, debug_trace=debug_trace,
             debug_colors=debug_colors, debug_layout=debug_layout, ws=ws,
@@ -67,7 +67,7 @@ class GLRParser(Parser):
             prefer_shifts_over_empty=prefer_shifts_over_empty,
             error_recovery=error_recovery, dynamic_filter=dynamic_filter,
             custom_token_recognition=custom_token_recognition,
-            force_load_table=force_load_table, table=table)
+            force_load_table=force_load_table, table=table, **kwargs)
 
     def _check_parser(self):
         """
