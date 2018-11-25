@@ -1,5 +1,21 @@
 # History
 
+- Development version.
+  - PR #81 Support for manual table loading from different sources. Thanks
+    SupraSummus@GitHub.
+  - PR #85 Using plain dicts instead of OrderedDicts in table seralization.
+    Thanks SupraSummus@GitHub.
+  - PR #91 Droping support for `start_production` Parser param. See related
+    discussion in #80. Thanks SupraSummus@GitHub.
+
+  - Fixes:
+    - PR #75, issue #74
+      Fixing regexp with backslashes. Thanks SupraSummus@GitHub.
+    - Fixing recognizer calling to prohibit empty matches. Thanks
+      SupraSummus@GitHub for the tests (PR #89, #90)
+    - Various typo/phrasing fixes in the docs and docstrings. Thanks
+      chenl@GitHub.
+
 - 2018-09-25 Version 0.8.0
   - Implemented table caching.
     See:
