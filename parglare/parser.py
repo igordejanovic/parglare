@@ -521,7 +521,7 @@ class Parser(object):
                 tok = symbol.recognizer(input_str, position)
             except TypeError:
                 tok = symbol.recognizer(context, input_str, position)
-            if tok is not None:
+            if tok:
                 tokens.append(Token(symbol, tok))
                 if finish_flags[idx]:
                     break
@@ -541,7 +541,7 @@ class Parser(object):
                 except TypeError:
                     tok = terminal.recognizer(context, context.input_str,
                                               context.position)
-                if tok is not None:
+                if tok:
                     tokens.append(Token(terminal, tok))
         return tokens
 
