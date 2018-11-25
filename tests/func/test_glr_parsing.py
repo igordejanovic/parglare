@@ -291,3 +291,24 @@ def test_empty_terminal():
     p = GLRParser(g)
     with pytest.raises(ParseError):
         p.parse("a")
+
+
+def test_empty_recognizer():
+    """This test verifies if custom recorgnizer matching on empty string
+    can throw parser into infinite loop."""
+
+    def match_bs(input_str, pos):
+        end_pos = pos
+        while end_pos < len(input_str) and input_str[end_pos] == 'b':
+            end_pos += 1
+        return input_str[pos:end_pos]
+
+    g = Grammar.from_string("""
+    start: a EOF;
+    a: a t | t;
+    terminals
+    t: ;
+    """, recognizers={'t': match_bs})
+    p = GLRParser(g)
+    with pytest.raises(ParseError):
+        p.parse("a")
