@@ -91,14 +91,6 @@ By default set to `False`. If set to `True` default error recovery will be used.
 If set to a Python function, the function will be called to recover from errors.
 For more information see [Error recovery](./handling_errors.md#error-recovery).
 
-## start_production
-
-By default the first rule of the grammar is the start rule. If you want to
-change this default behavior — for example you want to create multiple parsers
-from the same grammar with different start productions — you can use this
-parameter. The parameter accepts a fully qualified name of the start rule.
-
-
 ## debug/debug_layout
 
 This parameter if set to `True` will put the parser in debug mode. In this mode
