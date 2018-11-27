@@ -5,6 +5,12 @@
     SupraSummus@GitHub.
   - PR #85 Using plain dicts instead of OrderedDicts in table seralization.
     Thanks SupraSummus@GitHub.
+  - PR #86 Making implicit lexical disambiguation optional +
+    fixing/simplification of GLR error recovery and lexical disambiguation.
+    Thanks SupraSummus@GitHub
+    - BACKWARD INCOMPATIBILITY: GLR is not using implicit lexical disambiguation
+      now by default. To recover previous behaviour pass
+      `lexical_disambiguation=True` to `GLRParser`.
   - PR #91 Droping support for `start_production` Parser param. See related
     discussion in #80. Thanks SupraSummus@GitHub.
 
