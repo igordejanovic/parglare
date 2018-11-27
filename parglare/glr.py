@@ -5,9 +5,8 @@ from itertools import chain, takewhile
 from copy import copy
 from parglare import Parser
 from parglare import termui as t
-from .exceptions import DisambiguationError, ParseError
-from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, STOP, Context, \
-    Token
+from .exceptions import ParseError
+from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, Context, Token
 from .common import Location, position_context
 from .common import replace_newlines as _
 from .tables import LALR
@@ -40,8 +39,8 @@ class GLRParser(Parser):
                  tables=LALR, return_position=False,
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, force_load_table=False,
-                 table=None, **kwargs):
+                 custom_token_recognition=None, lexical_disambiguation=None,
+                 force_load_table=False, table=None, **kwargs):
 
         if table is None:
             # The default for GLR is not to use any strategy preferring shifts
@@ -54,6 +53,8 @@ class GLRParser(Parser):
             prefer_shifts_over_empty = False \
                 if prefer_shifts_over_empty is None \
                 else prefer_shifts_over_empty
+            if lexical_disambiguation is None:
+                lexical_disambiguation = False
 
         super(GLRParser, self).__init__(
             grammar=grammar,
@@ -67,6 +68,7 @@ class GLRParser(Parser):
             prefer_shifts_over_empty=prefer_shifts_over_empty,
             error_recovery=error_recovery, dynamic_filter=dynamic_filter,
             custom_token_recognition=custom_token_recognition,
+            lexical_disambiguation=lexical_disambiguation,
             force_load_table=force_load_table, table=table, **kwargs)
 
     def _check_parser(self):
@@ -251,9 +253,11 @@ class GLRParser(Parser):
                     h_print("Token(s) ahead: ", _(str(tokens)), level=1)
 
                 if not tokens:
-                    if debug:
-                        # This head is dying
-                        a_print("***Killing this head.", level=1)
+                    if self.error_recovery:
+                        # collect for possible recovery
+                        self.heads_for_recovery.append(head)
+                    elif debug:
+                        a_print("** Killing head: ", head, level=1)
                         if self.debug_trace:
                             self._trace_step_kill(head)
                 else:
@@ -261,12 +265,13 @@ class GLRParser(Parser):
                         reduce_head = head.for_token(token)
                         self.heads_for_reduce.insert(0, reduce_head)
                     continue
+
             else:
-                # If this head is reduced it can only continue to be reduced by
-                # the same token ahead. Check if the head is final.
-                if token.symbol is STOP:
-                    symbol_action = actions.get(token.symbol, None)
-                    if symbol_action and symbol_action[0].action is ACCEPT:
+                symbol_actions = actions.get(token.symbol, [])
+                for symbol_action in symbol_actions:
+                    action = symbol_action.action
+
+                    if action is ACCEPT:
                         if self.in_error_reporting:
                             self.expected.add(token.symbol)
                         else:
@@ -279,30 +284,21 @@ class GLRParser(Parser):
                                 self.finish_head.merge_head(head, self)
                             else:
                                 self.finish_head = head
-                        continue
 
-                # Do all reductions for this head
-                symbol_actions = actions.get(token.symbol, [])
-                reduce_actions = [a for a in symbol_actions
-                                  if a.action is REDUCE]
-                for action in reduce_actions:
-                    reduce(head, action.prod)
+                        # This break is supicious.
+                        # It prevents from ivestigating posibilities past
+                        # accepting state. Without it test_cyclic_grammar_1
+                        # fails returning more than one parse.
+                        break
 
-                symbol_act = symbol_actions[0] if symbol_actions else None
-                if symbol_act and symbol_act.action is SHIFT:
-                    if self.in_error_reporting:
-                        self.expected.add(token.symbol)
-                    else:
-                        self._add_to_heads_for_shift(head)
-                elif not reduce_actions and not self.in_error_reporting:
-                    if self.error_recovery:
-                        # If this head is not reduced and no shift is possible
-                        # collect it for possible recovery.
-                        self.heads_for_recovery.append(head)
-                    elif debug:
-                        a_print("** Killing head: ", head, level=1)
-                        if self.debug_trace:
-                            self._trace_step_kill(head)
+                    if action is REDUCE:
+                        reduce(head, symbol_action.prod)
+
+                    if action is SHIFT:
+                        if self.in_error_reporting:
+                            self.expected.add(token.symbol)
+                        else:
+                            self._add_to_heads_for_shift(head)
 
                 if debug:
                     h_print("No more reductions for this head and lookahead"
@@ -612,16 +608,6 @@ class GLRParser(Parser):
             if self.debug and self.debug_trace:
                 self._trace_step(old_head, new_head, root_head,
                                  "R:{}".format(dot_escape(context.production)))
-
-    def _next_tokens(self, context):
-        try:
-            tok = super(GLRParser, self)._next_token(context)
-            tokens = [tok]
-        except DisambiguationError as e:
-            # Lexical ambiguity will be handled by GLR
-            tokens = e.tokens
-
-        return tokens
 
     def _setup_error_reporting(self):
         """

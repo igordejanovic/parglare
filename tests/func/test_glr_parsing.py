@@ -115,6 +115,7 @@ def test_nops():
 def test_expressions():
 
     actions = {
+        "s": lambda _, c: c[0],
         "E": [
             lambda _, nodes: nodes[0] + nodes[2],
             lambda _, nodes: nodes[0] * nodes[2],
@@ -126,6 +127,7 @@ def test_expressions():
     # This grammar is highly ambiguous if priorities and
     # associativities are not defined to disambiguate.
     grammar = r"""
+    s: E EOF;
     E: E "+" E | E "*" E | "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -158,6 +160,7 @@ def test_expressions():
     # Default production priority is 10. Here we will raise it to 15 for
     # multiplication.
     grammar = r"""
+    s: E EOF;
     E: E "+" E | E "*" E {15}| "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -175,6 +178,7 @@ def test_expressions():
     # If we define associativity for both + and * we have resolved all
     # ambiguities in the grammar.
     grammar = r"""
+    s: E EOF;
     E: E "+" E {left}| E "*" E {left, 15}| "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -241,11 +245,27 @@ def test_non_eof_grammar_nonempty():
 
     p = GLRParser(g_nonempty, debug=True)
     results = p.parse(txt)
-    # There is three succesful parses.
-    # e.g. one would be the production 'First = One Two three Second' and the
-    # parser could not continue as the next token is '=' but it succeds as
-    # we haven't terminated our model with EOF so we allow partial parses.
-    assert len(results) == 3
+    # There are eight succesful parses:
+    # 1. First = One
+    # 2. First = One Two
+    # 3. First = One Two three
+    # 4. First = One Two three Second
+    # 5. ... Second = Foo
+    # 6. ... Second = Foo Bar
+    # 7. ... Second = Foo Bar Third
+    # 8. everyting parsed
+    assert len(results) == 8
+
+    # With lexical disambiguation turned on there are only 3 parses,
+    # because regular tokens are preferred over STOP stop tokens.
+    # So STOP token gets fed to the parser head only if there is nothing else.
+    # This is the situation when head parsing ProdRefs encounters "=".
+    # Namely the three parses are:
+    # 1. First = One Two three Second
+    # 2. ... Second = Foo Bar Third
+    # 3. everything parsed
+    disambig_p = GLRParser(g_nonempty, lexical_disambiguation=True)
+    assert len(disambig_p.parse(txt)) == 3
 
 
 def test_non_eof_grammar_empty():
@@ -275,7 +295,7 @@ def test_non_eof_grammar_empty():
     p = GLRParser(g_empty, debug=True)
 
     results = p.parse(txt)
-    assert len(results) == 3
+    assert len(results) == 8
 
     results = p.parse("")
     assert len(results) == 1
@@ -312,3 +332,46 @@ def test_empty_recognizer():
     p = GLRParser(g)
     with pytest.raises(ParseError):
         p.parse("a")
+
+
+def test_terminal_collision():
+    g = Grammar.from_string("""
+    expression: "1" s letter EOF
+              | "2" s "A" EOF
+              ;
+
+    s: " ";
+
+    terminals
+    letter: /[A-Z]/;
+    """)
+
+    p = GLRParser(g, ws='')
+
+    p.parse("2 A")
+    p.parse("1 B")
+    p.parse("1 A")
+
+
+def test_lexical_ambiguity():
+    g = Grammar.from_string("""
+    expression: a "x" EOF
+              | b EOF
+              ;
+
+    a: "x";
+    b: "xx";
+    """)
+
+    p = GLRParser(g)
+
+    assert sorted(p.parse("xx")) == [
+        ['x', 'x', None],
+        ['xx', None],
+    ]
+
+    disambig_p = GLRParser(g, lexical_disambiguation=True)
+
+    assert sorted(disambig_p.parse("xx")) == [
+        ['xx', None],
+    ]

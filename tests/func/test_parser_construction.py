@@ -166,7 +166,7 @@ def test_prefer_shifts_no_sr_conflicts():
     # prefer_shift is set to `True`. This means that the parser will first
     # consume all "a" using A+ and that reduce B at the end.
     grammar = r"""
-    S: B+;
+    S: B+ EOF;
     B: "b"? A+;
 
     terminals
@@ -184,7 +184,7 @@ def test_prefer_shifts_no_sr_conflicts():
 
     # With prefer_shifts we get a greedy behavior
     input_str = 'b a a a b a a'
-    output = [['b', ['a', 'a', 'a']], ['b', ['a', 'a']]]
+    output = [[['b', ['a', 'a', 'a']], ['b', ['a', 'a']]], None]
     parser = Parser(g, prefer_shifts=True)
     result = parser.parse(input_str)
     assert result == output

@@ -3,7 +3,7 @@ from parglare import Grammar, GLRParser
 
 def test_issue31_glr_drop_parses_on_lexical_ambiguity():
     grammar = """
-    model: element+;
+    model: element+ EOF;
     element: title
            | table_with_note
            | table_with_title;
