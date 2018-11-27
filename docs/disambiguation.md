@@ -297,7 +297,14 @@ or:
 number = /\d+/ {prefer};
 ```
 
-In addition, you can also specify terminal to take a part in dynamic
+!!! note
+
+    Implicit lexical disambiguation is controlled by `lexical_disambiguation`
+    parameter passed to `Parser`/`GLRParser` constructor. By default, `Parser`
+    uses implict disambiguation while `GLRParser` doesn't.
+
+
+In addition, you can also specify that the terminal takes part in dynamic
 disambiguation:
 
 ```nohighlight
@@ -312,11 +319,11 @@ strategy. There are use-cases when this strategy is not sufficient. For example,
 if we want to do fuzzy match of tokens and choose the most similar token at the
 position.
 
-parglare solves this problem by enabling you to register a callable during
-parser instantiation that will, during parsing, get all the symbols expected at
-the current location and return a list of tokens (instances of [`Token`
-class](./parser.md#token)) or `None` or empty list if no symbol is found at the
-location.
+parglare solves this problem by enabling you to implement a custom token
+recognition by registering a callable during parser instantiation that will,
+during parsing, get all the symbols expected at the current location and return
+a list of tokens (instances of [`Token` class](./parser.md#token)) or `None`/
+empty list if no symbol is found at the location.
 
 This callable is registered during parser instantiation as the parameter
 `custom_token_recognition`.
@@ -413,3 +420,9 @@ assert result == [['Ba. 34', 'baz 56'], None]
 with pytest.raises(ParseError):
     parser.parse('Bar. 34 bza 56')
 ```
+
+!!! note
+
+    `custom_token_recognition` can be used to implement custom lexical
+    disambiguation by calling `get_tokens` and then reducing returned list to a
+    list with a single result.
