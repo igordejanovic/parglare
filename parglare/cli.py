@@ -15,7 +15,7 @@ import parglare.termui as t
 @click.option('--prefer-shifts/--no-prefer-shifts', default=False,
               help="Prefer shifts over reductions.")
 @click.option('--prefer-shifts-over-empty/--no-prefer-shifts-over-empty',
-              default=True,
+              default=False,
               help="Prefer shifts over empty reductions.")
 @click.pass_context
 def pglr(ctx, debug, colors, prefer_shifts, prefer_shifts_over_empty):
