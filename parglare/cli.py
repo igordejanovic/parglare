@@ -10,19 +10,21 @@ import parglare.termui as t
 
 
 @click.group()
-@click.option('--debug/--no-debug', default=False, help="Debug/trace output")
-@click.option('--colors/--no-colors', default=True, help="Output coloring")
-@click.option('--prefer-shifts/--no-prefer-shifts', default=False,
+@click.option('--debug', default=False, is_flag=True,
+              help="Debug/trace output.")
+@click.option('--no-colors', default=False, is_flag=True,
+              help="Disable output coloring.")
+@click.option('--prefer-shifts', default=False, is_flag=True,
               help="Prefer shifts over reductions.")
-@click.option('--prefer-shifts-over-empty/--no-prefer-shifts-over-empty',
-              default=False,
+@click.option('--prefer-shifts-over-empty',
+              default=False, is_flag=True,
               help="Prefer shifts over empty reductions.")
 @click.pass_context
-def pglr(ctx, debug, colors, prefer_shifts, prefer_shifts_over_empty):
+def pglr(ctx, debug, no_colors, prefer_shifts, prefer_shifts_over_empty):
     """
     Command line interface for working with parglare grammars.
     """
-    ctx.obj = {'debug': debug, 'colors': colors,
+    ctx.obj = {'debug': debug, 'colors': not no_colors,
                'prefer_shifts': prefer_shifts,
                'prefer_shifts_over_empty': prefer_shifts_over_empty}
 

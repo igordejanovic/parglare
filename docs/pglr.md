@@ -13,13 +13,11 @@ Usage: pglr [OPTIONS] COMMAND [ARGS]...
   Command line interface for working with parglare grammars.
 
 Options:
-  --debug / --no-debug            Debug/trace output
-  --colors / --no-colors          Output coloring
-  --prefer-shifts / --no-prefer-shifts
-                                  Prefer shifts over reductions.
-  --prefer-shifts-over-empty / --no-prefer-shifts-over-empty
-                                  Prefer shifts over empty reductions.
-  --help                          Show this message and exit.
+  --debug                     Debug/trace output.
+  --no-colors                 Disable output coloring.
+  --prefer-shifts             Prefer shifts over reductions.
+  --prefer-shifts-over-empty  Prefer shifts over empty reductions.
+  --help                      Show this message and exit.
 
 Commands:
   compile
