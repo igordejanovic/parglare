@@ -62,7 +62,7 @@ class Location(object):
                               if self.file_name else "",
                               line, column,
                               position_context(self)))
-        elif self.context.file_name:
+        elif self.file_name:
             return _a(self.file_name)
         else:
             return "<Unknown location>"
