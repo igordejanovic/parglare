@@ -339,7 +339,7 @@ class GLRParser(Parser):
             if action and action.action is SHIFT:
                 if self.dynamic_filter and \
                    not self._call_dynamic_filter(context, SHIFT, None):
-                        pass
+                    pass
                 else:
                     self._shift(head, action.state, context)
             else:
@@ -375,7 +375,7 @@ class GLRParser(Parser):
 
             if self.dynamic_filter and \
                not self._call_dynamic_filter(context, REDUCE, []):
-                    pass
+                pass
             else:
                 new_head = GSSNode(context)
                 self._merge_create_head(new_head, head, head, [], True, True)
@@ -461,7 +461,7 @@ class GLRParser(Parser):
                 if self.dynamic_filter and \
                    not self._call_dynamic_filter(context, REDUCE,
                                                  subresults):
-                        pass
+                    pass
                 else:
                     new_head = GSSNode(context)
                     self._merge_create_head(new_head, head, root, subresults,

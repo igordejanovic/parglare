@@ -91,13 +91,13 @@ def grammar_pda_export(table, file_name):
                 for a in [a for a in actions if a.action in [SHIFT, ACCEPT]]:
                     shacc.append((term, a))
             for term, action in shacc:
-                    f.write('{} -> {} [label="{}:{}"]'.format(
-                        state.state_id, action.state.state_id,
-                        "SHIFT" if action.action == SHIFT else "ACCEPT", term))
+                f.write('{} -> {} [label="{}:{}"]'.format(
+                    state.state_id, action.state.state_id,
+                    "SHIFT" if action.action == SHIFT else "ACCEPT", term))
 
             for symb, goto_state in ((symb, goto) for symb, goto
                                      in state.gotos.items()):
-                    f.write('{} -> {} [label="GOTO:{}"]'.format(
-                        state.state_id, goto_state.state_id, symb))
+                f.write('{} -> {} [label="GOTO:{}"]'.format(
+                    state.state_id, goto_state.state_id, symb))
 
         f.write("\n}\n")
