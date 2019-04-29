@@ -1,8 +1,6 @@
 from __future__ import unicode_literals
-import pytest
 import os
-import re
-from parglare import get_collector, Parser, Grammar, GrammarError
+from parglare import get_collector, Parser, Grammar
 
 THIS_FOLDER = os.path.abspath(os.path.dirname(__file__))
 
