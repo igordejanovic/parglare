@@ -1,0 +1,46 @@
+
+    digraph parglare_trace {
+    rankdir=LR
+    fontname = "Bitstream Vera Sans"
+    fontsize = 8
+    node[
+        style=filled,
+        fillcolor=aliceblue
+    ]
+    nodesep = 0.3
+    edge[dir=black,arrowtail=empty]
+
+head_0_0_0 [label="0"];
+head_3_0_1 [label="3:number"];
+head_0_0_0 -> head_3_0_1 [label="1. S:number(2)" color="red" style="dashed"];
+head_3_0_1 -> head_0_0_0;
+head_1_0_1 [label="1:E"];
+head_3_0_1 -> head_1_0_1 [label="2. R:7: E = number" color="red" style="dashed"];
+head_1_0_1 -> head_0_0_0;
+head_5_2_3 [label="5:+"];
+head_1_0_1 -> head_5_2_3 [label="3. S:+(+)" color="red" style="dashed"];
+head_5_2_3 -> head_1_0_1;
+head_3_4_5 [label="3:number"];
+head_5_2_3 -> head_3_4_5 [label="4. S:number(3)" color="red" style="dashed"];
+head_3_4_5 -> head_5_2_3;
+head_11_4_5 [label="11:E"];
+head_3_4_5 -> head_11_4_5 [label="5. R:7: E = number" color="red" style="dashed"];
+head_11_4_5 -> head_5_2_3;
+head_7_6_7 [label="7:*"];
+head_11_4_5 -> head_7_6_7 [label="6. S:*(*)" color="red" style="dashed"];
+head_7_6_7 -> head_11_4_5;
+head_3_8_9 [label="3:number"];
+head_7_6_7 -> head_3_8_9 [label="7. S:number(5)" color="red" style="dashed"];
+head_3_8_9 -> head_7_6_7;
+head_13_8_9 [label="13:E"];
+head_3_8_9 -> head_13_8_9 [label="8. R:7: E = number" color="red" style="dashed"];
+head_13_8_9 -> head_7_6_7;
+head_11_4_9 [label="11:E"];
+head_13_8_9 -> head_11_4_9 [label="9. R:3: E = E * E" color="red" style="dashed"];
+head_11_4_9 -> head_5_2_3;
+head_1_0_9 [label="1:E"];
+head_11_4_9 -> head_1_0_9 [label="10. R:1: E = E + E" color="red" style="dashed"];
+head_1_0_9 -> head_0_0_0;
+head_1_0_9 -> success [label="11. " color="red" style="dashed"];
+success -> head_1_0_9;
+}
