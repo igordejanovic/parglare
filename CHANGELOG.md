@@ -1,47 +1,74 @@
-# History
+# parglare changelog
 
-- Development version.
-  - PR #81 Support for manual table loading from different sources. Thanks
-    SupraSummus@GitHub.
-  - PR #85 Using plain dicts instead of OrderedDicts in table seralization.
-    Thanks SupraSummus@GitHub.
-  - PR #86 Making implicit lexical disambiguation optional +
-    fixing/simplification of GLR error recovery and lexical disambiguation.
-    Thanks SupraSummus@GitHub
-    - BACKWARD INCOMPATIBILITY: GLR is not using implicit lexical disambiguation
-      now by default. To recover previous behaviour pass
-      `lexical_disambiguation=True` to `GLRParser`.
-  - PR #91 Droping support for `start_production` Parser param. See related
-    discussion in #80. Thanks SupraSummus@GitHub.
+All _notable_ changes to this project will be documented in this file.
 
-  - Fixes:
-    - PR #75, issue #74
-      Fixing regexp with backslashes. Thanks SupraSummus@GitHub.
+The format is based on _[Keep a Changelog][keepachangelog]_, and this project
+adheres to _[Semantic Versioning][semver]_.
+
+Everything that is documented in the [official docs][parglareDocs] is considered
+the part of the public API.
+
+Backward incompatible changes are marked with **(BIC)**. These changes are the
+reason for the major version increase so when upgrading between major versions
+please take a look at related PRs and issues and see if the change affects you.
+
+Note: Since parglare is still in pre-1.x version major version increase on
+backward incompatible changes will start to apply when the projects goes 1.0
+(i.e. is considered production/stable).
+
+
+## [Unreleased]
+
+
+### Added
+
+  - Support for manual table loading from different sources. Thanks
+    SupraSummus@GitHub. ([#81])
+
+### Changed
+
+  - Using plain dicts instead of OrderedDicts in table serialization. Thanks
+    SupraSummus@GitHub. ([#85])
+  - Making implicit lexical disambiguation optional + fixing/simplification of
+    GLR error recovery and lexical disambiguation. Thanks SupraSummus@GitHub
+    ([#86])
+    - **(BIC)**: GLR is not using implicit lexical disambiguation now by
+      default. To recover previous behaviour pass `lexical_disambiguation=True`
+      to `GLRParser`.
+  - Dropping support for `start_production` Parser param. Thanks
+    SupraSummus@GitHub. ([#80], [#91])
+
+### Fixed
+
+    - Fixing regexp with backslashes. Thanks SupraSummus@GitHub. ([#75], [#74])
     - Fixing recognizer calling to prohibit empty matches. Thanks
-      SupraSummus@GitHub for the tests (PR #89, #90)
+      SupraSummus@GitHub for the tests ([#89], [#90])
     - Various typo/phrasing fixes in the docs and docstrings. Thanks
       chenl@GitHub.
 
-- 2018-09-25 Version 0.8.0
-  - Implemented table caching.
-    See:
-    https://github.com/igordejanovic/parglare/issues/36
-    https://github.com/igordejanovic/parglare/issues/52
-    https://github.com/igordejanovic/parglare/issues/20
 
+## [0.8.0] (released: 2018-09-25)
+
+### Added
+  - Table caching. ([#36], [#52], [#20])
     parglare will store calculated LR table in `<grammar_file_name>.pgt` file.
     If the file exists and is newer than all of imported grammar files it will
     load table from the cached table file. Use `pglr compile` command to produce
     `.pgt` file in advance. See the docs on `pglr compile` command.
   - `force_load_table` parser param added that will load parser table if exists
     without checking modification time.
+    
+### Changed
   - `pglr check` command changed to `pglr compile` which checks the grammar and
     produces table file `<grammar_file_name>.pgt`.
-  - Fixes:
+    
+### Fixed
     - Recognizer context passing made more robust.
-    - Fixing location message bug in GrammarError
+    - Fixing location message bug in `GrammarError`
 
-- 2018-09-13 Version 0.7.0
+
+## [0.7.0] (released: 2018-09-13)
+
   - Rework/cleanup of both LR and GLR parsers. Backward incompatible changes
     (see below).
   - Added optional first param to recognizers passing in Context object.
@@ -83,12 +110,15 @@
     section](http://www.igordejanovic.net/parglare/0.7/handling_errors/).
 
 
-- 2018-05-24 Version 0.6.1
+## [0.6.1] (released: 2018-05-24)
+
   - Fixed issue with actions resolving search order.
   - Fixed #31 GLR drops valid parses on lexical ambiguity.
   - Fix in GLR graphical debug trace.
 
-- 2018-05-22 Version 0.6.0
+
+## [0.6.0] (released: 2018-05-22)
+
   - New feature: grammar modularization - see the docs:
     http://www.igordejanovic.net/parglare/grammar_modularization/
   - Backward incopatibile change: terminals are now specified in a separate
@@ -100,7 +130,9 @@
   - Various improvements in error reporting, docs and tests.
   - Support for Python 3.3 dropped.
 
-- 2018-03-25 Version 0.5
+
+## [0.5] (released: 2018-03-25)
+
   - Added file_name to the parse context.
   - Added `re_flags` param to the `Grammar` class factory methods.
   - Added `_pg_start_position/_pg_end_position` attributes to auto-created
@@ -131,10 +163,14 @@
   - More docs.
   - Code cleanup and refactorings.
 
-- 2017-10-18 Version 0.4.1
+
+## [0.4.1] (released: 2017-10-18)
+
   - Fix in GLR parser. Parser reference not set on the parser context.
 
-- 2017-10-18 Version 0.4
+
+## [0.4] (released: 2017-10-18)
+
   - Added regex-like syntax extension for grammar language (`?`, `*`, `+`).
     Issue: https://github.com/igordejanovic/parglare/issues/3
   - Rule actions can be defined in grammar using `@` syntax for both built-in
@@ -158,7 +194,9 @@
   - Docs reworkings/updates.
   - Various bugfixes + tests.
 
-- 2017-08-24 Version 0.3
+
+## [0.3] (released: 2017-08-24)
+
   - Dynamic disambiguation filters. Introducing `dynamic` disambiguation rule in
     the grammar.
   - Terminal definitions with empty bodies.
@@ -169,7 +207,9 @@
   - GLR visual tracing parameter is separated from debug.
   - Fixing GLR trace visualization.
 
-- 2017-08-09 Version 0.2
+
+## [0.2] (released: 2017-08-09)
+
   - GLR parsing. Support for epsilon grammars, cyclic grammars and grammars with
     infinite ambiguity.
   - Lexical recognizers. Parsing the stream of arbitrary objects.
@@ -186,7 +226,9 @@
   - Additions to examples and tests.
   - Various optimizations and bug fixes.
 
-- 2017-02-02 - Version 0.1
+
+## [0.1] (released: 2017-02-02)
+
   - Textual syntax for grammar specification. Parsed with parglare.
   - SLR and LALR tables calculation (LALR is the default)
   - Scannerless LR(1) parsing
@@ -211,3 +253,37 @@
     `Parser` instantiation).
   - Tests
   - Few examples (see `examples` folder)
+
+
+
+[#91]: https://github.com/igordejanovic/parglare/pull/91
+[#90]: https://github.com/igordejanovic/parglare/pull/90
+[#89]: https://github.com/igordejanovic/parglare/pull/89
+[#86]: https://github.com/igordejanovic/parglare/pull/86
+[#85]: https://github.com/igordejanovic/parglare/pull/85
+[#81]: https://github.com/igordejanovic/parglare/pull/81
+[#80]: https://github.com/igordejanovic/parglare/issue/80
+[#75]: https://github.com/igordejanovic/parglare/pull/75
+[#74]: https://github.com/igordejanovic/parglare/issue/74
+[#81]: https://github.com/igordejanovic/parglare/pull/81
+[#52]: https://github.com/igordejanovic/parglare/issues/52
+[#36]: https://github.com/igordejanovic/parglare/issues/36
+[#20]: https://github.com/igordejanovic/parglare/issues/20
+
+
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.8.0...HEAD
+[0.8.0]: https://github.com/igordejanovic/parglare/compare/0.7.0...0.8.0
+[0.7.0]: https://github.com/igordejanovic/parglare/compare/0.6.1...0.7.0
+[0.6.1]: https://github.com/igordejanovic/parglare/compare/0.6.0...0.6.1
+[0.6.0]: https://github.com/igordejanovic/parglare/compare/0.5...0.6.0
+[0.5]: https://github.com/igordejanovic/parglare/compare/0.4.1...0.5
+[0.4.1]: https://github.com/igordejanovic/parglare/compare/0.4...0.4.1
+[0.4]: https://github.com/igordejanovic/parglare/compare/0.3...0.4
+[0.3]: https://github.com/igordejanovic/parglare/compare/0.2...0.3
+[0.2]: https://github.com/igordejanovic/parglare/compare/0.1...0.2
+[0.1]: https://github.com/igordejanovic/parglare/compare/47d41aa...0.1
+
+
+[parglareDocs]: http://www.igordejanovic.net/parglare/
+[keepachangelog]: https://keepachangelog.com/
+[semver]: https://semver.org/spec/v2.0.0.html
