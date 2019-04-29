@@ -288,7 +288,7 @@ can't be constructed anyway in case of conflicts.</p>
 <h3 id="prefer">prefer<a class="headerlink" href="#prefer" title="Permanent link">&para;</a></h3>
 <p>This disambiguation filter is applicable to terminal productions only. It will
 be used to choose the right recognizer/terminal in case
-of <a href="#lexical-ambiguity">lexical ambiguity</a>.</p>
+of <a href="#lexical-ambiguities">lexical ambiguity</a>.</p>
 <p>For example:</p>
 <pre><code>INT = /[-+]?[0-9]+\b/ {prefer};
 FLOAT = /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
@@ -433,7 +433,13 @@ matches of the same length.</p>
 <pre><code class="nohighlight">number = /\d+/ {prefer};
 </code></pre>
 
-<p>In addition, you can also specify terminal to take a part in dynamic
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Implicit lexical disambiguation is controlled by <code>lexical_disambiguation</code>
+parameter passed to <code>Parser</code>/<code>GLRParser</code> constructor. By default, <code>Parser</code>
+uses implict disambiguation while <code>GLRParser</code> doesn't.</p>
+</div>
+<p>In addition, you can also specify that the terminal takes part in dynamic
 disambiguation:</p>
 <pre><code class="nohighlight">number = /\d+/ {dynamic};
 </code></pre>
@@ -443,11 +449,11 @@ disambiguation:</p>
 strategy. There are use-cases when this strategy is not sufficient. For example,
 if we want to do fuzzy match of tokens and choose the most similar token at the
 position.</p>
-<p>parglare solves this problem by enabling you to register a callable during
-parser instantiation that will, during parsing, get all the symbols expected at
-the current location and return a list of tokens (instances of <a href="../parser/#token"><code>Token</code>
-class</a>) or <code>None</code> or empty list if no symbol is found at the
-location.</p>
+<p>parglare solves this problem by enabling you to implement a custom token
+recognition by registering a callable during parser instantiation that will,
+during parsing, get all the symbols expected at the current location and return
+a list of tokens (instances of <a href="../parser/#token"><code>Token</code> class</a>) or <code>None</code>/
+empty list if no symbol is found at the location.</p>
 <p>This callable is registered during parser instantiation as the parameter
 <code>custom_token_recognition</code>.</p>
 <pre><code>parser = Parser(
@@ -538,6 +544,13 @@ assert result == [['Ba. 34', 'baz 56'], None]
 with pytest.raises(ParseError):
     parser.parse('Bar. 34 bza 56')
 </code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>custom_token_recognition</code> can be used to implement custom lexical
+disambiguation by calling <code>get_tokens</code> and then reducing returned list to a
+list with a single result.</p>
+</div>
               
             </div>
           </div>

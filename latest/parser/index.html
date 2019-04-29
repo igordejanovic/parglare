@@ -106,8 +106,6 @@
         
             <li><a class="toctree-l4" href="#error_recovery">error_recovery</a></li>
         
-            <li><a class="toctree-l4" href="#start_production">start_production</a></li>
-        
             <li><a class="toctree-l4" href="#debugdebug_layout">debug/debug_layout</a></li>
         
             <li><a class="toctree-l4" href="#debug_colors">debug_colors</a></li>
@@ -298,11 +296,6 @@ implications. Try to understand <a href="../lr_parsing/">conflicts</a> and
 <p>By default set to <code>False</code>. If set to <code>True</code> default error recovery will be used.
 If set to a Python function, the function will be called to recover from errors.
 For more information see <a href="../handling_errors/#error-recovery">Error recovery</a>.</p>
-<h2 id="start_production">start_production<a class="headerlink" href="#start_production" title="Permanent link">&para;</a></h2>
-<p>By default the first rule of the grammar is the start rule. If you want to
-change this default behavior — for example you want to create multiple parsers
-from the same grammar with different start productions — you can use this
-parameter. The parameter accepts a fully qualified name of the start rule.</p>
 <h2 id="debugdebug_layout">debug/debug_layout<a class="headerlink" href="#debugdebug_layout" title="Permanent link">&para;</a></h2>
 <p>This parameter if set to <code>True</code> will put the parser in debug mode. In this mode
 parser will print a detailed information of its actions to the standard output.
