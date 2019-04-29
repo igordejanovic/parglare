@@ -40,11 +40,11 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ### Fixed
 
-    - Fixing regexp with backslashes. Thanks SupraSummus@GitHub. ([#75], [#74])
-    - Fixing recognizer calling to prohibit empty matches. Thanks
-      SupraSummus@GitHub for the tests ([#89], [#90])
-    - Various typo/phrasing fixes in the docs and docstrings. Thanks
-      chenl@GitHub.
+  - Fixing regexp with backslashes. Thanks SupraSummus@GitHub. ([#75], [#74])
+  - Fixing recognizer calling to prohibit empty matches. Thanks
+    SupraSummus@GitHub for the tests ([#89], [#90])
+  - Various typo/phrasing fixes in the docs and docstrings. Thanks
+    chenl@GitHub.
 
 
 ## [0.8.0] (released: 2018-09-25)
