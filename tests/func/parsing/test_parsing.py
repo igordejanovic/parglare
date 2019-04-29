@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import pytest
 from os.path import join, dirname
 from parglare import Parser, Grammar
-from .expression_grammar import get_grammar
+from ..grammar.expression_grammar import get_grammar
 from parglare.exceptions import ParseError
 
 

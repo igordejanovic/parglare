@@ -12,5 +12,5 @@ def test_recognizer_for_unexisting_terminal_raises_exception():
     """
 
     with pytest.raises(GrammarError,
-                       match=r'not given for unknown terminal "B".'):
+                       match=r'.*given for unknown terminal "B".'):
         Grammar.from_file(join(dirname(__file__), 'grammar.pg'))

@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import pytest  # noqa
 from parglare.parser import Parser
-from .expression_grammar import get_grammar
+from ..grammar.expression_grammar import get_grammar
 
 
 def test_tree_str():

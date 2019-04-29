@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import pytest  # noqa
 import os
 from parglare import Grammar, Parser, GLRParser, ParseError
-from .expression_grammar import get_grammar
+from ..grammar.expression_grammar import get_grammar
 
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])

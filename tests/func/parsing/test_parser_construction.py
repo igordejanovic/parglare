@@ -4,7 +4,8 @@ import sys
 import pytest  # noqa
 from parglare import Grammar, Parser, GLRParser, EMPTY, EOF
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
-from .expression_grammar import OPEN, ID, T, E, MULT, CLOSE, PLUS, get_grammar
+from ..grammar.expression_grammar import (OPEN, ID, T, E,
+                                          MULT, CLOSE, PLUS, get_grammar)
 
 HAS_MOCK = sys.version_info[0] >= 3
 if HAS_MOCK:

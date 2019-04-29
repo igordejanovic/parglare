@@ -3,7 +3,7 @@ import pytest  # noqa
 from parglare import Grammar, Parser, NodeNonTerm
 from parglare.exceptions import ParserInitError
 from parglare import get_collector
-from .expression_grammar_numbers import get_grammar
+from ..grammar.expression_grammar_numbers import get_grammar
 
 
 def get_actions():
