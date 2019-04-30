@@ -42,9 +42,10 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ### Fixed
 
-  - Fixing regexp with backslashes. Thanks SupraSummus@GitHub. ([#75], [#74])
-  - Fixing recognizer calling to prohibit empty matches. Thanks
-    SupraSummus@GitHub for the tests ([#89], [#90])
+  - Regexp with backslashes. Thanks SupraSummus@GitHub. ([#75], [#74])
+  - Recognizer calling to prohibit empty matches. Thanks SupraSummus@GitHub for
+    the tests ([#89], [#90])
+  - Bug triggered when recognizer is given for unexisting terminal
   - Various typo/phrasing fixes in the docs and docstrings. Thanks
     chenl@GitHub.
 
@@ -59,11 +60,11 @@ backward incompatible changes will start to apply when the projects goes 1.0
     `.pgt` file in advance. See the docs on `pglr compile` command.
   - `force_load_table` parser param added that will load parser table if exists
     without checking modification time.
-    
+
 ### Changed
   - `pglr check` command changed to `pglr compile` which checks the grammar and
     produces table file `<grammar_file_name>.pgt`.
-    
+
 ### Fixed
     - Recognizer context passing made more robust.
     - Fixing location message bug in `GrammarError`
