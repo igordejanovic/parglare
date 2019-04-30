@@ -39,6 +39,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
       to `GLRParser`.
   - Dropping support for `start_production` Parser param. Thanks
     SupraSummus@GitHub. ([#80], [#91])
+  - `prefer-shifts-over-empty` strategy is now by default `false` in CLI.
 
 ### Fixed
 
