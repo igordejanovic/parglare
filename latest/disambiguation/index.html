@@ -290,8 +290,8 @@ can't be constructed anyway in case of conflicts.</p>
 be used to choose the right recognizer/terminal in case
 of <a href="#lexical-ambiguities">lexical ambiguity</a>.</p>
 <p>For example:</p>
-<pre><code>INT = /[-+]?[0-9]+\b/ {prefer};
-FLOAT = /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
+<pre><code>INT: /[-+]?[0-9]+\b/ {prefer};
+FLOAT: /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
 </code></pre>
 
 <p>If in the grammar we have a possibility that both recognizers are tried, both
@@ -412,12 +412,12 @@ more than one recognizer match successfully.</p>
 integer or a float. Both of these recognizer can match the input. The integer
 recognizer would match <code>3</code> while the float recognizer would match <code>3.4</code>. What
 should we use?</p>
-<p>parglare has implicit lexical disambiguation strategy that will:</p>
+<p>parglare has lexical disambiguation strategy that will use priorities first. If
+this fails (i.e. all terminals have the same priority) we continue with implicit
+disambiguation strategy as follows:</p>
 <ol>
-<li>Use priorities first.</li>
 <li>String recognizers are preferred over regexes (i.e. the most specific match).</li>
-<li>If priorities are the same and we have no string recognizers use
-   longest-match strategy.</li>
+<li>If we still have multiple matches use longest-match strategy.</li>
 <li>If more recognizers still match use <code>prefer</code> rule if given.</li>
 <li>If all else fails raise an exception. In case of GLR, ambiguity will be
    handled by parser forking, i.e. you will end up with all solutions/trees.</li>
@@ -426,11 +426,11 @@ should we use?</p>
 recognizers, or we can use <code>prefer</code> to favor recognizer if there are multiple
 matches of the same length.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">number = /\d+/ {15};
+<pre><code class="nohighlight">number: /\d+/ {15};
 </code></pre>
 
 <p>or:</p>
-<pre><code class="nohighlight">number = /\d+/ {prefer};
+<pre><code class="nohighlight">number: /\d+/ {prefer};
 </code></pre>
 
 <div class="admonition note">
@@ -441,7 +441,7 @@ uses implict disambiguation while <code>GLRParser</code> doesn't.</p>
 </div>
 <p>In addition, you can also specify that the terminal takes part in dynamic
 disambiguation:</p>
-<pre><code class="nohighlight">number = /\d+/ {dynamic};
+<pre><code class="nohighlight">number: /\d+/ {dynamic};
 </code></pre>
 
 <h2 id="custom-token-recognition-and-lexical-disambiguation">Custom token recognition and lexical disambiguation<a class="headerlink" href="#custom-token-recognition-and-lexical-disambiguation" title="Permanent link">&para;</a></h2>
