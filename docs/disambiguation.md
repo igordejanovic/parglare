@@ -124,8 +124,8 @@ of [lexical ambiguity](#lexical-ambiguities).
 For example:
 
 ```
-INT = /[-+]?[0-9]+\b/ {prefer};
-FLOAT = /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
+INT: /[-+]?[0-9]+\b/ {prefer};
+FLOAT: /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
 ```
 
 If in the grammar we have a possibility that both recognizers are tried, both
@@ -270,16 +270,15 @@ integer or a float. Both of these recognizer can match the input. The integer
 recognizer would match `3` while the float recognizer would match `3.4`. What
 should we use?
 
-parglare has implicit lexical disambiguation strategy that will:
+parglare has lexical disambiguation strategy that will use priorities first. If
+this fails (i.e. all terminals have the same priority) we continue with implicit
+disambiguation strategy as follows:
 
-1. Use priorities first.
-2. String recognizers are preferred over regexes (i.e. the most specific match).
-3. If priorities are the same and we have no string recognizers use
-   longest-match strategy.
-4. If more recognizers still match use `prefer` rule if given.
-5. If all else fails raise an exception. In case of GLR, ambiguity will be
+1. String recognizers are preferred over regexes (i.e. the most specific match).
+2. If we still have multiple matches use longest-match strategy.
+3. If more recognizers still match use `prefer` rule if given.
+4. If all else fails raise an exception. In case of GLR, ambiguity will be
    handled by parser forking, i.e. you will end up with all solutions/trees.
-
 
 Thus, in terminal definition rules we can use priorities to favor some of the
 recognizers, or we can use `prefer` to favor recognizer if there are multiple
@@ -288,13 +287,13 @@ matches of the same length.
 For example:
 
 ```nohighlight
-number = /\d+/ {15};
+number: /\d+/ {15};
 ```
 
 or:
 
 ```nohighlight
-number = /\d+/ {prefer};
+number: /\d+/ {prefer};
 ```
 
 !!! note
@@ -308,7 +307,7 @@ In addition, you can also specify that the terminal takes part in dynamic
 disambiguation:
 
 ```nohighlight
-number = /\d+/ {dynamic};
+number: /\d+/ {dynamic};
 ```
 
 
