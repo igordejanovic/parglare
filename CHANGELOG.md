@@ -20,7 +20,14 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ## [Unreleased]
 
 
-## [0.9.0] (released: 2018-04-29)
+## [0.9.1] (released: 2019-05-03)
+
+### Fixed
+
+  - Non-deterministic parses and LR table cache when terminal priorities are
+    used due to unordered LR state actions ([c6e3226])
+
+## [0.9.0] (released: 2019-04-29)
 
 ### Added
 
@@ -260,6 +267,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 
 
+[c6e3226]: https://github.com/igordejanovic/parglare/commit/c6e3226
 [#91]: https://github.com/igordejanovic/parglare/pull/91
 [#90]: https://github.com/igordejanovic/parglare/pull/90
 [#89]: https://github.com/igordejanovic/parglare/pull/89
@@ -275,7 +283,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.9.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.9.1...HEAD
+[0.9.1]: https://github.com/igordejanovic/parglare/compare/0.9.0...0.9.1
 [0.9.0]: https://github.com/igordejanovic/parglare/compare/0.8.0...0.9.0
 [0.8.0]: https://github.com/igordejanovic/parglare/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/igordejanovic/parglare/compare/0.6.1...0.7.0
