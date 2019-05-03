@@ -56,7 +56,7 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
 
     if in_layout:
         # For layout grammars always calculate table.
-        # This are usually very small grammars so there is no point in
+        # Those are usually very small grammars so there is no point in
         # using cached tables.
         return create_table(grammar, itemset_type, start_production,
                             prefer_shifts, prefer_shifts_over_empty)
@@ -383,6 +383,7 @@ class LRTable(object):
         if calc_finish_flags:
             if lexical_disambiguation is None:
                 lexical_disambiguation = True
+            self.sort_state_actions()
             if lexical_disambiguation:
                 self.calc_finish_flags()
             else:
@@ -394,12 +395,12 @@ class LRTable(object):
                             'because calc_finish_flags is not set')
         self.calc_conflicts_and_dynamic_terminals()
 
-    def calc_finish_flags(self):
+    def sort_state_actions(self):
         """
-        Scanning optimization. Preorder actions based on terminal priority
-        and specificity. Set _finish flags.
+        State actions need to be sorted in order to utilize scanning
+        optimization based on explicit or implicit disambiguation.
+        Also, by sorting actions table save file is made deterministic.
         """
-
         def act_order(act_item):
             """Priority is the strongest property. After that honor string
             recognizer over other types of recognizers.
@@ -419,10 +420,16 @@ class LRTable(object):
             return cmp_str
 
         for state in self.states:
-            finish_flags = []
             state.actions = OrderedDict(sorted(state.actions.items(),
                                                key=act_order, reverse=True))
-            # Finish flags
+
+    def calc_finish_flags(self):
+        """
+        Scanning optimization. Preorder actions based on terminal priority
+        and specificity. Set _finish flags.
+        """
+        for state in self.states:
+            finish_flags = []
             prior = None
             for symbol, act in reversed(list(state.actions.items())):
                 if symbol.finish is not None:
