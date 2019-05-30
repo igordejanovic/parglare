@@ -7,6 +7,9 @@ import itertools
 from copy import copy
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError, ParserInitError
+from parglare.recognizers import (StringRecognizer, RegExRecognizer,
+                                  STOP_recognizer, EOF_recognizer,
+                                  EMPTY_recognizer)
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.common import Location, load_python_module
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
@@ -199,79 +202,6 @@ class Reference(object):
 
     def __repr__(self):
         return self.name
-
-
-class Recognizer(object):
-    """
-    Recognizers are callables capable of recognizing low-level patterns
-    (a.k.a tokens) in the input.
-    """
-    def __init__(self, name, location=None):
-        self.name = name
-        self.location = location
-
-
-class StringRecognizer(Recognizer):
-    def __init__(self, value, ignore_case=False, **kwargs):
-        super(StringRecognizer, self).__init__(value, **kwargs)
-        self.value = value
-        self.ignore_case = ignore_case
-        self.value_cmp = value.lower() if ignore_case else value
-
-    def __call__(self, in_str, pos):
-        if self.ignore_case:
-            if in_str[pos:pos+len(self.value)].lower() == self.value_cmp:
-                return self.value
-        else:
-            if in_str[pos:pos+len(self.value)] == self.value_cmp:
-                return self.value
-
-
-def esc_control_characters(regex):
-    """
-    Escape control characters in regular expressions.
-    """
-    unescapes = [('\a', r'\a'), ('\b', r'\b'), ('\f', r'\f'), ('\n', r'\n'),
-                 ('\r', r'\r'), ('\t', r'\t'), ('\v', r'\v')]
-    for val, text in unescapes:
-        regex = regex.replace(val, text)
-    return regex
-
-
-class RegExRecognizer(Recognizer):
-    def __init__(self, regex, name=None, re_flags=re.MULTILINE,
-                 ignore_case=False, **kwargs):
-        if name is None:
-            name = regex
-        super(RegExRecognizer, self).__init__(name, kwargs)
-        self._regex = regex
-        self.ignore_case = ignore_case
-        if ignore_case:
-            re_flags |= re.IGNORECASE
-        self.re_flags = re_flags
-        try:
-            self.regex = re.compile(self._regex, re_flags)
-        except re.error as ex:
-            regex = esc_control_characters(self._regex)
-            message = 'Regex compile error in /{}/ (report: "{}")'
-            raise GrammarError(message.format(regex, str(ex)))
-
-    def __call__(self, in_str, pos):
-        m = self.regex.match(in_str, pos)
-        if m and m.group():
-            return m.group()
-
-
-def EMPTY_recognizer(input, pos):
-    pass
-
-
-def EOF_recognizer(input, pos):
-    pass
-
-
-def STOP_recognizer(input, pos):
-    pass
 
 
 # These two terminals are special terminals used internally.
