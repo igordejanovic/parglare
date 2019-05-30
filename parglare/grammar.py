@@ -51,11 +51,11 @@ class GrammarSymbol(object):
     location(Location): The location where symbol is defined.
     action_name(string): Name of common/user action given in the grammar.
     action(callable): Resolved action given by the user. Overrides grammar
-        action if provided. If not provided by the user defaults to
-        grammar_action.
+                      action if provided. If not provided by the user defaults
+                      to grammar_action.
     grammar_action(callable): Resolved action given in the grammar.
     imported_with (PGFileImport): PGFileImport where this symbol is first time
-        imported from. Used for FQN calculation.
+                                  imported from. Used for FQN calculation.
     user_meta(dict): User meta-data.
     """
     def __init__(self, name, location=None, imported_with=None,
@@ -110,7 +110,8 @@ class GrammarSymbol(object):
 
 
 class NonTerminal(GrammarSymbol):
-    """Represents a non-termial symbol of the grammar.
+    """
+    Represents a non-termial symbol of the grammar.
 
     Attributes:
     productions(list of Production): A list of alternative productions for
@@ -124,7 +125,8 @@ class NonTerminal(GrammarSymbol):
 
 
 class Terminal(GrammarSymbol):
-    """Represent a terminal symbol of the grammar.
+    """
+    Represent a terminal symbol of the grammar.
 
     Attributes:
     prior(int): Priority used for lexical disambiguation.
@@ -167,6 +169,7 @@ class Reference(object):
     """
     A name reference to a GrammarSymbol used for cross-resolving during
     grammar construction.
+
     Attributes:
         name (str): The FQN name of the referred symbol. This is the name of
             the original desuggared symbol without taking into account
@@ -994,9 +997,11 @@ class Grammar(PGFile):
                 return p.prod_id
 
     @staticmethod
-    def from_struct(productions, start_symbol=None):
-        """Used internally to bootstrap grammar file parser."""
-        productions, terminals = create_productions_terminals(productions)
+    def from_struct(grammar_struct, start_symbol=None):
+        """
+        Construct grammar from the grammar given using a Python structure.
+        """
+        productions, terminals = create_productions_terminals(grammar_struct)
         return Grammar(productions,
                        terminals=terminals,
                        start_symbol=start_symbol)
