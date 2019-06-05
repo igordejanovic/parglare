@@ -20,12 +20,21 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ## [Unreleased]
 
 
+## [0.9.2] (released: 2019-06-05)
+
+### Fixed
+
+  - `KeyError` when using one-or-more multiplicity with imported grammars
+    ([#97])
+
+
 ## [0.9.1] (released: 2019-05-03)
 
 ### Fixed
 
   - Non-deterministic parses and LR table cache when terminal priorities are
     used due to unordered LR state actions ([c6e3226])
+
 
 ## [0.9.0] (released: 2019-04-29)
 
@@ -267,6 +276,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 
 
+[#97]: https://github.com/igordejanovic/parglare/issue/97
 [c6e3226]: https://github.com/igordejanovic/parglare/commit/c6e3226
 [#91]: https://github.com/igordejanovic/parglare/pull/91
 [#90]: https://github.com/igordejanovic/parglare/pull/90
