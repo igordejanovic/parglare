@@ -713,7 +713,7 @@ class PGFile(object):
             symbol_name = make_multiplicity_name(
                 symbol_ref.name, MULT_ONE_OR_MORE,
                 separator.name if separator else None)
-            symbol = self.symbols_by_name.get(symbol_name)
+            symbol = self.resolve_symbol_by_name(symbol_name)
             if not symbol:
                 # noqa See: http://www.igordejanovic.net/parglare/grammar_language/#one-or-more_1
                 productions = []
