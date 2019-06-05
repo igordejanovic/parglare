@@ -276,7 +276,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 
 
-[#97]: https://github.com/igordejanovic/parglare/issue/97
+[#97]: https://github.com/igordejanovic/parglare/issues/97
 [c6e3226]: https://github.com/igordejanovic/parglare/commit/c6e3226
 [#91]: https://github.com/igordejanovic/parglare/pull/91
 [#90]: https://github.com/igordejanovic/parglare/pull/90
