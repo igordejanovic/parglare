@@ -10,7 +10,7 @@ from parglare.exceptions import GrammarError, ParserInitError
 from parglare.recognizers import (StringRecognizer, RegExRecognizer,
                                   STOP_recognizer, EOF_recognizer,
                                   EMPTY_recognizer)
-from parglare.actions import pass_single, pass_none, collect, collect_sep
+#from parglare.actions import ParglareActions
 from parglare.common import Location, load_python_module
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
@@ -37,6 +37,8 @@ MULT_ZERO_OR_MORE = '0..*'
 RESERVED_SYMBOL_NAMES = ['EOF', 'STOP', 'EMPTY']
 SPECIAL_SYMBOL_NAMES = ['KEYWORD', 'LAYOUT']
 
+THIS_LOCATION = Location(file_name=__file__)
+
 
 def escape(instr):
     return instr.replace('\n', r'\n').replace('\t', r'\t')
@@ -46,27 +48,34 @@ class GrammarSymbol(object):
     """
     Represents an abstract grammar symbol.
 
-    Attributes:
-    name(str): The name of this grammar symbol.
-    location(Location): The location where symbol is defined.
-    action_name(string): Name of common/user action given in the grammar.
-    action(callable): Resolved action given by the user. Overrides grammar
-                      action if provided. If not provided by the user defaults
-                      to grammar_action.
-    grammar_action(callable): Resolved action given in the grammar.
-    imported_with (PGFileImport): PGFileImport where this symbol is first time
-                                  imported from. Used for FQN calculation.
-    user_meta(dict): User meta-data.
+    :param name: The name of this grammar symbol.
+    :param location: The location where symbol is defined.
+    :type location: :class:`Location`
+
+    :param int prior: Priority used for disambiguation.
+    :param bool dynamic: Should dynamic disambiguation be called to resolve
+        conflict involving this symbol.
+    :param action_name: A name of common/user action given in the grammar.
+    :param callable action: Resolved action given by the user.  Overrides
+        grammar action if provided.  If not provided by the user defaults to
+        grammar_action.
+    :param callable grammar_action: Resolved action given in the grammar.
+    :param PGFileImport imported_with: PGFileImport where this symbol is first
+        time imported from.  Used for FQN calculation.
+    :param dict meta: User meta-data.
     """
     def __init__(self, name, location=None, imported_with=None,
-                 user_meta=None):
+                 action_name=None, prior=DEFAULT_PRIORITY, dynamic=False,
+                 meta=None):
         self.name = escape(name)
         self.location = location
-        self.action_name = None
+        self.prior = prior
+        self.dynamic = dynamic
+        self.action_name = action_name
         self.action = None
         self.grammar_action = None
         self.imported_with = imported_with
-        self.user_meta = user_meta
+        self.meta = meta
         self._hash = hash(self.fqn)
 
     @property
@@ -84,14 +93,14 @@ class GrammarSymbol(object):
             else:
                 return self.action_name
 
-    def add_user_meta_data(self, name, value):
-        if self.user_meta is None:
-            self.user_meta = {}
-        self.user_meta[name] = value
+    def add_meta_data(self, name, value):
+        if self.meta is None:
+            self.meta = {}
+        self.meta[name] = value
 
     def __getattr__(self, name):
-        if self.user_meta is not None:
-            attr = self.user_meta.get(name)
+        if self.meta is not None:
+            attr = self.meta.get(name)
             if attr:
                 return attr
         raise AttributeError
@@ -113,48 +122,46 @@ class NonTerminal(GrammarSymbol):
     """
     Represents a non-termial symbol of the grammar.
 
-    Attributes:
-    productions(list of Production): A list of alternative productions for
-        this NonTerminal.
+    :param list productions: A list of alternative productions for this
+        NonTerminal.
+    :param assoc: Associativity for disambiguation
+    :param bool nops: Disable "prefer shift" strategy for this non-terminal.
+    :param bool nopse: Disable "prefer shift over empty" strategy for this
+        non-terminal.
     """
-    def __init__(self, name, productions=None, location=None,
-                 imported_with=None, user_meta=None):
-        super(NonTerminal, self).__init__(name, location, imported_with,
-                                          user_meta)
+    def __init__(self, name, productions=None, assoc=ASSOC_NONE, nops=False,
+                 nopse=False, **kwargs):
+        super(NonTerminal, self).__init__(name, **kwargs)
         self.productions = productions if productions is not None else []
+        self.assoc = assoc
+        self.nops = nops
+        self.nopse = nopse
 
 
 class Terminal(GrammarSymbol):
     """
     Represent a terminal symbol of the grammar.
 
-    Attributes:
-    prior(int): Priority used for lexical disambiguation.
-    dynamic(bool): Should dynamic disambiguation be called to resolve conflict
-        involving this terminal.
-    finish(bool): Used for scanning optimization. If this terminal is `finish`
-        no other recognizers will be checked if this succeeds. If not provided
-        in the grammar implicit rules will be used during table construction.
-    prefer(bool): Prefer this recognizer in case of multiple recognizers match
-        at the same place and implicit disambiguation doesn't resolve.
-    keyword(bool): `True` if this Terminal represents keyword. `False` by
-        default.
-
-    recognizer(callable): Called with input list of objects and position in the
-        stream. Should return a sublist of recognized objects. The sublist
-        should be rooted at the given position.
+    :param bool finish: Used for scanning optimization.  If this terminal is
+        `finish` no other recognizers will be checked if this succeeds.  If not
+        provided in the grammar implicit rules will be used during table
+        construction.
+    :param bool prefer: Prefer this recognizer in case of multiple recognizers
+        match at the same place and implicit disambiguation doesn't resolve.
+    :param bool keyword: `True` if this Terminal represents keyword.  `False`
+        by default.
+    :param callable recognizer: Called with input list of objects and position
+        in the stream.  Should return a sublist of recognized objects.  The
+        sublist should be rooted at the given position.
     """
-    def __init__(self, name, recognizer=None, location=None,
-                 imported_with=None):
-        self.prior = DEFAULT_PRIORITY
+    def __init__(self, name, recognizer=None, finish=None, prefer=False,
+                 keyword=False, **kwargs):
+        super(Terminal, self).__init__(name, **kwargs)
         self._recognizer = None
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
-        self.finish = None
-        self.prefer = False
-        self.dynamic = False
-        self.keyword = False
-        super(Terminal, self).__init__(name, location, imported_with,
-                                       user_meta=None)
+        self.finish = finish
+        self.prefer = prefer
+        self.keyword = keyword
 
     @property
     def recognizer(self):
@@ -215,34 +222,36 @@ STOP = Terminal("STOP", STOP_recognizer)
 # EMPTY will match nothing and always succeed.
 # EOF will match only at the end of the input string.
 EMPTY = Terminal("EMPTY", EMPTY_recognizer)
-EMPTY.grammar_action = pass_none
+EMPTY.grammar_action = None  # pass_none
 EOF = Terminal("EOF", EOF_recognizer)
-EOF.grammar_action = pass_none
+EOF.grammar_action = None  # pass_none
 
 
 class Production(object):
-    """Represent production from the grammar.
+    """
+    Represent production from the grammar.
 
-    Attributes:
-    symbol (GrammarSymbol):
-    rhs (ProductionRHS):
-    assignments(dict): Assignment instances keyed by name.
-    assoc (int): Associativity. Used for ambiguity (shift/reduce) resolution.
-    prior (int): Priority. Used for ambiguity (shift/reduce) resolution.
-    dynamic (bool): Is dynamic disambiguation used for this production.
-    nops (bool): Disable prefer_shifts strategy for this production.
+    :param GrammarSymbol symbol:
+    :param ProductionRHS rhs:
+    :param dict assignments: Assignment instances keyed by name.
+    :param int assoc: Associativity.  Used for ambiguity (shift/reduce)
+        resolution.
+    :param int prior: Priority.  Used for ambiguity (shift/reduce) resolution.
+    :param bool dynamic: Is dynamic disambiguation used for this production.
+    :param bool nops: Disable `prefer_shifts` strategy for this production.
         Only makes sense for GLR parser.
-    nopse (bool): Disable prefer_shifts_over_empty strategy for this
-        production. Only makes sense for GLR parser.
-    user_meta(dict): User meta-data.
-    prod_id (int): Ordinal number of the production.
-    prod_symbol_id (int): A zero-based ordinal of alternative choice for this
-        production grammar symbol.
+    :param bool nopse: Disable `prefer_shifts_over_empty` strategy for this
+        production.  Only makes sense for GLR parser.
+    :param action_name: A name of common/user action given in the grammar.
+    :param dict meta: User meta-data.
+    :param int prod_id: Ordinal number of the production.
+    :param int prod_symbol_id: A zero-based ordinal of alternative choice for
+        this production grammar symbol.
     """
 
     def __init__(self, symbol, rhs, assignments=None, assoc=ASSOC_NONE,
                  prior=DEFAULT_PRIORITY, dynamic=False, nops=False,
-                 nopse=False, user_meta=None):
+                 nopse=False, action_name=None, meta=None):
         """
         Args:
         symbol (GrammarSymbol): A grammar symbol on the LHS of the production.
@@ -261,7 +270,8 @@ class Production(object):
         self.dynamic = dynamic
         self.nops = nops
         self.nopse = nopse
-        self.user_meta = user_meta
+        self.action_name = action_name
+        self.meta = meta
 
     def __str__(self):
         if hasattr(self, 'prod_id'):
@@ -724,18 +734,207 @@ class PGFile(object):
         return symbol
 
 
-class Grammar(PGFile):
+class Grammar(object):
     """
     Grammar is a collection of production rules, nonterminals and terminals.
     First production is reserved for the augmented production (S' -> S).
 
-    Attributes:
-    start_symbol (GrammarSymbol or str): start/root symbol of the grammar or
-        its name.
-    nonterminals (set of NonTerminal):
-    terminals(set of Terminal):
-    imported_files(dict): Global registry of all imported files.
+    :param grammar_struct: Python structure that represents the grammar to be
+        built
+    :param classes: A dict of user specific classes
+    :param file_path: A file path where grammar was loaded from
+    :param start_symbol: start/root symbol of the grammar or its name.
+    :type start_symbol: :class:`GrammarSymbol` or str
 
+    :param nonterminals: A dict of :class:`NonTerminal` keyed by name
+    :param terminals: A dict of :class:`Terminal` keyed by name
+    """
+
+    def __init__(self, grammar_struct, classes=None, file_path=None,
+                 recognizers=None, start_symbol=None, ignore_case=False,
+                 debug=False, debug_parse=False, debug_colors=False):
+        self.classes = classes
+        self.file_path = file_path
+        self.recognizers = recognizers
+        self.terminals = {}
+        self.nonterminals = {}
+        self.productions = []
+
+        self._init_from_struct(grammar_struct)
+
+        # Determine start symbol. If name is provided get by name. If
+        # start_symbol is not given use the first production LHS symbol as the
+        # start symbol.
+        if start_symbol:
+            if isinstance(start_symbol, str):
+                self.start_symbol = self.get_symbol(start_symbol)
+            else:
+                self.start_symbol = start_symbol
+        else:
+            # By default, first production symbol is the start symbol.
+            self.start_symbol = self.productions[0].symbol
+
+        # Reserve 0 production. It is used for augmented prod. in LR automata
+        # calculation.
+        self.productions.insert(
+            0,
+            Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
+
+    def _init_from_struct(self, grammar_struct):
+        """
+        Initialize this grammar from a grammar given in a form of a Python
+        structure.
+        """
+        self._create_terminals(grammar_struct)
+        self._create_productions(grammar_struct)
+        self._resolve()
+
+    def _create_terminals(self, grammar_struct):
+        """
+        Create terminals of this grammar given the Python struct.
+        """
+        self.terminals.update([(s.name, s) for s in (EMPTY, EOF, STOP)])
+        for terminal_name, terminal_struct \
+                in grammar_struct.get('terminals', {}).items():
+            if terminal_name in self.terminals:
+                raise GrammarError(
+                    location=THIS_LOCATION,
+                    message=f'"{terminal_name}" terminal multiple definition')
+            recognizer_str = terminal_struct.get('recognizer')
+            if recognizer_str:
+                if recognizer_str.startswith('/') \
+                   and recognizer_str.endswith('/'):
+                    recognizer = RegExRecognizer(recognizer_str[1:-1])
+                else:
+                    recognizer = StringRecognizer(recognizer_str)
+            terminal = Terminal(terminal_name,
+                                recognizer=recognizer,
+                                prior=terminal_struct.get('prior',
+                                                          DEFAULT_PRIORITY),
+                                finish=terminal_struct.get('finish', None),
+                                prefer=terminal_struct.get('prefer', False),
+                                dynamic=terminal_struct.get('dynamic', False),
+                                keyword=terminal_struct.get('keyword', False),
+                                action_name=terminal_struct.get('action'),
+                                meta=terminal_struct.get('meta'))
+            self.terminals[terminal_name] = terminal
+
+    def _create_productions(self, grammar_struct):
+        """
+        Create productions of this grammar given the Python struct.
+        """
+        for rule_name, rule_struct in grammar_struct['rules'].items():
+            if rule_name in self.nonterminals or rule_name in self.terminals:
+                raise GrammarError(
+                    location=THIS_LOCATION,
+                    message=f'"{rule_name}" rule multiple definitions')
+            nt = NonTerminal(
+                rule_name,
+                action_name=rule_struct.get('action', None),
+                assoc=rule_struct.get('assoc', ASSOC_NONE),
+                prior=rule_struct.get('prior', DEFAULT_PRIORITY),
+                dynamic=rule_struct.get('dynamic', False),
+                nops=rule_struct.get('nops', False),
+                nopse=rule_struct.get('nopse', False),
+                meta=rule_struct.get('meta')
+            )
+            self.nonterminals[rule_name] = nt
+            productions = []
+            for production_struct in rule_struct['productions']:
+                rhs = ProductionRHS(production_struct['production'])
+                productions.append(Production(
+                    nt, rhs,
+                    action_name=production_struct.get('action', None),
+                    assoc=production_struct.get('assoc', ASSOC_NONE),
+                    prior=production_struct.get('prior', DEFAULT_PRIORITY),
+                    dynamic=production_struct.get('dynamic', False),
+                    nops=production_struct.get('nops', False),
+                    nopse=production_struct.get('nopse', False),
+                    meta=production_struct.get('meta')
+                ))
+            nt.productions = productions
+            self.productions.extend(productions)
+
+    def _resolve(self):
+        """
+        Resolve productions RHS references.
+        """
+        for nonterminal in self.nonterminals.values():
+            for production in nonterminal.productions:
+                for refidx, ref in enumerate(production.rhs):
+                    symbol = self.get_symbol(ref)
+                    if not symbol:
+                        raise GrammarError(
+                            location=THIS_LOCATION,
+                            message='Unknown reference "{}" '
+                            'in rule "{}".'.format(ref, nonterminal.name))
+                    production.rhs[refidx] = symbol
+
+    def get_terminal(self, name):
+        "Returns terminal with the given fully qualified name or name."
+        return self.terminals.get(name)
+
+    def get_nonterminal(self, name):
+        "Returns non-terminal with the given fully qualified name or name."
+        return self.nonterminals.get(name)
+
+    def get_symbol(self, name):
+        "Returns grammar symbol with the given name."
+        s = self.get_terminal(name)
+        if not s:
+            s = self.get_nonterminal(name)
+        return s
+
+    def __iter__(self):
+        return (s for s in itertools.chain(self.nonterminals.values(),
+                                           self.terminals.values())
+                if s not in [AUGSYMBOL, STOP])
+
+    def get_production_id(self, name):
+        "Returns first production id for the given symbol name"
+        for p in self.productions:
+            if p.symbol.fqn == name:
+                return p.prod_id
+
+    def from_struct(grammar_struct, **kwargs):
+        """
+        Create grammar object from grammar given in a form of a Python data
+        structure.
+        """
+        return Grammar(grammar_struct, **kwargs)
+
+    # @staticmethod
+    # def from_string(grammar_str, **kwargs):
+    #     return Grammar(struct_from_string(grammar_str), **kwargs)
+
+    # @staticmethod
+    # def from_file(file_name, **kwargs):
+    #     file_name = path.realpath(file_name)
+    #     return Grammar(struct_from_file(file_name), **kwargs)
+
+    def print_debug(self):
+        a_print("*** GRAMMAR ***", new_line=True)
+        h_print("Terminals:")
+        prints(" ".join([text(t) for t in self.terminals]))
+        h_print("NonTerminals:")
+        prints(" ".join([text(n) for n in self.nonterminals]))
+
+        h_print("Productions:")
+        for p in self.productions:
+            prints(text(p))
+
+
+class _Grammar(PGFile):
+    """
+    Grammar is a collection of production rules, nonterminals and terminals.
+    First production is reserved for the augmented production (S' -> S).
+
+    :param start_symbol: start/root symbol of the grammar or its name.
+    :type start_symbol: GrammarSymbol or str
+
+    :param nonterminals: terminals(set of Terminal): imported_files(dict):
+        Global registry of all imported files.
+    :type nonterminals: set of NonTerminal
     """
 
     def __init__(self, productions=None, terminals=None,
@@ -1791,44 +1990,44 @@ def act_regex_term(context, value):
     return value[1:-1]
 
 
-pg_actions = {
-    "PGFile": act_pgfile,
-    "Imports": collect,
-    "Import": act_import,
+# pg_actions = {
+#     "PGFile": act_pgfile,
+#     "Imports": collect,
+#     "Import": act_import,
 
-    "ProductionRules": [act_production_rules, pass_single],
-    'ProductionRule': act_production_rule,
-    'ProductionRuleWithAction': act_production_rule_with_action,
-    'ProductionRuleRHS': collect_sep,
-    'Production': act_production,
+#     "ProductionRules": [act_production_rules, pass_single],
+#     'ProductionRule': act_production_rule,
+#     'ProductionRuleWithAction': act_production_rule_with_action,
+#     'ProductionRuleRHS': collect_sep,
+#     'Production': act_production,
 
-    'TerminalRules': collect,
-    'TerminalRule': [act_term_rule,
-                     act_term_rule_empty_body,
-                     act_term_rule,
-                     act_term_rule_empty_body],
-    'TerminalRuleWithAction': act_term_rule_with_action,
+#     'TerminalRules': collect,
+#     'TerminalRule': [act_term_rule,
+#                      act_term_rule_empty_body,
+#                      act_term_rule,
+#                      act_term_rule_empty_body],
+#     'TerminalRuleWithAction': act_term_rule_with_action,
 
-    "ProductionMetaDatas": collect_sep,
-    "TerminalMetaDatas": collect_sep,
+#     "ProductionMetaDatas": collect_sep,
+#     "TerminalMetaDatas": collect_sep,
 
-    "Assignment": act_assignment,
-    "Assignments": collect,
+#     "Assignment": act_assignment,
+#     "Assignments": collect,
 
-    'GrammarSymbolReference': act_gsymbol_reference,
+#     'GrammarSymbolReference': act_gsymbol_reference,
 
-    'GrammarSymbol': [lambda context, nodes: Reference(Location(context),
-                                                       nodes[0]),
-                      act_gsymbol_string_recognizer],
+#     'GrammarSymbol': [lambda context, nodes: Reference(Location(context),
+#                                                        nodes[0]),
+#                       act_gsymbol_string_recognizer],
 
-    'Recognizer': [act_recognizer_str, act_recognizer_regex],
+#     'Recognizer': [act_recognizer_str, act_recognizer_regex],
 
-    'StrConst': act_str_term,
-    'RegExTerm': act_regex_term,
+#     'StrConst': act_str_term,
+#     'RegExTerm': act_regex_term,
 
-    # Constants
-    'IntConst': lambda _, value: int(value),
-    'FloatConst': lambda _, value: float(value),
-    'BoolConst': lambda _, value: value and value.lower() == 'true',
+#     # Constants
+#     'IntConst': lambda _, value: int(value),
+#     'FloatConst': lambda _, value: float(value),
+#     'BoolConst': lambda _, value: value and value.lower() == 'true',
 
-}
+# }

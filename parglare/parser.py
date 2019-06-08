@@ -10,7 +10,7 @@ from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, SRConflicts, RRConflicts, \
     expected_symbols_str
 from .common import Location, position_context
-from .actions import pass_none
+#from .actions import pass_none
 from .termui import prints, h_print, a_print
 from parglare import termui
 
@@ -39,8 +39,8 @@ class Parser(object):
         self.grammar = grammar
         self.in_layout = in_layout
 
-        EMPTY.action = pass_none
-        EOF.action = pass_none
+        # EMPTY.action = pass_none
+        # EOF.action = pass_none
         if actions:
             self.grammar._resolve_actions(action_overrides=actions,
                                           fail_on_no_resolve=True)
