@@ -750,6 +750,10 @@ class Grammar(object):
     :param terminals: A dict of :class:`Terminal` keyed by name
     """
 
+    # Cache for PG grammar and parser table
+    pg_parser_grammar = None
+    pg_parser_table = None
+
     def __init__(self, grammar_struct, classes=None, file_path=None,
                  recognizers=None, start_symbol=None, ignore_case=False,
                  debug=False, debug_parse=False, debug_colors=False):
@@ -779,6 +783,7 @@ class Grammar(object):
         self.productions.insert(
             0,
             Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
+        self.nonterminals['S\''] = AUGSYMBOL
 
     def _init_from_struct(self, grammar_struct):
         """
@@ -869,6 +874,24 @@ class Grammar(object):
                             message='Unknown reference "{}" '
                             'in rule "{}".'.format(ref, nonterminal.name))
                     production.rhs[refidx] = symbol
+
+    @classmethod
+    def get_grammar_parser(cls, **kwargs):
+        """
+        Constructs and returns a new instance of the Parglare grammar parser.
+        Memoize LALR table to speed up future calls.
+        """
+        if cls.pg_parser_grammar is None:
+            from parglare.lang import pg_grammar
+            cls.pg_parser_grammar = Grammar.from_struct(pg_grammar)
+        if cls.pg_parser_table is None:
+            from parglare.tables import create_table
+            cls.pg_parser_table = create_table(cls.pg_parser_grammar)
+
+        from parglare import Parser
+        return Parser(cls.pg_parser_grammar, actions=ParglareActions(),
+                      table=cls.pg_parser_table,
+                      **kwargs)
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."
