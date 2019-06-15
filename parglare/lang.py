@@ -8,12 +8,10 @@ from parglare.recognizers import StringRecognizer, RegExRecognizer
 from parglare.actions import ParglareActions
 
 
-def _(s, regex=False):
+def _(s):
     """
     Returns a terminal definition
     """
-    if regex:
-        {'recognizer': r'/{}/'.format(s)}
     return {'recognizer': s}
 
 
@@ -302,19 +300,18 @@ pg_grammar = {
         'ASTERISK': _('*'),
         'PLUS': _('+'),
         'QUESTION': _('?'),
-        'NAME': _(r'/[a-zA-Z_][a-zA-Z0-9_\.]*/', True),
-        'REGEX': _(r'\/(\\.|[^\/\\])*\/', True),
-        'ACTION': _(r'/@[a-zA-Z0-9_]+/', True),
-        'INT': _(r'\d+', True),
-        'FLOAT': _(r'[+-]?(\d+\.\d*|\.\d+)([eE][+-]?\d+)?(?<=[\w\.])(?![\w\.])', True),  # noqa
-        'BOOL': _(r'true|false', True),
-        'STR': _(r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
-                 r'''("[^"\\]*(?:\\.[^"\\]*)*")''', True),
+        'NAME': _(r'/[a-zA-Z_][a-zA-Z0-9_\.]*/'),
+        'REGEX': _(r'/\/(\\.|[^\/\\])*\//'),
+        'ACTION': _(r'/@[a-zA-Z0-9_]+/'),
+        'INT': _(r'/\d+/'),
+        'FLOAT': _(r'/[+-]?(\d+\.\d*|\.\d+)([eE][+-]?\d+)?(?<=[\w\.])(?![\w\.])/'),  # noqa
+        'BOOL': _(r'/true|false/'),
+        'STR': _(r'''/(?s)('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")/'''),  # noqa
         'COMMENTOPEN': _('/*'),
         'COMMENTCLOSE': _('*/'),
-        'COMMENTLINE': _(r'\/\/.*', True),
-        'NOTCOMMENT': _(r'/((\*[^\/])|[^\s*\/]|\/[^\*])+/', True),
-        'WS': _(r'/\s+/', True),
+        'COMMENTLINE': _(r'/\/\/.*/'),
+        'NOTCOMMENT': _(r'/((\*[^\/])|[^\s*\/]|\/[^\*])+/'),
+        'WS': _(r'/\s+/'),
         'LEFT': _('left'),
         'REDUCE': _('reduce'),
         'RIGHT': _('right'),
