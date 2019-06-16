@@ -3,9 +3,11 @@ This module defines the parglare grammar language using parglare internal
 DSL specification.
 
 """
-
+import re
 from parglare.recognizers import StringRecognizer, RegExRecognizer
 from parglare.actions import ParglareActions
+from parglare.grammar import (Grammar, MULT_ZERO_OR_MORE, MULT_ONE_OR_MORE,
+                              MULT_OPTIONAL)
 
 
 def _(s):
@@ -45,12 +47,14 @@ pg_grammar = {
         'ProductionRules': {
             'productions': [
                 {'production': ['ProductionRules',
-                                'ProductionRuleWithAction']},
+                                'ProductionRuleWithAction'],
+                 'action': 'rules'},
                 {'production': ['ProductionRuleWithAction'],
                  'action': 'pass_single'},
             ]
         },
         'ProductionRuleWithAction': {
+            'action': 'rule_with_action',
             'productions': [
                 {'production': ['ACTION', 'ProductionRule']},
                 {'production': ['ProductionRule']},
@@ -82,13 +86,15 @@ pg_grammar = {
             ]
         },
         'TerminalRules': {
-            'action': 'collect',
             'productions': [
-                {'production': ['TerminalRules', 'TerminalRuleWithAction']},
-                {'production': ['TerminalRuleWithAction']},
+                {'production': ['TerminalRules', 'TerminalRuleWithAction'],
+                 'action': 'rules'},
+                {'production': ['TerminalRuleWithAction'],
+                 'action': 'pass_single'},
             ]
         },
         'TerminalRuleWithAction': {
+            'action': 'rule_with_action',
             'productions': [
                 {'production': ['ACTION', 'TerminalRule']},
                 {'production': ['TerminalRule']},
@@ -100,17 +106,18 @@ pg_grammar = {
             'productions': [
                 {'production': ['NAME', 'COLON', 'Recognizer', 'SEMICOLON']},
                 {'production': ['NAME', 'COLON', 'SEMICOLON'],
-                 'action': 'TerminalRuleEmptyBody'},
+                 'action': 'terminal_rule_empty'},
                 {'production': ['NAME', 'COLON', 'Recognizer',
                                 'OPENCURLY', 'TermMetaDatas', 'CLOSEDCURLY',
                                 'SEMICOLON']},
                 {'production': ['NAME', 'COLON',
                                 'OPENCURLY', 'TermMetaDatas', 'CLOSEDCURLY',
                                 'SEMICOLON'],
-                 'action': 'TerminalRuleEmptyBody'},
+                 'action': 'terminal_rule_empty'},
             ]
         },
         'ProdMetaData': {
+            'action': 'meta_data_bool',
             'productions': [
                 {'production': ['LEFT']},
                 {'production': ['REDUCE']},
@@ -119,8 +126,8 @@ pg_grammar = {
                 {'production': ['DYNAMIC']},
                 {'production': ['NOPS']},
                 {'production': ['NOPSE']},
-                {'production': ['INT']},
-                {'production': ['UserMetaData']},
+                {'production': ['INT'], 'action': 'meta_data_priority'},
+                {'production': ['UserMetaData'], 'action': 'pass_single'},
             ]
         },
         'ProdMetaDatas': {
@@ -134,13 +141,14 @@ pg_grammar = {
             ]
         },
         'TermMetaData': {
+            'action': 'meta_data_bool',
             'productions': [
                 {'production': ['PREFER']},
                 {'production': ['FINISH']},
                 {'production': ['NOFINISH']},
                 {'production': ['DYNAMIC']},
-                {'production': ['INT']},
-                {'production': ['UserMetaData']},
+                {'production': ['INT'], 'action': 'meta_data_priority'},
+                {'production': ['UserMetaData'], 'action': 'pass_single'},
             ]
         },
         'TermMetaDatas': {
@@ -201,16 +209,19 @@ pg_grammar = {
             ]
         },
         'RepOperatorZero': {
+            'action': 'pass_single',
             'productions': [
                 {'production': ['ASTERISK', 'OptRepModifiersExp']},
             ]
         },
         'RepOperatorOne': {
+            'action': 'pass_single',
             'productions': [
                 {'production': ['PLUS', 'OptRepModifiersExp']},
             ]
         },
         'RepOperatorOptional': {
+            'action': 'pass_single',
             'productions': [
                 {'production': ['QUESTION', 'OptRepModifiersExp']},
             ]
@@ -218,11 +229,13 @@ pg_grammar = {
         'OptRepModifiersExp': {
             'productions': [
                 {'production': ['OPENSQUARED', 'OptRepModifiers',
-                                'CLOSEDSQUARED']},
+                                'CLOSEDSQUARED'],
+                 'action': 'pass_inner'},
                 {'production': ['EMPTY']},
             ]
         },
         'OptRepModifiers': {
+            'action': 'collect_sep',
             'productions': [
                 {'production': ['OptRepModifiers', 'COMMA', 'OptRepModifier']},
                 {'production': ['OptRepModifier']},
@@ -235,14 +248,14 @@ pg_grammar = {
         },
         'GSymbol': {
             'productions': [
-                {'production': ['NAME'], 'action': 'GSymbolName'},
-                {'production': ['STR'], 'action': 'GSymbolStr'},
+                {'production': ['NAME']},
+                {'production': ['STR']},
             ]
         },
         'Recognizer': {
             'productions': [
                 {'production': ['STR'], 'action': 'RecognizerStr'},
-                {'production': ['REGEX'], 'action': 'RecognizerRegex'},
+                {'production': ['REGEX'], 'action': 'pass_single'},
             ]
         },
 
@@ -331,64 +344,115 @@ class PGGrammarActions(ParglareActions):
     Actions for parglare files
     """
 
-    def pgimport(self, nodes):
-        pass
-
     def PGFile(self, nodes):
-        pass
+        return [
+            {'rules': nodes[0]},
+            {'imports': nodes[0],
+             'rules': nodes[1]},
+            {'rules': nodes[0],
+             'terminals': nodes[2]},
+            {'imports': nodes[0],
+             'rules': nodes[1],
+             'terminals': nodes[3]},
+            {'terminals': nodes[1]}][self.prod_idx]
 
-    def ProductionRules(self, nodes):
-        pass
+    def Import(self, nodes):
+        return
 
-    def ProductionRuleWithAction(self, nodes):
-        pass
+    def rule_with_action(self, nodes):
+        prod_rule = nodes[-1]
+        if len(nodes) > 1:
+            prod_rule['action'] = nodes[0][1:]
+        return prod_rule
 
     def ProductionRule(self, nodes):
-        pass
+        prods = {'productions': nodes[-2]}
+        if len(nodes) > 4:
+            # We have meta-data
+            prods['meta'] = nodes[2]
+        return {nodes[0]: prods}
+
+    def rules(self, nodes):
+        """
+        Collect and merge rules. If two rules with the same name
+        define same meta-data or both defined action report error.
+        """
+        rules, rule = nodes
+        if rules is None:
+            rules = {}
+        rule_name, rule = list(rule.items())[0]
+        if rule_name in rules:
+            # TODO: Merge and report error
+            pass
+        rules[rule_name] = rule
+        return rules
 
     def Production(self, nodes):
-        pass
-
-    def TerminalRuleWithAction(self, nodes):
-        pass
+        prod = {'production': nodes[0]}
+        if len(nodes) > 1:
+            prod['meta'] = nodes[2]
+        return prod
 
     def TerminalRule(self, nodes):
-        pass
+        term_rule = {'recognizer': nodes[2]}
+        if len(nodes) > 4:
+            term_rule['meta'] = nodes[4]
+        return {nodes[0]: term_rule}
 
-    def TerminalRuleEmptyBody(self, nodes):
-        pass
+    def terminal_rule_empty(self, nodes):
+        term_rule = {'recognizer': None}
+        if len(nodes) > 3:
+            term_rule['meta'] = nodes[3]
+        return {nodes[0]: term_rule}
+
+    def meta_data_bool(self, nodes):
+        return {nodes[0]: True}
+
+    def meta_data_priority(self, nodes):
+        return {'priority': nodes[0]}
+
+    def UserMetaData(self, nodes):
+        return {nodes[0]: nodes[2]}
 
     def Assignment(self, nodes):
-        pass
+        return nodes[0]
+
+    def PlainAssignment(self, nodes):
+        return nodes[0]
+
+    def BoolAssignment(self, nodes):
+        return nodes[0]
 
     def GSymbolReference(self, nodes):
-        pass
+        symbol_ref, rep_op = nodes
 
-    def GSymbolName(self, nodes):
-        pass
+        if rep_op:
+            symbol_ref = {'symbol': symbol_ref}
+            rep_op = rep_op[0]
+            sep = rep_op[1] if len(rep_op) > 1 else None
 
-    def GSymbolStr(self, nodes):
-        pass
+            if rep_op == '*':
+                multiplicity = MULT_ZERO_OR_MORE
+            elif rep_op == '+':
+                multiplicity = MULT_ONE_OR_MORE
+            else:
+                multiplicity = MULT_OPTIONAL
+
+            symbol_ref['multiplicity'] = multiplicity
+            if sep:
+                symbol_ref['separator'] = sep
+
+        return symbol_ref
 
     def RecognizerStr(self, nodes):
-        value = nodes[0]
-        value = value.replace(r'\"', '"')\
-                     .replace(r"\'", "'")\
-                     .replace(r"\\", "\\")\
-                     .replace(r"\n", "\n")\
-                     .replace(r"\t", "\t")
-        return StringRecognizer(value, ignore_case=self.extra.ignore_case)
-
-    def RecognizerRegex(self, nodes):
-        value = nodes[0]
-        return RegExRecognizer(value, re_flags=self.extra.re_flags,
-                               ignore_case=self.extra.ignore_case)
+        return nodes[0].replace(r'\"', '"')\
+                       .replace(r"\'", "'")\
+                       .replace(r"\\", "\\")\
+                       .replace(r"\n", "\n")\
+                       .replace(r"\t", "\t")
 
     def STR(self, value):
         return value[1:-1].replace(r"\\", "\\").replace(r"\'", "'")
-
-    def REGEX(self, value):
-        return value[1:-1]
 
     def INT(self, value):
         return int(value)
@@ -398,3 +462,26 @@ class PGGrammarActions(ParglareActions):
 
     def BOOL(self, value):
         return value and value.lower() == 'true'
+
+
+pg_parser_grammar = None
+pg_parser_table = None
+
+
+def get_grammar_parser():
+    """
+    Constructs and returns a new instance of the Parglare grammar parser.
+    Cache grammar and LALR table to speed up future calls.
+    """
+    global pg_parser_grammar, pg_parser_table
+    if pg_parser_grammar is None:
+        from parglare.lang import pg_grammar
+        pg_parser_grammar = Grammar.from_struct(pg_grammar)
+    if pg_parser_table is None:
+        from parglare.tables import create_table
+        pg_parser_table = create_table(pg_parser_grammar)
+
+    from parglare import Parser
+    from parglare.lang import PGGrammarActions
+    return Parser(pg_parser_grammar, actions=PGGrammarActions(),
+                  table=pg_parser_table)

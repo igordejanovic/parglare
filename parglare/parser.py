@@ -39,11 +39,10 @@ class Parser(object):
         self.grammar = grammar
         self.in_layout = in_layout
 
-        # EMPTY.action = pass_none
-        # EOF.action = pass_none
+        self.sem_actions = actions
         if actions:
-            self.grammar._resolve_actions(action_overrides=actions,
-                                          fail_on_no_resolve=True)
+            actions.grammar = grammar
+            actions.parser = self
 
         self.layout_parser = None
         if self.in_layout:
@@ -610,7 +609,9 @@ class Parser(object):
         """
         debug = self.debug
         token = context.token
-        sem_action = token.symbol.action
+        sem_action = None
+        if self.sem_actions and token.symbol.action:
+            sem_action = getattr(self.sem_actions, token.symbol.action, None)
 
         if self.build_tree:
             # call action for building tree node if tree building is enabled
@@ -628,7 +629,8 @@ class Parser(object):
             return treebuild_shift_action(context)
 
         if sem_action:
-            result = sem_action(context, token.value)
+            self.sem_actions.context = context
+            result = sem_action(token.value)
 
         else:
             if debug:
@@ -664,8 +666,13 @@ class Parser(object):
             if not self.call_actions_during_tree_build:
                 return bt_result
 
-        sem_action = production.symbol.action
+        sem_action = None
+        if self.sem_actions and production.action:
+            sem_action = getattr(self.sem_actions, production.action, None)
+
         if sem_action:
+            self.sem_actions.context = context
+            self.sem_actions.prod_idx = production.prod_symbol_id
             assignments = production.assignments
             if assignments:
                 assgn_results = {}
@@ -674,19 +681,9 @@ class Parser(object):
                         assgn_results[a.name] = subresults[a.index]
                     else:
                         assgn_results[a.name] = bool(subresults[a.index])
-
-            if type(sem_action) is list:
-                if assignments:
-                    result = sem_action[production.prod_symbol_id](
-                        context, subresults, **assgn_results)
-                else:
-                    result = sem_action[production.prod_symbol_id](context,
-                                                                   subresults)
+                result = sem_action(subresults, **assgn_results)
             else:
-                if assignments:
-                    result = sem_action(context, subresults, **assgn_results)
-                else:
-                    result = sem_action(context, subresults)
+                result = sem_action(subresults)
 
         else:
             if debug:

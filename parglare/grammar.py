@@ -10,7 +10,6 @@ from parglare.exceptions import GrammarError, ParserInitError
 from parglare.recognizers import (StringRecognizer, RegExRecognizer,
                                   STOP_recognizer, EOF_recognizer,
                                   EMPTY_recognizer)
-#from parglare.actions import ParglareActions
 from parglare.common import Location, load_python_module
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
@@ -55,7 +54,6 @@ class GrammarSymbol(object):
     :param int prior: Priority used for disambiguation.
     :param bool dynamic: Should dynamic disambiguation be called to resolve
         conflict involving this symbol.
-    :param action_name: A name of common/user action given in the grammar.
     :param callable action: Resolved action given by the user.  Overrides
         grammar action if provided.  If not provided by the user defaults to
         grammar_action.
@@ -65,13 +63,12 @@ class GrammarSymbol(object):
     :param dict meta: User meta-data.
     """
     def __init__(self, name, location=None, imported_with=None,
-                 action_name=None, prior=DEFAULT_PRIORITY, dynamic=False,
+                 action=None, prior=DEFAULT_PRIORITY, dynamic=False,
                  meta=None):
         self.name = escape(name)
         self.location = location
         self.prior = prior
         self.dynamic = dynamic
-        self.action_name = action_name
         self.action = None
         self.grammar_action = None
         self.imported_with = imported_with
@@ -87,11 +84,11 @@ class GrammarSymbol(object):
 
     @property
     def action_fqn(self):
-        if self.action_name:
+        if self.action:
             if self.imported_with:
-                return "{}.{}".format(self.imported_with.fqn, self.action_name)
+                return "{}.{}".format(self.imported_with.fqn, self.action)
             else:
-                return self.action_name
+                return self.action
 
     def add_meta_data(self, name, value):
         if self.meta is None:
@@ -142,6 +139,7 @@ class Terminal(GrammarSymbol):
     """
     Represent a terminal symbol of the grammar.
 
+    :param action: A name of common/user action given in the grammar.
     :param bool finish: Used for scanning optimization.  If this terminal is
         `finish` no other recognizers will be checked if this succeeds.  If not
         provided in the grammar implicit rules will be used during table
@@ -154,11 +152,12 @@ class Terminal(GrammarSymbol):
         in the stream.  Should return a sublist of recognized objects.  The
         sublist should be rooted at the given position.
     """
-    def __init__(self, name, recognizer=None, finish=None, prefer=False,
-                 keyword=False, **kwargs):
+    def __init__(self, name, recognizer=None, action=None, finish=None,
+                 prefer=False, keyword=False, **kwargs):
         super(Terminal, self).__init__(name, **kwargs)
         self._recognizer = None
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
+        self.action = action
         self.finish = finish
         self.prefer = prefer
         self.keyword = keyword
@@ -221,18 +220,17 @@ STOP = Terminal("STOP", STOP_recognizer)
 # These two terminals are special terminals used in the grammars.
 # EMPTY will match nothing and always succeed.
 # EOF will match only at the end of the input string.
-EMPTY = Terminal("EMPTY", EMPTY_recognizer)
-EMPTY.grammar_action = None  # pass_none
-EOF = Terminal("EOF", EOF_recognizer)
-EOF.grammar_action = None  # pass_none
+EMPTY = Terminal("EMPTY", EMPTY_recognizer, action='pass_none')
+EOF = Terminal("EOF", EOF_recognizer, action='pass_none')
 
 
 class Production(object):
     """
     Represent production from the grammar.
 
-    :param GrammarSymbol symbol:
+    :param GrammarSymbol symbol: A grammar symbol on the LHS of the production.
     :param ProductionRHS rhs:
+    :param action: A name of common/user action given in the grammar.
     :param dict assignments: Assignment instances keyed by name.
     :param int assoc: Associativity.  Used for ambiguity (shift/reduce)
         resolution.
@@ -242,23 +240,18 @@ class Production(object):
         Only makes sense for GLR parser.
     :param bool nopse: Disable `prefer_shifts_over_empty` strategy for this
         production.  Only makes sense for GLR parser.
-    :param action_name: A name of common/user action given in the grammar.
     :param dict meta: User meta-data.
     :param int prod_id: Ordinal number of the production.
     :param int prod_symbol_id: A zero-based ordinal of alternative choice for
         this production grammar symbol.
     """
 
-    def __init__(self, symbol, rhs, assignments=None, assoc=ASSOC_NONE,
-                 prior=DEFAULT_PRIORITY, dynamic=False, nops=False,
-                 nopse=False, action_name=None, meta=None):
-        """
-        Args:
-        symbol (GrammarSymbol): A grammar symbol on the LHS of the production.
-        rhs (list of GrammarSymbols):
-        """
+    def __init__(self, symbol, rhs, action=None, assignments=None,
+                 assoc=ASSOC_NONE, prior=DEFAULT_PRIORITY, dynamic=False,
+                 nops=False, nopse=False, meta=None):
         self.symbol = symbol
         self.rhs = rhs if rhs else ProductionRHS()
+        self.action = action
         self.assignments = None
         if assignments:
             self.assignments = {}
@@ -270,7 +263,6 @@ class Production(object):
         self.dynamic = dynamic
         self.nops = nops
         self.nopse = nopse
-        self.action_name = action_name
         self.meta = meta
 
     def __str__(self):
@@ -755,11 +747,12 @@ class Grammar(object):
     pg_parser_table = None
 
     def __init__(self, grammar_struct, classes=None, file_path=None,
-                 recognizers=None, start_symbol=None, ignore_case=False,
+                 start_symbol=None, ignore_case=False, re_flags=re.MULTILINE,
                  debug=False, debug_parse=False, debug_colors=False):
         self.classes = classes
         self.file_path = file_path
-        self.recognizers = recognizers
+        self.ignore_case = ignore_case
+        self.re_flags = re_flags
         self.terminals = {}
         self.nonterminals = {}
         self.productions = []
@@ -792,6 +785,7 @@ class Grammar(object):
         """
         self._create_terminals(grammar_struct)
         self._create_productions(grammar_struct)
+        self._enumerate_productions()
         self._resolve()
 
     def _create_terminals(self, grammar_struct):
@@ -809,9 +803,12 @@ class Grammar(object):
             if recognizer_str:
                 if recognizer_str.startswith('/') \
                    and recognizer_str.endswith('/'):
-                    recognizer = RegExRecognizer(recognizer_str[1:-1])
+                    recognizer = RegExRecognizer(recognizer_str[1:-1],
+                                                 re_flags=self.re_flags,
+                                                 ignore_case=self.ignore_case)
                 else:
-                    recognizer = StringRecognizer(recognizer_str)
+                    recognizer = StringRecognizer(recognizer_str,
+                                                  ignore_case=self.ignore_case)
             terminal = Terminal(terminal_name,
                                 recognizer=recognizer,
                                 prior=terminal_struct.get('prior',
@@ -820,7 +817,8 @@ class Grammar(object):
                                 prefer=terminal_struct.get('prefer', False),
                                 dynamic=terminal_struct.get('dynamic', False),
                                 keyword=terminal_struct.get('keyword', False),
-                                action_name=terminal_struct.get('action'),
+                                action=terminal_struct.get('action',
+                                                           terminal_name),
                                 meta=terminal_struct.get('meta'))
             self.terminals[terminal_name] = terminal
 
@@ -835,7 +833,6 @@ class Grammar(object):
                     message=f'"{rule_name}" rule multiple definitions')
             nt = NonTerminal(
                 rule_name,
-                action_name=rule_struct.get('action', None),
                 assoc=rule_struct.get('assoc', ASSOC_NONE),
                 prior=rule_struct.get('prior', DEFAULT_PRIORITY),
                 dynamic=rule_struct.get('dynamic', False),
@@ -849,7 +846,8 @@ class Grammar(object):
                 rhs = ProductionRHS(production_struct['production'])
                 productions.append(Production(
                     nt, rhs,
-                    action_name=production_struct.get('action', None),
+                    action=production_struct.get(
+                        'action', rule_struct.get('action', rule_name)),
                     assoc=production_struct.get('assoc', ASSOC_NONE),
                     prior=production_struct.get('prior', DEFAULT_PRIORITY),
                     dynamic=production_struct.get('dynamic', False),
@@ -859,6 +857,18 @@ class Grammar(object):
                 ))
             nt.productions = productions
             self.productions.extend(productions)
+
+    def _enumerate_productions(self):
+        """
+        Enumerates all productions (prod_id) and production per symbol
+        (prod_symbol_id).
+        """
+        idx_per_symbol = {}
+        for idx, prod in enumerate(self.productions):
+            prod.prod_id = idx
+            prod.prod_symbol_id = idx_per_symbol.get(prod.symbol, 0)
+            idx_per_symbol[prod.symbol] = \
+                idx_per_symbol.get(prod.symbol, 0) + 1
 
     def _resolve(self):
         """
@@ -874,24 +884,6 @@ class Grammar(object):
                             message='Unknown reference "{}" '
                             'in rule "{}".'.format(ref, nonterminal.name))
                     production.rhs[refidx] = symbol
-
-    @classmethod
-    def get_grammar_parser(cls, **kwargs):
-        """
-        Constructs and returns a new instance of the Parglare grammar parser.
-        Memoize LALR table to speed up future calls.
-        """
-        if cls.pg_parser_grammar is None:
-            from parglare.lang import pg_grammar
-            cls.pg_parser_grammar = Grammar.from_struct(pg_grammar)
-        if cls.pg_parser_table is None:
-            from parglare.tables import create_table
-            cls.pg_parser_table = create_table(cls.pg_parser_grammar)
-
-        from parglare import Parser
-        return Parser(cls.pg_parser_grammar, actions=ParglareActions(),
-                      table=cls.pg_parser_table,
-                      **kwargs)
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."
@@ -919,6 +911,7 @@ class Grammar(object):
             if p.symbol.fqn == name:
                 return p.prod_id
 
+    @staticmethod
     def from_struct(grammar_struct, **kwargs):
         """
         Create grammar object from grammar given in a form of a Python data
@@ -926,14 +919,28 @@ class Grammar(object):
         """
         return Grammar(grammar_struct, **kwargs)
 
-    # @staticmethod
-    # def from_string(grammar_str, **kwargs):
-    #     return Grammar(struct_from_string(grammar_str), **kwargs)
+    @staticmethod
+    def from_string(grammar_str, **kwargs):
+        return Grammar.from_struct(Grammar.struct_from_string(grammar_str,
+                                                              **kwargs))
 
     # @staticmethod
     # def from_file(file_name, **kwargs):
     #     file_name = path.realpath(file_name)
-    #     return Grammar(struct_from_file(file_name), **kwargs)
+
+    #     with codecs.open(file_name, 'w', encoding="utf-8") as f:
+    #         content = f.read()
+    #     return Grammar.from_struct(Grammar.struct_from_string(content),
+    #                                **kwargs)
+
+    @staticmethod
+    def struct_from_string(grammar_str, **kwargs):
+        """
+        Parse grammar string and return the grammar represented as Python
+        structure.
+        """
+        from parglare.lang import get_grammar_parser
+        return get_grammar_parser().parse(grammar_str, **kwargs)
 
     def print_debug(self):
         a_print("*** GRAMMAR ***", new_line=True)

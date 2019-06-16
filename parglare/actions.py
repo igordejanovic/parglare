@@ -83,68 +83,70 @@ class ParglareActions(object):
         Used for productions of the form - one or more elements:
         Elements: Elements Element | Element;
         """
-        [self.collect_first, self.pass_nochange][self.prod_idx](nodes)
+        return [self.collect_first, self.pass_nochange][self.prod_idx](nodes)
 
     def collect_sep(self, nodes):
         """
         Used for productions of the form - one or more elements:
         Elements: Elements "," Element | Element;
         """
-        [self.collect_first_sep, self.pass_nochange][self.prod_idx](nodes)
+        return [self.collect_first_sep,
+                self.pass_nochange][self.prod_idx](nodes)
 
     def collect_optional(self, nodes):
         """
         Used for productions of the form - zero or more elements:
         Elements: Elements Element | Element | EMPTY;
         """
-        [self.collect_first,
-         self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
+        return [self.collect_first,
+                self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
 
     def collect_sep_optional(self, nodes):
         """
         Used for productions of the form - zero or more elements:
         Elements: Elements "," Element | Element | EMPTY;
         """
-        [self.collect_first_sep,
-         self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
+        return [self.collect_first_sep,
+                self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
 
     def collect_right(self, nodes):
         """
         Used for productions of the form - one or more elements:
         Elements: Element Elements | Element;
         """
-        [self.collect_right_first, self.pass_nochange][self.prod_idx](nodes)
+        return [self.collect_right_first,
+                self.pass_nochange][self.prod_idx](nodes)
 
     def collect_right_sep(self, nodes):
         """
         Used for productions of the form - one or more elements:
         Elements: Element "," Elements | Element;
         """
-        [self.collect_right_first_sep,
-         self.pass_nochange][self.prod_idx](nodes)
+        return [self.collect_right_first_sep,
+                self.pass_nochange][self.prod_idx](nodes)
 
     def collect_right_optional(self, nodes):
         """
         Used for productions of the form - zero or more elements:
         Elements: Element Elements | Element | EMPTY;
         """
-        [self.collect_right_first,
-         self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
+        return [self.collect_right_first,
+                self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
 
     def collect_right_sep_optional(self, nodes):
         """
         Used for productions of the form - zero or more elements:
         Elements: Element "," Elements | Element | EMPTY;
         """
-        [self.collect_right_first_sep,
-         self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
+        return [self.collect_right_first_sep,
+                self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
 
     def optional(self, nodes):
         """
         Used for the production of the form:
         OptionalElement: Element | EMPTY;
         """
-        [self.pass_single, self.pass_none][self.prod_idx](nodes)
+        return [self.pass_single, self.pass_none][self.prod_idx](nodes)
 
     def obj(self, nodes, **attrs):
         """
