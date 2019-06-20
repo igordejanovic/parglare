@@ -3,8 +3,6 @@ This module defines the parglare grammar language using parglare internal
 DSL specification.
 
 """
-import re
-from parglare.recognizers import StringRecognizer, RegExRecognizer
 from parglare.actions import ParglareActions
 from parglare.grammar import (Grammar, MULT_ZERO_OR_MORE, MULT_ONE_OR_MORE,
                               MULT_OPTIONAL)

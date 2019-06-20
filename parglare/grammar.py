@@ -756,8 +756,9 @@ class Grammar(object):
         self.terminals = {}
         self.nonterminals = {}
         self.productions = []
+        self.grammar_struct = grammar_struct
 
-        self._init_from_struct(grammar_struct)
+        self._init_from_struct()
 
         # Determine start symbol. If name is provided get by name. If
         # start_symbol is not given use the first production LHS symbol as the
@@ -778,23 +779,118 @@ class Grammar(object):
             Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
         self.nonterminals['S\''] = AUGSYMBOL
 
-    def _init_from_struct(self, grammar_struct):
+    def _init_from_struct(self):
         """
         Initialize this grammar from a grammar given in a form of a Python
         structure.
         """
-        self._create_terminals(grammar_struct)
-        self._create_productions(grammar_struct)
+        self._desugar_struct_multiplicities()
+        self._create_terminals()
+        self._create_productions()
         self._enumerate_productions()
         self._resolve()
 
-    def _create_terminals(self, grammar_struct):
+    def _desugar_struct_multiplicities(self):
+        """
+        Desugar grammar struct by creating additional multiplicities grammar
+        symbols and reducing grammar struct to its canonical form.
+        """
+        rules = self.grammar_struct['rules']
+        for rule_name, rule_struct in list(rules.items()):
+            for (prod_idx,
+                 production_struct) in enumerate(rule_struct['productions']):
+                rhs = production_struct['production']
+                for ref_idx, ref in enumerate(rhs):
+                    if type(ref) is dict:
+                        if 'symbol' not in ref:
+                            raise GrammarError(
+                                location=THIS_LOCATION,
+                                message='"symbol" key must be given in '
+                                'reference in rule "{}".'.format(rule_name))
+                        self._degugar_multiplicity_ref(ref)
+                        if len(ref) == 1:
+                            # If we are reduced a reference only on symbol name
+                            # replace with just a simple string
+                            rhs[ref_idx] = ref['symbol']  # noqa
+
+    def _degugar_multiplicity_ref(self, ref):
+        """
+        Desugar complex suggared reference containing multiplicity and
+        separator definition to a canonical form of a reference.  Create
+        necessary rules for repetitions (one or more, zero or more, optional).
+        """
+        symbol = ref['symbol']
+        multiplicity = ref.get('multiplicity', None)
+
+        if not multiplicity:
+            return
+
+        separator = ref.get('separator', None)
+        symbol_mult = self._make_multiplicity_name(symbol, multiplicity,
+                                                   separator)
+        ref['symbol'] = symbol_mult
+        del ref['multiplicity']
+        if separator:
+            del ref['separator']
+
+        rules = self.grammar_struct['rules']
+        if symbol_mult in rules:
+            return
+
+        if multiplicity in [MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE]:
+            # noqa See: http://www.igordejanovic.net/parglare/grammar_language/#one-or-more_1
+            symbol_one = self._make_multiplicity_name(symbol, MULT_ONE_OR_MORE,
+                                                      separator)
+            if symbol_one not in rules:
+                productions = []
+                if separator:
+                    productions.append(
+                        {'production': [symbol_one, separator, symbol]}
+                    )
+                else:
+                    productions.append(
+                        {'production': [symbol_one, symbol]}
+                    )
+
+                productions.append(
+                        {'production': [symbol]}
+                )
+
+                rules[symbol_one] = {
+                    'action': 'collect_sep' if separator else 'collect',
+                    'productions': productions
+                }
+
+            if multiplicity is MULT_ZERO_OR_MORE:
+                rules[symbol_mult] = {
+                    'productions': [
+                        {'production': [symbol_one], 'nops': True},
+                        {'production': ['EMPTY']}
+                    ]
+                }
+
+        elif multiplicity in MULT_OPTIONAL:
+            if separator:
+                raise GrammarError(
+                    location=THIS_LOCATION,
+                    message='Repetition modifier not allowed for '
+                    'optional (?) for symbol "{}".'.format(symbol))
+
+            rules[symbol_mult] = {
+                'action': 'optional',
+                'productions': [
+                    {'production': [symbol]},
+                    {'production': ['EMPTY']}
+                ]
+            }
+
+    def _create_terminals(self):
         """
         Create terminals of this grammar given the Python struct.
         """
         self.terminals.update([(s.name, s) for s in (EMPTY, EOF, STOP)])
         for terminal_name, terminal_struct \
-                in grammar_struct.get('terminals', {}).items():
+                in self.grammar_struct.get('terminals', {}).items():
             if terminal_name in self.terminals:
                 raise GrammarError(
                     location=THIS_LOCATION,
@@ -822,11 +918,11 @@ class Grammar(object):
                                 meta=terminal_struct.get('meta'))
             self.terminals[terminal_name] = terminal
 
-    def _create_productions(self, grammar_struct):
+    def _create_productions(self):
         """
         Create productions of this grammar given the Python struct.
         """
-        for rule_name, rule_struct in grammar_struct['rules'].items():
+        for rule_name, rule_struct in self.grammar_struct['rules'].items():
             if rule_name in self.nonterminals or rule_name in self.terminals:
                 raise GrammarError(
                     location=THIS_LOCATION,
@@ -870,6 +966,33 @@ class Grammar(object):
             idx_per_symbol[prod.symbol] = \
                 idx_per_symbol.get(prod.symbol, 0) + 1
 
+    def _fix_keyword_terminals(self):
+        """
+        If KEYWORD terminal with regex match is given fix all matching string
+        recognizers to match on a word boundary.
+        """
+        keyword_term = self.get_terminal('KEYWORD')
+        if keyword_term is None:
+            return
+
+        # KEYWORD rule must have a regex recognizer
+        keyword_rec = keyword_term.recognizer
+        if not isinstance(keyword_rec, RegExRecognizer):
+            raise GrammarError(
+                location=keyword_term.location,
+                message='KEYWORD rule must have a regex recognizer defined.')
+
+        # Change each string recognizer corresponding to the KEYWORD
+        # regex by the regex recognizer that match on word boundaries.
+        for term in self.terminals.values():
+            if isinstance(term.recognizer, StringRecognizer):
+                match = keyword_rec(term.recognizer.value, 0)
+                if match == term.recognizer.value:
+                    term.recognizer = RegExRecognizer(
+                        r'\b{}\b'.format(match),
+                        ignore_case=term.recognizer.ignore_case)
+                    term.keyword = True
+
     def _resolve(self):
         """
         Resolve productions RHS references.
@@ -877,13 +1000,10 @@ class Grammar(object):
         for nonterminal in self.nonterminals.values():
             for production in nonterminal.productions:
                 for refidx, ref in enumerate(production.rhs):
-                    symbol = self.get_symbol(ref)
-                    if not symbol:
-                        raise GrammarError(
-                            location=THIS_LOCATION,
-                            message='Unknown reference "{}" '
-                            'in rule "{}".'.format(ref, nonterminal.name))
-                    production.rhs[refidx] = symbol
+                    if type(ref) is dict:
+                        ref = ref['symbol']
+                    production.rhs[refidx] = self.get_check_symbol(
+                        ref, nonterminal.name)
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."
@@ -899,6 +1019,16 @@ class Grammar(object):
         if not s:
             s = self.get_nonterminal(name)
         return s
+
+    def get_check_symbol(self, name, rule):
+        "Returns symbol if exists or raise grammar error if not."
+        symbol = self.get_symbol(name)
+        if not symbol:
+            raise GrammarError(
+                location=THIS_LOCATION,
+                message='Unknown reference "{}" '
+                'in rule "{}".'.format(ref, nonterminal.name))
+        return symbol
 
     def __iter__(self):
         return (s for s in itertools.chain(self.nonterminals.values(),
@@ -952,6 +1082,35 @@ class Grammar(object):
         h_print("Productions:")
         for p in self.productions:
             prints(text(p))
+
+    def _check_name(self, name, location=None):
+        """
+        Used in actions to check for reserved names usage.
+        """
+
+        if name in RESERVED_SYMBOL_NAMES:
+            raise GrammarError(
+                location=location,
+                message='Rule name "{}" is reserved.'.format(name))
+        if '.' in name:
+            raise GrammarError(
+                location=location,
+                message='Using dot in names is not allowed.'.format(name))
+
+    def _make_multiplicity_name(self, symbol_name, multiplicity=None,
+                                separator_name=None):
+        if multiplicity is None or multiplicity == MULT_ONE:
+            return symbol_name
+        name_by_mult = {
+            MULT_ZERO_OR_MORE: "0",
+            MULT_ONE_OR_MORE: "1",
+            MULT_OPTIONAL: "opt"
+        }
+        if multiplicity:
+            return "{}_{}{}".format(
+                symbol_name, name_by_mult[multiplicity],
+                "_{}".format(separator_name) if separator_name else "")
+
 
 
 class _Grammar(PGFile):
