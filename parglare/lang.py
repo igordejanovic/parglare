@@ -16,6 +16,7 @@ def _(s):
 
 
 pg_grammar = {
+    'start': 'PGFile',
     'rules': {
         'PGFile': {
             'productions': [
@@ -43,12 +44,11 @@ pg_grammar = {
             ]
         },
         'ProductionRules': {
+            'action': 'collect',
             'productions': [
                 {'production': ['ProductionRules',
-                                'ProductionRuleWithAction'],
-                 'action': 'rules'},
-                {'production': ['ProductionRuleWithAction'],
-                 'action': 'pass_single'},
+                                'ProductionRuleWithAction']},
+                {'production': ['ProductionRuleWithAction']}
             ]
         },
         'ProductionRuleWithAction': {
@@ -84,11 +84,10 @@ pg_grammar = {
             ]
         },
         'TerminalRules': {
+            'action': 'collect',
             'productions': [
-                {'production': ['TerminalRules', 'TerminalRuleWithAction'],
-                 'action': 'rules'},
-                {'production': ['TerminalRuleWithAction'],
-                 'action': 'pass_single'},
+                {'production': ['TerminalRules', 'TerminalRuleWithAction']},
+                {'production': ['TerminalRuleWithAction']},
             ]
         },
         'TerminalRuleWithAction': {
@@ -340,16 +339,21 @@ class PGGrammarActions(ParglareActions):
     """
 
     def PGFile(self, nodes):
-        return [
-            {'rules': nodes[0]},
-            {'imports': nodes[0],
-             'rules': nodes[1]},
-            {'rules': nodes[0],
-             'terminals': nodes[2]},
-            {'imports': nodes[0],
-             'rules': nodes[1],
-             'terminals': nodes[3]},
-            {'terminals': nodes[1]}][self.prod_idx]
+        rules_idx = [0, 1, 0, 1, None][self.prod_idx]
+        imports_idx = [None, 0, None, 0, None][self.prod_idx]
+        terminals_idx = [None, None, 2, 3, 1][self.prod_idx]
+
+        pgfile = {}
+        if rules_idx is not None:
+            pgfile['start'] = nodes[rules_idx][0][0]
+        if imports_idx is not None:
+            pgfile.update(nodes[imports_idx])
+        if rules_idx is not None:
+            pgfile.update({'rules': dict(nodes[rules_idx])})
+        if terminals_idx is not None:
+            pgfile.update({'terminals': dict(nodes[terminals_idx])})
+
+        return pgfile
 
     def Import(self, nodes):
         return
@@ -365,22 +369,7 @@ class PGGrammarActions(ParglareActions):
         if len(nodes) > 4:
             # We have meta-data
             prods['meta'] = nodes[2]
-        return {nodes[0]: prods}
-
-    def rules(self, nodes):
-        """
-        Collect and merge rules. If two rules with the same name
-        define same meta-data or both defined action report error.
-        """
-        rules, rule = nodes
-        if rules is None:
-            rules = {}
-        rule_name, rule = list(rule.items())[0]
-        if rule_name in rules:
-            # TODO: Merge and report error
-            pass
-        rules[rule_name] = rule
-        return rules
+        return nodes[0], prods
 
     def Production(self, nodes):
         prod = {'production': nodes[0]}
@@ -392,13 +381,13 @@ class PGGrammarActions(ParglareActions):
         term_rule = {'recognizer': nodes[2]}
         if len(nodes) > 4:
             term_rule['meta'] = nodes[4]
-        return {nodes[0]: term_rule}
+        return nodes[0], term_rule
 
     def terminal_rule_empty(self, nodes):
         term_rule = {'recognizer': None}
         if len(nodes) > 3:
             term_rule['meta'] = nodes[3]
-        return {nodes[0]: term_rule}
+        return nodes[0], term_rule
 
     def meta_data_bool(self, nodes):
         return {nodes[0]: True}

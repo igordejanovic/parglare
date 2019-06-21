@@ -3,7 +3,7 @@ import logging
 import os
 from collections import OrderedDict
 from itertools import chain
-from parglare.grammar import ProductionRHS, AUGSYMBOL, \
+from parglare.grammar import ProductionRHS, AUGSYMBOL_NAME, \
     ASSOC_LEFT, ASSOC_RIGHT, STOP, StringRecognizer, RegExRecognizer, \
     Grammar, EMPTY, NonTerminal
 from parglare.exceptions import GrammarError, SRConflict, RRConflict
@@ -131,7 +131,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
     grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
 
     # Create a state for the first production (augmented)
-    s = LRState(grammar, 0, AUGSYMBOL,
+    s = LRState(grammar, 0, grammar.AUGSYMBOL,
                 [LRItem(grammar.productions[0], 0, set())])
 
     state_queue = [s]
@@ -611,7 +611,8 @@ class LRItem(object):
         The only exception to this rule is start symbol of the augmented
         grammar.
         """
-        return self.position > 0 or self.production.symbol is AUGSYMBOL
+        return self.position > 0 \
+            or self.production.symbol.name == AUGSYMBOL_NAME
 
     def get_pos_inc(self):
         """

@@ -213,8 +213,9 @@ class Reference(object):
         return self.name
 
 
-# These two terminals are special terminals used internally.
-AUGSYMBOL = NonTerminal("S'")
+AUGSYMBOL_NAME = "S'"
+
+# This terminal is a special terminal used internally.
 STOP = Terminal("STOP", STOP_recognizer)
 
 # These two terminals are special terminals used in the grammars.
@@ -276,8 +277,8 @@ class Production(object):
         return 'Production({})'.format(str(self.symbol))
 
     def __getattr__(self, name):
-        if self.user_meta is not None:
-            attr = self.user_meta.get(name)
+        if self.meta is not None:
+            attr = self.meta.get(name)
             if attr:
                 return attr
         raise AttributeError
@@ -756,28 +757,27 @@ class Grammar(object):
         self.terminals = {}
         self.nonterminals = {}
         self.productions = []
-        self.grammar_struct = grammar_struct
 
-        self._init_from_struct()
-
-        # Determine start symbol. If name is provided get by name. If
-        # start_symbol is not given use the first production LHS symbol as the
-        # start symbol.
-        if start_symbol:
-            if isinstance(start_symbol, str):
-                self.start_symbol = self.get_symbol(start_symbol)
+        if start_symbol is None:
+            if 'start' not in grammar_struct:
+                raise GrammarError(
+                    location=THIS_LOCATION,
+                    message='No start symbol provided for the grammar.')
             else:
-                self.start_symbol = start_symbol
-        else:
-            # By default, first production symbol is the start symbol.
-            self.start_symbol = self.productions[0].symbol
+                start_symbol = grammar_struct['start']
 
-        # Reserve 0 production. It is used for augmented prod. in LR automata
-        # calculation.
-        self.productions.insert(
-            0,
-            Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
-        self.nonterminals['S\''] = AUGSYMBOL
+        # Augmented prod. in LR automata calculation.
+        if AUGSYMBOL_NAME not in grammar_struct['rules']:
+            grammar_struct['rules'][AUGSYMBOL_NAME] = {
+                'productions': [
+                    {'production': [start_symbol, 'STOP']}
+                ]
+            }
+            grammar_struct['start'] = AUGSYMBOL_NAME
+
+        self.grammar_struct = grammar_struct
+        self._init_from_struct()
+        self.AUGSYMBOL = self.get_nonterminal(AUGSYMBOL_NAME)
 
     def _init_from_struct(self):
         """
@@ -1026,14 +1026,14 @@ class Grammar(object):
         if not symbol:
             raise GrammarError(
                 location=THIS_LOCATION,
-                message='Unknown reference "{}" '
-                'in rule "{}".'.format(ref, nonterminal.name))
+                message='Unknown reference "{}" in rule "{}".'
+                .format(name, rule))
         return symbol
 
     def __iter__(self):
         return (s for s in itertools.chain(self.nonterminals.values(),
                                            self.terminals.values())
-                if s not in [AUGSYMBOL, STOP])
+                if s not in [self.AUGSYMBOL, STOP])
 
     def get_production_id(self, name):
         "Returns first production id for the given symbol name"

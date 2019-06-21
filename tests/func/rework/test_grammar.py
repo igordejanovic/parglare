@@ -3,6 +3,7 @@ Testing grammar construction
 """
 
 import pytest
+from parglare import Parser
 from parglare.grammar import (Grammar, MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE,
                               MULT_OPTIONAL)
 
@@ -20,6 +21,7 @@ COMMA: ',';
 def test_grammar_struct():
 
     return {
+        'start': 'A',
         'rules': {
             'A': {
                 'productions': [
@@ -48,7 +50,13 @@ def test_grammar_struct():
 
 
 test_grammar_struct_desugared = {
+    'start': "S'",
     'rules': {
+        "S'": {
+            'productions': [
+                {'production': ['A', 'STOP']}
+            ]
+        },
         'A': {
             'productions': [
                 {'production': ['B', 'C_1_COMMA', 'EOF']}
@@ -112,3 +120,6 @@ def test_grammar_struct_construction_from_string(test_grammar_struct):
 def test_grammar_from_string():
     grammar = Grammar.from_string(test_grammar)
     assert grammar
+    parser = Parser(grammar)
+    result = parser.parse('c c c c 34/44 c,c,c ')
+    import pudb;pudb.set_trace()
