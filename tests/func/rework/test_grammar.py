@@ -7,11 +7,12 @@ from parglare.grammar import (Grammar, MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE,
                               MULT_OPTIONAL)
 
 test_grammar = r'''
-A: B C+ EOF;
+A: B C+[COMMA] EOF;
 B: C* D? | D;
 terminals
 C: 'c';
 D: /\d+\/\d+/;
+COMMA: ',';
 '''
 
 
@@ -23,6 +24,7 @@ def test_grammar_struct():
             'A': {
                 'productions': [
                     {'production': ['B', {'symbol': 'C',
+                                          'separator': 'COMMA',
                                           'multiplicity': MULT_ONE_OR_MORE},
                                     'EOF']}
                 ]
@@ -40,21 +42,30 @@ def test_grammar_struct():
         'terminals': {
             'C': {'recognizer': 'c'},
             'D': {'recognizer': r'/\d+\/\d+/'},
+            'COMMA': {'recognizer': ','},
         }
     }
 
 
-test_grammar_struct_expanded = {
+test_grammar_struct_desugared = {
     'rules': {
         'A': {
             'productions': [
-                {'production': ['B', 'C_1', 'EOF']}
+                {'production': ['B', 'C_1_COMMA', 'EOF']}
             ]
         },
         'B': {
             'productions': [
                 {'production': ['C_0', 'D_opt']},
                 {'production': ['D']}
+            ]
+        },
+        'C_1_COMMA': {
+            'action': 'collect_sep',
+            'productions': [
+                {'production': ['C_1_COMMA', 'COMMA', 'C']},
+                {'production': ['C']},
+
             ]
         },
         'C_1': {
@@ -83,13 +94,14 @@ test_grammar_struct_expanded = {
     'terminals': {
         'C': {'recognizer': 'c'},
         'D': {'recognizer': r'/\d+\/\d+/'},
+        'COMMA': {'recognizer': ','},
     }
 }
 
 
 def test_grammar_construction_from_struct(test_grammar_struct):
     grammar = Grammar.from_struct(test_grammar_struct)
-    assert grammar.grammar_struct == test_grammar_struct_expanded
+    assert grammar.grammar_struct == test_grammar_struct_desugared
 
 
 def test_grammar_struct_construction_from_string(test_grammar_struct):
@@ -98,5 +110,5 @@ def test_grammar_struct_construction_from_string(test_grammar_struct):
 
 
 def test_grammar_from_string():
-     grammar = Grammar.from_string(test_grammar)
-     assert grammar
+    grammar = Grammar.from_string(test_grammar)
+    assert grammar

@@ -207,19 +207,16 @@ pg_grammar = {
             ]
         },
         'RepOperatorZero': {
-            'action': 'pass_single',
             'productions': [
                 {'production': ['ASTERISK', 'OptRepModifiersExp']},
             ]
         },
         'RepOperatorOne': {
-            'action': 'pass_single',
             'productions': [
                 {'production': ['PLUS', 'OptRepModifiersExp']},
             ]
         },
         'RepOperatorOptional': {
-            'action': 'pass_single',
             'productions': [
                 {'production': ['QUESTION', 'OptRepModifiersExp']},
             ]
@@ -426,8 +423,8 @@ class PGGrammarActions(ParglareActions):
 
         if rep_op:
             symbol_ref = {'symbol': symbol_ref}
+            sep = rep_op[1][0] if rep_op[1] else None
             rep_op = rep_op[0]
-            sep = rep_op[1] if len(rep_op) > 1 else None
 
             if rep_op == '*':
                 multiplicity = MULT_ZERO_OR_MORE
