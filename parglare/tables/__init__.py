@@ -127,9 +127,6 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
     follow_sets = follow(grammar, first_sets)
 
-    start_prod_symbol = grammar.productions[start_production].symbol
-    grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
-
     # Create a state for the first production (augmented)
     s = LRState(grammar, 0, grammar.AUGSYMBOL,
                 [LRItem(grammar.productions[0], 0, set())])
@@ -305,11 +302,16 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                                     # associativity defined use prefered
                                     # strategy.
                                     is_empty = len(prod.rhs) == 0
-                                    prod_pse = is_empty \
-                                        and prefer_shifts_over_empty \
-                                        and not prod.nopse
-                                    prod_ps = not is_empty \
-                                        and prefer_shifts and not prod.nops
+                                    if prod.pse is not None:
+                                        prod_pse = is_empty and prod.pse
+                                    else:
+                                        prod_pse = is_empty \
+                                            and prefer_shifts_over_empty
+                                    if prod.ps is not None:
+                                        prod_ps = not is_empty and prod.ps
+                                    else:
+                                        prod_ps = not is_empty \
+                                            and prefer_shifts
                                     should_reduce = not (prod_pse or prod_ps)
                             elif prod.prior > sh_prior:
                                 # This item operation priority is higher =>

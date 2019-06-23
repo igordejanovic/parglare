@@ -8,7 +8,7 @@ from parglare.grammar import (Grammar, MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE,
                               MULT_OPTIONAL)
 
 test_grammar = r'''
-A: B C+[COMMA] EOF;
+A: B C+[COMMA, nogreedy] EOF;
 B: C* D? | D;
 terminals
 C: 'c';
@@ -26,7 +26,7 @@ def test_grammar_struct():
             'A': {
                 'productions': [
                     {'production': ['B', {'symbol': 'C',
-                                          'separator': 'COMMA',
+                                          'modifiers': ['COMMA', 'nogreedy'],
                                           'multiplicity': MULT_ONE_OR_MORE},
                                     'EOF']}
                 ]
@@ -59,7 +59,7 @@ test_grammar_struct_desugared = {
         },
         'A': {
             'productions': [
-                {'production': ['B', 'C_1_COMMA', 'EOF']}
+                {'production': ['B', 'C_1_COMMA_nops', 'EOF']}
             ]
         },
         'B': {
@@ -68,10 +68,11 @@ test_grammar_struct_desugared = {
                 {'production': ['D']}
             ]
         },
-        'C_1_COMMA': {
+        'C_1_COMMA_nops': {
             'action': 'collect_sep',
             'productions': [
-                {'production': ['C_1_COMMA', 'COMMA', 'C']},
+                {'production': ['C_1_COMMA_nops', 'COMMA', 'C'],
+                 'ps': False},
                 {'production': ['C']},
 
             ]
@@ -86,7 +87,7 @@ test_grammar_struct_desugared = {
         },
         'C_0': {
             'productions': [
-                {'production': ['C_1'], 'nops': True},
+                {'production': ['C_1']},
                 {'production': ['EMPTY']}
 
             ]
@@ -122,4 +123,4 @@ def test_grammar_from_string():
     assert grammar
     parser = Parser(grammar)
     result = parser.parse('c c c c 34/44 c,c,c ')
-    import pudb;pudb.set_trace()
+    assert result == [[['c', 'c', 'c', 'c'], '34/44'], ['c', 'c', 'c'], None]

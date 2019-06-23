@@ -412,8 +412,11 @@ class PGGrammarActions(ParglareActions):
 
         if rep_op:
             symbol_ref = {'symbol': symbol_ref}
-            sep = rep_op[1][0] if rep_op[1] else None
+            modifiers = rep_op[1]
             rep_op = rep_op[0]
+
+            if modifiers:
+                symbol_ref['modifiers'] = modifiers
 
             if rep_op == '*':
                 multiplicity = MULT_ZERO_OR_MORE
@@ -423,8 +426,6 @@ class PGGrammarActions(ParglareActions):
                 multiplicity = MULT_OPTIONAL
 
             symbol_ref['multiplicity'] = multiplicity
-            if sep:
-                symbol_ref['separator'] = sep
 
         return symbol_ref
 

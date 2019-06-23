@@ -36,6 +36,12 @@ MULT_ZERO_OR_MORE = '0..*'
 RESERVED_SYMBOL_NAMES = ['EOF', 'STOP', 'EMPTY']
 SPECIAL_SYMBOL_NAMES = ['KEYWORD', 'LAYOUT']
 
+REP_MODIFIERS = {
+    'ps': 'ps',
+    'greedy': 'ps',
+    'pse': 'pse',
+}
+
 THIS_LOCATION = Location(file_name=__file__)
 
 
@@ -122,17 +128,16 @@ class NonTerminal(GrammarSymbol):
     :param list productions: A list of alternative productions for this
         NonTerminal.
     :param assoc: Associativity for disambiguation
-    :param bool nops: Disable "prefer shift" strategy for this non-terminal.
-    :param bool nopse: Disable "prefer shift over empty" strategy for this
-        non-terminal.
+    :param bool ps: "prefer shift" strategy for this non-terminal.
+    :param bool pse: "prefer shift over empty" strategy for this non-terminal.
     """
-    def __init__(self, name, productions=None, assoc=ASSOC_NONE, nops=False,
-                 nopse=False, **kwargs):
+    def __init__(self, name, productions=None, assoc=ASSOC_NONE, ps=False,
+                 pse=False, **kwargs):
         super(NonTerminal, self).__init__(name, **kwargs)
         self.productions = productions if productions is not None else []
         self.assoc = assoc
-        self.nops = nops
-        self.nopse = nopse
+        self.ps = ps
+        self.pse = pse
 
 
 class Terminal(GrammarSymbol):
@@ -237,10 +242,11 @@ class Production(object):
         resolution.
     :param int prior: Priority.  Used for ambiguity (shift/reduce) resolution.
     :param bool dynamic: Is dynamic disambiguation used for this production.
-    :param bool nops: Disable `prefer_shifts` strategy for this production.
-        Only makes sense for GLR parser.
-    :param bool nopse: Disable `prefer_shifts_over_empty` strategy for this
-        production.  Only makes sense for GLR parser.
+    :param bool ps: `prefer_shifts` strategy for this production.  Only makes
+        sense for GLR parser.  Default is `None` -- means use parser settings.
+    :param bool pse: `prefer_shifts_over_empty` strategy for this production.
+        Only makes sense for GLR parser.  Default is `None` -- means use parser
+        settings.
     :param dict meta: User meta-data.
     :param int prod_id: Ordinal number of the production.
     :param int prod_symbol_id: A zero-based ordinal of alternative choice for
@@ -249,7 +255,7 @@ class Production(object):
 
     def __init__(self, symbol, rhs, action=None, assignments=None,
                  assoc=ASSOC_NONE, prior=DEFAULT_PRIORITY, dynamic=False,
-                 nops=False, nopse=False, meta=None):
+                 ps=None, pse=None, meta=None):
         self.symbol = symbol
         self.rhs = rhs if rhs else ProductionRHS()
         self.action = action
@@ -262,8 +268,8 @@ class Production(object):
         self.assoc = assoc
         self.prior = prior
         self.dynamic = dynamic
-        self.nops = nops
-        self.nopse = nopse
+        self.ps = ps
+        self.pse = pse
         self.meta = meta
 
     def __str__(self):
@@ -825,13 +831,25 @@ class Grammar(object):
         if not multiplicity:
             return
 
-        separator = ref.get('separator', None)
+        modifiers = {}
+        separator = None
+        for modifier in ref.get('modifiers', []):
+            if modifier in REP_MODIFIERS or modifier.startswith('no') \
+               and modifier[2:] in REP_MODIFIERS:
+                val = not modifier.startswith('no')
+                modifier = modifier[2:] \
+                    if modifier.startswith('no') else modifier
+                modifier = REP_MODIFIERS[modifier]
+                modifiers[modifier] = val
+            else:
+                separator = modifier
+        if modifiers or separator:
+            del ref['modifiers']
+
         symbol_mult = self._make_multiplicity_name(symbol, multiplicity,
-                                                   separator)
+                                                   separator, modifiers)
         ref['symbol'] = symbol_mult
         del ref['multiplicity']
-        if separator:
-            del ref['separator']
 
         rules = self.grammar_struct['rules']
         if symbol_mult in rules:
@@ -840,18 +858,16 @@ class Grammar(object):
         if multiplicity in [MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE]:
             # noqa See: http://www.igordejanovic.net/parglare/grammar_language/#one-or-more_1
             symbol_one = self._make_multiplicity_name(symbol, MULT_ONE_OR_MORE,
-                                                      separator)
+                                                      separator, modifiers)
             if symbol_one not in rules:
                 productions = []
                 if separator:
-                    productions.append(
-                        {'production': [symbol_one, separator, symbol]}
-                    )
+                    p = {'production': [symbol_one, separator, symbol]}
                 else:
-                    productions.append(
-                        {'production': [symbol_one, symbol]}
-                    )
+                    p = {'production': [symbol_one, symbol]}
 
+                p.update(modifiers)
+                productions.append(p)
                 productions.append(
                         {'production': [symbol]}
                 )
@@ -864,7 +880,7 @@ class Grammar(object):
             if multiplicity is MULT_ZERO_OR_MORE:
                 rules[symbol_mult] = {
                     'productions': [
-                        {'production': [symbol_one], 'nops': True},
+                        {'production': [symbol_one]},
                         {'production': ['EMPTY']}
                     ]
                 }
@@ -932,8 +948,8 @@ class Grammar(object):
                 assoc=rule_struct.get('assoc', ASSOC_NONE),
                 prior=rule_struct.get('prior', DEFAULT_PRIORITY),
                 dynamic=rule_struct.get('dynamic', False),
-                nops=rule_struct.get('nops', False),
-                nopse=rule_struct.get('nopse', False),
+                ps=rule_struct.get('ps', None),
+                pse=rule_struct.get('pse', None),
                 meta=rule_struct.get('meta')
             )
             self.nonterminals[rule_name] = nt
@@ -944,15 +960,19 @@ class Grammar(object):
                     nt, rhs,
                     action=production_struct.get(
                         'action', rule_struct.get('action', rule_name)),
-                    assoc=production_struct.get('assoc', ASSOC_NONE),
-                    prior=production_struct.get('prior', DEFAULT_PRIORITY),
-                    dynamic=production_struct.get('dynamic', False),
-                    nops=production_struct.get('nops', False),
-                    nopse=production_struct.get('nopse', False),
+                    assoc=production_struct.get('assoc', nt.assoc),
+                    prior=production_struct.get('prior', nt.prior),
+                    dynamic=production_struct.get('dynamic', nt.dynamic),
+                    ps=production_struct.get('ps', nt.ps),
+                    pse=production_struct.get('pse', nt.pse),
                     meta=production_struct.get('meta')
                 ))
             nt.productions = productions
-            self.productions.extend(productions)
+            # AUGMENTED symbol production must be first
+            if rule_name == AUGSYMBOL_NAME:
+                self.productions.insert(0, productions[0])
+            else:
+                self.productions.extend(productions)
 
     def _enumerate_productions(self):
         """
@@ -1101,7 +1121,7 @@ class Grammar(object):
                 message='Using dot in names is not allowed.'.format(name))
 
     def _make_multiplicity_name(self, symbol_name, multiplicity=None,
-                                separator_name=None):
+                                separator_name=None, modifiers=None):
         if multiplicity is None or multiplicity == MULT_ONE:
             return symbol_name
         name_by_mult = {
@@ -1109,11 +1129,18 @@ class Grammar(object):
             MULT_ONE_OR_MORE: "1",
             MULT_OPTIONAL: "opt"
         }
-        if multiplicity:
-            return "{}_{}{}".format(
-                symbol_name, name_by_mult[multiplicity],
-                "_{}".format(separator_name) if separator_name else "")
-
+        name = "{}_{}{}".format(
+            symbol_name, name_by_mult[multiplicity],
+            "_{}".format(separator_name) if separator_name else "")
+        if modifiers:
+            mod_names = []
+            for m, val in modifiers.items():
+                m = 'no{}'.format(m) if not val else m
+                mod_names.append(m)
+            mod_names.sort()
+            mod_name_sufix = "_".join(mod_names)
+        name += "_{}".format(mod_name_sufix) if modifiers else ""
+        return name
 
 
 class _Grammar(PGFile):
