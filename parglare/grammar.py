@@ -997,13 +997,12 @@ class Grammar(object):
         """
         Resolve productions RHS references.
         """
-        for nonterminal in self.nonterminals.values():
-            for production in nonterminal.productions:
-                for refidx, ref in enumerate(production.rhs):
-                    if type(ref) is dict:
-                        ref = ref['symbol']
-                    production.rhs[refidx] = self.get_check_symbol(
-                        ref, nonterminal.name)
+        for production in self.productions:
+            for refidx, ref in enumerate(production.rhs):
+                if type(ref) is dict:
+                    ref = ref['symbol']
+                production.rhs[refidx] = self.get_check_symbol(
+                    ref, production.symbol.name)
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."
