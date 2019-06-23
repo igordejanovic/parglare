@@ -5,6 +5,7 @@ import logging
 import sys
 from copy import copy
 from .grammar import EMPTY, EOF, STOP
+from .actions import ParglareActions
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, SRConflicts, RRConflicts, \
@@ -39,10 +40,11 @@ class Parser(object):
         self.grammar = grammar
         self.in_layout = in_layout
 
+        if actions is None:
+            actions = ParglareActions()
+        actions.grammar = grammar
+        actions.parser = self
         self.sem_actions = actions
-        if actions:
-            actions.grammar = grammar
-            actions.parser = self
 
         self.layout_parser = None
         if self.in_layout:
