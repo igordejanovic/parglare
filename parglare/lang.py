@@ -452,7 +452,7 @@ pg_parser_grammar = None
 pg_parser_table = None
 
 
-def get_grammar_parser():
+def get_grammar_parser(debug=False, debug_colors=False):
     """
     Constructs and returns a new instance of the Parglare grammar parser.
     Cache grammar and LALR table to speed up future calls.
@@ -460,7 +460,8 @@ def get_grammar_parser():
     global pg_parser_grammar, pg_parser_table
     if pg_parser_grammar is None:
         from parglare.lang import pg_grammar
-        pg_parser_grammar = Grammar.from_struct(pg_grammar)
+        pg_parser_grammar = Grammar.from_struct(pg_grammar, debug=debug,
+                                                debug_colors=debug_colors)
     if pg_parser_table is None:
         from parglare.tables import create_table
         pg_parser_table = create_table(pg_parser_grammar)
@@ -468,4 +469,5 @@ def get_grammar_parser():
     from parglare import Parser
     from parglare.lang import PGGrammarActions
     return Parser(pg_parser_grammar, actions=PGGrammarActions(),
-                  table=pg_parser_table)
+                  table=pg_parser_table, debug=debug,
+                  debug_colors=debug_colors)

@@ -1070,7 +1070,11 @@ class Grammar(object):
         structure.
         """
         from parglare.lang import get_grammar_parser
-        return get_grammar_parser().parse(grammar_str, **kwargs)
+        debug = kwargs.pop('debug', False)
+        debug_colors = kwargs.pop('debug_colors', False)
+        return get_grammar_parser(
+            debug=debug, debug_colors=debug_colors).parse(grammar_str,
+                                                          **kwargs)
 
     def print_debug(self):
         a_print("*** GRAMMAR ***", new_line=True)
