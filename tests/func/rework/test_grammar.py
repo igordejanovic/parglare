@@ -26,17 +26,17 @@ def test_grammar_struct():
             'A': {
                 'productions': [
                     {'production': ['B', {'symbol': 'C',
-                                          'modifiers': ['COMMA', 'nogreedy'],
-                                          'multiplicity': MULT_ONE_OR_MORE},
+                                          'mult': MULT_ONE_OR_MORE,
+                                          'modifiers': ['COMMA', 'nogreedy']},
                                     'EOF']}
                 ]
             },
             'B': {
                 'productions': [
                     {'production': [{'symbol': 'C',
-                                    'multiplicity': MULT_ZERO_OR_MORE},
+                                    'mult': MULT_ZERO_OR_MORE},
                                     {'symbol': 'D',
-                                    'multiplicity': MULT_OPTIONAL}]},
+                                    'mult': MULT_OPTIONAL}]},
                     {'production': ['D']}
                 ]
             }
@@ -59,7 +59,7 @@ test_grammar_struct_desugared = {
         },
         'A': {
             'productions': [
-                {'production': ['B', 'C_1_COMMA_nops', 'EOF']}
+                {'production': ['B', 'C_1_COMMA_nogreedy', 'EOF']}
             ]
         },
         'B': {
@@ -68,11 +68,11 @@ test_grammar_struct_desugared = {
                 {'production': ['D']}
             ]
         },
-        'C_1_COMMA_nops': {
+        'C_1_COMMA_nogreedy': {
             'action': 'collect_sep',
             'productions': [
-                {'production': ['C_1_COMMA_nops', 'COMMA', 'C'],
-                 'ps': False},
+                {'production': ['C_1_COMMA_nogreedy', 'COMMA', 'C'],
+                 'modifiers': ['nogreedy']},
                 {'production': ['C']},
 
             ]

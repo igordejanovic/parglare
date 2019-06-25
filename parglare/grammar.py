@@ -36,11 +36,9 @@ MULT_ZERO_OR_MORE = '0..*'
 RESERVED_SYMBOL_NAMES = ['EOF', 'STOP', 'EMPTY']
 SPECIAL_SYMBOL_NAMES = ['KEYWORD', 'LAYOUT']
 
-REP_MODIFIERS = {
-    'ps': 'ps',
-    'greedy': 'ps',
-    'pse': 'pse',
-}
+MODIFIERS = ['left', 'right', 'shift', 'reduce', 'dynamic', 'ps', 'nops',
+             'pse', 'nopse', 'greedy', 'nogreedy', 'finish', 'nofinish',
+             'prefer']
 
 THIS_LOCATION = Location(file_name=__file__)
 
@@ -178,39 +176,38 @@ class Terminal(GrammarSymbol):
 
 class Reference(object):
     """
-    A name reference to a GrammarSymbol used for cross-resolving during
-    grammar construction.
+    A name reference to a :class:`GrammarSymbol` used for cross-resolving
+    during grammar construction.
 
-    Attributes:
-        name (str): The FQN name of the referred symbol. This is the name of
-            the original desuggared symbol without taking into account
-            multiplicity and separator.
-        location (Location): Location object of this reference.
-        multiplicty(str): Multiplicity of the RHS reference (used for regex
-            operators ?, *, +). See MULT_* constants above. By default
-            multiplicity is MULT_ONE.
-        separator (symbol or Reference): A reference to the separator symbol or
-            the separator symbol itself if resolved.
+    :param str name: The FQN name of the referred symbol.  This is the name of
+        the original desuggared symbol without taking into account multiplicity
+        and separator.
+    :param Location location: Location object of this reference.
+    :param str mult: Multiplicity of the RHS reference (used for regex
+        operators ?, *, +).  See MULT_* constants above.  By default
+        multiplicity is MULT_ONE.
+    :param symbol separator: A reference to the separator symbol or the
+        separator symbol itself if resolved.
     """
     def __init__(self, location, name):
         self.name = name
         self.location = location
-        self.multiplicity = MULT_ONE
+        self.mult = MULT_ONE
         self.separator = None
 
     @property
-    def multiplicity_name(self):
+    def mult_name(self):
         """
         Returns the name of the symbol that should be used if
         multiplicity/separator is used.
         """
         return make_multiplicity_name(
-            self.name, self.multiplicity,
+            self.name, self.mult,
             self.separator.name if self.separator else None)
 
     def clone(self):
         new_ref = Reference(self.location, self.name)
-        new_ref.multiplicity = self.multiplicity
+        new_ref.mult = self.mult
         new_ref.separator = self.separator
         return new_ref
 
@@ -320,22 +317,21 @@ class Assignment(object):
     """
     def __init__(self, name, op, symbol):
         """
-        Attributes:
-            name(str): The name on the LHS of assignment.
-            op(str): Either a `=` or `?=`.
-            symbol(Reference or GrammarSymbol): A grammar symbol on the RHS.
-            symbol_name(str): A de-sugarred grammar symbol name on the
-                RHS, i.e. referenced symbol without regex operators.
-            multiplicty(str): Multiplicity of the RHS reference (used for regex
-                operators ?, *, +). See MULT_* constants above. By default
-                multiplicity is MULT_ONE.
-            index(int): Index in the production RHS
+        :param str name: The name on the LHS of assignment.
+        :param str op: Either a `=` or `?=`.
+        :param GrammarSymbol symbol: A grammar symbol on the RHS.
+        :param str symbol_name: A de-sugarred grammar symbol name on the RHS,
+            i.e. referenced symbol without regex operators.
+        :param str mult: Multiplicity of the RHS reference (used for regex
+            operators ?, *, +).  See MULT_* constants above.  By default
+            multiplicity is MULT_ONE.
+        :param int index: Index in the production RHS
         """
         self.name = name
         self.op = op
         self.symbol = symbol
         self.symbol_name = symbol.name
-        self.multiplicity = symbol.multiplicity \
+        self.mult = symbol.mult \
             if isinstance(symbol, Reference) else MULT_ONE
         self.index = None
 
@@ -344,15 +340,14 @@ class PGAttribute(object):
     """
     PGAttribute definition created by named matches.
 
-    Attributes:
-        name(str): The name of the attribute.
-        multiplicity(str): Multiplicity of the attribute. See MULT_* constants.
-        type_name(str): The type name of the attribute value(s). It is also the
-            name of the referring grammar rule.
+    :param str name: The name of the attribute.
+    :param str mult: Multiplicity of the attribute.  See MULT_* constants.
+    :param str type_name: The type name of the attribute value(s).  It is also
+        the name of the referring grammar rule.
     """
-    def __init__(self, name, multiplicity, type_name):
+    def __init__(self, name, mult, type_name):
         self.name = name
-        self.multiplicity = multiplicity
+        self.mult = mult
         self.type_name = type_name
 
 
@@ -598,7 +593,7 @@ class PGFile(object):
                     location=symbol_ref.location,
                     message='Unknown symbol "{}"'.format(symbol_name))
 
-        mult = symbol_ref.multiplicity
+        mult = symbol_ref.mult
         if mult != MULT_ONE:
             # If multiplicity is used than we are referring to
             # suggared symbol
@@ -826,30 +821,29 @@ class Grammar(object):
         necessary rules for repetitions (one or more, zero or more, optional).
         """
         symbol = ref['symbol']
-        multiplicity = ref.get('multiplicity', None)
+        multiplicity = ref.get('mult', None)
 
         if not multiplicity:
             return
 
-        modifiers = {}
         separator = None
-        for modifier in ref.get('modifiers', []):
-            if modifier in REP_MODIFIERS or modifier.startswith('no') \
-               and modifier[2:] in REP_MODIFIERS:
-                val = not modifier.startswith('no')
-                modifier = modifier[2:] \
-                    if modifier.startswith('no') else modifier
-                modifier = REP_MODIFIERS[modifier]
-                modifiers[modifier] = val
-            else:
-                separator = modifier
-        if modifiers or separator:
+        modifiers = ref.get('modifiers', [])
+        if modifiers:
             del ref['modifiers']
+        for idx, modifier in enumerate(modifiers):
+            if modifier not in MODIFIERS:
+                if separator:
+                    raise GrammarError(
+                        location=Location(),
+                        message='Multiple separators in reference "{}".'
+                        .format(ref))
+                separator = modifier
+                del modifiers[idx]
 
         symbol_mult = self._make_multiplicity_name(symbol, multiplicity,
                                                    separator, modifiers)
         ref['symbol'] = symbol_mult
-        del ref['multiplicity']
+        del ref['mult']
 
         rules = self.grammar_struct['rules']
         if symbol_mult in rules:
@@ -866,7 +860,8 @@ class Grammar(object):
                 else:
                     p = {'production': [symbol_one, symbol]}
 
-                p.update(modifiers)
+                if modifiers:
+                    p['modifiers'] = modifiers
                 productions.append(p)
                 productions.append(
                         {'production': [symbol]}
@@ -1135,12 +1130,8 @@ class Grammar(object):
             symbol_name, name_by_mult[multiplicity],
             "_{}".format(separator_name) if separator_name else "")
         if modifiers:
-            mod_names = []
-            for m, val in modifiers.items():
-                m = 'no{}'.format(m) if not val else m
-                mod_names.append(m)
-            mod_names.sort()
-            mod_name_sufix = "_".join(mod_names)
+            modifiers = list(sorted(map(lambda x: str(x), modifiers)))
+            mod_name_sufix = "_".join(modifiers)
         name += "_{}".format(mod_name_sufix) if modifiers else ""
         return name
 
@@ -1964,8 +1955,7 @@ def act_production_rule(context, nodes):
 
         for a in assignments:
             if a.name:
-                attrs[a.name] = PGAttribute(a.name, a.multiplicity,
-                                            a.symbol_name)
+                attrs[a.name] = PGAttribute(a.name, a.mult, a.symbol_name)
             # TODO: check/handle multiple assignments to the same attribute
             #       If a single production have multiple assignment of the
             #       same attribute, multiplicity must be set to many.

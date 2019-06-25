@@ -5,7 +5,7 @@ DSL specification.
 """
 from parglare.actions import ParglareActions
 from parglare.grammar import (Grammar, MULT_ZERO_OR_MORE, MULT_ONE_OR_MORE,
-                              MULT_OPTIONAL)
+                              MULT_OPTIONAL, MODIFIERS)
 from parglare import GrammarError
 from parglare.common import Location
 
@@ -70,8 +70,7 @@ pg_grammar = {
             ]
         },
         'ProductionRuleRHS': {
-            'left': True,
-            'priority': 5,
+            'modifiers': ['left', 5],
             'action': 'collect_sep',
             'productions': [
                 {'production': ['ProductionRuleRHS', 'OR', 'Production']},
@@ -100,8 +99,7 @@ pg_grammar = {
             ]
         },
         'TerminalRule': {
-            'left': True,
-            'priority': 15,
+            'modifiers': ['left', 15],
             'productions': [
                 {'production': ['NAME', 'COLON', 'Recognizer', 'SEMICOLON']},
                 {'production': ['NAME', 'COLON', 'SEMICOLON'],
@@ -124,7 +122,11 @@ pg_grammar = {
                 {'production': ['SHIFT']},
                 {'production': ['DYNAMIC']},
                 {'production': ['NOPS']},
+                {'production': ['PS']},
+                {'production': ['GREEDY']},
+                {'production': ['NOGREEDY']},
                 {'production': ['NOPSE']},
+                {'production': ['PSE']},
                 {'production': ['INT'], 'action': 'meta_data_priority'},
                 {'production': ['UserMetaData'], 'action': 'pass_single'},
             ]
@@ -133,7 +135,7 @@ pg_grammar = {
             'action': 'collect_sep',
             'productions': [
                 {
-                    'left': True,
+                    'modifiers': ['left'],
                     'production': ['ProdMetaDatas', 'COMMA', 'ProdMetaData']
                 },
                 {'production': ['ProdMetaData']}
@@ -327,10 +329,14 @@ pg_grammar = {
         'SHIFT': _('shift'),
         'DYNAMIC': _('dynamic'),
         'NOPS': _('nops'),
+        'PS': _('ps'),
+        'GREEDY': _('greedy'),
+        'NOGREEDY': _('nogreedy'),
         'NOPSE': _('nopse'),
-        'PREFER': _('prefer'),
+        'PSE': _('pse'),
         'FINISH': _('finish'),
         'NOFINISH': _('nofinish'),
+        'PREFER': _('prefer'),
     }
 }
 
@@ -394,36 +400,55 @@ class PGGrammarActions(ParglareActions):
             prod_rule['action'] = nodes[0][1:]
         return prod_rule
 
+    def extract_modifiers(self, target):
+        """
+        Extract built-in modifiers (e.g. disambiguation rules) from meta-data
+        of rules, productions, terminals.
+        """
+        modifiers = []
+        meta = target['meta']
+        for m in list(meta):
+            if m == 'prior' or m in MODIFIERS:
+                modifiers.append(m)
+                del meta[m]
+        if modifiers:
+            target['modifiers'] = modifiers
+
     def ProductionRule(self, nodes):
-        prods = {'productions': nodes[-2]}
+        rule = {'productions': nodes[-2]}
         if len(nodes) > 4:
             # We have meta-data
-            prods['meta'] = nodes[2]
-        return nodes[0], prods
+            rule['meta'] = nodes[2]
+            self.extract_modifiers(rule)
+        return nodes[0], rule
 
     def Production(self, nodes):
         prod = {'production': nodes[0]}
         if len(nodes) > 1:
             prod['meta'] = nodes[2]
+            self.extract_modifiers(prod)
         return prod
 
     def TerminalRule(self, nodes):
         term_rule = {'recognizer': nodes[2]}
         if len(nodes) > 4:
-            term_rule['meta'] = nodes[4]
+            meta = nodes[4]
+            term_rule['meta'] = meta
+            self.extract_modifiers(term_rule)
         return nodes[0], term_rule
 
     def terminal_rule_empty(self, nodes):
         term_rule = {'recognizer': None}
         if len(nodes) > 3:
             term_rule['meta'] = nodes[3]
+            self.extract_modifiers(term_rule)
         return nodes[0], term_rule
 
     def meta_data_bool(self, nodes):
         return {nodes[0]: True}
 
     def meta_data_priority(self, nodes):
-        return {'priority': nodes[0]}
+        return {'prior': nodes[0]}
 
     def UserMetaData(self, nodes):
         return {nodes[0]: nodes[2]}
@@ -449,13 +474,13 @@ class PGGrammarActions(ParglareActions):
                 symbol_ref['modifiers'] = modifiers
 
             if rep_op == '*':
-                multiplicity = MULT_ZERO_OR_MORE
+                mult = MULT_ZERO_OR_MORE
             elif rep_op == '+':
-                multiplicity = MULT_ONE_OR_MORE
+                mult = MULT_ONE_OR_MORE
             else:
-                multiplicity = MULT_OPTIONAL
+                mult = MULT_OPTIONAL
 
-            symbol_ref['multiplicity'] = multiplicity
+            symbol_ref['mult'] = mult
 
         return symbol_ref
 
