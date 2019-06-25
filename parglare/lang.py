@@ -145,6 +145,7 @@ pg_grammar = {
             'action': 'meta_data_bool',
             'productions': [
                 {'production': ['PREFER']},
+                {'production': ['KEYWORD']},
                 {'production': ['FINISH']},
                 {'production': ['NOFINISH']},
                 {'production': ['DYNAMIC']},
@@ -337,6 +338,7 @@ pg_grammar = {
         'FINISH': _('finish'),
         'NOFINISH': _('nofinish'),
         'PREFER': _('prefer'),
+        'KEYWORD': _('keyword'),
     }
 }
 
@@ -408,50 +410,54 @@ class PGGrammarActions(ParglareActions):
         modifiers = []
         meta = target['meta']
         for m in list(meta):
-            if m == 'prior' or m in MODIFIERS:
+            if m == 'prior':
+                modifiers.append(meta[m])
+                del meta[m]
+            elif m in MODIFIERS:
                 modifiers.append(m)
                 del meta[m]
         if modifiers:
             target['modifiers'] = modifiers
+        if not target['meta']:
+            del target['meta']
 
     def ProductionRule(self, nodes):
         rule = {'productions': nodes[-2]}
         if len(nodes) > 4:
             # We have meta-data
-            rule['meta'] = nodes[2]
+            rule['meta'] = dict(nodes[2])
             self.extract_modifiers(rule)
         return nodes[0], rule
 
     def Production(self, nodes):
         prod = {'production': nodes[0]}
         if len(nodes) > 1:
-            prod['meta'] = nodes[2]
+            prod['meta'] = dict(nodes[2])
             self.extract_modifiers(prod)
         return prod
 
     def TerminalRule(self, nodes):
         term_rule = {'recognizer': nodes[2]}
         if len(nodes) > 4:
-            meta = nodes[4]
-            term_rule['meta'] = meta
+            term_rule['meta'] = dict(nodes[4])
             self.extract_modifiers(term_rule)
         return nodes[0], term_rule
 
     def terminal_rule_empty(self, nodes):
         term_rule = {'recognizer': None}
         if len(nodes) > 3:
-            term_rule['meta'] = nodes[3]
+            term_rule['meta'] = dict(nodes[3])
             self.extract_modifiers(term_rule)
         return nodes[0], term_rule
 
     def meta_data_bool(self, nodes):
-        return {nodes[0]: True}
+        return (nodes[0], True)
 
     def meta_data_priority(self, nodes):
-        return {'prior': nodes[0]}
+        return ('prior', nodes[0])
 
     def UserMetaData(self, nodes):
-        return {nodes[0]: nodes[2]}
+        return (nodes[0], nodes[2])
 
     def Assignment(self, nodes):
         return nodes[0]
@@ -473,14 +479,7 @@ class PGGrammarActions(ParglareActions):
             if modifiers:
                 symbol_ref['modifiers'] = modifiers
 
-            if rep_op == '*':
-                mult = MULT_ZERO_OR_MORE
-            elif rep_op == '+':
-                mult = MULT_ONE_OR_MORE
-            else:
-                mult = MULT_OPTIONAL
-
-            symbol_ref['mult'] = mult
+            symbol_ref['mult'] = rep_op
 
         return symbol_ref
 

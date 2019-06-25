@@ -29,9 +29,9 @@ DEFAULT_PRIORITY = 10
 
 # Multiplicity
 MULT_ONE = '1'
-MULT_OPTIONAL = '0..1'
-MULT_ONE_OR_MORE = '1..*'
-MULT_ZERO_OR_MORE = '0..*'
+MULT_OPTIONAL = '?'
+MULT_ONE_OR_MORE = '+'
+MULT_ZERO_OR_MORE = '*'
 
 RESERVED_SYMBOL_NAMES = ['EOF', 'STOP', 'EMPTY']
 SPECIAL_SYMBOL_NAMES = ['KEYWORD', 'LAYOUT']
@@ -917,14 +917,16 @@ class Grammar(object):
                 else:
                     recognizer = StringRecognizer(recognizer_str,
                                                   ignore_case=self.ignore_case)
+            term_modifiers = self._desugar_modifiers(
+                terminal_struct.get('modifiers', []))
             terminal = Terminal(terminal_name,
                                 recognizer=recognizer,
-                                prior=terminal_struct.get('prior',
-                                                          DEFAULT_PRIORITY),
-                                finish=terminal_struct.get('finish', None),
-                                prefer=terminal_struct.get('prefer', False),
-                                dynamic=terminal_struct.get('dynamic', False),
-                                keyword=terminal_struct.get('keyword', False),
+                                prior=term_modifiers.get('prior',
+                                                         DEFAULT_PRIORITY),
+                                finish=term_modifiers.get('finish', None),
+                                prefer=term_modifiers.get('prefer', False),
+                                dynamic=term_modifiers.get('dynamic', False),
+                                keyword=term_modifiers.get('keyword', False),
                                 action=terminal_struct.get('action',
                                                            terminal_name),
                                 meta=terminal_struct.get('meta'))
@@ -940,28 +942,32 @@ class Grammar(object):
                 raise GrammarError(
                     location=THIS_LOCATION,
                     message=f'"{rule_name}" rule multiple definitions')
+            rule_modifiers = self._desugar_modifiers(
+                rule_struct.get('modifiers', []))
             nt = NonTerminal(
                 rule_name,
-                assoc=rule_struct.get('assoc', ASSOC_NONE),
-                prior=rule_struct.get('prior', DEFAULT_PRIORITY),
-                dynamic=rule_struct.get('dynamic', False),
-                ps=rule_struct.get('ps', None),
-                pse=rule_struct.get('pse', None),
+                assoc=rule_modifiers.get('assoc', ASSOC_NONE),
+                prior=rule_modifiers.get('prior', DEFAULT_PRIORITY),
+                dynamic=rule_modifiers.get('dynamic', False),
+                ps=rule_modifiers.get('ps', None),
+                pse=rule_modifiers.get('pse', None),
                 meta=rule_struct.get('meta')
             )
             self.nonterminals[rule_name] = nt
             productions = []
             for production_struct in rule_struct['productions']:
                 rhs = ProductionRHS(production_struct['production'])
+                prod_modifiers = self._desugar_modifiers(
+                    production_struct.get('modifiers', []))
                 productions.append(Production(
                     nt, rhs,
                     action=production_struct.get(
                         'action', rule_struct.get('action', rule_name)),
-                    assoc=production_struct.get('assoc', nt.assoc),
-                    prior=production_struct.get('prior', nt.prior),
-                    dynamic=production_struct.get('dynamic', nt.dynamic),
-                    ps=production_struct.get('ps', nt.ps),
-                    pse=production_struct.get('pse', nt.pse),
+                    assoc=prod_modifiers.get('assoc', nt.assoc),
+                    prior=prod_modifiers.get('prior', nt.prior),
+                    dynamic=prod_modifiers.get('dynamic', nt.dynamic),
+                    ps=prod_modifiers.get('ps', nt.ps),
+                    pse=prod_modifiers.get('pse', nt.pse),
                     meta=production_struct.get('meta')
                 ))
             nt.productions = productions
@@ -982,6 +988,32 @@ class Grammar(object):
             prod.prod_symbol_id = idx_per_symbol.get(prod.symbol, 0)
             idx_per_symbol[prod.symbol] = \
                 idx_per_symbol.get(prod.symbol, 0) + 1
+
+    def _desugar_modifiers(self, modifiers):
+        """
+        Returns a dict of desugared modifiers values.
+        """
+        mod_dict = {}
+        for m in modifiers:
+            if type(m) is int:
+                mod_dict['prior'] = m
+            elif m in ['left', 'reduce']:
+                mod_dict['assoc'] = ASSOC_LEFT
+            elif m in ['right', 'shift']:
+                mod_dict['assoc'] = ASSOC_RIGHT
+            elif m in ['ps', 'nops', 'greedy', 'nogreedy']:
+                mod_dict['ps'] = not m.startswith('no')
+            elif m in ['pse', 'nopse']:
+                mod_dict['pse'] = not m.startswith('no')
+            elif m == 'dynamic':
+                mod_dict['dynamic'] = True
+            elif m in ['finish', 'nofinish']:
+                mod_dict['finish'] = not m.startswith('no')
+            elif m == 'prefer':
+                mod_dict['prefer'] = True
+            elif m == 'keyword':
+                mod_dict['keyword'] = True
+        return mod_dict
 
     def _fix_keyword_terminals(self):
         """
