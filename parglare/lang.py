@@ -366,9 +366,17 @@ class PGGrammarActions(ParglareActions):
             rules = {}
             rule_tuples = nodes[rules_idx]
             for rule_name, rule in rule_tuples:
-                rules.setdefault(rule_name,
-                                 {'productions': []})['productions']\
-                     .extend(rule['productions'])
+                if rule_name not in rules:
+                    rules[rule_name] = {'productions': []}
+                rules[rule_name]['productions'].extend(rule['productions'])
+                del rule['productions']
+                if 'action' in rule:
+                    if 'action' in rules[rule_name]:
+                        raise GrammarError(
+                            location=Location(),
+                            message='Multiple actions defined for rule "{}".'
+                            .format(rule_name))
+                rules[rule_name].update(rule)
             pgfile['rules'] = rules
         if terminals_idx is not None or self.inline_terminals:
             terminals = {}
@@ -399,7 +407,7 @@ class PGGrammarActions(ParglareActions):
     def rule_with_action(self, nodes):
         prod_rule = nodes[-1]
         if len(nodes) > 1:
-            prod_rule['action'] = nodes[0][1:]
+            prod_rule[1]['action'] = nodes[0][1:]
         return prod_rule
 
     def extract_modifiers(self, target):

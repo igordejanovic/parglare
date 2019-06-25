@@ -215,8 +215,7 @@ def test_builtin_grammar_action():
     g = Grammar.from_string(grammar)
 
     ones = g.get_nonterminal('Ones')
-    from parglare.actions import collect
-    assert ones.action == collect
+    assert ones.productions[0].action == 'collect'
 
     p = Parser(g)
     result = p.parse('1 1 1 1 1')

@@ -418,7 +418,7 @@ class LRTable(object):
                    ((len(symbol.recognizer._regex) - 4)
                     if type(symbol.recognizer) is
                     RegExRecognizer and symbol.keyword
-                    else 0)), symbol.fqn)
+                    else 0)), symbol.name)
             return cmp_str
 
         for state in self.states:

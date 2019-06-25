@@ -58,41 +58,16 @@ class GrammarSymbol(object):
     :param int prior: Priority used for disambiguation.
     :param bool dynamic: Should dynamic disambiguation be called to resolve
         conflict involving this symbol.
-    :param callable action: Resolved action given by the user.  Overrides
-        grammar action if provided.  If not provided by the user defaults to
-        grammar_action.
-    :param callable grammar_action: Resolved action given in the grammar.
-    :param PGFileImport imported_with: PGFileImport where this symbol is first
-        time imported from.  Used for FQN calculation.
     :param dict meta: User meta-data.
     """
-    def __init__(self, name, location=None, imported_with=None,
-                 action=None, prior=DEFAULT_PRIORITY, dynamic=False,
-                 meta=None):
+    def __init__(self, name, location=None, prior=DEFAULT_PRIORITY,
+                 dynamic=False, meta=None):
         self.name = escape(name)
         self.location = location
         self.prior = prior
         self.dynamic = dynamic
-        self.action = None
-        self.grammar_action = None
-        self.imported_with = imported_with
         self.meta = meta
-        self._hash = hash(self.fqn)
-
-    @property
-    def fqn(self):
-        if self.imported_with:
-            return "{}.{}".format(self.imported_with.fqn, self.name)
-        else:
-            return self.name
-
-    @property
-    def action_fqn(self):
-        if self.action:
-            if self.imported_with:
-                return "{}.{}".format(self.imported_with.fqn, self.action)
-            else:
-                return self.action
+        self._hash = hash(self.name)
 
     def add_meta_data(self, name, value):
         if self.meta is None:
@@ -110,7 +85,7 @@ class GrammarSymbol(object):
         return str(self)
 
     def __str__(self):
-        return self.fqn
+        return self.name
 
     def __repr__(self):
         return "{}({})".format(type(self).__name__, str(self))
