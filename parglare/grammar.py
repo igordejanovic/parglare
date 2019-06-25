@@ -159,7 +159,7 @@ class Terminal(GrammarSymbol):
                  prefer=False, keyword=False, **kwargs):
         super(Terminal, self).__init__(name, **kwargs)
         self._recognizer = None
-        self.recognizer = recognizer if recognizer else StringRecognizer(name)
+        self.recognizer = recognizer
         self.action = action
         self.finish = finish
         self.prefer = prefer
@@ -907,6 +907,7 @@ class Grammar(object):
                 raise GrammarError(
                     location=THIS_LOCATION,
                     message=f'"{terminal_name}" terminal multiple definition')
+            recognizer = None
             recognizer_str = terminal_struct.get('recognizer')
             if recognizer_str:
                 if recognizer_str.startswith('/') \
