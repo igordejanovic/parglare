@@ -4,8 +4,7 @@ DSL specification.
 
 """
 from parglare.actions import ParglareActions
-from parglare.grammar import (Grammar, MULT_ZERO_OR_MORE, MULT_ONE_OR_MORE,
-                              MULT_OPTIONAL, MODIFIERS)
+from parglare.grammar import Grammar, MODIFIERS
 from parglare import GrammarError
 from parglare.common import Location
 
