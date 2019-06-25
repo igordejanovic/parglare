@@ -907,6 +907,7 @@ class Grammar(object):
         self.terminals.update([(s.name, s) for s in (EMPTY, EOF, STOP)])
         for terminal_name, terminal_struct \
                 in self.grammar_struct.get('terminals', {}).items():
+            check_name(None, terminal_name)
             if terminal_name in self.terminals:
                 raise GrammarError(
                     location=THIS_LOCATION,
@@ -939,6 +940,7 @@ class Grammar(object):
         Create productions of this grammar given the Python struct.
         """
         for rule_name, rule_struct in self.grammar_struct['rules'].items():
+            check_name(None, rule_name)
             if rule_name in self.nonterminals or rule_name in self.terminals:
                 raise GrammarError(
                     location=THIS_LOCATION,
@@ -1045,7 +1047,7 @@ class Grammar(object):
         if not symbol:
             raise GrammarError(
                 location=THIS_LOCATION,
-                message='Unknown reference "{}" in rule "{}".'
+                message='Unknown symbol "{}" in rule "{}".'
                 .format(name, rule))
         return symbol
 

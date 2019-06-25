@@ -1,11 +1,13 @@
 """
-This module defines the parglare grammar language using parglare internal
+This module defines parglare textual grammar language using parglare internal
 DSL specification.
 
 """
 from parglare.actions import ParglareActions
 from parglare.grammar import (Grammar, MULT_ZERO_OR_MORE, MULT_ONE_OR_MORE,
                               MULT_OPTIONAL)
+from parglare import GrammarError
+from parglare.common import Location
 
 
 def _(s):
@@ -243,7 +245,7 @@ pg_grammar = {
         'GSymbol': {
             'productions': [
                 {'production': ['NAME']},
-                {'production': ['STR']},
+                {'production': ['STR'], 'action': 'inline_terminal'},
             ]
         },
         'Recognizer': {
@@ -338,6 +340,10 @@ class PGGrammarActions(ParglareActions):
     Actions for parglare files
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.inline_terminals = {}
+
     def PGFile(self, nodes):
         rules_idx = [0, 1, 0, 1, None][self.prod_idx]
         imports_idx = [None, 0, None, 0, None][self.prod_idx]
@@ -349,9 +355,33 @@ class PGGrammarActions(ParglareActions):
         if imports_idx is not None:
             pgfile.update(nodes[imports_idx])
         if rules_idx is not None:
-            pgfile.update({'rules': dict(nodes[rules_idx])})
-        if terminals_idx is not None:
-            pgfile.update({'terminals': dict(nodes[terminals_idx])})
+            rules = {}
+            rule_tuples = nodes[rules_idx]
+            for rule_name, rule in rule_tuples:
+                rules.setdefault(rule_name,
+                                 {'productions': []})['productions']\
+                     .extend(rule['productions'])
+            pgfile['rules'] = rules
+        if terminals_idx is not None or self.inline_terminals:
+            terminals = {}
+            if terminals_idx:
+                term_tuples = nodes[terminals_idx]
+                for name, term in term_tuples:
+                    if name in terminals:
+                        raise GrammarError(
+                            location=Location(),
+                            message='Multiple definitions '
+                            'of terminal rule "{}"'.format(name))
+                    terminals[name] = term
+
+            for inline_term in self.inline_terminals:
+                if inline_term in terminals:
+                    raise GrammarError(
+                        location=Location(),
+                        message='Inline terminal with the name '
+                        '"{}" already exists.'.format(inline_term))
+                terminals[inline_term] = self.inline_terminals[inline_term]
+            pgfile.update({'terminals': terminals})
 
         return pgfile
 
@@ -435,6 +465,12 @@ class PGGrammarActions(ParglareActions):
                        .replace(r"\\", "\\")\
                        .replace(r"\n", "\n")\
                        .replace(r"\t", "\t")
+
+    def inline_terminal(self, nodes):
+        symbol = nodes[0]
+        if symbol not in self.inline_terminals:
+            self.inline_terminals[symbol] = {'recognizer': symbol}
+        return symbol
 
     def STR(self, value):
         return value[1:-1].replace(r"\\", "\\").replace(r"\'", "'")

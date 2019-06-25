@@ -27,9 +27,8 @@ class Location(object):
         self.start_position = context.start_position if context else None
         self.end_position = context.end_position if context else None
         self.position = context.position if context else None
-        if file_name:
-            self.file_name = file_name
-        elif context:
+        self.file_name = file_name
+        if not file_name and context:
             self.file_name = context.file_name
 
         # Evaluate this only when string representation is needed.
