@@ -161,7 +161,7 @@ def test_no_terminal_associavitity():
     with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Expected: : but found <NotComment(};)> or <}(})>' \
+    assert 'Expected: COLON but found <CLOSEDCURLY(})> or <NOTCOMMENT(};)>' \
         in str(e)
 
 
@@ -177,10 +177,11 @@ def test_terminal_empty_body():
     B: ;
     """
 
-    g = Grammar.from_string(grammar, recognizers={'B': None, 'A': None})
+    g = Grammar.from_string(grammar)
 
     a = g.get_terminal('A')
     assert a.prior == 15
+    assert a.recognizer is None
     b = g.get_terminal('B')
     assert b.recognizer is None
 
