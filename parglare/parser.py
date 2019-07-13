@@ -119,6 +119,26 @@ class Parser(object):
             self.print_debug()
 
     def _check_parser(self):
+        # Check that all actions given in the grammar are defined
+        if self.sem_actions:
+            def check_action(action, symbol_name):
+                try:
+                    getattr(self.sem_actions, action)
+                except AttributeError:
+                    raise ParserInitError(
+                        'Action "{}" given for rule "{}" '
+                        'doesn\'t exists.'
+                        .format(action, symbol_name))
+
+            for term in self.grammar.terminals.values():
+                if term.action and (term.name != term.action):
+                    check_action(term.action, term.name)
+
+            for production in self.grammar.productions:
+                if production.action and \
+                   (production.symbol.name != production.action):
+                    check_action(production.action, production.symbol.name)
+
         if self.table.sr_conflicts:
             self.print_debug()
             if self.dynamic_filter:
@@ -621,12 +641,13 @@ class Parser(object):
                 h_print("Building terminal node",
                         "'{}'.".format(token.symbol.name), level=2)
 
-            # If both build_tree and call_actions_during_build are set to
-            # True, semantic actions will be call but their result will be
+            # If both build_tree and call_actions_during_build are set to True,
+            # semantic actions will be called but their result will be
             # discarded. For more info check following issue:
             # https://github.com/igordejanovic/parglare/issues/44
             if self.call_actions_during_tree_build and sem_action:
-                sem_action(context, token.value)
+                self.sem_actions.context = context
+                sem_action(token.value)
 
             return treebuild_shift_action(context)
 
