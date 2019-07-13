@@ -1,26 +1,20 @@
 import pytest  # noqa
-from parglare.actions import collect, collect_optional, \
-    collect_sep, collect_sep_optional, collect_right, \
-    collect_right_optional, collect_right_sep, \
-    collect_right_sep_optional, pass_single
+from parglare import ParglareActions
 from parglare import Grammar, Parser
 from parglare.exceptions import ParserInitError
 
 
 def test_collect_left():
     grammar = """
+    @collect
     Elements: Elements Element | Element;
+    @pass_single
     Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
 
-    actions = {
-        "Elements": collect,
-        "Element": pass_single
-    }
-
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=ParglareActions(), debug=True)
 
     result = parser.parse('a b a a b')
 
@@ -29,18 +23,15 @@ def test_collect_left():
 
 def test_collect_left_optional():
     grammar = """
+    @collect_optional
     Elements: Elements Element | Element | EMPTY;
+    @pass_single
     Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
 
-    actions = {
-        "Elements": collect_optional,
-        "Element": pass_single
-    }
-
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=ParglareActions(), debug=True)
 
     result = parser.parse('a b a a b')
     assert result == ['a', 'b', 'a', 'a', 'b']
@@ -52,18 +43,15 @@ def test_collect_left_optional():
 
 def test_collect_left_sep():
     grammar = """
+    @collect_sep
     Elements: Elements "," Element | Element;
+    @pass_single
     Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
 
-    actions = {
-        "Elements": collect_sep,
-        "Element": pass_single
-    }
-
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=ParglareActions(), debug=True)
 
     result = parser.parse('a, b, a ,a, b')
 
@@ -72,18 +60,15 @@ def test_collect_left_sep():
 
 def test_collect_left_sep_optional():
     grammar = """
+    @collect_sep_optional
     Elements: Elements "," Element | Element | EMPTY;
+    @pass_single
     Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
 
-    actions = {
-        "Elements": collect_sep_optional,
-        "Element": pass_single
-    }
-
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=ParglareActions(), debug=True)
 
     result = parser.parse('a ,b, a, a, b')
     assert result == ['a', 'b', 'a', 'a', 'b']
@@ -95,18 +80,15 @@ def test_collect_left_sep_optional():
 
 def test_collect_right():
     grammar = """
+    @collect_right
     Elements: Element Elements | Element;
+    @pass_single
     Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
 
-    actions = {
-        "Elements": collect_right,
-        "Element": pass_single
-    }
-
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=ParglareActions(), debug=True)
 
     result = parser.parse('a b a a b')
 
@@ -115,18 +97,15 @@ def test_collect_right():
 
 def test_collect_right_optional():
     grammar = """
+    @collect_right_optional
     Elements: Element Elements | Element | EMPTY;
+    @pass_single
     Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
 
-    actions = {
-        "Elements": collect_right_optional,
-        "Element": pass_single
-    }
-
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=ParglareActions(), debug=True)
 
     result = parser.parse('a b a a b')
     assert result == ['a', 'b', 'a', 'a', 'b']
@@ -138,18 +117,15 @@ def test_collect_right_optional():
 
 def test_collect_right_sep():
     grammar = """
+    @collect_right_sep
     Elements: Element "," Elements | Element;
+    @pass_single
     Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
 
-    actions = {
-        "Elements": collect_right_sep,
-        "Element": pass_single
-    }
-
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=ParglareActions(), debug=True)
 
     result = parser.parse('a, b, a ,a, b')
 
@@ -158,18 +134,15 @@ def test_collect_right_sep():
 
 def test_collect_right_sep_optional():
     grammar = """
+    @collect_right_sep_optional
     Elements: Element "," Elements | Element | EMPTY;
+    @pass_single
     Element: "a" | "b";
     """
 
     g = Grammar.from_string(grammar)
 
-    actions = {
-        "Elements": collect_right_sep_optional,
-        "Element": pass_single
-    }
-
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=ParglareActions(), debug=True)
 
     result = parser.parse('a ,b, a, a, b')
     assert result == ['a', 'b', 'a', 'a', 'b']
@@ -192,23 +165,19 @@ def test_user_grammar_actions():
     B: "b";
     """
 
-    called = [False, False]
+    class MyActions(ParglareActions):
+        called = [False, False]
 
-    def nonterm_action(_, __):
-        called[0] = True
+        def nonterm_action(self, _):
+            self.called[0] = True
 
-    def term_action(_, __):
-        called[1] = True
-
-    my_actions = {
-        "nonterm_action": nonterm_action,
-        "term_action": term_action,
-    }
+        def term_action(self, _):
+            self.called[1] = True
 
     g = Grammar.from_string(grammar)
-    p = Parser(g, actions=my_actions)
+    p = Parser(g, actions=MyActions())
     assert p.parse("a b a b")
-    assert all(called)
+    assert all(MyActions.called)
 
 
 def test_parglare_builtin_action_override():
@@ -221,19 +190,16 @@ def test_parglare_builtin_action_override():
     A: "a";
     """
 
-    called = [False]
+    class MyActions(ParglareActions):
+        called = [False]
 
-    def my_collect(_, __):
-        called[0] = True
-
-    my_actions = {
-        "collect": my_collect,
-    }
+        def collect(self, _):
+            self.called[0] = True
 
     g = Grammar.from_string(grammar)
-    p = Parser(g, actions=my_actions)
+    p = Parser(g, actions=MyActions())
     assert p.parse("a a ")
-    assert called[0]
+    assert MyActions.called[0]
 
 
 def test_parglare_builtin_action_override_repetition():
@@ -247,20 +213,17 @@ def test_parglare_builtin_action_override_repetition():
     B: "b";
     """
 
-    called = [False]
+    class MyActions(ParglareActions):
+        called = [False]
 
-    def my_collect(_, __):
-        called[0] = True
-        return "pass"
-
-    my_actions = {
-        "collect": my_collect,
-    }
+        def collect(self, _):
+            self.called[0] = True
+            return "pass"
 
     g = Grammar.from_string(grammar)
-    p = Parser(g, actions=my_actions)
+    p = Parser(g, actions=MyActions())
     assert p.parse("b b") == 'pass'
-    assert called[0]
+    assert MyActions.called[0]
 
 
 def test_unexisting_builtin_action_raises_exception():
@@ -272,12 +235,8 @@ def test_unexisting_builtin_action_raises_exception():
     A: "a";
     """
 
-    my_actions = {
-        "collect": lambda _, __: None,
-    }
-
     g = Grammar.from_string(grammar)
     with pytest.raises(ParserInitError) as e:
-        Parser(g, actions=my_actions)
+        Parser(g, actions=ParglareActions())
 
     assert 'a_action_unexisting' in str(e)

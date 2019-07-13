@@ -38,7 +38,7 @@ pg_grammar = {
             ]
         },
         'Import': {
-            'action': 'pgimport',
+            #'action': 'pgimport',
             'productions': [
                 {'production': ['IMPORT', 'STR', 'SEMICOLON']},
                 {'production': ['IMPORT', 'STR', 'AS', 'NAME', 'SEMICOLON']},
