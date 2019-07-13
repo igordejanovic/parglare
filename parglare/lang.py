@@ -187,11 +187,13 @@ pg_grammar = {
             ]
         },
         'PlainAssignment': {
+            'action': 'pass_nochange',
             'productions': [
                 {'production': ['NAME', 'EQUAL', 'GSymbolReference']},
             ]
         },
         'BoolAssignment': {
+            'action': 'pass_nochange',
             'productions': [
                 {'production': ['NAME', 'BOOLEQUAL', 'GSymbolReference']},
             ]
@@ -437,10 +439,19 @@ class PGGrammarActions(ParglareActions):
         return nodes[0], rule
 
     def Production(self, nodes):
-        prod = {'production': nodes[0]}
+        p = nodes[0]
+        assignments = {}
+        for idx, assignment in enumerate(p):
+            if type(assignment) is list:
+                # We have an assignment
+                assignments[assignment[0]] = (idx, assignment[1])
+                p[idx] = assignment[2]
+        prod = {'production': p}
         if len(nodes) > 1:
             prod['meta'] = dict(nodes[2])
             self.extract_modifiers(prod)
+        if assignments:
+            prod['assignments'] = assignments
         return prod
 
     def TerminalRule(self, nodes):
@@ -465,15 +476,6 @@ class PGGrammarActions(ParglareActions):
 
     def UserMetaData(self, nodes):
         return (nodes[0], nodes[2])
-
-    def Assignment(self, nodes):
-        return nodes[0]
-
-    def PlainAssignment(self, nodes):
-        return nodes[0]
-
-    def BoolAssignment(self, nodes):
-        return nodes[0]
 
     def GSymbolReference(self, nodes):
         symbol_ref, rep_op = nodes
