@@ -371,13 +371,21 @@ class Parser(object):
             context.production = None
             context.token = None
             context.layout_content = node.layout_content
+            if isinstance(node, NodeNonTerm):
+                context.production = node.production
+                self.sem_actions.prod_idx = node.production.prod_symbol_id
+            if self.sem_actions:
+                self.sem_actions.context = context
 
         def inner_call_actions(node):
-            sem_action = node.symbol.action
+            sem_action = None
             if isinstance(node, NodeTerm):
+                if self.sem_actions and node.symbol.action:
+                    sem_action = getattr(self.sem_actions, node.symbol.action,
+                                         None)
                 if sem_action:
                     set_context(context, node)
-                    result = sem_action(context, node.value)
+                    result = sem_action(node.value)
                 else:
                     result = node.value
             else:
@@ -388,9 +396,11 @@ class Parser(object):
                     subresults.append(inner_call_actions(n))
                 subresults.reverse()
 
+                if self.sem_actions and node.production.action:
+                    sem_action = getattr(self.sem_actions,
+                                         node.production.action, None)
                 if sem_action:
                     set_context(context, node)
-                    context.production = node.production
                     assignments = node.production.assignments
                     if assignments:
                         assgn_results = {}
@@ -400,23 +410,9 @@ class Parser(object):
                             else:
                                 assgn_results[a.name] = \
                                     bool(subresults[a.index])
-                    if type(sem_action) is list:
-                        if assignments:
-                            result = \
-                                sem_action[
-                                    node.production.prod_symbol_id](
-                                        context, subresults, **assgn_results)
-                        else:
-                            result = \
-                                sem_action[
-                                    node.production.prod_symbol_id](context,
-                                                                    subresults)
+                        result = sem_action(subresults, **assgn_results)
                     else:
-                        if assignments:
-                            result = sem_action(context, subresults,
-                                                **assgn_results)
-                        else:
-                            result = sem_action(context, subresults)
+                        result = sem_action(subresults)
                 else:
                     if len(subresults) == 1:
                         # Unpack if single subresult
