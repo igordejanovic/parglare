@@ -127,6 +127,9 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
     follow_sets = follow(grammar, first_sets)
 
+    start_prod_symbol = grammar.productions[start_production].symbol
+    grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
+
     # Create a state for the first production (augmented)
     s = LRState(grammar, 0, grammar.AUGSYMBOL,
                 [LRItem(grammar.productions[0], 0, set())])
