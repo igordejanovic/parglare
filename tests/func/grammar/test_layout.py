@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Parser, GLRParser, Grammar, ParseError
+from parglare import Parser, GLRParser, Grammar, ParseError, ParglareActions
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
@@ -26,7 +26,7 @@ def test_layout_whitespaces(parser_class):
     aaa
     """
 
-    parser = parser_class(g, debug=True)
+    parser = parser_class(g)
     result = parser.parse(in_str)
     assert result
 
@@ -124,24 +124,22 @@ def test_layout_context(parser_class):
     aaa
     """
 
-    def layout_action(context, _):
-        layout_called[0] = True
-        if 'This is a comment' in context.layout_content:
-            layout_passed[0] = True
+    class MyActions(ParglareActions):
+        layout_called = False
+        layout_passed = False
 
-    actions = {
-        "a": layout_action
-    }
+        def a(self, _):
+            self.layout_called = True
+            if 'This is a comment' in self.context.layout_content:
+                self.layout_passed = True
 
-    layout_called = [False]
-    layout_passed = [False]
-
+    actions = MyActions()
     parser = parser_class(g, actions=actions)
 
     parser.parse(in_str)
 
-    assert layout_called[0]
-    assert layout_passed[0]
+    assert actions.layout_called
+    assert actions.layout_passed
 
 
 @parsers
@@ -171,33 +169,29 @@ def test_layout_actions(parser_class):
     aaa
     """
 
-    def comment_action(_, nodes):
-        layout_called[0] = True
+    class MyActions(ParglareActions):
+        called = False
+        layout_called = False
 
-    def layout_action(_, nodes):
-        ret = ''
-        for n in nodes:
-            if n:
-                ret += n
-        return ret
+        def Comment(self, nodes):
+            self.layout_called = True
 
-    def a_action(context, _):
-        called[0] = True
+        def LAYOUT(self, nodes):
+            ret = ''
+            for n in nodes:
+                if n:
+                    ret += n
+            return ret
 
-    actions = {
-        'Comment': comment_action,
-        'LAYOUT': layout_action,
-        'a': a_action
-    }
+        def a(self, _):
+            self.called = True
 
-    called = [False]
-    layout_called = [False]
-
+    actions = MyActions()
     parser = parser_class(g, actions=actions, layout_actions=actions)
     parser.parse(in_str)
 
-    assert called[0]
-    assert layout_called[0]
+    assert actions.called
+    assert actions.layout_called
 
 
 def test_layout_terminal():
