@@ -1153,8 +1153,8 @@ class Grammar(object):
 
     @staticmethod
     def from_string(grammar_str, **kwargs):
-        return Grammar.from_struct(Grammar.struct_from_string(grammar_str,
-                                                              **kwargs))
+        return Grammar.from_struct(Grammar.struct_from_string(grammar_str),
+                                   **kwargs)
 
     # @staticmethod
     # def from_file(file_name, **kwargs):
