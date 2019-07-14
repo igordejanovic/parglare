@@ -144,7 +144,7 @@ pg_grammar = {
             'action': 'meta_data_bool',
             'productions': [
                 {'production': ['PREFER']},
-                {'production': ['KEYWORD']},
+                {'production': ['_KEYWORD']},
                 {'production': ['FINISH']},
                 {'production': ['NOFINISH']},
                 {'production': ['DYNAMIC']},
@@ -339,7 +339,7 @@ pg_grammar = {
         'FINISH': _('finish'),
         'NOFINISH': _('nofinish'),
         'PREFER': _('prefer'),
-        'KEYWORD': _('keyword'),
+        '_KEYWORD': _('keyword'),
     }
 }
 

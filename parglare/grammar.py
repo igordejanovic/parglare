@@ -755,6 +755,7 @@ class Grammar(object):
         self._extend_assignment_definitions()
         self._desugar_struct_multiplicities()
         self._create_terminals()
+        self._fix_keyword_terminals()
         self._create_productions()
         self._enumerate_productions()
         self._resolve()
