@@ -1,25 +1,37 @@
-def act_assignment(context, nodes):
-    name = nodes[0]
-    number = nodes[2]
-
-    # Use context.extra to collect variables
-    if context.extra is None:
-        context.extra = {}
-
-    context.extra[name] = number
+from parglare import Actions
 
 
-actions = {
-    "Calc": lambda _, nodes: nodes[1],
-    "Assignment": act_assignment,
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[1],
-          lambda _, nodes: nodes[0],
-          lambda _, nodes: nodes[0]],
-    "Number": lambda _, value: float(value),
-    "VariableName": lambda _, value: value,
-    "VariableRef": lambda context, nodes: context.extra[nodes[0]],
-}
+class MyActions(Actions):
+    def Calc(self, nodes):
+        return self.pass_inner(nodes)
+
+    def Assignment(self, nodes):
+        name = nodes[0]
+        number = nodes[2]
+
+        # Use context.extra to collect variables
+        if self.context.extra is None:
+            self.context.extra = {}
+
+        self.context.extra[name] = number
+
+    def E(self, nodes):
+        return [lambda n: n[0] + n[2],
+                lambda n: n[0] - n[2],
+                lambda n: n[0] * n[2],
+                lambda n: n[0] / n[2],
+                lambda n: n[1],
+                lambda n: n[0],
+                lambda n: n[0]][self.prod_idx](nodes)
+
+    def Number(self, value):
+        return float(value)
+
+    def VariableName(self, value):
+        return value
+
+    def VariableRef(self, nodes):
+        return self.context.extra[nodes[0]]
+
+
+actions = MyActions()

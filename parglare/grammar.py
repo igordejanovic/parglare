@@ -906,7 +906,8 @@ class Grammar(object):
             recognizer_str = terminal_struct.get('recognizer')
             if recognizer_str:
                 if recognizer_str.startswith('/') \
-                   and recognizer_str.endswith('/'):
+                   and recognizer_str.endswith('/') \
+                   and len(recognizer_str) > 2:
                     recognizer = RegExRecognizer(recognizer_str[1:-1],
                                                  re_flags=self.re_flags,
                                                  ignore_case=self.ignore_case)
@@ -1157,14 +1158,14 @@ class Grammar(object):
         return Grammar.from_struct(Grammar.struct_from_string(grammar_str),
                                    **kwargs)
 
-    # @staticmethod
-    # def from_file(file_name, **kwargs):
-    #     file_name = path.realpath(file_name)
+    @staticmethod
+    def from_file(file_name, **kwargs):
+        file_name = path.realpath(file_name)
 
-    #     with codecs.open(file_name, 'w', encoding="utf-8") as f:
-    #         content = f.read()
-    #     return Grammar.from_struct(Grammar.struct_from_string(content),
-    #                                **kwargs)
+        with open(file_name, 'r', encoding="utf-8") as f:
+            content = f.read()
+        return Grammar.from_struct(Grammar.struct_from_string(content),
+                                   **kwargs)
 
     @staticmethod
     def struct_from_string(grammar_str, **kwargs):
