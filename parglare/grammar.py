@@ -209,7 +209,7 @@ class Production(object):
     :param GrammarSymbol symbol: A grammar symbol on the LHS of the production.
     :param ProductionRHS rhs:
     :param action: A name of common/user action given in the grammar.
-    :param dict assignments: Assignment instances keyed by name.
+    :param list assignments: A list of Assignment instances.
     :param int assoc: Associativity.  Used for ambiguity (shift/reduce)
         resolution.
     :param int prior: Priority.  Used for ambiguity (shift/reduce) resolution.
@@ -231,12 +231,7 @@ class Production(object):
         self.symbol = symbol
         self.rhs = rhs if rhs else ProductionRHS()
         self.action = action
-        self.assignments = None
-        if assignments:
-            self.assignments = {}
-            for assignment in assignments:
-                if assignment.name:
-                    self.assignments[assignment.name] = assignment
+        self.assignments = assignments
         self.assoc = assoc
         self.prior = prior
         self.dynamic = dynamic
@@ -290,25 +285,22 @@ class Assignment(object):
     General assignment (`=` or `?=`, a.k.a. `named matches`) in productions.
     Used also for references as LHS and assignment operator are optional.
     """
-    def __init__(self, name, op, symbol):
+    def __init__(self, name, op, symbol, mult=MULT_ONE, rhs_idx=None):
         """
         :param str name: The name on the LHS of assignment.
         :param str op: Either a `=` or `?=`.
-        :param GrammarSymbol symbol: A grammar symbol on the RHS.
-        :param str symbol_name: A de-sugarred grammar symbol name on the RHS,
-            i.e. referenced symbol without regex operators.
+        :param symbol: A grammar symbol on the RHS or the symbol name
+        :type symbol: `GrammarSymbol` or `str`
         :param str mult: Multiplicity of the RHS reference (used for regex
             operators ?, *, +).  See MULT_* constants above.  By default
             multiplicity is MULT_ONE.
-        :param int index: Index in the production RHS
+        :param int rhs_idx: Index in the production RHS
         """
         self.name = name
         self.op = op
         self.symbol = symbol
-        self.symbol_name = symbol.name
-        self.mult = symbol.mult \
-            if isinstance(symbol, Reference) else MULT_ONE
-        self.index = None
+        self.mult = mult
+        self.rhs_idx = rhs_idx
 
 
 class PGAttribute(object):
@@ -726,7 +718,7 @@ class Grammar(object):
     def __init__(self, grammar_struct, classes=None, file_path=None,
                  start_symbol=None, ignore_case=False, re_flags=re.MULTILINE,
                  debug=False, debug_parse=False, debug_colors=False):
-        self.classes = classes
+        self.classes = classes if classes else {}
         self.file_path = file_path
         self.ignore_case = ignore_case
         self.re_flags = re_flags
@@ -760,11 +752,38 @@ class Grammar(object):
         Initialize this grammar from a grammar given in a form of a Python
         structure.
         """
+        self._extend_assignment_definitions()
         self._desugar_struct_multiplicities()
         self._create_terminals()
         self._create_productions()
         self._enumerate_productions()
         self._resolve()
+
+    def _extend_assignment_definitions(self):
+        """
+        Extend assignment definition struct to include information about
+        multiplicities and symbol names before multiplicities desugaring.
+        """
+        rules = self.grammar_struct['rules']
+        for rule_name, rule_struct in list(rules.items()):
+            for (prod_idx,
+                 production_struct) in enumerate(rule_struct['productions']):
+                rhs = production_struct['production']
+                assignments_struct = production_struct.get('assignments', {})
+                for assignment_struct in assignments_struct.values():
+                    rhs_idx = assignment_struct['rhs_idx']
+                    mult_struct = rhs[rhs_idx]
+                    if 'mult' not in assignment_struct:
+                        if type(mult_struct) is dict:
+                            assignment_struct['mult'] = mult_struct['mult']
+                        else:
+                            assignment_struct['mult'] = MULT_ONE
+                    if 'symbol' not in assignment_struct:
+                        if type(mult_struct) is dict:
+                            assignment_struct['symbol'] = \
+                                mult_struct['symbol']
+                        else:
+                            assignment_struct['symbol'] = mult_struct
 
     def _desugar_struct_multiplicities(self):
         """
@@ -931,14 +950,25 @@ class Grammar(object):
             )
             self.nonterminals[rule_name] = nt
             productions = []
+            rule_assignments = {}
             for production_struct in rule_struct['productions']:
                 rhs = ProductionRHS(production_struct['production'])
                 prod_modifiers = self._desugar_modifiers(
                     production_struct.get('modifiers', []))
+                prod_assignments = {}
+                assignments = production_struct.get('assignments', {})
+                for assign_name, assignment_struct in assignments.items():
+                    prod_assignments[assign_name] = \
+                        Assignment(assign_name,
+                                   op=assignment_struct['op'],
+                                   symbol=assignment_struct['symbol'],
+                                   mult=assignment_struct['mult'],
+                                   rhs_idx=assignment_struct['rhs_idx'])
                 productions.append(Production(
                     nt, rhs,
                     action=production_struct.get(
                         'action', rule_struct.get('action', rule_name)),
+                    assignments=prod_assignments.values(),
                     assoc=prod_modifiers.get('assoc', nt.assoc),
                     prior=prod_modifiers.get('prior', nt.prior),
                     dynamic=prod_modifiers.get('dynamic', nt.dynamic),
@@ -946,7 +976,11 @@ class Grammar(object):
                     pse=prod_modifiers.get('pse', nt.pse),
                     meta=production_struct.get('meta')
                 ))
+                rule_assignments.update(prod_assignments)
             nt.productions = productions
+            if rule_assignments and rule_name not in self.classes:
+                self._create_class(rule_name, rule_assignments)
+                nt.action = 'obj'
             # AUGMENTED symbol production must be first
             if rule_name == AUGSYMBOL_NAME:
                 self.productions.insert(0, productions[0])
@@ -964,6 +998,50 @@ class Grammar(object):
             prod.prod_symbol_id = idx_per_symbol.get(prod.symbol, 0)
             idx_per_symbol[prod.symbol] = \
                 idx_per_symbol.get(prod.symbol, 0) + 1
+
+    def _create_class(self, rule_name, rule_assignments):
+        """
+        Create class for each rule using assignments.
+        """
+        attrs = {}
+        for a in rule_assignments.values():
+            attrs[a.name] = PGAttribute(a.name, a.mult, a.symbol)
+
+        class ParglareMetaClass(type):
+
+            def __repr__(cls):
+                return '<parglare:{} class at {}>'.format(rule_name, id(cls))
+
+        @add_metaclass(ParglareMetaClass)
+        class ParglareClass(object):
+            """
+            Dynamically created class for each parglare rule that uses named
+            matches.
+
+            :param _pg_attrs: A dict of meta-attributes keyed by name.  Used by
+                common rules.
+            :param int _pg_position: A position in the input string where this
+                class is defined.
+            :param int _pg_position_end: A position in the input string where
+                this class ends.
+            """
+
+            _pg_attrs = attrs
+
+            def __init__(self, **attrs):
+                for attr_name, attr_value in attrs.items():
+                    setattr(self, attr_name, attr_value)
+
+            def __repr__(self):
+                if hasattr(self, 'name'):
+                    return "<{}:{}>".format(rule_name, self.name)
+                else:
+                    return "<parglare:{} instance at {}>"\
+                        .format(rule_name, hex(id(self)))
+
+        ParglareClass.__name__ = rule_name
+
+        self.classes[rule_name] = ParglareClass
 
     def _desugar_modifiers(self, modifiers):
         """

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest
-from parglare import Parser, Grammar
+from parglare import Parser, Grammar, ParglareActions
 from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
 from parglare.exceptions import GrammarError, ParseError
 
@@ -271,27 +271,31 @@ def test_action_override():
     result = p.parse(input_str)
     assert result == ["foo", ["1", "a"]]
 
-    actions = {
-        "Foo": lambda _, __: "eggs",
-        "Bar": lambda _, __: "bar reduce"}
+    class Actions(ParglareActions):
+        def pass_nochange(self, nodes):
+            if self.context.symbol.name == 'Foo':
+                return "eggs"
+            elif self.context.symbol.name == 'Bar':
+                return "bar reduce"
 
-    p = Parser(g, actions=actions)
+    p = Parser(g, actions=Actions())
     result = p.parse(input_str)
     assert result == ["eggs", "bar reduce"]
 
     # Test with actions call postponing
-    p = Parser(g, build_tree=True, actions=actions)
+    p = Parser(g, build_tree=True, actions=Actions())
     tree = p.parse(input_str)
     result = p.call_actions(tree)
     assert result == ["eggs", "bar reduce"]
 
 
 def assignment_in_productions(prods, symbol_name, assgn_name):
-    found = False
     for p in prods:
         if p.symbol.name == symbol_name:
-            found = assgn_name in p.assignments
-    return found
+            for assgn in p.assignments:
+                if assgn_name == assgn.name:
+                    return True
+    return False
 
 
 def test_assignment_plain():
@@ -307,26 +311,25 @@ def test_assignment_plain():
     """
 
     g = Grammar.from_string(grammar)
+    assert 'S' in g.classes
     assert assignment_in_productions(g.productions, 'S', 'first')
 
-    called = [False]
+    class MyActions(ParglareActions):
+        called = False
 
-    def act_s(_, nodes, first):
-        called[0] = True
-        assert first == "2"
-        return nodes
+        def S(self, nodes, first):
+            self.called = True
+            assert first == "2"
+            return nodes
 
-    actions = {
-        "S": act_s
-    }
-
+    actions = MyActions()
     p = Parser(g, actions=actions)
 
     input_str = '1 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", "2", "3"]
-    assert called[0]
+    assert actions.called
 
 
 def test_assignment_bool():
@@ -344,24 +347,22 @@ def test_assignment_bool():
     g = Grammar.from_string(grammar)
     assert assignment_in_productions(g.productions, 'S', 'first')
 
-    called = [False]
+    class MyActions(ParglareActions):
+        called = False
 
-    def act_s(_, nodes, first):
-        called[0] = True
-        assert first is True
-        return nodes
+        def S(self, nodes, first):
+            self.called = True
+            assert first is True
+            return nodes
 
-    actions = {
-        "S": act_s
-    }
-
+    actions = MyActions()
     p = Parser(g, actions=actions)
 
     input_str = '1 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", "2", "3"]
-    assert called[0]
+    assert actions.called
 
 
 def test_assignment_of_repetition():
@@ -379,16 +380,15 @@ def test_assignment_of_repetition():
     g = Grammar.from_string(grammar)
     assert assignment_in_productions(g.productions, 'S', 'first')
 
-    called = [False]
+    class MyActions(ParglareActions):
+        called = False
 
-    def act_s(_, nodes, first):
-        called[0] = True
-        assert first == ["2", "2"]
-        return nodes
+        def S(self, nodes, first):
+            self.called = True
+            assert first == ["2", "2"]
+            return nodes
 
-    actions = {
-        "S": act_s
-    }
+    actions = MyActions()
 
     p = Parser(g, actions=actions)
 
@@ -396,7 +396,7 @@ def test_assignment_of_repetition():
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], "3"]
-    assert called[0]
+    assert actions.called
 
 
 def test_assignment_of_repetition_with_sep():
@@ -415,24 +415,22 @@ def test_assignment_of_repetition_with_sep():
     g = Grammar.from_string(grammar)
     assert assignment_in_productions(g.productions, 'S', 'first')
 
-    called = [False]
+    class MyActions(ParglareActions):
+        called = False
 
-    def act_s(_, nodes, first):
-        called[0] = True
-        assert first == ["2", "2"]
-        return nodes
+        def S(self, nodes, first):
+            self.called = True
+            assert first == ["2", "2"]
+            return nodes
 
-    actions = {
-        "S": act_s
-    }
-
+    actions = MyActions()
     p = Parser(g, actions=actions)
 
     input_str = '1 2, 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], "3"]
-    assert called[0]
+    assert actions.called
 
 
 def test_multiple_assignment_with_repetitions():
@@ -452,25 +450,23 @@ def test_multiple_assignment_with_repetitions():
     assert assignment_in_productions(g.productions, 'S', 'first')
     assert assignment_in_productions(g.productions, 'S', 'second')
 
-    called = [False]
+    class MyActions(ParglareActions):
+        called = False
 
-    def act_s(_, nodes, first, second):
-        called[0] = True
-        assert first == ["2", "2"]
-        assert second is True
-        return nodes
+        def S(self, nodes, first, second):
+            self.called = True
+            assert first == ["2", "2"]
+            assert second is True
+            return nodes
 
-    actions = {
-        "S": act_s
-    }
-
+    actions = MyActions()
     p = Parser(g, actions=actions)
 
     input_str = '1 2, 2 2 2 2 3'
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], ["2", "2", "2"], "3"]
-    assert called[0]
+    assert actions.called
 
 
 def test_case_insensitive_parsing():

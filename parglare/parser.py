@@ -389,6 +389,7 @@ class Parser(object):
                 else:
                     result = node.value
             else:
+                production = node.production
                 subresults = []
                 # Recursive right to left, bottom up. Simulate LR
                 # reductions.
@@ -396,20 +397,19 @@ class Parser(object):
                     subresults.append(inner_call_actions(n))
                 subresults.reverse()
 
-                if self.sem_actions and node.production.action:
+                if self.sem_actions and production.action:
                     sem_action = getattr(self.sem_actions,
-                                         node.production.action, None)
+                                         production.action, None)
                 if sem_action:
                     set_context(context, node)
-                    assignments = node.production.assignments
-                    if assignments:
+                    if production.assignments:
                         assgn_results = {}
-                        for a in assignments.values():
+                        for a in production.assignments:
                             if a.op == '=':
-                                assgn_results[a.name] = subresults[a.index]
+                                assgn_results[a.name] = subresults[a.rhs_idx]
                             else:
                                 assgn_results[a.name] = \
-                                    bool(subresults[a.index])
+                                    bool(subresults[a.rhs_idx])
                         result = sem_action(subresults, **assgn_results)
                     else:
                         result = sem_action(subresults)
@@ -692,14 +692,13 @@ class Parser(object):
         if sem_action:
             self.sem_actions.context = context
             self.sem_actions.prod_idx = production.prod_symbol_id
-            assignments = production.assignments
-            if assignments:
+            if production.assignments:
                 assgn_results = {}
-                for a in assignments.values():
+                for a in production.assignments:
                     if a.op == '=':
-                        assgn_results[a.name] = subresults[a.index]
+                        assgn_results[a.name] = subresults[a.rhs_idx]
                     else:
-                        assgn_results[a.name] = bool(subresults[a.index])
+                        assgn_results[a.name] = bool(subresults[a.rhs_idx])
                 result = sem_action(subresults, **assgn_results)
             else:
                 result = sem_action(subresults)

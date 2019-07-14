@@ -444,7 +444,8 @@ class PGGrammarActions(ParglareActions):
         for idx, assignment in enumerate(p):
             if type(assignment) is list:
                 # We have an assignment
-                assignments[assignment[0]] = (idx, assignment[1])
+                assignments[assignment[0]] = {'op': assignment[1],
+                                              'rhs_idx': idx}
                 p[idx] = assignment[2]
         prod = {'production': p}
         if len(nodes) > 1:
