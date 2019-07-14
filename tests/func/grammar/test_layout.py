@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Parser, GLRParser, Grammar, ParseError, ParglareActions
+from parglare import Parser, GLRParser, Grammar, ParseError, Actions
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
@@ -124,7 +124,7 @@ def test_layout_context(parser_class):
     aaa
     """
 
-    class MyActions(ParglareActions):
+    class MyActions(Actions):
         layout_called = False
         layout_passed = False
 
@@ -169,7 +169,7 @@ def test_layout_actions(parser_class):
     aaa
     """
 
-    class MyActions(ParglareActions):
+    class MyActions(Actions):
         called = False
         layout_called = False
 

@@ -1,12 +1,12 @@
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Parser, NodeNonTerm, ParglareActions
+from parglare import Parser, NodeNonTerm, Actions
 from ..grammar.expression_grammar_numbers import get_grammar
 
 
 def get_actions():
 
-    class Actions(ParglareActions):
+    class MyActions(Actions):
 
         def NUMBER(self, value):
             return float(value)
@@ -32,7 +32,7 @@ def get_actions():
         def pass_act(self, nodes):
             return nodes[0]
 
-    return Actions()
+    return MyActions()
 
 
 def test_actions():

@@ -1,6 +1,5 @@
 import pytest  # noqa
-from parglare import ParglareActions
-from parglare import Grammar, Parser
+from parglare import Grammar, Parser, Actions
 from parglare.exceptions import ParserInitError
 
 
@@ -14,7 +13,7 @@ def test_collect_left():
 
     g = Grammar.from_string(grammar)
 
-    parser = Parser(g, actions=ParglareActions(), debug=True)
+    parser = Parser(g, actions=Actions(), debug=True)
 
     result = parser.parse('a b a a b')
 
@@ -31,7 +30,7 @@ def test_collect_left_optional():
 
     g = Grammar.from_string(grammar)
 
-    parser = Parser(g, actions=ParglareActions(), debug=True)
+    parser = Parser(g, actions=Actions(), debug=True)
 
     result = parser.parse('a b a a b')
     assert result == ['a', 'b', 'a', 'a', 'b']
@@ -51,7 +50,7 @@ def test_collect_left_sep():
 
     g = Grammar.from_string(grammar)
 
-    parser = Parser(g, actions=ParglareActions(), debug=True)
+    parser = Parser(g, actions=Actions(), debug=True)
 
     result = parser.parse('a, b, a ,a, b')
 
@@ -68,7 +67,7 @@ def test_collect_left_sep_optional():
 
     g = Grammar.from_string(grammar)
 
-    parser = Parser(g, actions=ParglareActions(), debug=True)
+    parser = Parser(g, actions=Actions(), debug=True)
 
     result = parser.parse('a ,b, a, a, b')
     assert result == ['a', 'b', 'a', 'a', 'b']
@@ -88,7 +87,7 @@ def test_collect_right():
 
     g = Grammar.from_string(grammar)
 
-    parser = Parser(g, actions=ParglareActions(), debug=True)
+    parser = Parser(g, actions=Actions(), debug=True)
 
     result = parser.parse('a b a a b')
 
@@ -105,7 +104,7 @@ def test_collect_right_optional():
 
     g = Grammar.from_string(grammar)
 
-    parser = Parser(g, actions=ParglareActions(), debug=True)
+    parser = Parser(g, actions=Actions(), debug=True)
 
     result = parser.parse('a b a a b')
     assert result == ['a', 'b', 'a', 'a', 'b']
@@ -125,7 +124,7 @@ def test_collect_right_sep():
 
     g = Grammar.from_string(grammar)
 
-    parser = Parser(g, actions=ParglareActions(), debug=True)
+    parser = Parser(g, actions=Actions(), debug=True)
 
     result = parser.parse('a, b, a ,a, b')
 
@@ -142,7 +141,7 @@ def test_collect_right_sep_optional():
 
     g = Grammar.from_string(grammar)
 
-    parser = Parser(g, actions=ParglareActions(), debug=True)
+    parser = Parser(g, actions=Actions(), debug=True)
 
     result = parser.parse('a ,b, a, a, b')
     assert result == ['a', 'b', 'a', 'a', 'b']
@@ -165,7 +164,7 @@ def test_user_grammar_actions():
     B: "b";
     """
 
-    class MyActions(ParglareActions):
+    class MyActions(Actions):
         called = [False, False]
 
         def nonterm_action(self, _):
@@ -190,7 +189,7 @@ def test_parglare_builtin_action_override():
     A: "a";
     """
 
-    class MyActions(ParglareActions):
+    class MyActions(Actions):
         called = [False]
 
         def collect(self, _):
@@ -213,7 +212,7 @@ def test_parglare_builtin_action_override_repetition():
     B: "b";
     """
 
-    class MyActions(ParglareActions):
+    class MyActions(Actions):
         called = [False]
 
         def collect(self, _):
@@ -237,6 +236,6 @@ def test_unexisting_builtin_action_raises_exception():
 
     g = Grammar.from_string(grammar)
     with pytest.raises(ParserInitError) as e:
-        Parser(g, actions=ParglareActions())
+        Parser(g, actions=Actions())
 
     assert 'a_action_unexisting' in str(e)

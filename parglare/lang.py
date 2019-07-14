@@ -3,7 +3,7 @@ This module defines parglare textual grammar language using parglare internal
 DSL specification.
 
 """
-from parglare.actions import ParglareActions
+from parglare.actions import Actions
 from parglare.grammar import Grammar, MODIFIERS
 from parglare import GrammarError
 from parglare.common import Location
@@ -344,7 +344,7 @@ pg_grammar = {
 }
 
 
-class PGGrammarActions(ParglareActions):
+class PGGrammarActions(Actions):
     """
     Actions for parglare files
     """

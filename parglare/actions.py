@@ -9,7 +9,7 @@ else:
     text = str
 
 
-class ParglareActions(object):
+class Actions(object):
     """
     Default base class for parglare actions subclasses. Defines
     common actions.
