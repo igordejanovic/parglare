@@ -7,7 +7,6 @@ from parglare.glr import GLRParser
 from parglare.grammar import Grammar, NonTerminal, Terminal, \
     RegExRecognizer, StringRecognizer, EMPTY, EOF, STOP
 from parglare.actions import Actions
-from parglare.common import get_collector
 from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
     DisambiguationError
 
