@@ -11,7 +11,6 @@ from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, SRConflicts, RRConflicts, \
     expected_symbols_str
 from .common import Location, position_context
-#from .actions import pass_none
 from .termui import prints, h_print, a_print
 from parglare import termui
 
@@ -25,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class Parser(object):
-    """Parser works like a DFA driven by LR tables. For a given grammar LR table
+    """
+    Parser works like a DFA driven by LR tables.  For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
     def __init__(self, grammar, in_layout=False, actions=None,
@@ -174,8 +174,8 @@ class Parser(object):
     def parse_file(self, file_name, **kwargs):
         """
         Parses content from the given file.
-        Args:
-            file_name(str): A file name.
+
+        :param str file_name: A file name.
         """
         with codecs.open(file_name, 'r', 'utf-8') as f:
             content = f.read()
@@ -184,11 +184,12 @@ class Parser(object):
     def parse(self, input_str, position=0, file_name=None, context=None):
         """
         Parses the given input string.
-        Args:
-            input_str(str): A string to parse.
-            position(int): Position to start from.
-            file_name(str): File name if applicable. Used in error reporting.
-            context(Context): An object used to keep parser context info.
+
+        :param str input_str: A string to parse.
+        :param int position: Position to start from.
+        :param str file_name: File name if applicable.  Used in error
+            reporting.
+        :param Context context: An object used to keep parser context info.
         """
 
         if self.debug:
@@ -489,9 +490,9 @@ class Parser(object):
     def _next_tokens(self, context):
         """
         For the current position in the input stream and actions in the current
-        state find next tokens. This function must return only tokens that
-        are relevant to specified context - ie it mustn't return a token
-        if it's not expected by any action in given state.
+        state find next tokens.  This function must return only tokens that are
+        relevant to specified context - ie it mustn't return a token if it's
+        not expected by any action in given state.
         """
         state = context.state
         input_str = context.input_str
@@ -623,7 +624,7 @@ class Parser(object):
 
     def _call_shift_action(self, context):
         """
-        Calls registered shift action for the given grammar symbol.
+        Call registered shift action for the given grammar symbol.
         """
         debug = self.debug
         token = context.token
@@ -668,7 +669,7 @@ class Parser(object):
 
     def _call_reduce_action(self, context, subresults):
         """
-        Calls registered reduce action for the given grammar symbol.
+        Call registered reduce action for the given grammar symbol.
         """
         debug = self.debug
         result = None
@@ -729,8 +730,7 @@ class Parser(object):
         """
         For the given list of matched tokens apply disambiguation strategy.
 
-        Args:
-        tokens (list of Token)
+        :param tokens: list of `Token`
         """
 
         if self.debug:
@@ -802,15 +802,13 @@ class Parser(object):
         return bool(token or position)
 
     def default_error_recovery(self, context):
-        """The default recovery strategy is to drop char/object at current position
-        and try to continue.
+        """
+        The default recovery strategy is to drop char/object at current
+        position and try to continue.
 
-        Args:
-            context(Context): The parsing context
+        :param context: The parsing context
 
-        Returns:
-            (None for new Token, new position)
-
+        :returns: A tuple (None for new :class:`Token`, new position)
         """
         return None, context.position + 1 \
             if context.position < len(context.input_str) else None
@@ -835,18 +833,8 @@ class Parser(object):
 
 class Context:
     """
+    Parsing context.
     Args:
-        state(LRState):
-        file_name(str):
-        position(int):
-        start_position, end_position(int):
-        layout_content(str): Layout content preceeding current token.
-        layout_content_ahead(str): Layout content preceeding token_ahead.
-        token(Token): Token for shift operation.
-        token_ahead(Token): Token recognized ahead at position in given
-             state.
-        extra(anything): Used for additional state maintained by the user.
-             If not given empty dict is used.
     """
 
     __local = ['state',
@@ -871,6 +859,28 @@ class Context:
                  production=None, layout_content=None,
                  layout_content_ahead=None, node=None, file_name=None,
                  input_str=None, parser=None, extra=None, context=None):
+        """
+        :param state: An instance of :class:`LRState`
+        :param int position: A current position in the input stream
+        :param int start_position: A beginning of interval of input stream for
+            reduction
+        :param int end_position: An end of interval of input stream for
+            reduction
+        :param token: An instance of :class:`Token` for shift operation.
+        :param token_ahead: :class:`Token` recognized ahead at position in
+            given state.
+        :param production: A production for reduction
+        :param str layout_content: Layout content preceding current token.
+        :param str layout_content_ahead: Layout content preceding
+            :param:`token_ahead`.
+        :param node:
+        :param str file_name:
+        :param str input_str:
+        :param Parser parser: A reference to the parser producing this context
+        :param anything extra: Used for additional state maintained by the
+            user.  If not given empty dict is used.
+        :param context: A context to copy
+        """
         self.state = state
         self.position = position
         self.start_position = start_position
