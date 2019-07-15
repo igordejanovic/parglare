@@ -447,7 +447,8 @@ class PGGrammarActions(Actions):
                 assignments[assignment[0]] = {'op': assignment[1],
                                               'rhs_idx': idx}
                 p[idx] = assignment[2]
-        prod = {'production': p}
+        prod = {'production': p,
+                'location': Location(self.context)}
         if len(nodes) > 1:
             prod['meta'] = dict(nodes[2])
             self.extract_modifiers(prod)
@@ -456,7 +457,8 @@ class PGGrammarActions(Actions):
         return prod
 
     def TerminalRule(self, nodes):
-        term_rule = {'recognizer': nodes[2]}
+        term_rule = {'recognizer': nodes[2],
+                     'location': Location(self.context)}
         if len(nodes) > 4:
             term_rule['meta'] = dict(nodes[4])
             self.extract_modifiers(term_rule)

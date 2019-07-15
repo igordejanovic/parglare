@@ -115,6 +115,7 @@ def test_grammar_construction_from_struct(test_grammar_struct):
 
 def test_grammar_struct_construction_from_string(test_grammar_struct):
     grammar_struct = Grammar.struct_from_string(test_grammar)
+    Grammar.remove_locations(grammar_struct)
     assert grammar_struct == test_grammar_struct
 
 

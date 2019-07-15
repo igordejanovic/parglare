@@ -45,23 +45,34 @@ def escape(instr):
     return instr.replace('\n', r'\n').replace('\t', r'\t')
 
 
-class GrammarSymbol(object):
+class Locatable(object):
+    """
+    Represents a base class for all classes whose instances could have a
+    location of definition.
+
+    :param location: The location where the object is defined.
+    :type location: :class:`Location`
+    """
+    def __init__(self, location=None, **kwargs):
+        self.location = location
+        super(Locatable, self).__init__(**kwargs)
+
+
+class GrammarSymbol(Locatable):
     """
     Represents an abstract grammar symbol.
 
     :param name: The name of this grammar symbol.
-    :param location: The location where symbol is defined.
-    :type location: :class:`Location`
 
     :param int prior: Priority used for disambiguation.
     :param bool dynamic: Should dynamic disambiguation be called to resolve
         conflict involving this symbol.
     :param dict meta: User meta-data.
     """
-    def __init__(self, name, location=None, prior=DEFAULT_PRIORITY,
-                 dynamic=False, meta=None):
+    def __init__(self, name, prior=DEFAULT_PRIORITY, dynamic=False, meta=None,
+                 **kwargs):
+        super(GrammarSymbol, self).__init__(**kwargs)
         self.name = escape(name)
-        self.location = location
         self.prior = prior
         self.dynamic = dynamic
         self.meta = meta
@@ -159,7 +170,7 @@ EMPTY = Terminal("EMPTY", EMPTY_recognizer, action='pass_none')
 EOF = Terminal("EOF", EOF_recognizer, action='pass_none')
 
 
-class Production(object):
+class Production(Locatable):
     """
     Represent production from the grammar.
 
@@ -184,7 +195,8 @@ class Production(object):
 
     def __init__(self, symbol, rhs, action=None, assignments=None,
                  assoc=ASSOC_NONE, prior=DEFAULT_PRIORITY, dynamic=False,
-                 ps=None, pse=None, meta=None):
+                 ps=None, pse=None, meta=None, **kwargs):
+        super(Production, self).__init__(**kwargs)
         self.symbol = symbol
         self.rhs = rhs if rhs else ProductionRHS()
         self.action = action
@@ -340,6 +352,9 @@ class Grammar(object):
         self._enumerate_productions()
         self._resolve()
 
+        # At the end remove location objects to release unused memory
+        self.remove_locations(self.grammar_struct)
+
     def _extend_assignment_definitions(self):
         """
         Extend assignment definition struct to include information about
@@ -380,16 +395,16 @@ class Grammar(object):
                     if type(ref) is dict:
                         if 'symbol' not in ref:
                             raise GrammarError(
-                                location=THIS_LOCATION,
+                                location=self._get_location(production_struct),
                                 message='"symbol" key must be given in '
                                 'reference in rule "{}".'.format(rule_name))
-                        self._degugar_multiplicity_ref(ref)
+                        self._degugar_multiplicity_ref(ref, production_struct)
                         if len(ref) == 1:
                             # If we are reduced a reference only on symbol name
                             # replace with just a simple string
                             rhs[ref_idx] = ref['symbol']  # noqa
 
-    def _degugar_multiplicity_ref(self, ref):
+    def _degugar_multiplicity_ref(self, ref, production_struct):
         """
         Desugar complex suggared reference containing multiplicity and
         separator definition to a canonical form of a reference.  Create
@@ -409,7 +424,7 @@ class Grammar(object):
             if modifier not in MODIFIERS:
                 if separator:
                     raise GrammarError(
-                        location=Location(),
+                        location=self._get_location(production_struct),
                         message='Multiple separators in reference "{}".'
                         .format(ref))
                 separator = modifier
@@ -458,7 +473,7 @@ class Grammar(object):
         elif multiplicity in MULT_OPTIONAL:
             if separator:
                 raise GrammarError(
-                    location=THIS_LOCATION,
+                    location=self._get_location(production_struct),
                     message='Repetition modifier not allowed for '
                     'optional (?) for symbol "{}".'.format(symbol))
 
@@ -477,10 +492,11 @@ class Grammar(object):
         self.terminals.update([(s.name, s) for s in (EMPTY, EOF, STOP)])
         for terminal_name, terminal_struct \
                 in self.grammar_struct.get('terminals', {}).items():
-            check_name(None, terminal_name)
+            location = self._get_location(terminal_struct)
+            self._check_name(terminal_name, location)
             if terminal_name in self.terminals:
                 raise GrammarError(
-                    location=THIS_LOCATION,
+                    location=location,
                     message=f'"{terminal_name}" terminal multiple definition')
             recognizer = None
             recognizer_str = terminal_struct.get('recognizer')
@@ -497,6 +513,7 @@ class Grammar(object):
             term_modifiers = self._desugar_modifiers(
                 terminal_struct.get('modifiers', []))
             terminal = Terminal(terminal_name,
+                                location=location,
                                 recognizer=recognizer,
                                 prior=term_modifiers.get('prior',
                                                          DEFAULT_PRIORITY),
@@ -514,15 +531,17 @@ class Grammar(object):
         Create productions of this grammar given the Python struct.
         """
         for rule_name, rule_struct in self.grammar_struct['rules'].items():
-            check_name(None, rule_name)
+            location = self._get_location(rule_struct)
+            self._check_name(rule_name, location)
             if rule_name in self.nonterminals or rule_name in self.terminals:
                 raise GrammarError(
-                    location=THIS_LOCATION,
+                    location=location,
                     message=f'"{rule_name}" rule multiple definitions')
             rule_modifiers = self._desugar_modifiers(
                 rule_struct.get('modifiers', []))
             nt = NonTerminal(
                 rule_name,
+                location=location,
                 assoc=rule_modifiers.get('assoc', ASSOC_NONE),
                 prior=rule_modifiers.get('prior', DEFAULT_PRIORITY),
                 dynamic=rule_modifiers.get('dynamic', False),
@@ -534,6 +553,7 @@ class Grammar(object):
             productions = []
             rule_assignments = {}
             for production_struct in rule_struct['productions']:
+                location = self._get_location(production_struct)
                 rhs = ProductionRHS(production_struct['production'])
                 prod_modifiers = self._desugar_modifiers(
                     production_struct.get('modifiers', []))
@@ -548,6 +568,7 @@ class Grammar(object):
                                    rhs_idx=assignment_struct['rhs_idx'])
                 productions.append(Production(
                     nt, rhs,
+                    location=location,
                     action=production_struct.get(
                         'action', rule_struct.get('action', rule_name)),
                     assignments=prod_assignments.values(),
@@ -686,8 +707,7 @@ class Grammar(object):
             for refidx, ref in enumerate(production.rhs):
                 if type(ref) is dict:
                     ref = ref['symbol']
-                production.rhs[refidx] = self.get_check_symbol(
-                    ref, production.symbol.name)
+                production.rhs[refidx] = self.get_check_symbol(ref, production)
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."
@@ -704,14 +724,14 @@ class Grammar(object):
             s = self.get_nonterminal(name)
         return s
 
-    def get_check_symbol(self, name, rule):
+    def get_check_symbol(self, name, production):
         "Returns symbol if exists or raise grammar error if not."
         symbol = self.get_symbol(name)
         if not symbol:
             raise GrammarError(
-                location=THIS_LOCATION,
+                location=production.location,
                 message='Unknown symbol "{}" in rule "{}".'
-                .format(name, rule))
+                .format(name, production.symbol.name))
         return symbol
 
     def __iter__(self):
@@ -760,16 +780,27 @@ class Grammar(object):
             debug=debug, debug_colors=debug_colors).parse(grammar_str,
                                                           **kwargs)
 
-    def print_debug(self):
-        a_print("*** GRAMMAR ***", new_line=True)
-        h_print("Terminals:")
-        prints(" ".join([text(t) for t in self.terminals]))
-        h_print("NonTerminals:")
-        prints(" ".join([text(n) for n in self.nonterminals]))
+    @staticmethod
+    def remove_locations(grammar_struct):
+        """
+        Remove location objects used to report errors during grammar
+        construction.
+        """
+        for rule_name, rule_struct in grammar_struct['rules'].items():
+            for production_struct in rule_struct['productions']:
+                if 'location' in production_struct:
+                    del production_struct['location']
 
-        h_print("Productions:")
-        for p in self.productions:
-            prints(text(p))
+        for terminal_name, terminal_struct \
+                in grammar_struct.get('terminals', {}).items():
+            if 'location' in terminal_struct:
+                del terminal_struct['location']
+
+    def _get_location(self, loc_struct):
+        """
+        Construct location object used in error reporting.
+        """
+        return loc_struct.get('location', THIS_LOCATION)
 
     def _check_name(self, name, location=None):
         """
@@ -803,17 +834,13 @@ class Grammar(object):
         name += "_{}".format(mod_name_sufix) if modifiers else ""
         return name
 
+    def print_debug(self):
+        a_print("*** GRAMMAR ***", new_line=True)
+        h_print("Terminals:")
+        prints(" ".join([text(t) for t in self.terminals]))
+        h_print("NonTerminals:")
+        prints(" ".join([text(n) for n in self.nonterminals]))
 
-def check_name(context, name):
-    """
-    Used in actions to check for reserved names usage.
-    """
-
-    if name in RESERVED_SYMBOL_NAMES:
-        raise GrammarError(
-            location=Location(context),
-            message='Rule name "{}" is reserved.'.format(name))
-    if '.' in name:
-        raise GrammarError(
-            location=Location(context),
-            message='Using dot in names is not allowed.'.format(name))
+        h_print("Productions:")
+        for p in self.productions:
+            prints(text(p))
