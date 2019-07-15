@@ -13,9 +13,14 @@ class Location(object):
     """
     Represents a location (point or span) of the object in the source code.
 
-    Args:
-    context(Context): Parsing context used to populate this object.
-    line, column (int):
+    :ivar class:`Context` context: Parsing context used to populate this
+        object.
+    :ivar int start_position, end_position: The start/end of interval in the
+        input string if applicable.
+    :ivar int position: The position in the input string.
+    :ivar str file_name: A path to the file this location refers to.
+    :ivar int line, column: Properties for getting line/column of this
+        location.
     """
 
     __slots__ = ['input_str', 'start_position', 'end_position', 'position',
