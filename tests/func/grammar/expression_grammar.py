@@ -1,20 +1,44 @@
-from parglare import NonTerminal, Terminal, Grammar, EOF
-
+from parglare import Grammar
+from parglare.lang import _
 
 # Expression grammar
-S, E, T, F = [NonTerminal(name) for name in ['S', 'E', 'T', 'F']]
-PLUS, MULT, ID, OPEN, CLOSE = [
-    Terminal(value) for value in ['+', '*', 'id', '(', ')']]
-productions = [
-    (S, (E, EOF)),
-    (E, (E, PLUS, T)),
-    (E, (T, )),
-    (T, (T, MULT, F)),
-    (T, (F, )),
-    (F, (OPEN, E, CLOSE)),
-    (F, (ID,))
-]
+expression_grammar = {
+    'start': 'S',
+    'rules': {
+        'S': {
+            'productions': [
+                {'action': 'pass_single',
+                 'production': ['E', 'EOF']},
+            ]
+        },
+        'E': {
+            'productions': [
+                {'production': ['E', 'PLUS', 'T']},
+                {'production': ['T']}
+            ]
+        },
+        'T': {
+            'productions': [
+                {'production': ['T', 'MULT', 'F']},
+                {'production': ['F']},
+            ]
+        },
+        'F': {
+            'productions': [
+                {'production': ['OPEN', 'E', 'CLOSE']},
+                {'production': ['ID']}
+            ]
+        }
+    },
+    'terminals': {
+        'PLUS': _('+'),
+        'MULT': _('*'),
+        'OPEN': _('('),
+        'CLOSE': _(')'),
+        'ID': _('id'),
+    }
+}
 
 
 def get_grammar():
-    return Grammar.from_struct(productions=productions, start_symbol=S)
+    return Grammar.from_struct(expression_grammar)
