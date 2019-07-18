@@ -142,17 +142,17 @@ def test_multiple_rule_meta_override():
                                                label: 'My overriden label'}
                                     | 'second';
 
-    MyRule {label: 'Other rule'}: 'third' {left}
-                                | 'fourth' {label: 'Fourth prod'};
+    MyRule {label: 'Rule meta-data'}: 'third' {left}
+                                    | 'fourth' {label: 'Fourth prod'};
     '''
 
     grammar = Grammar.from_string(grammar_str)
     my_rule = grammar.get_nonterminal('MyRule')
 
-    # User meta-data is accessible on non-terminal
-    # Rule level meta-data are only those defined on the
-    # first rule in the order of the definition.
-    assert my_rule.label == 'My Label'
+    # User meta-data is accessible on non-terminal also.
+    # Rule level meta-data are overridden by definitions
+    # that comes later, so the last definition wins.
+    assert my_rule.label == 'Rule meta-data'
 
     assert len(my_rule.productions) == 4
 
@@ -163,15 +163,16 @@ def test_multiple_rule_meta_override():
 
     # If not overriden it uses meta-data from the rule.
     prod = my_rule.productions[1]
-    assert prod.label == 'My Label'
+    assert prod.label == 'Rule meta-data'
     assert prod.assoc == ASSOC_LEFT
 
-    # Third and fourth production belongs to the second rule so they
-    # inherits its meta-data.
+    # Third production inherits rule meta-data.
     prod = my_rule.productions[2]
-    assert prod.label == 'Other rule'
+    assert prod.label == 'Rule meta-data'
     assert prod.assoc == ASSOC_LEFT
 
+    # Fourth production inherits rule association (defined in the first
+    # `MyRule`) and overrides label.
     prod = my_rule.productions[3]
     assert prod.label == 'Fourth prod'
-    assert prod.assoc == ASSOC_NONE
+    assert prod.assoc == ASSOC_LEFT

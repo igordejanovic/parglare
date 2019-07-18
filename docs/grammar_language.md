@@ -633,7 +633,7 @@ assert prod.label == 'My Label'
 
 Meta-data defined on the rule level can be overriden on the production level.
 Also, rule can be specified multiple times. Propagation of each rule meta-data
-is done only to the productions specified in the rule.
+is done to all productions specified in any of the rules.
 
 For example:
 
@@ -650,30 +650,33 @@ MyRule {label: 'Other rule'}: 'third' {left}
 grammar = Grammar.from_string(grammar_str)
 my_rule = grammar.get_nonterminal('MyRule')
 
-# User meta-data is accessible on the non-terminal
-# Rule level meta-data are only those defined on the
-# first rule in the order of the definition.
-assert my_rule.label == 'My Label'
+# User meta-data is accessible on non-terminal also.
+# Rule level meta-data are overridden by definitions
+# that comes later, so the last definition wins.
+assert my_rule.label == 'Rule meta-data'
 
-prod1 = my_rule.productions[0]
+assert len(my_rule.productions) == 4
+
+prod = my_rule.productions[0]
 # First production overrides meta-data
-assert prod1.label == 'My overriden label'
-assert prod1.assoc == ASSOC_RIGHT
+assert prod.label == 'My overriden label'
+assert prod.assoc == ASSOC_RIGHT
 
 # If not overriden it uses meta-data from the rule.
-prod2 = my_rule.productions[1]
-assert prod2.label == 'My Label'
-assert prod2.assoc == ASSOC_LEFT
+prod = my_rule.productions[1]
+assert prod.label == 'Rule meta-data'
+assert prod.assoc == ASSOC_LEFT
 
-# Third and fourth production belongs to the second rule so they
-# inherits its meta-data.
-prod3 = my_rule.productions[2]
-assert prod3.label == 'Other rule'
-assert prod3.assoc == ASSOC_LEFT
+# Third production inherits rule meta-data.
+prod = my_rule.productions[2]
+assert prod.label == 'Rule meta-data'
+assert prod.assoc == ASSOC_LEFT
 
-prod4 = my_rule.productions[3]
-assert prod4.label == 'Fourth prod'
-assert prod4.assoc == ASSOC_NONE
+# Fourth production inherits rule association (defined in the first
+# `MyRule`) and overrides label.
+prod = my_rule.productions[3]
+assert prod.label == 'Fourth prod'
+assert prod.assoc == ASSOC_LEFT
 ```
 
 

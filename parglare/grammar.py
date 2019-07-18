@@ -539,6 +539,7 @@ class Grammar(object):
                     message=f'"{rule_name}" rule multiple definitions')
             rule_modifiers = self._desugar_modifiers(
                 rule_struct.get('modifiers', []))
+            nt_meta = rule_struct.get('meta', {})
             nt = NonTerminal(
                 rule_name,
                 location=location,
@@ -547,7 +548,7 @@ class Grammar(object):
                 dynamic=rule_modifiers.get('dynamic', False),
                 ps=rule_modifiers.get('ps', None),
                 pse=rule_modifiers.get('pse', None),
-                meta=rule_struct.get('meta')
+                meta=nt_meta
             )
             self.nonterminals[rule_name] = nt
             productions = []
@@ -566,6 +567,11 @@ class Grammar(object):
                                    symbol=assignment_struct['symbol'],
                                    mult=assignment_struct['mult'],
                                    rhs_idx=assignment_struct['rhs_idx'])
+                production_meta = production_struct.get('meta', {})
+                # Inherit NonTerminal/rule meta-data if not given on production
+                for i in nt_meta:
+                    if i not in production_meta:
+                        production_meta[i] = nt_meta[i]
                 productions.append(Production(
                     nt, rhs,
                     location=location,
@@ -577,7 +583,7 @@ class Grammar(object):
                     dynamic=prod_modifiers.get('dynamic', nt.dynamic),
                     ps=prod_modifiers.get('ps', nt.ps),
                     pse=prod_modifiers.get('pse', nt.pse),
-                    meta=production_struct.get('meta')
+                    meta=production_meta
                 ))
                 rule_assignments.update(prod_assignments)
             nt.productions = productions
