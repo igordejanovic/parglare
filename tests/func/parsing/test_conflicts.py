@@ -11,7 +11,7 @@ def test_sr_conflict():
     terminals
     A:"a";
     """
-    g = Grammar.from_string(grammar, _no_check_recognizers=True)
+    g = Grammar.from_string(grammar)
     with pytest.raises(SRConflicts) as e:
         Parser(g, prefer_shifts=False)
     assert "whether to shift or reduce by production(s) '2: As = As A'" in \
@@ -30,7 +30,7 @@ def test_rr_empty_conflict():
     B1:;
     D1:;
     """
-    g = Grammar.from_string(grammar, _no_check_recognizers=True)
+    g = Grammar.from_string(grammar)
     with pytest.raises(RRConflicts) as e:
         Parser(g)
 
@@ -49,7 +49,7 @@ def test_rr_nonempty_conflict():
     A1: ;
     B1: ;
     """
-    g = Grammar.from_string(grammar, _no_check_recognizers=True)
+    g = Grammar.from_string(grammar)
     with pytest.raises(RRConflicts) as e:
         Parser(g)
 

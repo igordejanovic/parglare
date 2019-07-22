@@ -11,29 +11,29 @@ from __future__ import unicode_literals
 import pytest  # noqa
 import difflib
 import re
-from parglare import Parser, Grammar, Token, ParseError, DisambiguationError
+from parglare import (Parser, Grammar, Token, ParseError, DisambiguationError,
+                      Actions)
 
 
-called = [False, False, False]
+class MyActions(Actions):
+    called = [False, False, False]
 
+    def act_called(self, which_called):
+        self.called[which_called] = True
 
-def act_called(which_called):
-    def _called(_, __):
-        called[which_called] = True
-    return _called
+    def First(self, n):
+        return self.act_called(0)
 
+    def Second(self, n):
+        return self.act_called(1)
 
-actions = {
-    "First": act_called(0),
-    "Second": act_called(1),
-    "Third": act_called(2),
-}
+    def Third(self, n):
+        return self.act_called(2)
 
 
 @pytest.fixture()
 def cf():
-    global called
-    called = [False, False, False]
+    MyActions.called = [False, False, False]
 
 
 def test_priority(cf):
@@ -49,16 +49,16 @@ def test_priority(cf):
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=False)
+    parser = Parser(g, actions=MyActions(), debug=False)
 
     # Priority is used first
     parser.parse('14.75')
-    assert called == [False, False, True]
+    assert MyActions.called == [False, False, True]
 
 
 def test_priority_lower(cf):
     """
-    Test that lower priority terminals have lower precendence.
+    Test that lower priority terminals have lower precedence.
     """
 
     grammar = r"""
@@ -72,11 +72,11 @@ def test_priority_lower(cf):
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=False)
+    parser = Parser(g, actions=MyActions(), debug=False)
 
     # Second should match as it has higher priority over First
     parser.parse('14.75')
-    assert called == [False, True, False]
+    assert MyActions.called == [False, True, False]
 
 
 def test_most_specific(cf):
@@ -91,11 +91,11 @@ def test_most_specific(cf):
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=MyActions(), debug=True)
 
     # String match in rule Second is more specific than Third regexp rule.
     parser.parse('14')
-    assert called == [False, True, False]
+    assert MyActions.called == [False, True, False]
 
 
 def test_most_specific_longest_match(cf):
@@ -110,13 +110,13 @@ def test_most_specific_longest_match(cf):
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=MyActions(), debug=True)
 
     # All three rules could match. First is tried first because it is
     # more specific (str match) and longest. It succeeds so other two
     # are not tried at all.
     parser.parse('147')
-    assert called == [True, False, False]
+    assert MyActions.called == [True, False, False]
 
 
 def test_longest_match(cf):
@@ -131,12 +131,12 @@ def test_longest_match(cf):
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
+    parser = Parser(g, actions=MyActions())
 
     # If all matches are regexes of the same priority use longest match
     # disambiguation.
     parser.parse('14.17')
-    assert called == [True, False, False]
+    assert MyActions.called == [True, False, False]
 
 
 def test_failed_disambiguation(cf):
@@ -151,7 +151,7 @@ def test_failed_disambiguation(cf):
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(g, actions=MyActions(), debug=True)
 
     # All rules will match but First and Third have higher priority.
     # Both are regexes so longest match will be used.
@@ -178,14 +178,14 @@ def test_longest_match_prefer(cf):
     """
 
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
+    parser = Parser(g, actions=MyActions())
 
     # All rules will match but First and Third have higher priority.
     # Both are regexes so longest match will be used.
     # Both have the same length but the third rule is preferred.
 
     parser.parse('14.75')
-    assert called == [False, False, True]
+    assert MyActions.called == [False, False, True]
 
 
 def test_nofinish(cf):
@@ -193,8 +193,6 @@ def test_nofinish(cf):
     Test that `nofinish` terminal filter will disable `finish` short-circuit
     optimization.
     """
-    global called
-
     # In rare circumstances `finish` scanning optimization may lead to a
     # problem. This grammar demonstrates the problem.
     grammar = r"""
@@ -211,9 +209,9 @@ def test_nofinish(cf):
     # implicit "prefer string match" rule and `finish` flag on Second terminal
     # will be set.
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
+    parser = Parser(g, actions=MyActions())
     parser.parse('*ThirdShouldMatchThis')
-    assert called == [False, True, False]
+    assert MyActions.called == [False, True, False]
 
     # In this case we would actually like for Third to match as it is a longer
     # match. To do this we should set `nofinish` flag on Second terminal which
@@ -227,11 +225,11 @@ def test_nofinish(cf):
     Second: '*' {nofinish};
     Third: /[A-Za-z0-9\*\-]+/;
     """
-    called = [False, False, False]
+    MyActions.called = [False, False, False]
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
+    parser = Parser(g, actions=MyActions())
     parser.parse('*ThirdShouldMatchThis')
-    assert called == [False, False, True]
+    assert MyActions.called == [False, False, True]
 
 
 def test_dynamic_lexical_disambiguation():

@@ -1,5 +1,5 @@
 import pytest  # noqa
-from parglare import GLRParser, Grammar, Parser, SHIFT, REDUCE
+from parglare import GLRParser, Grammar, Parser, SHIFT, REDUCE, Actions
 from parglare.exceptions import SRConflicts
 
 
@@ -17,12 +17,15 @@ op_mul: '*' {dynamic};
 instr1 = '1 + 2 * 5 + 3'
 instr2 = '1 * 2 + 5 * 3'
 
-actions = {
-    's': [lambda _, c: c[0]],
-    'E': [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: float(nodes[0])]
-}
+
+class MyActions(Actions):
+    def s(self, n):
+        return n[0]
+
+    def E(self, n):
+        return [lambda n: n[0] + n[2],
+                lambda n: n[0] * n[2],
+                lambda n: float(n[0])][self.prod_idx](n)
 
 
 g = Grammar.from_string(grammar)
@@ -84,7 +87,7 @@ def test_dynamic_disambiguation():
 
     # But if we provide dynamic disambiguation filter
     # the conflicts can be handled at run-time.
-    p = Parser(g, actions=actions, prefer_shifts=False,
+    p = Parser(g, actions=MyActions(), prefer_shifts=False,
                dynamic_filter=custom_disambiguation_filter)
 
     # * operation will be of higher priority as it appears later in the stream.
@@ -101,7 +104,7 @@ def test_dynamic_disambiguation_glr():
     Test disambiguation determined at run-time based on the input.
     This tests GLR parsing.
     """
-    p = GLRParser(g, actions=actions,
+    p = GLRParser(g, actions=MyActions(),
                   dynamic_filter=custom_disambiguation_filter)
 
     # * operation will be of higher priority as it appears later in the stream.

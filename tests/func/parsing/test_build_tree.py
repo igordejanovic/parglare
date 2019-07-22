@@ -1,5 +1,5 @@
 import pytest  # noqa
-from parglare import Grammar, Parser
+from parglare import Grammar, Parser, Actions
 
 
 def test_call_actions_during_tree_build():
@@ -22,14 +22,14 @@ def test_call_actions_during_tree_build():
 
     left_moves = []
 
-    def left_dir_collector(_, nodes):
-        """Finds all 'left' moves and adds them into a list."""
-        term = nodes[0]
-        if term.value == "left":
-            left_moves.append(term)
+    class MyActions(Actions):
+        def Direction(self, nodes):
+            """Finds all 'left' moves and adds them into a list."""
+            term = nodes[0]
+            if term.value == "left":
+                left_moves.append(term)
 
-    parser = Parser(g, build_tree=True,
-                    actions={"Direction": left_dir_collector})
+    parser = Parser(g, build_tree=True, actions=MyActions())
     parser.parse(code)
 
     # call_actions_during_tree_build is False by default, so left_dir_collector

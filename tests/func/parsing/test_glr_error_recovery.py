@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import GLRParser, Grammar, ParseError
+from parglare import GLRParser, Grammar, ParseError, Actions
 from parglare.parser import Token
-from parglare.actions import pass_single, pass_inner
 
 grammar = r"""
 Result: E EOF;
@@ -19,17 +18,23 @@ terminals
 number: /\d+(\.\d+)?/;
 """
 
-actions = {
-    "Result": pass_single,
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          pass_inner,
-          pass_single],
-    "number": lambda _, value: float(value),
-}
+
+class MyActions(Actions):
+    def Result(self, n):
+        return self.pass_single(n)
+
+    def E(self, n):
+        return [lambda n: n[0] + n[2],
+                lambda n: n[0] - n[2],
+                lambda n: n[0] * n[2],
+                lambda n: n[0] / n[2],
+                lambda n: n[0] ** n[2],
+                lambda n: n[1],
+                lambda n: n[0]][self.prod_idx](n)
+
+    def number(self, value):
+        return float(value)
+
 
 g = Grammar.from_string(grammar)
 
@@ -41,7 +46,7 @@ def test_glr_recovery_default():
     In case of multiple subsequent errouneous chars only one error should be
     reported.
     """
-    parser = GLRParser(g, actions=actions, error_recovery=True, debug=True)
+    parser = GLRParser(g, actions=MyActions(), error_recovery=True, debug=True)
 
     results = parser.parse('1 + 2 + * 3 & 89 - 5')
 
@@ -72,7 +77,7 @@ def test_glr_recovery_custom_new_position():
         # This recovery will just skip over erroneous part of input '& 89'.
         return None, context.position + 4
 
-    parser = GLRParser(g, actions=actions, error_recovery=custom_recovery,
+    parser = GLRParser(g, actions=MyActions(), error_recovery=custom_recovery,
                        debug=True)
 
     results = parser.parse('1 + 5 & 89 - 2')
@@ -93,7 +98,7 @@ def test_glr_recovery_custom_new_token():
         # Here we will introduce missing operation token
         return Token(g.get_terminal('-'), '-', 0), None
 
-    parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
+    parser = GLRParser(g, actions=MyActions(), error_recovery=custom_recovery)
 
     results = parser.parse('1 + 5 8 - 2')
 
@@ -112,7 +117,7 @@ def test_glr_recovery_custom_unsuccessful():
     def custom_recovery(context, error):
         return None, None
 
-    parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
+    parser = GLRParser(g, actions=MyActions(), error_recovery=custom_recovery)
 
     with pytest.raises(ParseError) as e:
         parser.parse('1 + 5 8 - 2')
