@@ -2,10 +2,9 @@
 Test for class/object auto AST building.
 """
 import pytest  # noqa
-from parglare import Grammar, Parser
+from parglare import Grammar, Parser, Actions
 from parglare.grammar import MULT_ONE, MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE, \
     MULT_OPTIONAL
-from parglare.actions import obj
 
 
 grammar = """
@@ -44,43 +43,43 @@ def test_class_attributes():
     simple = A._pg_attrs['simple']
     assert simple.name == 'simple'
     assert simple.type_name == 'B'
-    assert simple.multiplicity == MULT_ONE
+    assert simple.mult == MULT_ONE
 
     assert 'one_or_more' in A._pg_attrs
     one_or_more = A._pg_attrs['one_or_more']
     assert one_or_more.name == 'one_or_more'
     assert one_or_more.type_name == 'C'
-    assert one_or_more.multiplicity == MULT_ONE_OR_MORE
+    assert one_or_more.mult == MULT_ONE_OR_MORE
 
     assert 'zero_or_more' in A._pg_attrs
     zero_or_more = A._pg_attrs['zero_or_more']
     assert zero_or_more.name == 'zero_or_more'
     assert zero_or_more.type_name == 'D'
-    assert zero_or_more.multiplicity == MULT_ZERO_OR_MORE
+    assert zero_or_more.mult == MULT_ZERO_OR_MORE
 
     assert 'optional' in A._pg_attrs
     optional = A._pg_attrs['optional']
     assert optional.name == 'optional'
     assert optional.type_name == 'E'
-    assert optional.multiplicity == MULT_OPTIONAL
+    assert optional.mult == MULT_OPTIONAL
 
     assert 'bool_attr' in A._pg_attrs
     bool_attr = A._pg_attrs['bool_attr']
     assert bool_attr.name == 'bool_attr'
     assert bool_attr.type_name == 'F'
-    assert bool_attr.multiplicity == MULT_ONE
+    assert bool_attr.mult == MULT_ONE
 
     assert 'obj' in A._pg_attrs
     obj = A._pg_attrs['obj']
     assert obj.name == 'obj'
     assert obj.type_name == 'Obj'
-    assert obj.multiplicity == MULT_ONE
+    assert obj.mult == MULT_ONE
 
     Obj = g.classes['Obj']
     a = Obj._pg_attrs['a']
     assert a.name == 'a'
     assert a.type_name == 'D'
-    assert a.multiplicity == MULT_ONE
+    assert a.mult == MULT_ONE
 
 
 def test_default_object_create():
@@ -90,7 +89,7 @@ def test_default_object_create():
     """
     g = Grammar.from_string(grammar)
 
-    p = Parser(g)
+    p = Parser(g, actions=Actions())
     a = p.parse('b c c d f d b')
 
     assert isinstance(a, g.classes['A'])
@@ -114,8 +113,7 @@ def test_obj_action_override():
     """
     g = Grammar.from_string(grammar)
     A = g.get_nonterminal('A')
-    assert A.action_name == 'obj'
-    assert A.action is obj
+    assert A.productions[0].action == 'obj'
 
     grammar = """
     @myaction
@@ -124,8 +122,7 @@ def test_obj_action_override():
     """
     g = Grammar.from_string(grammar)
     A = g.get_nonterminal('A')
-    assert A.action_name == 'myaction'
-    assert A.action is None
+    assert A.productions[0].action == 'myaction'
 
 
 def test_obj_position():

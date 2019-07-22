@@ -576,7 +576,8 @@ class Grammar(object):
                     nt, rhs,
                     location=location,
                     action=production_struct.get(
-                        'action', rule_struct.get('action', rule_name)),
+                        'action', rule_struct.get(
+                            'action', 'obj' if assignments else rule_name)),
                     assignments=prod_assignments.values(),
                     assoc=prod_modifiers.get('assoc', nt.assoc),
                     prior=prod_modifiers.get('prior', nt.prior),
@@ -589,7 +590,6 @@ class Grammar(object):
             nt.productions = productions
             if rule_assignments and rule_name not in self.classes:
                 self._create_class(rule_name, rule_assignments)
-                nt.action = 'obj'
             # AUGMENTED symbol production must be first
             if rule_name == AUGSYMBOL_NAME:
                 self.productions.insert(0, productions[0])

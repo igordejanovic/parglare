@@ -154,12 +154,12 @@ class Actions(object):
         This action is used as default action for rules with named matches.
         """
         grammar = self.parser.grammar
-        rule_name = self.production.symbol.fqn
+        rule_name = self.context.production.symbol.name
 
         cls = grammar.classes[rule_name]
         instance = cls(**attrs)
 
-        instance._pg_start_position = self.start_position
-        instance._pg_end_position = self.end_position
+        instance._pg_start_position = self.context.start_position
+        instance._pg_end_position = self.context.end_position
 
         return instance
