@@ -576,8 +576,7 @@ class Grammar(object):
                     nt, rhs,
                     location=location,
                     action=production_struct.get(
-                        'action', rule_struct.get(
-                            'action', 'obj' if assignments else rule_name)),
+                        'action', rule_struct.get('action', rule_name)),
                     assignments=prod_assignments.values(),
                     assoc=prod_modifiers.get('assoc', nt.assoc),
                     prior=prod_modifiers.get('prior', nt.prior),
