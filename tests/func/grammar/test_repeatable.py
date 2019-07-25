@@ -224,7 +224,7 @@ def test_repeatable_one_zero_rr_conflicts():
     S: A B* D;
 
     terminals
-    A:; B:; C:; D:;
+    A:"a"; B:"b"; C:"c"; D:"d";
     """
     g = Grammar.from_string(grammar)
 

@@ -5,8 +5,9 @@ from parglare.parser import Parser, Token, pos_to_line_col, \
 from parglare.tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from parglare.glr import GLRParser
 from parglare.grammar import Grammar, NonTerminal, Terminal, \
-    RegExRecognizer, StringRecognizer, EMPTY, EOF, STOP
+    RegExRecognizer, StringRecognizer
 from parglare.actions import Actions
+from parglare.recognizers import Recognizers
 from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
     DisambiguationError
 

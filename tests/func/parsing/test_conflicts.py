@@ -25,10 +25,10 @@ def test_rr_empty_conflict():
     D: D1 | EMPTY;
 
     terminals
-    A:;
-    C:;
-    B1:;
-    D1:;
+    A: "a";
+    C: "c";
+    B1: "b";
+    D1: "d";
     """
     g = Grammar.from_string(grammar)
     with pytest.raises(RRConflicts) as e:
@@ -46,8 +46,8 @@ def test_rr_nonempty_conflict():
     B: A1 B1;
 
     terminals
-    A1: ;
-    B1: ;
+    A1: "a";
+    B1: "b";
     """
     g = Grammar.from_string(grammar)
     with pytest.raises(RRConflicts) as e:

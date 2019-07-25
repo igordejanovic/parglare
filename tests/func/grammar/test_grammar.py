@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest
-from parglare import Parser, Grammar, Actions
+from parglare import Parser, Grammar, Actions, Recognizers
 from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
 from parglare.exceptions import GrammarError, ParseError
 
@@ -167,8 +167,8 @@ def test_no_terminal_associavitity():
 
 def test_terminal_empty_body():
     """
-    Test that terminals may have empty bodies (when defined using
-    recognizers)
+    Test that terminals may have empty bodies in the grammar (when defined
+    using recognizers).
     """
     grammar = """
     S: A | B;
@@ -177,13 +177,21 @@ def test_terminal_empty_body():
     B: ;
     """
 
-    g = Grammar.from_string(grammar)
+    class MyRecognizers(Recognizers):
+        def A(self, in_str, pos):
+            pass
+
+        def B(self, in_str, pos):
+            pass
+
+    recognizers = MyRecognizers()
+    g = Grammar.from_string(grammar, recognizers=recognizers)
 
     a = g.get_terminal('A')
     assert a.prior == 15
-    assert a.recognizer is None
+    assert a.recognizer == recognizers.A
     b = g.get_terminal('B')
-    assert b.recognizer is None
+    assert b.recognizer == recognizers.B
 
 
 def test_terminal_regexp_with_backslash():

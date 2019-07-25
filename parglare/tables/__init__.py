@@ -4,8 +4,8 @@ import os
 from collections import OrderedDict
 from itertools import chain
 from parglare.grammar import ProductionRHS, AUGSYMBOL_NAME, \
-    ASSOC_LEFT, ASSOC_RIGHT, STOP, StringRecognizer, RegExRecognizer, \
-    Grammar, EMPTY, NonTerminal
+    ASSOC_LEFT, ASSOC_RIGHT, StringRecognizer, RegExRecognizer, \
+    Grammar, NonTerminal
 from parglare.exceptions import GrammarError, SRConflict, RRConflict
 from parglare.closure import closure, LR_1
 from parglare.termui import prints, s_header, h_print, a_print, s_emph
@@ -128,7 +128,8 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
     follow_sets = follow(grammar, first_sets)
 
     start_prod_symbol = grammar.productions[start_production].symbol
-    grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
+    grammar.productions[0].rhs = ProductionRHS([start_prod_symbol,
+                                                grammar.STOP])
 
     # Create a state for the first production (augmented)
     s = LRState(grammar, 0, grammar.AUGSYMBOL,
@@ -207,7 +208,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                 state.gotos[symbol] = target_state
 
             else:
-                if symbol is STOP:
+                if symbol is grammar.STOP:
                     state.actions[symbol] = [Action(ACCEPT,
                                                     state=target_state)]
                 else:
@@ -752,20 +753,20 @@ def first(grammar):
             nonterm = p.symbol
             for rhs_symbol in p.rhs:
                 rhs_symbol_first = set(first_sets[rhs_symbol])
-                rhs_symbol_first.discard(EMPTY)
+                rhs_symbol_first.discard(grammar.EMPTY)
                 if rhs_symbol_first.difference(first_sets[nonterm]):
                     first_sets[nonterm].update(first_sets[rhs_symbol])
                     additions = True
                 # If current RHS symbol can't derive EMPTY
                 # this production can't add any more members of
                 # the first set for LHS nonterminal.
-                if EMPTY not in first_sets[rhs_symbol]:
+                if grammar.EMPTY not in first_sets[rhs_symbol]:
                     break
             else:
                 # If we reached the end of the RHS and each
                 # symbol along the way could derive EMPTY than
                 # we must add EMPTY to the first set of LHS symbol.
-                first_sets[nonterm].add(EMPTY)
+                first_sets[nonterm].add(grammar.EMPTY)
 
     return first_sets
 
@@ -797,11 +798,11 @@ def follow(grammar, first_sets=None):
                         for rsymbol in p.rhs[idx+1:]:
                             sfollow = first_sets[rsymbol]
                             prod_follow.update(sfollow)
-                            if EMPTY not in sfollow:
+                            if grammar.EMPTY not in sfollow:
                                 break
                         else:
                             prod_follow.update(follow_sets[p.symbol])
-                        prod_follow.discard(EMPTY)
+                        prod_follow.discard(grammar.EMPTY)
                         if prod_follow.difference(follow_sets[symbol]):
                             additions = True
                             follow_sets[symbol].update(prod_follow)

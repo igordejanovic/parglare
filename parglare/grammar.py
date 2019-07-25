@@ -6,9 +6,8 @@ import re
 import itertools
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError
-from parglare.recognizers import (StringRecognizer, RegExRecognizer,
-                                  STOP_recognizer, EOF_recognizer,
-                                  EMPTY_recognizer)
+from parglare.recognizers import (Recognizers, StringRecognizer,
+                                  RegExRecognizer)
 from parglare.common import Location
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 
@@ -160,15 +159,6 @@ class Terminal(GrammarSymbol):
 
 AUGSYMBOL_NAME = "S'"
 
-# This terminal is a special terminal used internally.
-STOP = Terminal("STOP", STOP_recognizer)
-
-# These two terminals are special terminals used in the grammars.
-# EMPTY will match nothing and always succeed.
-# EOF will match only at the end of the input string.
-EMPTY = Terminal("EMPTY", EMPTY_recognizer, action='pass_none')
-EOF = Terminal("EOF", EOF_recognizer, action='pass_none')
-
 
 class Production(Locatable):
     """
@@ -231,7 +221,7 @@ class ProductionRHS(list):
         try:
             while True:
                 symbol = super(ProductionRHS, self).__getitem__(idx)
-                if symbol is not EMPTY:
+                if type(symbol) is list or symbol.name != 'EMPTY':
                     break
                 idx += 1
             return symbol
@@ -239,10 +229,11 @@ class ProductionRHS(list):
             return None
 
     def __len__(self):
-        return super(ProductionRHS, self).__len__() - self.count(EMPTY)
+        return super(ProductionRHS, self).__len__() \
+            - sum(map(lambda x: 1 if x == 'EMPTY' else 0, self))
 
     def __str__(self):
-        return " ".join([str(x) for x in self])
+        return " ".join([str(x) for x in self]) if self else "EMPTY"
 
     def __repr__(self):
         return "<ProductionRHS([{}])>".format(
@@ -294,6 +285,7 @@ class Grammar(object):
 
     :param grammar_struct: Python structure that represents the grammar to be
         built
+    :param recognizers: An instance of Recognizers inherited class.
     :param classes: A dict of user specific classes
     :param file_path: A file path where grammar was loaded from
     :param start_symbol: start/root symbol of the grammar or its name.
@@ -307,9 +299,11 @@ class Grammar(object):
     pg_parser_grammar = None
     pg_parser_table = None
 
-    def __init__(self, grammar_struct, classes=None, file_path=None,
-                 start_symbol=None, ignore_case=False, re_flags=re.MULTILINE,
-                 debug=False, debug_parse=False, debug_colors=False):
+    def __init__(self, grammar_struct, recognizers=None, classes=None,
+                 file_path=None, start_symbol=None, ignore_case=False,
+                 re_flags=re.MULTILINE, debug=False, debug_parse=False,
+                 debug_colors=False):
+        self.recognizers = recognizers if recognizers else Recognizers()
         self.classes = classes if classes else {}
         self.file_path = file_path
         self.ignore_case = ignore_case
@@ -489,7 +483,19 @@ class Grammar(object):
         """
         Create terminals of this grammar given the Python struct.
         """
-        self.terminals.update([(s.name, s) for s in (EMPTY, EOF, STOP)])
+        # This terminal is a special terminal used internally.
+        self.STOP = Terminal("STOP", recognizer=self.recognizers.STOP)
+
+        # These two terminals are special terminals used in the grammars.
+        # EMPTY will match nothing and always succeed.
+        # EOF will match only at the end of the input string.
+        self.EMPTY = Terminal("EMPTY", recognizer=self.recognizers.EMPTY,
+                              action='pass_none')
+        self.EOF = Terminal("EOF", recognizer=self.recognizers.EOF,
+                            action='pass_none')
+        self.terminals.update([(s.name, s) for s in (self.EMPTY, self.EOF,
+                                                     self.STOP)])
+
         for terminal_name, terminal_struct \
                 in self.grammar_struct.get('terminals', {}).items():
             location = self._get_location(terminal_struct)
@@ -499,22 +505,35 @@ class Grammar(object):
                     location=location,
                     message=f'"{terminal_name}" terminal multiple definition')
             recognizer = None
+
             recognizer_str = terminal_struct.get('recognizer')
-            if recognizer_str:
-                if recognizer_str.startswith('/') \
-                   and recognizer_str.endswith('/') \
-                   and len(recognizer_str) > 2:
-                    recognizer = RegExRecognizer(recognizer_str[1:-1],
-                                                 re_flags=self.re_flags,
-                                                 ignore_case=self.ignore_case)
+            if terminal_name not in self.recognizers:
+                if recognizer_str:
+                    if recognizer_str.startswith('/') \
+                       and recognizer_str.endswith('/') \
+                       and len(recognizer_str) > 2:
+                        recognizer = RegExRecognizer(
+                            recognizer_str[1:-1],
+                            re_flags=self.re_flags,
+                            ignore_case=self.ignore_case)
+                    else:
+                        recognizer = StringRecognizer(
+                            recognizer_str,
+                            ignore_case=self.ignore_case)
+                    self.recognizers.add_recognizer(terminal_name, recognizer)
                 else:
-                    recognizer = StringRecognizer(recognizer_str,
-                                                  ignore_case=self.ignore_case)
+                    raise GrammarError(
+                        location=location,
+                        message=f'Recognizer not defined for terminal rule '
+                        f'"{terminal_name}"')
+            else:
+                recognizer = getattr(self.recognizers, terminal_name)
+
             term_modifiers = self._desugar_modifiers(
                 terminal_struct.get('modifiers', []))
             terminal = Terminal(terminal_name,
-                                location=location,
                                 recognizer=recognizer,
+                                location=location,
                                 prior=term_modifiers.get('prior',
                                                          DEFAULT_PRIORITY),
                                 finish=term_modifiers.get('finish', None),
@@ -742,7 +761,7 @@ class Grammar(object):
     def __iter__(self):
         return (s for s in itertools.chain(self.nonterminals.values(),
                                            self.terminals.values())
-                if s not in [self.AUGSYMBOL, STOP])
+                if s.name not in [AUGSYMBOL_NAME, 'STOP'])
 
     def get_production_id(self, name):
         "Returns first production id for the given symbol name"

@@ -4,7 +4,6 @@ import codecs
 import logging
 import sys
 from copy import copy
-from .grammar import EMPTY, EOF, STOP
 from .actions import Actions
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
@@ -38,6 +37,10 @@ class Parser(object):
                  custom_token_recognition=None, lexical_disambiguation=True,
                  force_load_table=False, table=None):
         self.grammar = grammar
+        self.STOP_token = Token(grammar.STOP)
+        self.EMPTY_token = Token(grammar.EMPTY)
+        self.EOF_token = Token(grammar.EOF)
+
         self.in_layout = in_layout
 
         if actions is None:
@@ -481,7 +484,7 @@ class Parser(object):
             # We have to return something.
             # Returning EMPTY token is not a lie (EMPTY can always be matched)
             # and will cause proper parse error to be raised.
-            return EMPTY_token
+            return self.EMPTY_token
         elif len(tokens) == 1:
             return tokens[0]
         else:
@@ -502,12 +505,12 @@ class Parser(object):
         tokens = []
 
         # add special tokens (EMPTY, STOP and EOF) if they are applicable
-        if EMPTY in actions:
-            tokens.append(EMPTY_token)
-        if STOP in actions:
-            tokens.append(STOP_token)
+        if self.grammar.EMPTY in actions:
+            tokens.append(self.EMPTY_token)
+        if self.grammar.STOP in actions:
+            tokens.append(self.STOP_token)
         if position == in_len:
-            tokens.append(EOF_token)
+            tokens.append(self.EOF_token)
         else:
 
             # Get tokens by trying recognizers - but only if we are not at
@@ -741,11 +744,12 @@ class Parser(object):
             return tokens
 
         # prefer STOP over EMPTY and EOF
-        if STOP_token in tokens:
-            tokens = [t for t in tokens if t not in (EMPTY_token, EOF_token)]
+        if self.STOP_token in tokens:
+            tokens = [t for t in tokens if t not in (self.EMPTY_token,
+                                                     self.EOF_token)]
         # prefer EMTPY over EOF
-        elif EMPTY_token in tokens:
-            tokens = [t for t in tokens if t != EOF_token]
+        elif self.EMPTY_token in tokens:
+            tokens = [t for t in tokens if t != self.EOF_token]
 
         # Longest-match strategy.
         max_len = max((len(x.value) for x in tokens))
@@ -1049,11 +1053,6 @@ class Token(object):
 
     def __bool__(self):
         return True
-
-
-STOP_token = Token(STOP)
-EMPTY_token = Token(EMPTY)
-EOF_token = Token(EOF)
 
 
 def treebuild_shift_action(context):

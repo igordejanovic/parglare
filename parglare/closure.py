@@ -1,4 +1,4 @@
-from parglare.grammar import EMPTY, NonTerminal
+from parglare.grammar import NonTerminal
 
 LR_0 = 0
 LR_1 = 1
@@ -30,7 +30,8 @@ def closure(state, itemset_type, first_sets=None):
                             # Calculate follow set that is possible after the
                             # non-terminal at the given position of the current
                             # item.
-                            follow = _new_item_follow(item, first_sets)
+                            follow = _new_item_follow(item, first_sets,
+                                                      state.grammar)
                             new_item = LRItem(p, 0, follow)
                         else:
                             new_item = LRItem(p, 0)
@@ -65,7 +66,7 @@ def closure(state, itemset_type, first_sets=None):
             break
 
 
-def _new_item_follow(item, first_sets):
+def _new_item_follow(item, first_sets, grammar):
     """
     Returns follow set of possible terminals after the item's current
     non-terminal.
@@ -80,7 +81,7 @@ def _new_item_follow(item, first_sets):
     new_follow = set()
     for s in item.production.rhs[item.position + 1:]:
         new_follow.update(first_sets[s])
-        if EMPTY not in new_follow:
+        if grammar.EMPTY not in new_follow:
             # If EMPTY can't be derived at current position than we have found
             # the whole follow set.
             break
@@ -88,7 +89,7 @@ def _new_item_follow(item, first_sets):
             # If the EMPTY is possible at current position in this loop we must
             # continue to include firsts of the next grammar symbol.
             # EMTPY can't be a member of the follow set.
-            new_follow.remove(EMPTY)
+            new_follow.remove(grammar.EMPTY)
     else:
         # If the rest of production can be EMPTY we shall inherit
         # all elements of the source item follow set.

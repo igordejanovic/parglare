@@ -7,6 +7,42 @@ import re
 from parglare.exceptions import GrammarError
 
 
+class Recognizers(object):
+    """
+    Methods of this class are used to recognize tokens in the input stream.
+    """
+    def __init__(self):
+        self.recognizers = {}
+
+    def add_recognizer(self, name, recognizer):
+        self.recognizers[name] = recognizer
+
+    def __getattr__(self, name):
+        try:
+            return super(Recognizers, self).__getattr__(name)
+        except AttributeError:
+            r = self.recognizers.get(name, None)
+            if r:
+                return r
+            raise
+
+    def __contains__(self, name):
+        try:
+            getattr(self, name)
+        except AttributeError:
+            return False
+        return True
+
+    def EMPTY(self, input, pos):
+        pass
+
+    def EOF(self, input, pos):
+        pass
+
+    def STOP(self, input, pos):
+        pass
+
+
 class Recognizer(object):
     """
     Recognizers are callables capable of recognizing low-level patterns
@@ -66,15 +102,3 @@ class RegExRecognizer(Recognizer):
         m = self.regex.match(in_str, pos)
         if m and m.group():
             return m.group()
-
-
-def EMPTY_recognizer(input, pos):
-    pass
-
-
-def EOF_recognizer(input, pos):
-    pass
-
-
-def STOP_recognizer(input, pos):
-    pass
