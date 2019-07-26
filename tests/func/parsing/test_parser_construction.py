@@ -2,14 +2,24 @@
 from __future__ import unicode_literals
 import sys
 import pytest  # noqa
-from parglare import Grammar, Parser, GLRParser, EMPTY, EOF
+from parglare import Grammar, Parser, GLRParser
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
-from ..grammar.expression_grammar import (OPEN, ID, T, E,
-                                          MULT, CLOSE, PLUS, get_grammar)
+from ..grammar.expression_grammar import get_grammar
 
 HAS_MOCK = sys.version_info[0] >= 3
 if HAS_MOCK:
     from unittest.mock import patch
+
+
+expression_grammar = get_grammar()
+T = expression_grammar.get_symbol('T')
+E = expression_grammar.get_symbol('E')
+OPEN = expression_grammar.get_symbol('OPEN')
+CLOSE = expression_grammar.get_symbol('CLOSE')
+PLUS = expression_grammar.get_symbol('PLUS')
+MULT = expression_grammar.get_symbol('MULT')
+ID = expression_grammar.get_symbol('ID')
+EMPTY = expression_grammar.get_symbol('EMPTY')
 
 
 def test_first():
@@ -20,7 +30,6 @@ def test_first():
     derived from the given non-terminal.
     """
 
-    expression_grammar = get_grammar()
     first_set = first(expression_grammar)
 
     assert OPEN in first_set[T]
@@ -51,7 +60,7 @@ def test_first_empty_in_rhs():
     C = g.get_terminal('C')
     S = g.get_nonterminal('S')
 
-    assert EMPTY in first_set[A]
+    assert g.EMPTY in first_set[A]
     assert B in first_set[A]
 
     assert B in first_set[S]
@@ -67,13 +76,12 @@ def test_follow():
     non-terminal in any of derived sentential forms.
     """
 
-    expression_grammar = get_grammar()
     follow_set = follow(expression_grammar)
 
-    assert follow_set[E] == set([CLOSE, PLUS, EOF])
+    assert follow_set[E] == set([CLOSE, PLUS, expression_grammar.EOF])
 
     # Follow of T must contain all of follow of E
-    assert follow_set[T] == set([MULT, CLOSE, PLUS, EOF])
+    assert follow_set[T] == set([MULT, CLOSE, PLUS, expression_grammar.EOF])
 
 
 def test_table_construction():

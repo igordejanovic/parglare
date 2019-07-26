@@ -21,11 +21,11 @@ def test_invalid_input(parser_class):
     assert e.value.location.start_position == 6
     assert "(" in str(e)
     assert "id" in str(e)
-    assert '*' in [s.name for s in e.value.symbols_before]
+    assert 'MULT' in [s.name for s in e.value.symbols_before]
     assert '+' in [t.value for t in e.value.tokens_ahead]
     expected_names = [s.name for s in e.value.symbols_expected]
-    assert 'id' in expected_names
-    assert '(' in expected_names
+    assert 'ID' in expected_names
+    assert 'OPEN' in expected_names
 
 
 @parsers
@@ -39,9 +39,9 @@ def test_premature_end(parser_class):
 
     assert e.value.location.start_position == 6
     expected_names = [s.name for s in e.value.symbols_expected]
-    assert 'id' in expected_names
-    assert '(' in expected_names
-    assert '*' in [s.name for s in e.value.symbols_before]
+    assert 'ID' in expected_names
+    assert 'OPEN' in expected_names
+    assert 'MULT' in [s.name for s in e.value.symbols_before]
     assert e.value.tokens_ahead == []
 
 

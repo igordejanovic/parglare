@@ -16,6 +16,6 @@ def test_tree_str():
 
     ts = res.tree_str()
 
-    assert '+[18->19, "+"]' in ts
-    assert ')[23->24, ")"]' in ts
+    assert 'PLUS[18->19, "+"]' in ts
+    assert 'CLOSE[23->24, ")"]' in ts
     assert 'F[10->24]' in ts
