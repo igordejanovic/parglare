@@ -17,8 +17,9 @@ number: /\d+(\.\d+)?/;
 
 class MyActions(Actions):
 
-    called = [False, False, False]
-    node_exists = False
+    def __init__(self):
+        self.called = [False, False, False]
+        self.node_exists = False
 
     def sum(self, nodes):
         self.called[0] = True
@@ -64,13 +65,12 @@ g = Grammar.from_string(grammar)
 
 
 def test_parse_context():
-    MyActions.called = [False, False, False]
-
-    parser = Parser(g, actions=MyActions())
+    actions = MyActions()
+    parser = Parser(g, actions=actions)
 
     parser.parse("   1 + 2  ")
 
-    assert all(MyActions.called)
+    assert all(actions.called)
 
 
 def test_parse_context_call_actions():
@@ -78,9 +78,9 @@ def test_parse_context_call_actions():
     Test that valid context attributes are available when calling
     actions using `call_actions`.
     """
-    MyActions.called = [False, False, False]
 
-    parser = Parser(g, build_tree=True, actions=MyActions())
+    actions = MyActions()
+    parser = Parser(g, build_tree=True, actions=actions)
 
     tree = parser.parse("   1 + 2  ")
     context = Context()
@@ -88,5 +88,5 @@ def test_parse_context_call_actions():
     context.extra = True
     parser.call_actions(tree, context=context)
 
-    assert all(MyActions.called)
-    assert MyActions.node_exists
+    assert all(actions.called)
+    assert actions.node_exists
