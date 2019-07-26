@@ -305,13 +305,16 @@ class Grammar(object):
     def __init__(self, grammar_struct, recognizers=None, classes=None,
                  file_path=None, start_symbol=None, obj_action_default=False,
                  ignore_case=False, re_flags=re.MULTILINE, debug=False,
-                 debug_parse=False, debug_colors=False):
+                 debug_parse=False, debug_colors=False,
+                 _no_check_recognizers=False):
         self.recognizers = recognizers if recognizers else Recognizers()
         self.classes = classes if classes else {}
         self.obj_action_default = obj_action_default
         self.file_path = file_path
         self.ignore_case = ignore_case
         self.re_flags = re_flags
+        self._no_check_recognizers = _no_check_recognizers
+
         self.terminals = {}
         self.nonterminals = {}
         self.productions = []
@@ -524,10 +527,11 @@ class Grammar(object):
                             ignore_case=self.ignore_case)
                     self.recognizers.add_recognizer(terminal_name, recognizer)
                 else:
-                    raise GrammarError(
-                        location=location,
-                        message=f'Recognizer not defined for terminal rule '
-                        f'"{terminal_name}"')
+                    if not self._no_check_recognizers:
+                        raise GrammarError(
+                            location=location,
+                            message=f'Recognizer not defined for terminal '
+                            f'rule "{terminal_name}"')
             else:
                 recognizer = getattr(self.recognizers, terminal_name)
 
