@@ -291,6 +291,9 @@ class Grammar(object):
     :param start_symbol: start/root symbol of the grammar or its name.
     :type start_symbol: :class:`GrammarSymbol` or str
 
+    :param obj_action_default: If set to `True` will by default call `obj`
+        action if assignments/named matches are used and no explicit action is
+        specified.
     :param nonterminals: A dict of :class:`NonTerminal` keyed by name
     :param terminals: A dict of :class:`Terminal` keyed by name
     """
@@ -300,11 +303,12 @@ class Grammar(object):
     pg_parser_table = None
 
     def __init__(self, grammar_struct, recognizers=None, classes=None,
-                 file_path=None, start_symbol=None, ignore_case=False,
-                 re_flags=re.MULTILINE, debug=False, debug_parse=False,
-                 debug_colors=False):
+                 file_path=None, start_symbol=None, obj_action_default=False,
+                 ignore_case=False, re_flags=re.MULTILINE, debug=False,
+                 debug_parse=False, debug_colors=False):
         self.recognizers = recognizers if recognizers else Recognizers()
         self.classes = classes if classes else {}
+        self.obj_action_default = obj_action_default
         self.file_path = file_path
         self.ignore_case = ignore_case
         self.re_flags = re_flags
@@ -591,8 +595,11 @@ class Grammar(object):
                 productions.append(Production(
                     nt, rhs,
                     location=location,
-                    action=production_struct.get('action',
-                                                 rule_struct.get('action')),
+                    action=production_struct.get(
+                        'action', rule_struct.get(
+                            'action',
+                            'obj' if self.obj_action_default and assignments
+                            else rule_name)),
                     assignments=prod_assignments.values(),
                     assoc=prod_modifiers.get('assoc', nt.assoc),
                     prior=prod_modifiers.get('prior', nt.prior),
