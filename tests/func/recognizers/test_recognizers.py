@@ -2,38 +2,32 @@
 from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Grammar, Parser, ParseError, ParserInitError, \
-    GrammarError, DisambiguationError
-from parglare.actions import pass_single, pass_nochange, collect
+    GrammarError, DisambiguationError, Recognizers
 
 
 def test_parse_list_of_integers():
 
     grammar = """
+    @pass_single
     Numbers: all_less_than_five EOF;
+    @collect
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
 
     terminals
+    @pass_single
     int_less_than_five:;
     """
 
-    def int_less_than_five(input, pos):
-        if input[pos] < 5:
-            return [input[pos]]
+    class MyRecognizers(Recognizers):
+        def int_less_than_five(self, input, pos):
+            if input[pos] < 5:
+                return [input[pos]]
 
-    recognizers = {
-        'int_less_than_five': int_less_than_five
-    }
-    g = Grammar.from_string(grammar, recognizers=recognizers, debug=True)
-
-    actions = {
-        'Numbers': pass_single,
-        'all_less_than_five': collect,
-        'int_less_than_five': pass_single
-    }
+    g = Grammar.from_string(grammar, recognizers=MyRecognizers())
 
     # Test that `ws` must be set to `None` for non-textual content
-    parser = Parser(g, actions=actions)
+    parser = Parser(g)
 
     ints = [3, 4, 1, 4]
     with pytest.raises(
@@ -42,7 +36,7 @@ def test_parse_list_of_integers():
             'set `ws` to `None`'):
         parser.parse(ints)
 
-    parser = Parser(g, actions=actions, ws=None)
+    parser = Parser(g, ws=None)
     ints = [3, 4, 1, 4]
     p = parser.parse(ints)
     assert p == ints
@@ -56,49 +50,41 @@ def test_parse_list_of_integers():
 
 def test_parse_list_of_integers_lexical_disambiguation():
 
-    def int_less_than_five(input, pos):
-        if input[pos] < 5:
-            return [input[pos]]
+    class MyRecognizers(Recognizers):
+        def int_less_than_five(self, input, pos):
+            if input[pos] < 5:
+                return [input[pos]]
 
-    def ascending(input, pos):
-        "Match sublist of ascending elements. Matches at least one."
-        last = pos + 1
-        while last < len(input) and input[last] > input[last-1]:
-            last += 1
-        if last > pos:
-            return input[pos:last]
+        def ascending(self, input, pos):
+            "Match sublist of ascending elements. Matches at least one."
+            last = pos + 1
+            while last < len(input) and input[last] > input[last-1]:
+                last += 1
+            if last > pos:
+                return input[pos:last]
 
-    def ascending_nosingle(input, pos):
-        "Match sublist of ascending elements. Matches at least two."
-        last = pos + 1
-        while last < len(input) and input[last] > input[last-1]:
-            last += 1
-        if last - pos >= 2:
-            return input[pos:last]
+        def ascending_nosingle(self, input, pos):
+            "Match sublist of ascending elements. Matches at least two."
+            last = pos + 1
+            while last < len(input) and input[last] > input[last-1]:
+                last += 1
+            if last - pos >= 2:
+                return input[pos:last]
 
     grammar = """
     Numbers: all_less_than_five ascending all_less_than_five EOF;
+    @collect
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
 
     terminals
-    int_less_than_five:;
+    @pass_single int_less_than_five:;
     ascending:;
     """
 
-    recognizers = {
-        'int_less_than_five': int_less_than_five,
-        'ascending': ascending
-    }
-    g = Grammar.from_string(grammar, recognizers=recognizers)
+    g = Grammar.from_string(grammar, recognizers=MyRecognizers())
 
-    actions = {
-        'Numbers': lambda _, nodes: [nodes[0], nodes[1], nodes[2]],
-        'all_less_than_five': collect,
-        'int_less_than_five': pass_single,   # Unpack element for collect
-        'ascending': pass_nochange
-    }
-    parser = Parser(g, actions=actions, ws=None, debug=True)
+    parser = Parser(g, ws=None)
 
     ints = [3, 4, 1, 4, 7, 8, 9, 3]
 
@@ -111,14 +97,22 @@ def test_parse_list_of_integers_lexical_disambiguation():
 
     # Now we change the recognizer for ascending to match at least two
     # consecutive ascending numbers.
-    recognizers['ascending'] = ascending_nosingle
-    g = Grammar.from_string(grammar, recognizers=recognizers)
-    parser = Parser(g, actions=actions, ws=None, debug=True)
+    class MyRecognizers2(MyRecognizers):
+        def ascending(self, input, pos):
+            "Match sublist of ascending elements. Matches at least two."
+            last = pos + 1
+            while last < len(input) and input[last] > input[last-1]:
+                last += 1
+            if last - pos >= 2:
+                return input[pos:last]
+
+    g = Grammar.from_string(grammar, recognizers=MyRecognizers2())
+    parser = Parser(g, ws=None)
 
     # Parsing now must pass
     p = parser.parse(ints)
 
-    assert p == [[3, 4], [1, 4, 7, 8, 9], [3]]
+    assert p == [[3, 4], [1, 4, 7, 8, 9], [3], None]
 
 
 def test_terminals_with_emtpy_bodies_require_recognizers():
@@ -140,16 +134,18 @@ def test_terminals_with_emtpy_bodies_require_recognizers():
     with pytest.raises(GrammarError):
         g = Grammar.from_string(grammar)
 
-    recognizers = {
-        'B': lambda input, pos: None,
-    }
+    class MyRecognizers(Recognizers):
+        def B(self, input, pos):
+            return None
 
     with pytest.raises(GrammarError):
-        g = Grammar.from_string(grammar, recognizers=recognizers)
+        g = Grammar.from_string(grammar, recognizers=MyRecognizers())
 
-    recognizers['A'] = lambda input, pos: None
+    class MyRecognizers2(MyRecognizers):
+        def A(self, input, pos):
+            return None
 
-    g = Grammar.from_string(grammar, recognizers=recognizers)
+    g = Grammar.from_string(grammar, recognizers=MyRecognizers2())
     assert g
 
     # Test that setting _no_check_recognizers will prevent grammar

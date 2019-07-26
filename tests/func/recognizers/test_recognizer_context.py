@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest  # noqa
-from parglare import Grammar, Parser
+from parglare import Grammar, Parser, Recognizers
 import re
 
 
@@ -15,14 +15,16 @@ def test_recognizer_context():
     term:;
     """
 
-    term_re = re.compile(r"[a-zA-Z_]+")
+    class MyRecognizers(Recognizers):
 
-    def term(context, input, pos):
-        match = term_re.match(input, pos)
-        if match is None:
-            return None
-        return input[pos:match.end()]
+        term_re = re.compile(r"[a-zA-Z_]+")
 
-    g = Grammar.from_string(grammar, recognizers={'term': term})
+        def term(self, input, pos):
+            match = self.term_re.match(input, pos)
+            if match is None:
+                return None
+            return input[pos:match.end()]
+
+    g = Grammar.from_string(grammar, recognizers=MyRecognizers())
     parser = Parser(g)
     assert parser.parse("a bb cc; d ee f; g hh i")
