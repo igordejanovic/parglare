@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import pytest
-from parglare import GLRParser, Grammar, Parser, ParseError
+from parglare import (GLRParser, Grammar, Parser, ParseError, Actions,
+                      Recognizers)
 from parglare.exceptions import SRConflicts
 
 
@@ -114,15 +115,17 @@ def test_nops():
 
 def test_expressions():
 
-    actions = {
-        "s": lambda _, c: c[0],
-        "E": [
-            lambda _, nodes: nodes[0] + nodes[2],
-            lambda _, nodes: nodes[0] * nodes[2],
-            lambda _, nodes: nodes[1],
-            lambda _, nodes: int(nodes[0])
-        ]
-    }
+    class MyActions(Actions):
+        def s(self, nodes):
+            return self.pass_single(nodes)
+
+        def E(self, nodes):
+            return [
+                lambda n: n[0] + n[2],
+                lambda n: n[0] * n[2],
+                lambda n: n[1],
+                lambda n: int(n[0])
+            ][self.prod_idx](nodes)
 
     # This grammar is highly ambiguous if priorities and
     # associativities are not defined to disambiguate.
@@ -133,7 +136,7 @@ def test_expressions():
     Number: /\d+/;
     """
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, actions=actions, debug=True)
+    p = GLRParser(g, actions=MyActions())
 
     # Even this simple expression has 2 different interpretations
     # (4 + 2) * 3 and
@@ -166,7 +169,7 @@ def test_expressions():
     Number: /\d+/;
     """
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, actions=actions)
+    p = GLRParser(g, actions=MyActions())
 
     # This expression now has 2 interpretation:
     # (4 + (2*3)) + 8
@@ -184,7 +187,7 @@ def test_expressions():
     Number: /\d+/;
     """
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, actions=actions)
+    p = GLRParser(g, actions=MyActions())
 
     results = p.parse("4 + 2 * 3 + 8 * 5 * 3")
     assert len(results) == 1
@@ -317,18 +320,19 @@ def test_empty_recognizer():
     """This test verifies if custom recorgnizer matching on empty string
     can throw parser into infinite loop."""
 
-    def match_bs(input_str, pos):
-        end_pos = pos
-        while end_pos < len(input_str) and input_str[end_pos] == 'b':
-            end_pos += 1
-        return input_str[pos:end_pos]
+    class MyRecognizers(Recognizers):
+        def t(self, input_str, pos):
+            end_pos = pos
+            while end_pos < len(input_str) and input_str[end_pos] == 'b':
+                end_pos += 1
+            return input_str[pos:end_pos]
 
     g = Grammar.from_string("""
     start: a EOF;
     a: a t | t;
     terminals
     t: ;
-    """, recognizers={'t': match_bs})
+    """, recognizers=MyRecognizers())
     p = GLRParser(g)
     with pytest.raises(ParseError):
         p.parse("a")
