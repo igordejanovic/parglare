@@ -143,7 +143,7 @@ class Terminal(GrammarSymbol):
         super(Terminal, self).__init__(name, **kwargs)
         self._recognizer = None
         self.recognizer = recognizer
-        self.action = action
+        self.action = action if action else name
         self.finish = finish
         self.prefer = prefer
         self.keyword = keyword
@@ -189,7 +189,7 @@ class Production(Locatable):
         super(Production, self).__init__(**kwargs)
         self.symbol = symbol
         self.rhs = rhs if rhs else ProductionRHS()
-        self.action = action
+        self.action = action if action else symbol.name
         self.assignments = assignments
         self.assoc = assoc
         self.prior = prior
@@ -489,10 +489,8 @@ class Grammar(object):
         # These two terminals are special terminals used in the grammars.
         # EMPTY will match nothing and always succeed.
         # EOF will match only at the end of the input string.
-        self.EMPTY = Terminal("EMPTY", recognizer=self.recognizers.EMPTY,
-                              action='pass_none')
-        self.EOF = Terminal("EOF", recognizer=self.recognizers.EOF,
-                            action='pass_none')
+        self.EMPTY = Terminal("EMPTY", recognizer=self.recognizers.EMPTY)
+        self.EOF = Terminal("EOF", recognizer=self.recognizers.EOF)
         self.terminals.update([(s.name, s) for s in (self.EMPTY, self.EOF,
                                                      self.STOP)])
 
@@ -540,8 +538,7 @@ class Grammar(object):
                                 prefer=term_modifiers.get('prefer', False),
                                 dynamic=term_modifiers.get('dynamic', False),
                                 keyword=term_modifiers.get('keyword', False),
-                                action=terminal_struct.get('action',
-                                                           terminal_name),
+                                action=terminal_struct.get('action'),
                                 meta=terminal_struct.get('meta'))
             self.terminals[terminal_name] = terminal
 
@@ -594,8 +591,8 @@ class Grammar(object):
                 productions.append(Production(
                     nt, rhs,
                     location=location,
-                    action=production_struct.get(
-                        'action', rule_struct.get('action', rule_name)),
+                    action=production_struct.get('action',
+                                                 rule_struct.get('action')),
                     assignments=prod_assignments.values(),
                     assoc=prod_modifiers.get('assoc', nt.assoc),
                     prior=prod_modifiers.get('prior', nt.prior),

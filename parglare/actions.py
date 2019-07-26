@@ -163,3 +163,9 @@ class Actions(object):
         instance._pg_end_position = self.context.end_position
 
         return instance
+
+    def EMPTY(self, nodes):
+        return self.pass_none(nodes)
+
+    def EOF(self, nodes):
+        return self.pass_none(nodes)
