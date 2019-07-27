@@ -1,19 +1,19 @@
 from __future__ import unicode_literals
-from parglare import Grammar, Parser
-from parglare.actions import pass_inner, pass_single
+from parglare import Grammar, Parser, Actions
+from operator import add, sub, mul, truediv
 
 grammar = r"""
-Calc: Assignments E;
+@pass_inner Calc: Assignments E;
 Assignments: Assignment | Assignments Assignment | EMPTY;
 Assignment: VariableName "=" Number;
 
-E: E "+" E {left, 1}
- | E "-" E {left, 1}
- | E "*" E {left, 2}
- | E "/" E {left, 2}
- | "(" E ")"
- | VariableRef
- | Number
+@op E: E "+" E {left, 1}
+     | E "-" E {left, 1}
+     | E "*" E {left, 2}
+     | E "/" E {left, 2}
+     | "(" E ")" {@pass_inner}
+     | VariableRef {@pass_single}
+     | Number {@pass_single}
 ;
 
 VariableRef: VariableName;
@@ -24,37 +24,39 @@ Number: /\d+(\.\d+)?/;
 """
 
 
-# Semantic Actions
-def act_assignment(context, nodes):
-    """Semantic action for variable assignment."""
+class MyActions(Actions):
 
-    name = nodes[0]
-    number = nodes[2]
+    # Semantic Actions
+    def Assignment(self, n):
+        """Semantic action for variable assignment."""
 
-    if context.extra is None:
-        context.extra = {}
+        name = n[0]
+        number = n[2]
 
-    context.extra[name] = number
+        if self.context.extra is None:
+            self.context.extra = {}
 
+        self.context.extra[name] = number
 
-actions = {
-    "Calc": pass_inner,
-    "Assignment": act_assignment,
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          pass_inner,
-          pass_single,
-          pass_single],
-    "Number": lambda _, value: float(value),
-    "VariableRef": lambda context, nodes: context.extra[nodes[0]],
-}
+    def op(self, n):
+        opfunc = {
+            '+': add,
+            '-': sub,
+            '*': mul,
+            '/': truediv,
+        }[n[1]]
+        return opfunc(n[0], n[2])
+
+    def Number(self, n):
+        return float(n)
+
+    def VariableRef(self, n):
+        return self.context.extra[n[0]]
 
 
 def main(debug=False):
     g = Grammar.from_string(grammar, debug=debug, debug_colors=True)
-    parser = Parser(g, actions=actions, debug=debug, debug_colors=True)
+    parser = Parser(g, actions=MyActions(), debug=debug, debug_colors=True)
 
     input_str = """
     a = 5
