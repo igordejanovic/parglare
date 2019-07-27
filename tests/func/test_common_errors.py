@@ -30,27 +30,6 @@ def test_infinite_recursions():
     assert 'infinite recursion' in str(e)
 
 
-def test_terminals_with_different_names():
-    """Test that all terminals with same string match have the same name.
-    """
-
-    # In this grammar we have 'd' terminal in S production and B terminal with
-    # the same 'd' recognizer.
-    grammar = """
-    S: 'a' A 'd' | 'b' A B;
-    A: 'c' A | 'c';
-    terminals
-    B: 'd';
-    """
-
-    with pytest.raises(GrammarError) as e:
-        Grammar.from_string(grammar)
-
-    assert 'B' in str(e)
-    assert 'd' in str(e)
-    assert 'match the same string' in str(e)
-
-
 def todo_test_grammar_without_valid_inputs():
     """
     TODO: There is no valid input for this grammar. This should be detected by
