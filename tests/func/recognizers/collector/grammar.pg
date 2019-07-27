@@ -1,6 +1,0 @@
-Model: INT+ Rule1 INT;
-Rule1: a=STRING;
-
-terminals
-INT:;
-STRING:;
