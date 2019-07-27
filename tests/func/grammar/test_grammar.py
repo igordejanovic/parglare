@@ -297,6 +297,56 @@ def test_action_override():
     assert result == ["eggs", "bar reduce"]
 
 
+def test_production_actions():
+    """
+    Action can be given per production in which case it overrides rule level
+    action.
+    """
+    grammar = """
+    @pass_single
+    E: E '+' E {@add}
+     | E '-' E {@sub}
+     | num;
+
+    terminals
+    num: 'num';
+    """
+
+    g = Grammar.from_string(grammar)
+    input_str = "num + num - num"
+
+    class MyActions(Actions):
+        def __init__(self):
+            self.pass_single_calls = 0
+
+        def num(self, value):
+            self.num_called = True
+            return 1
+
+        def add(self, n):
+            self.add_called = True
+            return n[0] + n[2]
+
+        def sub(self, n):
+            self.sub_called = True
+            return n[0] - n[2]
+
+        def pass_single(self, n):
+            self.pass_single_calls += 1
+            assert self.context.symbol.name == 'E'
+            assert len(n) == 1
+            return n[0]
+
+    actions = MyActions()
+    p = Parser(g, actions=actions)
+    result = p.parse(input_str)
+    assert result == 1
+    assert actions.pass_single_calls == 3
+    assert all([actions.num_called,
+                actions.add_called,
+                actions.sub_called])
+
+
 def assignment_in_productions(prods, symbol_name, assgn_name):
     for p in prods:
         if p.symbol.name == symbol_name:

@@ -127,6 +127,7 @@ pg_grammar = {
                 {'production': ['NOPSE']},
                 {'production': ['PSE']},
                 {'production': ['INT'], 'action': 'meta_data_priority'},
+                {'production': ['ACTION'], 'action': 'pass_single'},
                 {'production': ['UserMetaData'], 'action': 'pass_single'},
             ]
         },
@@ -408,19 +409,23 @@ class PGGrammarActions(Actions):
     def rule_with_action(self, nodes):
         prod_rule = nodes[-1]
         if len(nodes) > 1:
-            prod_rule[1]['action'] = nodes[0][1:]
+            action = nodes[0]
+            prod_rule[1][action[0]] = action[1]
         return prod_rule
 
     def extract_modifiers(self, target):
         """
-        Extract built-in modifiers (e.g. disambiguation rules) from meta-data
-        of rules, productions, terminals.
+        Extract built-in modifiers (e.g. disambiguation rules) and action from
+        meta-data of rules, productions, terminals.
         """
         modifiers = []
         meta = target['meta']
         for m in list(meta):
             if m == 'prior':
                 modifiers.append(meta[m])
+                del meta[m]
+            elif m == 'action':
+                target['action'] = meta[m]
                 del meta[m]
             elif m in MODIFIERS:
                 modifiers.append(m)
@@ -507,6 +512,9 @@ class PGGrammarActions(Actions):
         if symbol not in self.inline_terminals:
             self.inline_terminals[symbol] = {'recognizer': symbol}
         return symbol
+
+    def ACTION(self, value):
+        return ('action', value[1:])
 
     def STR(self, value):
         return value[1:-1].replace(r"\\", "\\").replace(r"\'", "'")
