@@ -1,6 +1,7 @@
 import os
 import time
 from parglare import Grammar, Parser
+from calc_actions import MyActions
 
 this_folder = os.path.dirname(__file__)
 
@@ -22,7 +23,8 @@ def test_save_load_table():
     except OSError:
         pass
 
-    parser = Parser(grammar)
+    actions = MyActions()
+    parser = Parser(grammar, actions=actions)
     assert parser.parse(input_str) == input_str_result
 
     # Table file must be produced by parser construction.
@@ -31,7 +33,7 @@ def test_save_load_table():
     last_mtime = os.path.getmtime(table_file)
     time.sleep(1)
 
-    parser = Parser(grammar)
+    parser = Parser(grammar, actions=actions)
 
     # Last generated table should be used during parser construction.
     # Currently, it is hard to check this so we'll only check if
@@ -44,7 +46,7 @@ def test_save_load_table():
     # This should trigger table file regeneration
     with open(variable_file, 'a'):
         os.utime(variable_file, None)
-    parser = Parser(grammar)
+    parser = Parser(grammar, actions=actions)
     assert parser.parse(input_str) == input_str_result
     # We verify that the table file is newer.
     assert last_mtime < os.path.getmtime(table_file)
@@ -57,5 +59,5 @@ def test_save_load_table():
     last_mtime = os.path.getmtime(table_file)
     parser = Parser(grammar, force_load_table=True)
     assert last_mtime == os.path.getmtime(table_file)
-    parser = Parser(grammar)
+    parser = Parser(grammar, actions=actions)
     assert last_mtime < os.path.getmtime(table_file)

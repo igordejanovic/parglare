@@ -50,7 +50,7 @@ def test_grammar_struct():
 
 
 test_grammar_struct_desugared = {
-    'start': "S'",
+    'start': "A",
     'rules': {
         "S'": {
             'productions': [

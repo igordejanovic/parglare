@@ -38,8 +38,8 @@ def table_from_serializable(serialized_states, grammar):
     for state in states:
 
         actions = OrderedDict()
-        for json_action_fqn in state.actions:
-            terminal_fqn, json_actions = json_action_fqn
+        for json_action_name in state.actions:
+            terminal_name, json_actions = json_action_name
             term_acts = []
             for json_action in json_actions:
                 if 'state_id' in json_action:
@@ -53,13 +53,13 @@ def table_from_serializable(serialized_states, grammar):
                 term_acts.append(Action(json_action['action'],
                                         act_state, act_prod))
 
-            actions[grammar.get_terminal(terminal_fqn)] = term_acts
+            actions[grammar.get_terminal(terminal_name)] = term_acts
         state.actions = actions
 
         gotos = OrderedDict()
-        for json_goto_fqn in state.gotos:
-            nonterm_fqn, goto_state = json_goto_fqn
-            gotos[grammar.get_nonterminal(nonterm_fqn)] = \
+        for json_goto_name in state.gotos:
+            nonterm_name, goto_state = json_goto_name
+            gotos[grammar.get_nonterminal(nonterm_name)] = \
                 states_dict[goto_state]
         state.gotos = gotos
 
@@ -76,12 +76,12 @@ def load_table(file_name, grammar):
 def _dump_state(state):
     s = {}
     s['state_id'] = state.state_id
-    s['symbol'] = state.symbol.fqn
+    s['symbol'] = state.symbol.name
     action_items = list(state.actions.items())
-    s['actions'] = [[terminal.fqn, _dump_actions(actions)]
+    s['actions'] = [[terminal.name, _dump_actions(actions)]
                     for terminal, actions in action_items]
     goto_items = list(state.gotos.items())
-    s['gotos'] = [[nonterminal.fqn, st.state_id]
+    s['gotos'] = [[nonterminal.name, st.state_id]
                   for nonterminal, st in goto_items]
     s['finish_flags'] = state.finish_flags
 

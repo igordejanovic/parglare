@@ -3,6 +3,7 @@ This module defines parglare textual grammar language using parglare internal
 DSL specification.
 
 """
+import os
 from parglare.actions import Actions
 from parglare.grammar import Grammar, MODIFIERS
 from parglare import GrammarError
@@ -38,10 +39,8 @@ pg_grammar = {
             ]
         },
         'Import': {
-            #'action': 'pgimport',
             'productions': [
                 {'production': ['IMPORT', 'STR', 'SEMICOLON']},
-                {'production': ['IMPORT', 'STR', 'AS', 'NAME', 'SEMICOLON']},
             ]
         },
         'ProductionRules': {
@@ -352,6 +351,7 @@ class PGGrammarActions(Actions):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.imported_files = set()
         self.inline_terminals = {}
 
     def PGFile(self, nodes):
@@ -363,9 +363,12 @@ class PGGrammarActions(Actions):
         if rules_idx is not None:
             pgfile['start'] = nodes[rules_idx][0][0]
         if imports_idx is not None:
-            pgfile.update(nodes[imports_idx])
+            imported_grammars = nodes[imports_idx]
+            for imported_grammar in imported_grammars:
+                if imported_grammar:
+                    merge_grammar_struct(pgfile, imported_grammar)
         if rules_idx is not None:
-            rules = {}
+            rules = pgfile.setdefault('rules', {})
             rule_tuples = nodes[rules_idx]
             for rule_name, rule in rule_tuples:
                 if rule_name not in rules:
@@ -379,9 +382,8 @@ class PGGrammarActions(Actions):
                             message='Multiple actions defined for rule "{}".'
                             .format(rule_name))
                 rules[rule_name].update(rule)
-            pgfile['rules'] = rules
         if terminals_idx is not None or self.inline_terminals:
-            terminals = {}
+            terminals = pgfile.setdefault('terminals', {})
             if terminals_idx:
                 term_tuples = nodes[terminals_idx]
                 for name, term in term_tuples:
@@ -392,19 +394,43 @@ class PGGrammarActions(Actions):
                             'of terminal rule "{}"'.format(name))
                     terminals[name] = term
 
-            for inline_term in self.inline_terminals:
-                if inline_term in terminals:
-                    raise GrammarError(
-                        location=Location(),
-                        message='Inline terminal with the name '
-                        '"{}" already exists.'.format(inline_term))
-                terminals[inline_term] = self.inline_terminals[inline_term]
-            pgfile.update({'terminals': terminals})
+            for inline_term_name, inline_term in self.inline_terminals.items():
+                if inline_term_name in terminals:
+                    if inline_term != terminals[inline_term_name]:
+                        raise GrammarError(
+                            location=Location(),
+                            message='Inline terminal with the name '
+                            '"{}" already exists.'.format(inline_term_name))
+                else:
+                    terminals[inline_term_name] = inline_term
 
-        return pgfile
+        return pgfile, self.imported_files
 
     def Import(self, nodes):
-        return
+        import_file = nodes[1]
+
+        if self.context.file_name is None:
+            raise GrammarError(
+                message='"import" can be used only for file-based grammars.',
+                location=Location(context=self.context))
+
+        # File path to import from is always given relative to the file
+        # currently processed.
+        dir_path = os.path.dirname(os.path.abspath(self.context.file_name))
+        import_file = os.path.join(dir_path, import_file)
+
+        if import_file in self.imported_files:
+            # Already imported
+            return
+        self.imported_files.add(import_file)
+
+        with open(import_file, 'r', encoding="utf-8") as f:
+            content = f.read()
+
+        grammar_struct = Grammar.struct_from_string(content,
+                                                    actions=self,
+                                                    file_name=import_file)
+        return grammar_struct
 
     def rule_with_action(self, nodes):
         prod_rule = nodes[-1]
@@ -533,7 +559,7 @@ pg_parser_grammar = None
 pg_parser_table = None
 
 
-def get_grammar_parser(debug=False, debug_colors=False):
+def get_grammar_parser(debug=False, debug_colors=False, actions=None):
     """
     Constructs and returns a new instance of the Parglare grammar parser.
     Cache grammar and LALR table to speed up future calls.
@@ -549,6 +575,27 @@ def get_grammar_parser(debug=False, debug_colors=False):
 
     from parglare import Parser
     from parglare.lang import PGGrammarActions
-    return Parser(pg_parser_grammar, actions=PGGrammarActions(),
+    return Parser(pg_parser_grammar,
+                  actions=actions if actions else PGGrammarActions(),
                   table=pg_parser_table, debug=debug,
                   debug_colors=debug_colors)
+
+
+def merge_grammar_struct(gto, gfrom):
+    """
+    Merges two grammar structs in-place.  The target is gto.  Raises
+    GrammarError if the merge would not be consistent.
+    """
+
+    terminals = gfrom.get('terminals', {})
+    gto_terminals = gto.get('terminals', {})
+    for term_name, term_struct in terminals.items():
+        if term_name not in gto_terminals:
+            gto.setdefault('terminals', {})[term_name] = term_struct
+
+    rules = gfrom.get('rules', {})
+    for rule_name, rule_struct in rules.items():
+        gto.setdefault('rules', {})\
+           .setdefault(rule_name, {})\
+           .setdefault('productions', [])\
+           .extend(rule_struct.get('productions', []))

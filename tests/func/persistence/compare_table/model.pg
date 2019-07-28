@@ -1,7 +1,7 @@
 import 'packages.pg';
-import 'modules.pg' as m;
+import 'modules.pg';
 
 Model:
-    packages=packages.Package*
-    modules=m.Module*
+    packages=Package*
+    modules=Module*
 ;

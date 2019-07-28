@@ -22,7 +22,7 @@ def test_multiple_rules_with_assignments():
     A : t="a" | t="b" ;
     """
 
-    grammar = Grammar.from_string(grammar_str, obj_action_default=True)
+    grammar = Grammar.from_string(grammar_str, create_objects=True)
     parser = Parser(grammar)
     result = parser.parse(text)
     assert type(result).__name__ == 'A'
@@ -34,7 +34,7 @@ def test_multiple_rules_with_assignments():
     A : t="b" ;
     """
 
-    grammar = Grammar.from_string(grammar_str, obj_action_default=True)
+    grammar = Grammar.from_string(grammar_str, create_objects=True)
     parser = Parser(grammar)
     result = parser.parse(text)
     assert type(result).__name__ == 'A'

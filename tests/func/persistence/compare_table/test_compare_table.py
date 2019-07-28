@@ -32,7 +32,7 @@ def test_diamond_import_resolving_and_model_creation():
     table_file = os.path.join(this_folder, 'model.pgt')
     table_cmp_file = os.path.join(this_folder, 'model_compare.pgt')
 
-    g = Grammar.from_file(grammar_file)
+    g = Grammar.from_file(grammar_file, create_objects=True)
     try:
         os.remove(table_file)
     except Exception:
@@ -59,7 +59,7 @@ def test_diamond_import_resolving_and_model_creation():
     assert packageComponent.name == 'packageComponent'
 
     module = model.modules[0]
-    assert module.__class__.__name__ == 'm.Module'
+    assert module.__class__.__name__ == 'Module'
     assert module.name == 'SomeModule'
     assert len(module.components) == 1
 
@@ -69,5 +69,5 @@ def test_diamond_import_resolving_and_model_creation():
     assert len(component.slots) == 2
 
     slot = component.slots[1]
-    assert slot.__class__.__name__ == 'packages.components.SlotOut'
+    assert slot.__class__.__name__ == 'SlotOut'
     assert slot.name == 'SomeOutputSlot'

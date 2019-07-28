@@ -2,11 +2,11 @@ import 'components.pg';
 import 'base.pg';
 
 Package:
-    'package' name=base.ID body=PackageBody?
+    'package' name=ID body=PackageBody?
 ;
 
 PackageBody:
     '{'
-              components=components.Component*
+              components=Component*
     '}'
 ;

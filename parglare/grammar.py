@@ -288,11 +288,14 @@ class Grammar(object):
     :param recognizers: An instance of Recognizers inherited class.
     :param classes: A dict of user specific classes
     :param file_path: A file path where grammar was loaded from
+    :param imported_files: A set of imported file names including the root
+        grammar file.  Used in table caching to check if files has been changed
+        since last cache persist.
     :param start_symbol: start/root symbol of the grammar or its name.
     :type start_symbol: :class:`GrammarSymbol` or str
 
-    :param obj_action_default: If set to `True` will by default call `obj`
-        action if assignments/named matches are used and no explicit action is
+    :param create_objects: If set to `True` will by default call `obj` action
+        if assignments/named matches are used and no explicit action is
         specified.
     :param nonterminals: A dict of :class:`NonTerminal` keyed by name
     :param terminals: A dict of :class:`Terminal` keyed by name
@@ -303,14 +306,15 @@ class Grammar(object):
     pg_parser_table = None
 
     def __init__(self, grammar_struct, recognizers=None, classes=None,
-                 file_path=None, start_symbol=None, obj_action_default=False,
-                 ignore_case=False, re_flags=re.MULTILINE, debug=False,
-                 debug_parse=False, debug_colors=False,
-                 _no_check_recognizers=False):
+                 file_path=None, imported_files=None, start_symbol=None,
+                 create_objects=False, ignore_case=False,
+                 re_flags=re.MULTILINE, debug=False, debug_parse=False,
+                 debug_colors=False, _no_check_recognizers=False):
         self.recognizers = recognizers if recognizers else Recognizers()
         self.classes = classes if classes else {}
-        self.obj_action_default = obj_action_default
+        self.create_objects = create_objects
         self.file_path = file_path
+        self.imported_files = imported_files
         self.ignore_case = ignore_case
         self.re_flags = re_flags
         self._no_check_recognizers = _no_check_recognizers
@@ -334,7 +338,6 @@ class Grammar(object):
                     {'production': [start_symbol, 'STOP']}
                 ]
             }
-            grammar_struct['start'] = AUGSYMBOL_NAME
 
         self.grammar_struct = grammar_struct
         self._init_from_struct()
@@ -603,7 +606,7 @@ class Grammar(object):
                     action=production_struct.get(
                         'action', rule_struct.get(
                             'action',
-                            'obj' if self.obj_action_default and assignments
+                            'obj' if self.create_objects and assignments
                             else rule_name)),
                     assignments=prod_assignments.values(),
                     assoc=prod_modifiers.get('assoc', nt.assoc),
@@ -795,8 +798,11 @@ class Grammar(object):
 
         with open(file_name, 'r', encoding="utf-8") as f:
             content = f.read()
-        return Grammar.from_struct(Grammar.struct_from_string(content),
-                                   **kwargs)
+        g_struct, imported_files = Grammar._internal_struct_from_string(
+            content, file_name=file_name)
+        imported_files.add(file_name)
+        return Grammar.from_struct(g_struct, imported_files=imported_files,
+                                   file_path=file_name, **kwargs)
 
     @staticmethod
     def struct_from_string(grammar_str, **kwargs):
@@ -804,12 +810,22 @@ class Grammar(object):
         Parse grammar string and return the grammar represented as Python
         structure.
         """
+        return Grammar._internal_struct_from_string(grammar_str, **kwargs)[0]
+
+    @staticmethod
+    def _internal_struct_from_string(grammar_str, **kwargs):
+        """
+        Used internally to return both the structure and a set of imported
+        files.
+        """
         from parglare.lang import get_grammar_parser
         debug = kwargs.pop('debug', False)
         debug_colors = kwargs.pop('debug_colors', False)
+        actions = kwargs.pop('actions', None)
         return get_grammar_parser(
-            debug=debug, debug_colors=debug_colors).parse(grammar_str,
-                                                          **kwargs)
+            debug=debug,
+            debug_colors=debug_colors,
+            actions=actions).parse(grammar_str, **kwargs)
 
     @staticmethod
     def remove_locations(grammar_struct):

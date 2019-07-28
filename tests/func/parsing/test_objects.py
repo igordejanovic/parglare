@@ -87,7 +87,7 @@ def test_default_object_create():
     Test that default action will create object of the constructed class
     for rules using named matches (assignments).
     """
-    g = Grammar.from_string(grammar, obj_action_default=True)
+    g = Grammar.from_string(grammar, create_objects=True)
 
     p = Parser(g)
     a = p.parse('b c c d f d b')
@@ -111,7 +111,7 @@ def test_obj_action_override():
     A: b=B;
     B: "b";
     """
-    g = Grammar.from_string(grammar, obj_action_default=True)
+    g = Grammar.from_string(grammar, create_objects=True)
     A = g.get_nonterminal('A')
     assert A.productions[0].action == 'obj'
 
@@ -120,7 +120,7 @@ def test_obj_action_override():
     A: b=B;
     B: "b";
     """
-    g = Grammar.from_string(grammar, obj_action_default=True)
+    g = Grammar.from_string(grammar, create_objects=True)
     A = g.get_nonterminal('A')
     assert A.productions[0].action == 'myaction'
 
@@ -136,7 +136,7 @@ def test_obj_position():
     terminals
     digits:/\d+/;
     """
-    g = Grammar.from_string(grammar, obj_action_default=True)
+    g = Grammar.from_string(grammar, create_objects=True)
     parser = Parser(g)
 
     result = parser.parse("""

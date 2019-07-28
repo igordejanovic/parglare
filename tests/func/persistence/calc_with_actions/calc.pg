@@ -1,18 +1,15 @@
-import 'variable.pg' as v;
+import 'variable.pg';
 
-Calc: Assignments E;
+Calc: Assignments E EOF;
 @collect_optional
 Assignments: Assignments Assignment | Assignment | EMPTY;
-Assignment: v.VariableName "=" Number;
+Assignment: VariableName "=" Number;
 
 E: E "+" E {left, 1}
  | E "-" E {left, 1}
  | E "*" E {left, 2}
  | E "/" E {left, 2}
  | "(" E ")"
- | v.VariableRef
+ | VariableRef
  | Number
 ;
-
-terminals
-Number: /\d+(\.\d+)?/;
