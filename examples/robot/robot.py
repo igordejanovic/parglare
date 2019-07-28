@@ -15,51 +15,42 @@ An example of the robot program:
 """
 from __future__ import unicode_literals, print_function
 import os
-from parglare import Grammar, Parser
-from parglare import get_collector
-
-action = get_collector()
+from parglare import Grammar, Parser, Actions
 
 
-@action
-def INT(_, value):
-    return int(value)
+class MyActions(Actions):
+    def INT(self, value):
+        return int(value)
 
+    def initial(self, nodes, x, y):
+        print("Robot initial position set to: {}, {}".format(x, y))
+        # We use context.extra to keep robot position state.
+        self.context.extra = (x, y)
 
-@action
-def initial(context, nodes, x, y):
-    print("Robot initial position set to: {}, {}".format(x, y))
-    # We use context.extra to keep robot position state.
-    context.extra = (x, y)
+    def program(self, nodes, commands):
+        return self.context.extra
 
+    def move(self, nodes, direction, steps):
+        steps = 1 if steps is None else steps
+        print("Moving robot {} for {} steps.".format(direction, steps))
 
-@action
-def program(context, nodes, commands):
-    return context.extra
+        move = {
+            "up": (0, 1),
+            "down": (0, -1),
+            "left": (-1, 0),
+            "right": (1, 0)
+        }[direction]
 
-
-@action
-def move(context, nodes, direction, steps):
-    steps = 1 if steps is None else steps
-    print("Moving robot {} for {} steps.".format(direction, steps))
-
-    move = {
-        "up": (0, 1),
-        "down": (0, -1),
-        "left": (-1, 0),
-        "right": (1, 0)
-    }[direction]
-
-    # Calculate new robot position
-    x, y = context.extra
-    context.extra = (x + steps * move[0], y + steps * move[1])
+        # Calculate new robot position
+        x, y = self.context.extra
+        self.context.extra = (x + steps * move[0], y + steps * move[1])
 
 
 def main(debug=False):
     this_folder = os.path.dirname(__file__)
     g = Grammar.from_file(os.path.join(this_folder, 'robot.pg'),
                           debug=debug, debug_colors=True)
-    parser = Parser(g, actions=action.all, debug=debug,
+    parser = Parser(g, actions=MyActions(), debug=debug,
                     debug_colors=True)
 
     end_position = parser.parse_file(os.path.join(this_folder, 'program.rbt'))
