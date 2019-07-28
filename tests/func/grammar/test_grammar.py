@@ -554,3 +554,24 @@ def test_case_insensitive_parsing():
     parser = Parser(g)
     parser.parse('One Two Aaa')
     parser.parse('one Two AAa')
+
+
+def test_grammar_comments():
+    """
+    Test using grammar comments.
+    """
+
+    grammar = r"""
+    S: "1" A "b"; // This is a simple line comment
+                  // It can be repeated
+
+    terminals
+    A: "a"; /* And this is a C-like block comment
+                /* which can be nested
+                 */
+     This is the end of outer comment block */
+    """
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+    result = parser.parse('1 a b')
+    assert result == ['1', 'a', 'b']

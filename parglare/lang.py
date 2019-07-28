@@ -261,10 +261,10 @@ pg_grammar = {
         },
 
         # Support for Layout
-        'Layout': {
+        'LAYOUT': {
             'productions': [
                 {'production': ['LayoutItem']},
-                {'production': ['Layout', 'LayoutItem']},
+                {'production': ['LAYOUT', 'LayoutItem']},
             ]
         },
         'LayoutItem': {

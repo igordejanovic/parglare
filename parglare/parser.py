@@ -55,6 +55,8 @@ class Parser(object):
         else:
             start_production = 1
             layout_symbol = grammar.get_symbol('LAYOUT')
+            if layout_actions is None:
+                layout_actions = actions
             if layout_symbol:
                 self.layout_parser = Parser(
                     grammar,
