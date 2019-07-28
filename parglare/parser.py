@@ -31,7 +31,7 @@ class Parser(object):
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, return_position=False,
+                 tables=LALR, return_position=False, start_prod_id=None,
                  prefer_shifts=None, prefer_shifts_over_empty=None,
                  error_recovery=False, dynamic_filter=None,
                  custom_token_recognition=None, lexical_disambiguation=True,
@@ -51,13 +51,14 @@ class Parser(object):
 
         self.layout_parser = None
         if self.in_layout:
-            start_production = grammar.get_production_id('LAYOUT')
+            start_prod_id = grammar.get_production_id('LAYOUT')
         else:
-            start_production = 1
+            start_prod_id = start_prod_id \
+                if start_prod_id else grammar.start_prod_id
             layout_symbol = grammar.get_symbol('LAYOUT')
-            if layout_actions is None:
-                layout_actions = actions
             if layout_symbol:
+                if layout_actions is None:
+                    layout_actions = actions
                 self.layout_parser = Parser(
                     grammar,
                     in_layout=True,
@@ -99,7 +100,7 @@ class Parser(object):
 
             self.table = create_load_table(
                 grammar, itemset_type=itemset_type,
-                start_production=start_production,
+                start_prod_id=start_prod_id,
                 prefer_shifts=prefer_shifts,
                 prefer_shifts_over_empty=prefer_shifts_over_empty,
                 lexical_disambiguation=lexical_disambiguation,

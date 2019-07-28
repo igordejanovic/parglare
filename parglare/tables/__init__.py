@@ -34,7 +34,7 @@ SLR = 0
 LALR = 1
 
 
-def create_load_table(grammar, itemset_type=LR_1, start_production=1,
+def create_load_table(grammar, itemset_type=LR_1, start_prod_id=1,
                       prefer_shifts=False, prefer_shifts_over_empty=True,
                       force_create=False, force_load=False, in_layout=False,
                       **kwargs):
@@ -58,7 +58,7 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
         # For layout grammars always calculate table.
         # Those are usually very small grammars so there is no point in
         # using cached tables.
-        return create_table(grammar, itemset_type, start_production,
+        return create_table(grammar, itemset_type, start_prod_id,
                             prefer_shifts, prefer_shifts_over_empty)
 
     table_file_name = None
@@ -77,13 +77,13 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
                 create_table_file = False
                 table_mtime = os.path.getmtime(table_file_name)
                 # Check if older than any of the grammar files
-                for g_file_name in grammar.imported_files.keys():
+                for g_file_name in grammar.imported_files:
                     if os.path.getmtime(g_file_name) > table_mtime:
                         create_table_file = True
                         break
 
     if (create_table_file or force_create) and not force_load:
-        table = create_table(grammar, itemset_type, start_production,
+        table = create_table(grammar, itemset_type, start_prod_id,
                              prefer_shifts, prefer_shifts_over_empty,
                              **kwargs)
         if table_file_name:
@@ -97,14 +97,14 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
     return table
 
 
-def create_table(grammar, itemset_type=LR_1, start_production=1,
+def create_table(grammar, itemset_type=LR_1, start_prod_id=1,
                  prefer_shifts=False, prefer_shifts_over_empty=True,
                  **kwargs):
     """
     Arguments:
     grammar (Grammar):
     itemset_type(int) - SRL=0 LR_1=1. By default LR_1.
-    start_production(int) - The production which defines start state.
+    start_prod_id(int) - The production which defines start state.
         By default 1 - first production from the grammar.
     prefer_shifts(bool) - Conflict resolution strategy which favours SHIFT over
         REDUCE (gready). By default False.
@@ -127,7 +127,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
     follow_sets = follow(grammar, first_sets)
 
-    start_prod_symbol = grammar.productions[start_production].symbol
+    start_prod_symbol = grammar.productions[start_prod_id].symbol
     grammar.productions[0].rhs = ProductionRHS([start_prod_symbol,
                                                 grammar.STOP])
 

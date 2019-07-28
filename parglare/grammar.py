@@ -339,6 +339,7 @@ class Grammar(object):
         self.grammar_struct = grammar_struct
         self._init_from_struct()
         self.AUGSYMBOL = self.get_nonterminal(AUGSYMBOL_NAME)
+        self.start_prod_id = self.get_production_id(start_symbol)
 
     def _init_from_struct(self):
         """
@@ -773,9 +774,7 @@ class Grammar(object):
 
     def get_production_id(self, name):
         "Returns first production id for the given symbol name"
-        for p in self.productions:
-            if p.symbol.name == name:
-                return p.prod_id
+        return self.get_symbol(name).productions[0].prod_id
 
     @staticmethod
     def from_struct(grammar_struct, **kwargs):
