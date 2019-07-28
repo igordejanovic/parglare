@@ -1,4 +1,4 @@
-from parglare import Grammar, Parser, get_collector
+from parglare import Grammar, Parser, Actions
 
 grammar_1 = r'''
 STMT : STMT ADDOP STMT {left, 1}
@@ -40,31 +40,28 @@ NUMBER: /\d+(.\d+)?/;
 expression = '1 - 2 / (3 - 1 + 5 / 6 - 8 + 8 * 2 - 5)'
 result = 1 - 2 / (3 - 1 + 5 / 6 - 8 + 8 * 2 - 5)
 
-action = get_collector()
 
+class MyActions(Actions):
 
-@action
-def NUMBER(_, value):
-    return int(value)
+    def NUMBER(self, value):
+        return int(value)
 
+    def STMT(self, nodes):
+        if len(nodes) == 1:
+            return nodes[0]
+        elif nodes[0] == '(':
+            return nodes[1]
+        else:
+            left, op, right = nodes
 
-@action
-def STMT(_, nodes):
-    if len(nodes) == 1:
-        return nodes[0]
-    elif nodes[0] == '(':
-        return nodes[1]
-    else:
-        left, op, right = nodes
-
-    if op == '+':
-        return left + right
-    elif op == '-':
-        return left - right
-    elif op == '*':
-        return left * right
-    else:
-        return left / right
+        if op == '+':
+            return left + right
+        elif op == '-':
+            return left - right
+        elif op == '*':
+            return left * right
+        else:
+            return left / right
 
 
 def test_associativity_variant_1():
@@ -72,7 +69,7 @@ def test_associativity_variant_1():
     See https://github.com/igordejanovic/parglare/issues/22
     """
     g = Grammar.from_string(grammar_1)
-    parser = Parser(g, actions=action.all)
+    parser = Parser(g, actions=MyActions())
     r = parser.parse(expression)
 
     assert r == result
@@ -83,7 +80,7 @@ def test_associativity_variant_2():
     See https://github.com/igordejanovic/parglare/issues/22
     """
     g = Grammar.from_string(grammar_2)
-    parser = Parser(g, actions=action.all)
+    parser = Parser(g, actions=MyActions())
     r = parser.parse(expression)
 
     assert r == result
@@ -95,7 +92,7 @@ def test_associativity_variant_3():
     Using https://github.com/igordejanovic/parglare/issues/17
     """
     g = Grammar.from_string(grammar_3)
-    parser = Parser(g, actions=action.all)
+    parser = Parser(g, actions=MyActions())
     r = parser.parse(expression)
 
     assert r == result
