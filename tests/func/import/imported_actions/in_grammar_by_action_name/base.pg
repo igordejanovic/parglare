@@ -1,5 +1,0 @@
-terminals
-ID: /\w+/;
-@numeric NUMERIC_ID: /\d+/;
-FQN: /\w+(\.\w+)*/;
-COMMA: ',';

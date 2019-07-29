@@ -2,5 +2,5 @@ import 'components.pg';
 import 'base.pg';
 
 Package:
-    'package' name=base.ID
+    'package' name=ID
 ;

@@ -5,14 +5,14 @@ this_folder = os.path.dirname(__file__)
 
 
 def test_diamond_import_resolving_and_model_creation():
-    g = Grammar.from_file(os.path.join(this_folder, 'model.pg'))
+    g = Grammar.from_file(os.path.join(this_folder, 'model.pg'), create_objects=True)
     assert g
-    assert g.get_terminal('packages.components.base.COMMA')
+    assert g.get_terminal('COMMA')
     assert g.get_nonterminal('Model')
 
     # First path used for import of Component is going
     # packages->components->Component
-    component_nonterminal = g.get_nonterminal('packages.components.Component')
+    component_nonterminal = g.get_nonterminal('Component')
     assert component_nonterminal
 
     input_str = '''
@@ -49,7 +49,7 @@ def test_diamond_import_resolving_and_model_creation():
     assert packageComponent.name == 'packageComponent'
 
     module = model.modules[0]
-    assert module.__class__.__name__ == 'm.Module'
+    assert module.__class__.__name__ == 'Module'
     assert module.name == 'SomeModule'
     assert len(module.components) == 1
 
@@ -59,5 +59,5 @@ def test_diamond_import_resolving_and_model_creation():
     assert len(component.slots) == 2
 
     slot = component.slots[1]
-    assert slot.__class__.__name__ == 'packages.components.SlotOut'
+    assert slot.__class__.__name__ == 'SlotOut'
     assert slot.name == 'SomeOutputSlot'

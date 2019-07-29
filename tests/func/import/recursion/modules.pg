@@ -1,6 +1,6 @@
-import 'components.pg' as c;   // recursive import of 'components'
+import 'components.pg';   // recursive import of 'components'
 import 'base.pg';
 
-Module: 'module' name=base.ID '{'
-        components=c.Component*
+Module: 'module' name=ID '{'
+        components=Component*
 '}';

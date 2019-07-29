@@ -1,6 +1,0 @@
-terminals
-// We will define some of the terminals in `*_recognizers.py` file
-ID: /\w+/;
-@number NUMERIC_ID: ;
-FQN: ;
-COMMA: ;

@@ -1,7 +1,7 @@
 import 'second.pg';
-import 'submodule/third.pg' as t;
+import 'submodule/third.pg';
 
-FirstRule: INT+ second.SecondRule t.ThirdRule;
+FirstRule: INT+ SecondRule ThirdRule;
 
 terminals
 INT: /\d+/;

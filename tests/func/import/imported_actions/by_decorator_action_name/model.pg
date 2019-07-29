@@ -1,7 +1,0 @@
-import 'base.pg';
-import 'components.pg' as c;
-
-Model:
-    'modelID' modelID = base.NUMERIC_ID
-    components=c.Component*
-;

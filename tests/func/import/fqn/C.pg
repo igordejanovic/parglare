@@ -1,6 +1,0 @@
-import 'D.pg';
-
-CRule: CTerm;
-
-terminals
-CTerm: "CTerm";

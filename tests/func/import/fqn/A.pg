@@ -1,7 +1,0 @@
-import 'B.pg';
-import 'C.pg';
-
-ARule: C.CRule ATerm B.BTerm C.CTerm;
-
-terminals
-ATerm: "ATerm";

@@ -1,6 +1,6 @@
-import 'components.pg' as c;
+import 'components.pg';
 import 'base.pg';
 
-Module: 'module' name=base.ID '{'
-        components=c.Component*
+Module: 'module' name=ID '{'
+        components=Component*
 '}';
