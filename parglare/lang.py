@@ -3,7 +3,9 @@ This module defines parglare textual grammar language using parglare internal
 DSL specification.
 
 """
+from __future__ import unicode_literals
 import os
+import io
 from parglare.actions import Actions
 from parglare.grammar import Grammar, MODIFIERS
 from parglare import GrammarError
@@ -424,7 +426,7 @@ class PGGrammarActions(Actions):
             return
         self.imported_files.add(import_file)
 
-        with open(import_file, 'r', encoding="utf-8") as f:
+        with io.open(import_file, 'r', encoding="utf-8") as f:
             content = f.read()
 
         grammar_struct = Grammar.struct_from_string(content,

@@ -496,7 +496,7 @@ def test_multiple_assignment_with_repetitions():
     Test assignment of repetition.
     """
 
-    grammar = """
+    grammar = r"""
     S: "1" first=some_match+[comma] second?=some_match* "3";
 
     terminals

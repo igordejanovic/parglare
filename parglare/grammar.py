@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
-from os import path
+import io
 import sys
 import re
 import itertools
+from os import path
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError
 from parglare.recognizers import (Recognizers, StringRecognizer,
@@ -467,7 +468,7 @@ class Grammar(object):
                     'productions': productions
                 }
 
-            if multiplicity is MULT_ZERO_OR_MORE:
+            if multiplicity == MULT_ZERO_OR_MORE:
                 rules[symbol_mult] = {
                     'productions': [
                         {'production': [symbol_one]},
@@ -475,7 +476,7 @@ class Grammar(object):
                     ]
                 }
 
-        elif multiplicity in MULT_OPTIONAL:
+        elif multiplicity == MULT_OPTIONAL:
             if separator:
                 raise GrammarError(
                     location=self._get_location(production_struct),
@@ -679,7 +680,7 @@ class Grammar(object):
                     return "<parglare:{} instance at {}>"\
                         .format(rule_name, hex(id(self)))
 
-        ParglareClass.__name__ = rule_name
+        ParglareClass.__name__ = str(rule_name)
 
         self.classes[rule_name] = ParglareClass
 
@@ -797,7 +798,7 @@ class Grammar(object):
     def from_file(file_name, **kwargs):
         file_name = path.realpath(file_name)
 
-        with open(file_name, 'r', encoding="utf-8") as f:
+        with io.open(file_name, 'r', encoding="utf-8") as f:
             content = f.read()
         g_struct, imported_files = Grammar._internal_struct_from_string(
             content, file_name=file_name)
