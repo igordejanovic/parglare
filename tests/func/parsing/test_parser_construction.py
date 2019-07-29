@@ -122,7 +122,7 @@ def test_table_construction():
     assert len(state.actions[d]) == 1
     action = list(state.actions.values())[0][0]
     assert action.action == REDUCE
-    assert action.prod.prod_id == 4
+    assert action.prod.prod_id == 2
     action = list(state.actions.values())[1][0]
     assert action.action == SHIFT
     assert action.state.state_id == 6
