@@ -583,8 +583,12 @@ def get_grammar_parser(debug=False, debug_colors=False, actions=None):
 
 def merge_grammar_struct(gto, gfrom):
     """
-    Merges two grammar structs in-place.  The target is gto.  Raises
-    GrammarError if the merge would not be consistent.
+    Merges two grammar structs in-place.  The target is `gto`.  Used to handle
+    grammar imports.
+
+    :param gto: A target grammar struct.  It will be updated in-place from
+        information in `gfrom`
+    :param gfrom: A source grammar struct
     """
 
     terminals = gfrom.get('terminals', {})
