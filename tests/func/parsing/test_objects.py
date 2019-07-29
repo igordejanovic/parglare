@@ -2,7 +2,7 @@
 Test for class/object auto AST building.
 """
 import pytest  # noqa
-from parglare import Grammar, Parser, Actions
+from parglare import Grammar, Parser
 from parglare.grammar import MULT_ONE, MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE, \
     MULT_OPTIONAL
 

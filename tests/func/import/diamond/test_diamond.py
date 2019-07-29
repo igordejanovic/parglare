@@ -5,7 +5,8 @@ this_folder = os.path.dirname(__file__)
 
 
 def test_diamond_import_resolving_and_model_creation():
-    g = Grammar.from_file(os.path.join(this_folder, 'model.pg'), create_objects=True)
+    g = Grammar.from_file(os.path.join(this_folder, 'model.pg'),
+                          create_objects=True)
     assert g
     assert g.get_terminal('COMMA')
     assert g.get_nonterminal('Model')

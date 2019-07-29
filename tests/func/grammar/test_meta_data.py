@@ -4,7 +4,7 @@ See issue: https://github.com/igordejanovic/parglare/issues/57
 """
 import pytest
 from parglare import Grammar, ParseError
-from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, ASSOC_NONE
+from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT
 
 
 def test_production_meta_data():
