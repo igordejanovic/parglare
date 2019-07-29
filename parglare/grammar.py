@@ -512,7 +512,8 @@ class Grammar(object):
             if terminal_name in self.terminals:
                 raise GrammarError(
                     location=location,
-                    message=f'"{terminal_name}" terminal multiple definition')
+                    message='"{}" terminal multiple definition'
+                    .format(terminal_name))
             recognizer = None
 
             recognizer_str = terminal_struct.get('recognizer')
@@ -534,8 +535,8 @@ class Grammar(object):
                     if not self._no_check_recognizers:
                         raise GrammarError(
                             location=location,
-                            message=f'Recognizer not defined for terminal '
-                            f'rule "{terminal_name}"')
+                            message='Recognizer not defined for terminal '
+                            'rule "{}"'.format(terminal_name))
             else:
                 recognizer = getattr(self.recognizers, terminal_name)
 
@@ -564,7 +565,7 @@ class Grammar(object):
             if rule_name in self.nonterminals or rule_name in self.terminals:
                 raise GrammarError(
                     location=location,
-                    message=f'"{rule_name}" rule multiple definitions')
+                    message='"{}" rule multiple definitions'.format(rule_name))
             rule_modifiers = self._desugar_modifiers(
                 rule_struct.get('modifiers', []))
             nt_meta = rule_struct.get('meta', {})
