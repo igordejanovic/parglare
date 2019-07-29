@@ -18,13 +18,10 @@ class Recognizers(object):
         self.recognizers[name] = recognizer
 
     def __getattr__(self, name):
-        try:
-            return super(Recognizers, self).__getattr__(name)
-        except AttributeError:
-            r = self.recognizers.get(name, None)
-            if r:
-                return r
-            raise
+        r = self.recognizers.get(name, None)
+        if r:
+            return r
+        raise AttributeError
 
     def __contains__(self, name):
         try:
