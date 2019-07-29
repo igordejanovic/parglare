@@ -631,14 +631,19 @@ class Grammar(object):
     def _enumerate_productions(self):
         """
         Enumerates all productions (prod_id) and production per symbol
-        (prod_symbol_id).
+        (prod_symbol_id). Do sorting first for deterministic behavior.
         """
         idx_per_symbol = {}
         for idx, prod in enumerate(self.productions):
+            prod.prod_symbol_id = idx_per_symbol.setdefault(prod.symbol, 0)
+            idx_per_symbol[prod.symbol] += 1
+
+        self.productions = self.productions[:1] + sorted(
+            self.productions[1:],
+            key=lambda x: "{}_{:04d}".format(x.symbol.name,
+                                             x.prod_symbol_id))
+        for idx, prod in enumerate(self.productions):
             prod.prod_id = idx
-            prod.prod_symbol_id = idx_per_symbol.get(prod.symbol, 0)
-            idx_per_symbol[prod.symbol] = \
-                idx_per_symbol.get(prod.symbol, 0) + 1
 
     def _create_class(self, rule_name, rule_assignments):
         """
