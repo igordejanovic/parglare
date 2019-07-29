@@ -350,7 +350,7 @@ class PGGrammarActions(Actions):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(PGGrammarActions, self).__init__(*args, **kwargs)
         self.imported_files = set()
         self.inline_terminals = {}
 

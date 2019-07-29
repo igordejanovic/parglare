@@ -230,7 +230,7 @@ class ProductionRHS(list):
 
     def __len__(self):
         return super(ProductionRHS, self).__len__() \
-            - sum(map(lambda x: 1 if x == 'EMPTY' else 0, self))
+            - sum(1 for x in self if x == 'EMPTY')
 
     def __str__(self):
         return " ".join([str(x) for x in self]) if self else "EMPTY"
