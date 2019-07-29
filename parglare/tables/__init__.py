@@ -97,7 +97,7 @@ def create_load_table(grammar, itemset_type=LR_1, start_prod_id=1,
     return table
 
 
-def create_table(grammar, itemset_type=LR_1, start_prod_id=1,
+def create_table(grammar, itemset_type=LR_1, start_prod_id=None,
                  prefer_shifts=False, prefer_shifts_over_empty=True,
                  **kwargs):
     """
@@ -105,13 +105,16 @@ def create_table(grammar, itemset_type=LR_1, start_prod_id=1,
     grammar (Grammar):
     itemset_type(int) - SRL=0 LR_1=1. By default LR_1.
     start_prod_id(int) - The production which defines start state.
-        By default 1 - first production from the grammar.
+        By default use the grammar.start_prod_id.
     prefer_shifts(bool) - Conflict resolution strategy which favours SHIFT over
         REDUCE (gready). By default False.
     prefer_shifts_over_empty(bool) - Conflict resolution strategy which favours
         SHIFT over REDUCE of EMPTY. By default False. If prefer_shifts is
         `True` this param is ignored.
     """
+
+    if start_prod_id is None:
+        start_prod_id = grammar.start_prod_id
 
     first_sets = first(grammar)
 
