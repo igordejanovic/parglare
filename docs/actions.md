@@ -1,9 +1,8 @@
 # Actions
 
-Actions (a.k.a. _semantic actions_ or _reductions actions_) are Python callables
-(functions or lambdas mostly) that get called to reduce the recognized pattern
-to some higher concept. E.g. in the calc example actions are called to calculate
-sub-expressions.
+Actions (a.k.a. _semantic actions_ or _reductions actions_) are methods of an
+object that get called to reduce the recognized pattern to some higher concept.
+E.g. in the `calc` example actions are called to calculate sub-expressions.
 
 There are two consideration to think of:
 
@@ -19,77 +18,92 @@ parameter `build_tree` is set to `True` the parser will build [a parse
 tree](./parse_trees.md).
 
 Custom actions are provided to the parser during parser instantiation as
-`actions` parameter which must be a Python dict where the keys are the names of
-the rules from the grammar and values are the action callables or a list of
-callables if the rule has more than one production/choice. You can provide
-additional actions that are not named after the grammar rule names, these
-actions may be referenced from the grammar using [`@` syntax for action
+`actions` parameter which must be a Python object where the methods are named
+after rules from the grammar. You can provide additional actions that are not
+named after the grammar rule names, these actions may be referenced from the
+grammar using [`@` syntax for action
 specification](./grammar_language.md#referencing-semantic-actions-from-a-grammar).
+A Python class that contains action methods must inherit `parglare.Actions`.
+This base class defines built-in actions.
 
 
 Lets take a closer look at the quick intro example:
 
 ```python
 grammar = r"""
-E: E '+' E  {left, 1}
-  | E '-' E  {left, 1}
-  | E '*' E  {left, 2}
-  | E '/' E  {left, 2}
-  | E '^' E  {right, 3}
-  | '(' E ')'
-  | number;
+@pass_single Exp: E EOF;
+@op E: E '+' E  {left, 1}
+     | E '-' E  {left, 1}
+     | E '*' E  {left, 2}
+     | E '/' E  {left, 2}
+     | E '^' E  {right, 3}
+     | '(' E ')' {@pass_inner}
+     | number {@pass_single};
 
 terminals
 number: /\d+(\.\d+)?/;
 """
 
-actions = {
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          lambda _, nodes: nodes[1],
-          lambda _, nodes: nodes[0]],
-    "number": lambda _, value: float(value),
-}
+
+class MyActions(Actions):
+    def op(self, n):
+        opfunc = {
+            '+': add,
+            '-': sub,
+            '*': mul,
+            '/': truediv,
+            '^': pow
+        }[n[1]]
+        return opfunc(n[0], n[2])
+
+    def number(self, n):
+        return float(n)
+
 
 g = Grammar.from_string(grammar)
-parser = Parser(g, actions=actions)
+parser = Parser(g, actions=MyActions())
 result = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
 ```
 
-Here you can see that for rule `E` we provide a list of lambdas, one lambda for
-each operation. The first element of the list corresponds to the first
-production of the `E` rule (`E '+' E {left, 1}`), the second to the second and
-so on. For `number` rule there is only a single lambda which converts the
-matched string to the Python `float` type, because `number` is a terminal
-definition and thus the second parameter in action call will not be a list but a
-matched value itself.
+The actions for the grammar is defined as class `MyActions` which inherits
+`Actions`. Base class contains built-in actions. We can see that `op` action is
+defined for rule `E` by specifying `@op` before the rule name. By default
+parglare will match the action by the rule name but if different action name is
+provided in the grammar it will be used instead. We can also see that the action
+can be defined per production (as `@pass_inner` given for production `'(' E
+')'`). If the action is defined for production it will take precedence over rule
+level action. Thus, in this example for each production of rule `E` action `op`
+will be called except for the two last production where action is redefined.
 
-At the end we instantiate the parser and pass in our `actions` using the
-parameter.
+The `MyActions` class has `op` and `number` methods. `op` method is the action
+referenced by the `E` rule while `number` will be called for terminal rule
+`number` where default match by name is used.
 
-Each action callable receive two parameters. The first is the context object
-which gives [parsing context information](./common.md#the-context-object) (like
-the start and end position where the match occurred, the parser instance etc.).
-The second parameters `nodes` is a list of actual results of sub-expressions
-given in the order defined in the grammar.
+Each action method receives one parameter which is a list of actual results of
+sub-expressions (results from the lower level actions) given in the order
+defined in the grammar. In the case of terminal rule actions, the received
+parameter will be the matched input. In this example it will be the matched
+number as a string so we shall convert it to `float` in the action.
 
-For example:
+For example in the `op` action we know that the method will be called for the
+first 5 production of rule `E`. Each production is of the same form, the only
+difference is the operation that is used so we first determine the operation
+function by using `n[1]` which will be the matched operation. Then we call the
+operation function with `n[0]` and `n[2]` which will be the left and right
+operands respectively.
 
-```python
-lambda _, nodes: nodes[0] * nodes[2],
-```
+In addition, you can access the [parser context
+object](./common.md#the-context-object) on the action object as `self.context`.
+Context object can provide information like the start and end position where the
+match occurred, the parser instance etc. Also, you have access to the index of
+the production for which the action is called by `self.prod_idx`.
 
-In this line we don't care about the context thus giving it the `_` name.
-`nodes[0]` will cary the value of the left sub-expression while `nodes[2]` will
-carry the result of the right sub-expression. `nodes[1]` must be `*` and we
-don't need to check that as the parser already did that for us.
+At the end we instantiate the parser and pass in our `MyActions` instance using
+the parameter `actions`.
 
 The result of the parsing will be the evaluated expression as the actions will
 get called along the way and the result of each actions will be used as an
-element of the `nodes` parameter in calling actions higher in the hierarchy.
+element of the `n` parameter in calling actions higher in the hierarchy.
 
 If we don't provide `actions`, by default parglare will return a matched string
 for each terminal and a list of sub-expressions for each non-terminal
@@ -97,56 +111,6 @@ effectively producing nested lists. If we set `build_tree` parameter of the
 parser to `True` the parser will produce a [parse tree](./parse_trees.md) whose
 elements are instances of `NodeNonTerm` and `NodeTerm` classes representing a
 non-terminals and terminals respectively.
-
-
-## `action` decorator
-
-You can use a special decorator/collector factory `parglare.get_collector` to
-create decorator that can be used to collect all actions.
-
-```python
-from parglare import get_collector
-
-action = get_collector()
-
-@action
-def number(_, value):
-    return float(value)
-
-@action('E')
-def sum_act(_, nodes):
-    return nodes[0] + nodes[2]
-
-@action('E')
-def pass_act_E(_, nodes):
-    return nodes[0]
-
-@action
-def T(_, nodes):
-    if len(nodes) == 3:
-        return nodes[0] * nodes[2]
-    else:
-        return nodes[0]
-
-@action('F')
-def parenthesses_act(_, nodes):
-    return nodes[1]
-
-@action('F')
-def pass_act_F(_, nodes):
-    return nodes[0]
-
-p = Parser(grammar, actions=action.all)
-```
-
-In the previous example `action` decorator is created using `get_collector`
-factory. This decorator is parametrized where optional parameter is the name of
-the action. If the name is not given the name of the decorated function will be
-used. As you can see in the previous example, same name can be used multiple
-times (e.g. `E` for `sum_act` and `pass_act_E`). If same name is used multiple
-times all action functions will be collected as a list in the order of
-definition. Dictionary holding all actions for the created action decorator is
-`action.all`.
 
 
 ## Time of actions call
@@ -176,7 +140,7 @@ method of the parser object to execute actions. For example:
 
 ## Built-in actions
 
-parglare provides some common actions in the module `parglare.actions`. You can
+parglare provides some common actions in the base class `parglare.Actions`. You can
 [reference these actions directly from the
 grammar](./grammar_language.md#referencing-rule-actions-from-a-grammar).
 Built-in actions are used implicitly by parglare as default actions in
@@ -184,7 +148,7 @@ particular case (e.g. for [syntactic
 sugar](./grammar_language.md#syntactic-sugar-bnf-extensions)) but you might want
 to reference some of these actions directly.
 
-Following are parglare built-in actions from the `parglare.actions` module:
+Following are parglare built-in actions from the `parglare.Actions` class:
 
 - **pass_none** - returns `None`;
 
@@ -193,14 +157,14 @@ Following are parglare built-in actions from the `parglare.actions` module:
 
 - **pass_empty** - returns an empty list `[]`;
 
-- **pass_single** - returns `nodes[0]`. Used implicitly by rules where all
+- **pass_single** - returns `n[0]`. Used implicitly by rules where all
   productions have only a single rule reference on the RHS;
 
-- **pass_inner** - returns `nodes[1]`. Handy to extract sub-expression value for
+- **pass_inner** - returns `n[1]`. Handy to extract sub-expression value for
   values in parentheses;
 
 - **collect** - Used for rules of the form `Elements: Elements Element |
-  Element;`. Implicitly used for `+` operator. Returns list;
+  Element;`. Implicitly used for `+` operator (one-or-more). Returns list;
 
 - **collect_sep** - Used for rules of the form `Elements: Elements separator
   Element | Element;`. Implicitly used for `+` with separator. Returns list;
@@ -227,12 +191,11 @@ Following are parglare built-in actions from the `parglare.actions` module:
   Implicitly used for `?` operator. Returns either a sub-expression value or
   `None` if empty match.
 
-- **obj** - Used implicitly by rules
-  using [named matches](./grammar_language.md#named-matches-assignments).
-  Creates Python object with attributes derived from named matches. Objects
-  created this way have additional attributes
-  `_pg_start_position`/`_pg_end_position` with start/end position in the input
-  stream where the object is found.
+- **obj** - Used implicitly by rules using [named
+  matches](./grammar_language.md#named-matches-assignments). Creates Python
+  object with attributes derived from named matches. Objects created this way
+  have additional attributes `_pg_start_position`/`_pg_end_position` with
+  start/end position in the input stream where the object is found.
 
 
 
@@ -240,9 +203,10 @@ Following are parglare built-in actions from the `parglare.actions` module:
 
 If [named matches](./grammar_language.md#named-matches-assignments) are used in
 the grammar rule, action will be called with additional keyword parameters named
-by the name of LHS of rule assignments. If no action is specified for the rule a
-built-in action `obj` is called and will produce instance of dynamically created
-Python class corresponding to the grammar rule. See more in the section
+by the name of LHS of rule assignments. If no action is specified for the rule,
+and `create_objects` parameter of `Grammar` constructor methods is set to `True`
+para a built-in action `obj` is called and will produce instance of dynamically
+created Python class corresponding to the grammar rule. See more in the section
 on [named matches](./grammar_language.md#named-matches-assignments).
 
 If for some reason you want to override default behavior that create Python
@@ -257,18 +221,12 @@ digit: /\d+/;
 ```
 
 
-now create action function that accepts additional params:
+now create action method that accepts additional params:
 
 ```python
-def s_action(context, nodes, first, second):
-    ... do some transformation and return the result of S evaluation
-    ... nodes will contain subexpression results by position while
-    ... first and second will contain the values of corresponding
-    ... sub-expressions
-```
-
-register action on `Parser` instance as usual:
-
-```python
-parser = Parser(grammar, actions={"S": s_action})
+  def S(self, n, first, second):
+      ... do some transformation and return the result of S evaluation
+      ... nodes will contain subexpression results by position while
+      ... first and second will contain the values of corresponding
+      ... sub-expressions
 ```
