@@ -12,11 +12,23 @@ e.g. [PEGs](https://en.wikipedia.org/wiki/Parsing_expression_grammar).
 Ambiguities are dealt with explicitly (see
 the [section on conflicts](./lr_parsing.md#resolving-conflicts)).
 
+!!! note
+
+    parglare provides a [canonical form for grammar
+    definition](./grammar_language_canonical.md) which is based on Python data
+    structures (dicts and lists). This canonical form is then used to implement
+    textual form which is what you will need most of the time. The rest of this
+    section describes the grammar using the textual syntax.
+
+
+# Textual grammar form/syntax
+
 Each grammar file consists of three parts:
 - zero or more imports of other grammar files. See [grammar
   modularization](./grammar_modularization.md)
 - one or more derivation/production rules
-- zero or more terminal definitions
+- zero or more terminal definitions in the `terminals` section
+
 
 Each derivation/production rule is of the form:
 
@@ -129,7 +141,7 @@ recognizers. In the grammar, you just have to provide terminal symbol without
 body, i.e. without string or regex recognizer. You will provide missing
 recognizers during grammar instantiation from Python. Although you don't supply
 body of the terminal you can define [disambiguation rules](./disambiguation.md)
-as usual.
+and other meta-data as usual.
 
 Lets say that we have a list of integers (real list of Python ints, not a text
 with numbers) and we have some weird requirement to break those numbers
@@ -147,8 +159,8 @@ ascending: ;
 int_less_than_five: ;
 ```
 
-So, we should first match all numbers less than five and collect those, than we
-should match a list of ascending numbers and than list of less than five again.
+So, we should first match all numbers less than five and collect those, then we
+should match a list of ascending numbers and then list of less than five again.
 `int_less_than_five` and `ascending` are terminals/recognizers that will be
 defined in Python and passed to grammar construction. `int_less_than_five` will
 recognize Python integer that is, well, less than five. `ascending` will
@@ -174,8 +186,8 @@ sections: sections section | section;
 ```
 
 In this example `sections` will match one or more `section`. Notice the
-recursive definition of the rule. You can read this as _`sections` is either a
-single section or `sections` and a `section`_.
+recursive definition of the rule. You can read this as _`sections` is either
+`sections` and a `section` or a single section_.
 
 !!! note
 
@@ -184,7 +196,7 @@ single section or `sections` and a `section`_.
         sections: section sections | section;
 
     which will give you similar result but the resulting tree will be different.
-    Notice the recursive reference is now at the and of the first production.
+    Notice the recursive reference is now at the end of the first production.
     Previous example will reduce sections early and than add another section to it,
     thus the tree will be expanding to the left. The example in this note will
     collect all the sections and than start reducing from the end, thus building a
