@@ -7,6 +7,13 @@ are writing a grammar of a complex language I would suggest the separate file
 approach. Although not mandatory, the convention is that parglare grammar files
 have `.pg` extension.
 
+
+!!! note
+
+    There is an option to directly use [parglare canonical grammar
+    form](./grammar_language_canonical.md) but most often it is easier to use the
+    textual syntax.
+
 The next step is to create the instance of the `Grammar` class. This is achieved
 by importing the `Grammar` class and calling either `from_file` or `from_str`
 methods supplying the file name for the former and the Python string for the
