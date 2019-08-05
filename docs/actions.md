@@ -30,6 +30,9 @@ This base class defines built-in actions.
 Lets take a closer look at the quick intro example:
 
 ```python
+from parglare import Parser, Grammar, Actions
+from operator import add, sub, mul, truediv, pow
+
 grammar = r"""
 @pass_single Exp: E EOF;
 @op E: E '+' E  {left, 1}
