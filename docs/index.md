@@ -62,24 +62,19 @@ A pure Python LR/GLR parser.
 
     - by default parser builds nested lists;
     - you can build a tree using `build_tree=True` parameter to the parser;
-    - call user-supplied actions - you write a Python function that is called
-      when the rule matches. You can do whatever you want at this place and the
-      result returned is used in parent rules/actions. There are some handy
-      build-in actions in the [`parglare.actions`
-      module](./actions.md#built-in-actions).
+    - call user-supplied actions - you write a Python class whose methods are
+      called when the rule matches. You get the results of sub-rules and
+      whatever you return from the method is used in parent rules/actions. There
+      are some handy build-in actions inherited from [`parglare.Actions`
+      class](./actions.md#built-in-actions).
     - User actions may be postponed and called on the parse tree - this is handy
       if you want to process your tree in multiple ways, or you are using GLR
       parsing and the actions are introducing side-effects and you would like to
-      avoid those effects created from wrong parsers/trees.
+      avoid those effects created from unsuccessful parsers/trees.
 
 * [**Grammar modularization**](./grammar_modularization.md)
 
-    Grammars can be split in multiple files and imported where needed. In
-    addition each grammar file may have an
-    [actions](./grammar_modularization.md#grammar-file-actions) and
-    [recognizers](./grammar_modularization.md#grammar-file-recognizers) python
-    file defined. This enable a nice separation of parts of the language with
-    their grammars and accompanying actions and recognizers.
+    Grammars can be split in multiple files and imported where needed.
 
 * [**Support for whitespaces/comments**](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
 
@@ -88,7 +83,9 @@ A pure Python LR/GLR parser.
     parameter to the parser constructor which is by default set to `\t\n `. If
     set to `None` no whitespace skipping is provided. If there is a rule
     `LAYOUT` in the grammar this rule is used instead. An additional parser with
-    the grammar defined by the `LAYOUT` rule will be built to handle whitespaces.
+    the grammar defined by the `LAYOUT` rule will be built to handle
+    white-spaces. You have access to the skipped part of the input in the action
+    called on next successful recognition.
 
 * [**Error recovery**](./handling_errors.md#error-recovery)
 
@@ -139,38 +136,44 @@ This is just a small example to get the general idea. This example shows how to
 parse and evaluate expressions with 5 operations with different priority and
 associativity. Evaluation is done using semantic/reduction actions.
 
-The whole expression evaluator is done in under 30 lines of code!
+The whole expression evaluator is done in under 40 lines of code!
 
 ```python
-from parglare import Parser, Grammar
+from parglare import Parser, Grammar, Actions
+from operator import add, sub, mul, truediv, pow
 
 grammar = r"""
-E: E '+' E  {left, 1}
- | E '-' E  {left, 1}
- | E '*' E  {left, 2}
- | E '/' E  {left, 2}
- | E '^' E  {right, 3}
- | '(' E ')'
- | number;
+@pass_single Exp: E EOF;
+@op E: E '+' E  {left, 1}
+     | E '-' E  {left, 1}
+     | E '*' E  {left, 2}
+     | E '/' E  {left, 2}
+     | E '^' E  {right, 3}
+     | '(' E ')' {@pass_inner}
+     | number {@pass_single};
 
 terminals
 number: /\d+(\.\d+)?/;
 """
 
-actions = {
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          lambda _, nodes: nodes[1],
-          lambda _, nodes: nodes[0]],
-    "number": lambda _, value: float(value),
-}
+
+class MyActions(Actions):
+    def op(self, n):
+        opfunc = {
+            '+': add,
+            '-': sub,
+            '*': mul,
+            '/': truediv,
+            '^': pow
+        }[n[1]]
+        return opfunc(n[0], n[2])
+
+    def number(self, n):
+        return float(n)
+
 
 g = Grammar.from_string(grammar)
-parser = Parser(g, debug=True, actions=actions)
-
+parser = Parser(g, actions=MyActions(), debug=True)
 result = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
 
 print("Result = ", result)
@@ -218,4 +221,4 @@ MIT
 
 ## Python versions
 
-Tested with 2.7, 3.3-3.7
+Tested with 2.7, 3.4-3.7
