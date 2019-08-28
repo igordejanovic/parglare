@@ -9,15 +9,24 @@ from parglare.exceptions import GrammarError
 
 class Recognizers(object):
     """
+    Base class for grammar recognizers.
+
     Methods of this class are used to recognize tokens in the input stream.
     """
     def __init__(self):
         self.recognizers = {}
 
     def add_recognizer(self, name, recognizer):
+        """
+        Dynamically register a new recognizer.
+        """
         self.recognizers[name] = recognizer
 
     def __getattr__(self, name):
+        """
+        If regular recognizer method is not found search into dynamically
+        registered recognizers.
+        """
         r = self.recognizers.get(name, None)
         if r:
             return r
@@ -42,6 +51,8 @@ class Recognizers(object):
 
 class Recognizer(object):
     """
+    Base class for a recognizer.
+
     Recognizers are callables capable of recognizing low-level patterns
     (a.k.a tokens) in the input.
     """
@@ -51,6 +62,10 @@ class Recognizer(object):
 
 
 class StringRecognizer(Recognizer):
+    """
+    String recognizer will recognize the given literal string in the input
+    string.
+    """
     def __init__(self, value, ignore_case=False, **kwargs):
         super(StringRecognizer, self).__init__(value, **kwargs)
         self.value = value
@@ -78,6 +93,10 @@ def esc_control_characters(regex):
 
 
 class RegExRecognizer(Recognizer):
+    """
+    Regular expression recognizer will recognize given regular expression in
+    the input string.
+    """
     def __init__(self, regex, name=None, re_flags=re.MULTILINE,
                  ignore_case=False, **kwargs):
         if name is None:
