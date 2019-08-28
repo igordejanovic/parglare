@@ -87,25 +87,3 @@ def replace_newlines(in_str):
         return in_str.replace("\n", "\\n")
     except AttributeError:
         return in_str
-
-
-def load_python_module(mod_name, mod_path):
-    """
-    Loads Python module from an arbitrary location.
-    See https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
-    """
-    if sys.version_info >= (3, 5):
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            mod_name, mod_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-    elif sys.version_info >= (3, 3):
-        from importlib.machinery import SourceFileLoader
-        module = SourceFileLoader(
-            mod_name, mod_path).load_module()
-    else:
-        import imp
-        module = imp.load_source(mod_name, mod_path)
-
-    return module
