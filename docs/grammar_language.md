@@ -505,10 +505,9 @@ the input.
 
 ## Named matches (*assignments*)
 
-In section on [actions](./actions.md) you can see that semantic action (Python
-callable) connected to a rule will be called with two parameters: a context and
-a list of sub-expressions evaluation results. This require you to use positional
-access in the list of sub-expressions.
+In section on [actions](./actions.md) you can see that semantic action connected
+to a rule will be called with a list of sub-expressions evaluation results. This
+require you to use positional access in the list of sub-expressions.
 
 `Named matches` (a.k.a `assignments`) enable giving a name to the sub-expression
 directly in the grammar.
@@ -531,10 +530,22 @@ by a comma. You can see that the first sub-expression (`a` match) is assigned to
 semantic action. The values passed in using these parameters will be the results
 of evaluation of the rules referenced by the assignments.
 
+For example, an action for rule `S` might look like this:
+
+```python
+
+   def S(self, n, first, second):
+   ...
+```
+
+Where `n` would contain the list of matched sub-expressions as usual, but as a
+convenience `first` and `second` parameters would contain what is matched as the
+right-hand side (RHS) in the `S` grammar rule of the corresponding assignment.
+
 There are two kind of assignments:
 
 - plain assignment (`=`) -- will collect RHS and pass it to the action under the
-  names given by LHS,
+  name given by LHS,
 - bool assignment (`?=`) -- will pass `True` if the match return non-empty
   result. If the result of RHS is empty the assignment will result in `False`
   being passed to the action.
@@ -544,10 +555,11 @@ after the rule. These classes are kept in a dictionary `grammar.classes` and
 used to instantiate Python objects during parsing by an implicitly
 set [built-in `obj` action](./actions.md#built-in-actions).
 
-Thus, for rules using named matches, default action is to create object with
-attributes whose names are those of LHS of the assignments and values are from
-RHS of the assignments (or boolean values for `bool` assignments). Each object
-is an instance of corresponding dynamically created Python class.
+Thus, for rules using named matches, default action (if `create_objects` parser
+parameter is set to `True`) is to create object with attributes whose names are
+those of LHS of the assignments and values are from RHS of the assignments (or
+boolean values for `bool` assignments). Each object is an instance of
+corresponding dynamically created Python class.
 
 Effectively, using named matches enables automatic creation of a nice AST.
 

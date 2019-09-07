@@ -71,7 +71,7 @@ result = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
 The actions for the grammar is defined as class `MyActions` which inherits
 `Actions`. Base class contains built-in actions. We can see that `op` action is
 defined for rule `E` by specifying `@op` before the rule name. By default
-parglare will match the action by the rule name but if different action name is
+parglare will match the action by the rule name, but if different action name is
 provided in the grammar it will be used instead. We can also see that the action
 can be defined per production (as `@pass_inner` given for production `'(' E
 ')'`). If the action is defined for production it will take precedence over rule
@@ -88,21 +88,21 @@ defined in the grammar. In the case of terminal rule actions, the received
 parameter will be the matched input. In this example it will be the matched
 number as a string so we shall convert it to `float` in the action.
 
-For example in the `op` action we know that the method will be called for the
-first 5 production of rule `E`. Each production is of the same form, the only
-difference is the operation that is used so we first determine the operation
-function by using `n[1]` which will be the matched operation. Then we call the
-operation function with `n[0]` and `n[2]` which will be the left and right
-operands respectively.
+For example, for the `op` action we know that the `op` method will be called for
+the first 5 production of rule `E`. Each production is of the same form, the
+only difference is the operation that is used so we first determine the
+operation function by using `n[1]` which will be the matched operation. Then we
+call the operation function with `n[0]` and `n[2]` which will be the left and
+right operands respectively.
 
 In addition, you can access the [parser context
 object](./common.md#the-context-object) on the action object as `self.context`.
-Context object can provide information like the start and end position where the
-match occurred, the parser instance etc. Also, you have access to the index of
-the production for which the action is called by `self.prod_idx`.
+`Context` object can provide information like the start and end position where
+the match occurred, the parser instance etc. Also, you have access to the index
+of the production for which the action is called by `self.prod_idx`.
 
-At the end we instantiate the parser and pass in our `MyActions` instance using
-the parameter `actions`.
+To use `MyAction` actions in our parser we pass an instance of this class as
+`actions` parameter during parser construction.
 
 The result of the parsing will be the evaluated expression as the actions will
 get called along the way and the result of each actions will be used as an
@@ -143,8 +143,8 @@ method of the parser object to execute actions. For example:
 
 ## Built-in actions
 
-parglare provides some common actions in the base class `parglare.Actions`. You can
-[reference these actions directly from the
+parglare provides some common actions in the base class `parglare.Actions`. You
+can [reference these actions directly from the
 grammar](./grammar_language.md#referencing-rule-actions-from-a-grammar).
 Built-in actions are used implicitly by parglare as default actions in
 particular case (e.g. for [syntactic
@@ -155,8 +155,8 @@ Following are parglare built-in actions from the `parglare.Actions` class:
 
 - **pass_none** - returns `None`;
 
-- **pass_nochange** - returns second parameter of action callable (`value` or
-  `nodes`) unchanged;
+- **pass_nochange** - returns parameter of action callable (`value` or `nodes`)
+  unchanged;
 
 - **pass_empty** - returns an empty list `[]`;
 
@@ -207,8 +207,8 @@ Following are parglare built-in actions from the `parglare.Actions` class:
 If [named matches](./grammar_language.md#named-matches-assignments) are used in
 the grammar rule, action will be called with additional keyword parameters named
 by the name of LHS of rule assignments. If no action is specified for the rule,
-and `create_objects` parameter of `Grammar` constructor methods is set to `True`
-para a built-in action `obj` is called and will produce instance of dynamically
+and `create_objects` parameter of `Grammar` constructor methods is set to `True`,
+a built-in action `obj` is called and will produce instance of dynamically
 created Python class corresponding to the grammar rule. See more in the section
 on [named matches](./grammar_language.md#named-matches-assignments).
 

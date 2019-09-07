@@ -13,8 +13,7 @@ class Location(object):
     """
     Represents a location (point or span) of the object in the source code.
 
-    :ivar class:`Context` context: Parsing context used to populate this
-        object.
+    :ivar str input_str: An input string being parsed this location refers to.
     :ivar int start_position, end_position: The start/end of interval in the
         input string if applicable.
     :ivar int position: The position in the input string.
@@ -27,6 +26,11 @@ class Location(object):
                  'file_name', '_line', '_column']
 
     def __init__(self, context=None, file_name=None):
+        """
+        :param class:`Context` context: Parsing context used to populate this
+            object.
+        :param str file_name: A path to the file this location refers to.
+        """
 
         self.input_str = context.input_str if context else None
         self.start_position = context.start_position if context else None

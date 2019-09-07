@@ -56,15 +56,18 @@ Used at various places in parglare to define location and span in the files
 
 ### Attributes
 
-- **input_str** - the input string being parsed.
+- **input_str**: the input string being parsed.
 
-- **file_name** (property) - the name of the file being parsed (`None` if string
-  is parsed),
+- **file_name** (property): the name of the file being parsed (`None` if string
+  is parsed).
 
-- **start_position/end_position** - an absolute position in the input where the
-  error occurred,
+- **position**: an absolute position in the input string.
 
-- **line**/**column** (properites) - line and column where the error starts.
+- **start_position/end_position** -- The start/end of interval in the input
+  string if applicable.
+
+- **line**/**column** (properties) -- line and column of the location calculated
+  from an absolute position.
 
 
 If there is an error in the grammar itself parglare will raise
