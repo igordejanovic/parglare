@@ -800,20 +800,23 @@ class Parser(object):
         return None, context.position + 1 \
             if context.position < len(context.input_str) else None
 
-    def _create_error(self, context, symbols_expected, tokens_ahead,
-                      symbols_before):
+    def _create_error(self, context, symbols_expected, tokens_ahead=None,
+                      symbols_before=None, last_heads=None, store=True):
         context = copy(context)
         context.start_position = context.position
         context.end_position = context.position
         error = ParseError(Location(context=context),
                            symbols_expected,
                            tokens_ahead,
-                           symbols_before=symbols_before)
+                           symbols_before=symbols_before,
+                           last_heads=last_heads,
+                           grammar=self.grammar)
 
         if self.debug:
             a_print("Error: ", error, level=1)
 
-        self.errors.append(error)
+        if store:
+            self.errors.append(error)
 
         return error
 

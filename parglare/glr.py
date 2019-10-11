@@ -5,9 +5,8 @@ from itertools import chain, takewhile
 from copy import copy
 from parglare import Parser
 from parglare import termui as t
-from .exceptions import ParseError
 from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, Context, Token
-from .common import Location, position_context
+from .common import position_context
 from .common import replace_newlines as _
 from .tables import LALR
 from .export import dot_escape
@@ -187,10 +186,13 @@ class GLRParser(Parser):
             context.start_position = context.end_position = context.position
             last_heads_for_reduce = self.last_heads_for_reduce
             self._remove_transient_state()
-            raise ParseError(Location(context=context),
-                             self.expected, self.tokens_ahead,
-                             list({h.context.state.symbol
-                                   for h in last_heads_for_reduce}))
+            raise self._create_error(context, self.expected,
+                                     tokens_ahead=self.tokens_ahead,
+                                     symbols_before=list(
+                                         {h.context.state.symbol
+                                          for h in last_heads_for_reduce}),
+                                     last_heads=last_heads_for_reduce,
+                                     store=False)
 
         results = [x[1] for x in self.finish_head.parents]
         self._remove_transient_state()

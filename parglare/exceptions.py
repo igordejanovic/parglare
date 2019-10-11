@@ -17,10 +17,26 @@ class GrammarError(LocationError):
 
 class ParseError(LocationError):
     def __init__(self, location, symbols_expected, tokens_ahead=None,
-                 symbols_before=None):
+                 symbols_before=None, last_heads=None, grammar=None):
+        """
+        Args:
+        location(Location): The :class:`Location` of the error.
+        symbols_expected(set): A set of :class:`GrammarSymbol` expected at the
+            location
+        tokens_ahead(list): A list of :class:`Token` recognized at the current
+            location.
+        symbols_before(list): A list of :class:`GrammarSymbol` recognized just
+            before the current position
+        last_heads(list): A list of :class:`GSSNode` GLR heads before the
+            error.
+        grammar(Grammar): An instance of :class:`Grammar` being used for
+            parsing.
+        """
         self.symbols_expected = symbols_expected
         self.tokens_ahead = tokens_ahead if tokens_ahead else []
         self.symbols_before = symbols_before if symbols_before else []
+        self.last_heads = last_heads
+        self.grammar = grammar
         message = expected_message(symbols_expected, tokens_ahead)
         super(ParseError, self).__init__(location, message)
 
