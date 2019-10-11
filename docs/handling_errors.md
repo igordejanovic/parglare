@@ -20,6 +20,12 @@ be performed it will report an error by raising an instance of
   parser it will always be a single element list. In the case of GLR there might
   be more symbols if there were multiple parser heads.
 
+- **last_heads (list)** - A list of last GLR parser heads. Available only for
+  GLR parsing.
+
+- **grammar (Grammar)** - An instance of `parglare.Grammar` class used for
+  parsing.
+
 
 # Error recovery
 
