@@ -19,6 +19,11 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Added
+
+  - Attributes `last_heads` and `grammar` added to the `ParseError` class. This
+    can be used for a more elaborate error reports if needed.
+
 
 ## [0.9.2] (released: 2019-06-05)
 
