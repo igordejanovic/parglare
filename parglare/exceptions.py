@@ -21,8 +21,8 @@ class ParseError(LocationError):
         """
         Args:
         location(Location): The :class:`Location` of the error.
-        symbols_expected(set): A set of :class:`GrammarSymbol` expected at the
-            location
+        symbols_expected(list): A list of :class:`GrammarSymbol` expected at
+            the location
         tokens_ahead(list): A list of :class:`Token` recognized at the current
             location.
         symbols_before(list): A list of :class:`GrammarSymbol` recognized just

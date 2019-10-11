@@ -15,7 +15,15 @@ class Location(object):
 
     Args:
     context(Context): Parsing context used to populate this object.
-    line, column (int):
+    file_name(str): The name (path) to the file this location refers to.
+
+    Attributes:
+    input_str: The input string (from context) being parsed.
+    start_position(int): The position of the span if applicable
+    end_position(int): The end of the span if applicable.
+    position(int): An absolute position of this location inside the file.
+    line, column (int): The line/column calculated from the position and
+        input_str.
     """
 
     __slots__ = ['input_str', 'start_position', 'end_position', 'position',
