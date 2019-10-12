@@ -8,7 +8,7 @@
   
   <meta name="author" content="Igor Dejanović">
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Handling errors - parglare</title>
+  <title>Canonical form of grammar definition - parglare</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -19,8 +19,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Handling errors";
-    var mkdocs_page_input_path = "handling_errors.md";
+    var mkdocs_page_name = "Canonical form of grammar definition";
+    var mkdocs_page_input_path = "grammar_language_canonical.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -113,24 +113,9 @@
                     
     <a class="" href="../parse_trees/">Parse trees</a>
                 </li>
-                <li class=" current">
+                <li class="">
                     
-    <a class="current" href="./">Handling errors</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#handling-errors">Handling errors</a></li>
-    
-
-    <li class="toctree-l3"><a href="#error-recovery">Error recovery</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#custom-recovery-strategy">Custom recovery strategy</a></li>
-        
-        </ul>
-    
-
-    </ul>
+    <a class="" href="../handling_errors/">Handling errors</a>
                 </li>
                 <li class="">
                     
@@ -179,15 +164,11 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
-        
-          <li>User Guide &raquo;</li>
-        
-      
     
-    <li>Handling errors</li>
+    <li>Canonical form of grammar definition</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/handling_errors.md"
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/grammar_language_canonical.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -197,92 +178,11 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="handling-errors">Handling errors<a class="headerlink" href="#handling-errors" title="Permanent link">&para;</a></h1>
-<p>When parglare encounters a situation in which no SHIFT or REDUCE operation could
-be performed it will report an error by raising an instance of
-<code>parglare.ParseError</code> class.</p>
-<p><code>ParseError</code> has the following attributes:</p>
-<ul>
-<li>
-<p><strong>location</strong> - an instance of the <a href="../common/#location-class">Location class</a>
-  with information of the position and span of the error.</p>
-</li>
-<li>
-<p><strong>symbols_expected (list)</strong> - a list of expected symbol at the location.</p>
-</li>
-<li>
-<p><strong>tokens_ahead (list)</strong> - a list of tokens recognized at the position by
-  trying all terminal symbols recognizers from the grammar. Note that this list
-  might be empty in case nothing can be recognized at the position or it might
-  have more than one element if more recognizers succeeds (lexical ambiguity).</p>
-</li>
-<li>
-<p><strong>symbols_before (list)</strong> - a list of last seen symbols. In the case of LR
-  parser it will always be a single element list. In the case of GLR there might
-  be more symbols if there were multiple parser heads.</p>
-</li>
-<li>
-<p><strong>last_heads (list)</strong> - A list of last GLR parser heads. Available only for
-  GLR parsing.</p>
-</li>
-<li>
-<p><strong>grammar (Grammar)</strong> - An instance of <code>parglare.Grammar</code> class used for
-  parsing.</p>
-</li>
-</ul>
-<h1 id="error-recovery">Error recovery<a class="headerlink" href="#error-recovery" title="Permanent link">&para;</a></h1>
-<p>There are a lot of situations where you would want parser to report all the
-errors in one go. To do this, parser has to recover from errors, i.e. get to
-the valid state and continue.</p>
-<p>To enable error recovery set <code>error_recovery</code> <a href="../parser/#error_recovery">parameter of parser
-construction</a> to <code>True</code>. This will enable implicit
-error recovery strategy that will simply drop characther/object at the place of
-the error and try to continue. All errors will be collected as an <code>errors</code> list
-on the parser instance.</p>
-<p>Each error is an instance of <a href="#handling-errors"><code>ParseError</code> class</a>. In case no
-recovery is possible last <code>ParseError</code> will be raised.</p>
-<h2 id="custom-recovery-strategy">Custom recovery strategy<a class="headerlink" href="#custom-recovery-strategy" title="Permanent link">&para;</a></h2>
-<p>To provide a custom strategy for error recovery set <code>error_recovery</code> to a Python
-function. This function should have the following signature:</p>
-<pre><code>def error_recovery_strategy(context, error):
-    ...
-</code></pre>
-<ul>
-<li><strong>context</strong> - the <a href="../common/#the-context-object">context object</a> at the
-  place where error occurred.</li>
-<li><strong>error</strong> - <a href="#handling-errors"><code>ParseError</code> instance</a>.</li>
-</ul>
-<p>Using the context object you can query the state of the parser. E.g. to get the
-position use <code>context.position</code>, to get the parser state use <code>context.state</code>, to
-get expected symbols in this state use <code>context.state.actions.keys()</code>.</p>
-<p>To get information about the error use <code>error</code> object. E.g. to get expected
-symbols at this position for which parser can succesfully continue use
-<code>error.symbols_expected</code>.</p>
-<p>The recovery function should return the tuple <code>(token, position)</code>. <code>position</code>
-should be a new position where the parser should continue or <code>None</code> if position
-should not change. <code>token</code> should be a new token introduced at the given
-position or <code>None</code> if no new token is introduced. If both <code>token</code> and <code>position</code>
-are <code>None</code> error recovery didn't succeed.</p>
-<p>The <code>token</code> symbol should be from the <code>error.symbols_expected</code> for the parser to
-recover successfully. <code>token</code> should be an instance of
-<a href="../parser/#token"><code>parser.Token</code></a>. This class constructor accepts <code>symbol</code>,
-<code>value</code> and <code>length</code>. <code>symbol</code> should be a grammar symbol from
-<code>expected_symbols</code>, <code>value</code> should be a matched part of the input (actually, in
-the context of error recovery this value is a made-up value) and length is the
-length of the token. For introduced tokens, length should be set to 0.</p>
+                <h1 id="canonical-form-of-grammar-definition">Canonical form of grammar definition<a class="headerlink" href="#canonical-form-of-grammar-definition" title="Permanent link">&para;</a></h1>
               
             </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../pglr/" class="btn btn-neutral float-right" title="pglr command">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../parse_trees/" class="btn btn-neutral" title="Parse trees"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
@@ -310,10 +210,6 @@ length of the token. For introduced tokens, length should be set to 0.</p>
           <a href="https://github.com/igordejanovic/parglare/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href="../parse_trees/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../pglr/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
