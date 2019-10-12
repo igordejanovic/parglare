@@ -19,6 +19,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.10.0] (released: 2019-10-12)
+
 ### Added
 
   - Attributes `last_heads` and `grammar` added to the `ParseError` class. This
@@ -298,7 +301,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.9.2...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.10.0...HEAD
+[0.10.0]: https://github.com/igordejanovic/parglare/compare/0.9.2...0.10.0
 [0.9.2]: https://github.com/igordejanovic/parglare/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/igordejanovic/parglare/compare/0.9.0...0.9.1
 [0.9.0]: https://github.com/igordejanovic/parglare/compare/0.8.0...0.9.0
