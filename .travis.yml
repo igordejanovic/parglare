@@ -5,11 +5,8 @@ python:
     - "3.4"
     - "3.5"
     - "3.6"
+    - "3.7"
+    - "3.8"
+
 install: pip install -U tox-travis
 script: tox
-
-matrix:
-  include:
-    - python: 3.7
-      dist: xenial
-      sudo: true
