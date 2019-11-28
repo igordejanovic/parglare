@@ -218,4 +218,4 @@ MIT
 
 ## Python versions
 
-Tested with 2.7, 3.3-3.7
+Tested with 2.7, 3.4-3.8
