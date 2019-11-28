@@ -8,7 +8,7 @@ from parglare.exceptions import SRConflicts
 def test_lr2_grammar():
 
     grammar = r"""
-    Model: Prods EOF;
+    Model: Prods;
     Prods: Prod | Prods Prod;
     Prod: ID "=" ProdRefs;
     ProdRefs: ID | ProdRefs ID;
@@ -55,7 +55,7 @@ def test_nops():
     grammar = """
     Program: "begin"
              statements=Statements
-             ProgramEnd EOF;
+             ProgramEnd;
     Statements: Statements1 | EMPTY;
     Statements1: Statements1 Statement | Statement;
     ProgramEnd: End;
@@ -89,7 +89,7 @@ def test_nops():
     grammar = """
     Program: "begin"
              statements=Statements
-             ProgramEnd EOF;
+             ProgramEnd;
     Statements: Statements1 {nops} | EMPTY;
     Statements1: Statements1 Statement | Statement;
     ProgramEnd: End;
@@ -127,7 +127,6 @@ def test_expressions():
     # This grammar is highly ambiguous if priorities and
     # associativities are not defined to disambiguate.
     grammar = r"""
-    s: E EOF;
     E: E "+" E | E "*" E | "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -160,7 +159,6 @@ def test_expressions():
     # Default production priority is 10. Here we will raise it to 15 for
     # multiplication.
     grammar = r"""
-    s: E EOF;
     E: E "+" E | E "*" E {15}| "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -178,7 +176,6 @@ def test_expressions():
     # If we define associativity for both + and * we have resolved all
     # ambiguities in the grammar.
     grammar = r"""
-    s: E EOF;
     E: E "+" E {left}| E "*" E {left, 15}| "(" E ")" | Number;
     terminals
     Number: /\d+/;
@@ -194,7 +191,7 @@ def test_expressions():
 def test_epsilon_grammar():
 
     grammar = r"""
-    Model: Prods EOF;
+    Model: Prods;
     Prods: Prod | Prods Prod | EMPTY;
     Prod: ID "=" ProdRefs;
     ProdRefs: ID | ProdRefs ID;
@@ -219,11 +216,11 @@ def test_epsilon_grammar():
     assert len(results) == 1
 
 
-def test_non_eof_grammar_nonempty():
+def test_no_consume_input_multiple_trees():
     """
-    Grammar that is not anchored by EOF at the end might
-    result in multiple trees that are produced by sucessful
-    parses of the incomplete input.
+    When GLR parser is run with `consume_input=False` it could result in
+    multiple trees that are produced by successful parses of the incomplete
+    input.
     """
     grammar_nonempty = r"""
     Model: Prods;
@@ -243,7 +240,7 @@ def test_non_eof_grammar_nonempty():
     Third = Baz
     """
 
-    p = GLRParser(g_nonempty, debug=True)
+    p = GLRParser(g_nonempty, consume_input=False, debug=True)
     results = p.parse(txt)
     # There are eight succesful parses:
     # 1. First = One
@@ -257,53 +254,19 @@ def test_non_eof_grammar_nonempty():
     assert len(results) == 8
 
     # With lexical disambiguation turned on there are only 3 parses,
-    # because regular tokens are preferred over STOP stop tokens.
+    # because regular tokens are preferred over STOP tokens.
     # So STOP token gets fed to the parser head only if there is nothing else.
     # This is the situation when head parsing ProdRefs encounters "=".
     # Namely the three parses are:
     # 1. First = One Two three Second
     # 2. ... Second = Foo Bar Third
     # 3. everything parsed
-    disambig_p = GLRParser(g_nonempty, lexical_disambiguation=True)
+    disambig_p = GLRParser(g_nonempty, consume_input=False, lexical_disambiguation=True)
     assert len(disambig_p.parse(txt)) == 3
-
-
-def test_non_eof_grammar_empty():
-    """
-    Grammar that is not anchored by EOF at the end might
-    result in multiple trees that are produced by sucessful
-    parses of the incomplete input.
-    """
-    grammar_empty = r"""
-    Model: Prods;
-    Prods: Prod | Prods Prod | EMPTY;
-    Prod: ID "=" ProdRefs;
-    ProdRefs: ID | ProdRefs ID;
-
-    terminals
-    ID: /\w+/;
-    """
-
-    g_empty = Grammar.from_string(grammar_empty)
-
-    txt = """
-    First = One Two three
-    Second = Foo Bar
-    Third = Baz
-    """
-
-    p = GLRParser(g_empty, debug=True)
-
-    results = p.parse(txt)
-    assert len(results) == 8
-
-    results = p.parse("")
-    assert len(results) == 1
 
 
 def test_empty_terminal():
     g = Grammar.from_string("""
-    start: a EOF;
     a: a t | t;
     terminals
     t: /b*/;
@@ -324,7 +287,6 @@ def test_empty_recognizer():
         return input_str[pos:end_pos]
 
     g = Grammar.from_string("""
-    start: a EOF;
     a: a t | t;
     terminals
     t: ;
@@ -336,8 +298,8 @@ def test_empty_recognizer():
 
 def test_terminal_collision():
     g = Grammar.from_string("""
-    expression: "1" s letter EOF
-              | "2" s "A" EOF
+    expression: "1" s letter
+              | "2" s "A"
               ;
 
     s: " ";
@@ -355,8 +317,8 @@ def test_terminal_collision():
 
 def test_lexical_ambiguity():
     g = Grammar.from_string("""
-    expression: a "x" EOF
-              | b EOF
+    expression: a "x"
+              | b
               ;
 
     a: "x";
@@ -365,13 +327,8 @@ def test_lexical_ambiguity():
 
     p = GLRParser(g)
 
-    assert sorted(p.parse("xx")) == [
-        ['x', 'x', None],
-        ['xx', None],
-    ]
+    assert all([x in ['xx', ['x', 'x']] for x in p.parse('xx')])
 
     disambig_p = GLRParser(g, lexical_disambiguation=True)
 
-    assert sorted(disambig_p.parse("xx")) == [
-        ['xx', None],
-    ]
+    assert disambig_p.parse("xx") == ['xx']

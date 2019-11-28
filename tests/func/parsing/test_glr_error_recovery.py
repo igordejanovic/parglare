@@ -6,7 +6,6 @@ from parglare.parser import Token
 from parglare.actions import pass_single, pass_inner
 
 grammar = r"""
-Result: E EOF;
 E: E '+' E
  | E '-' E
  | E '*' E
@@ -20,7 +19,6 @@ number: /\d+(\.\d+)?/;
 """
 
 actions = {
-    "Result": pass_single,
     "E": [lambda _, nodes: nodes[0] + nodes[2],
           lambda _, nodes: nodes[0] - nodes[2],
           lambda _, nodes: nodes[0] * nodes[2],

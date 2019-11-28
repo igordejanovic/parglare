@@ -3,7 +3,6 @@ from parglare import Parser, ParseError, Grammar
 from parglare.actions import pass_single
 
 grammar = r"""
-Result: E EOF;
 E: E '+' E  {left, 1}
  | E '-' E  {left, 1}
  | E '*' E  {left, 2}
@@ -36,24 +35,10 @@ def test_error_recovery_uncomplete():
     Test default recovery for partial parse.
     parglare will try to parse as much as possible for the given grammar and
     input. If the current input can be reduced to the start rule the parse
-    will succeed. In order to prevent partial parse first grammar rule should
-    be ended with EOF like in the case of 'Result' rule.
+    will succeed.
     """
 
-    # expression grammar, but not terminated with EOF
-    grammar = Grammar.from_string(r"""
-    E: E '+' E  {left, 1}
-     | E '-' E  {left, 1}
-     | E '*' E  {left, 2}
-     | E '/' E  {left, 2}
-     | E '^' E  {right, 3}
-     | '(' E ')'
-     | number;
-
-    terminals
-    number: /\d+(\.\d+)?/;
-    """)
-    parser = Parser(grammar, actions=actions, error_recovery=True)
+    parser = Parser(g, actions=actions, consume_input=False, error_recovery=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
 
@@ -75,15 +60,14 @@ def test_error_recovery_uncomplete():
 
 def test_error_recovery_complete():
     """
-    In this test we start from the 'Result' rule so parglare will require
-    input to end with 'EOF' for the parse to be successful.
+    In this test we are using complete parse.
     """
     parser = Parser(g, actions=actions, error_recovery=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
 
-    # Both '*' and '& 89' should be dropped now as the parser expects EOF at
-    # the end. Thus the parser should calculate '1 + 2 + 3 - 5'
+    # Both '*' and '& 89' should be dropped now as the parser expects to
+    # consume all the input. Thus the parser should calculate '1 + 2 + 3 - 5'
     assert result == 1
 
     assert len(parser.errors) == 2
@@ -98,16 +82,16 @@ def test_error_recovery_complete():
     assert e2.location.start_position == 12
     assert e2.location.end_position == 16
     assert 'Error at 1:12:"+ 2 + * 3 *& 89 - 5" => '\
-        'Expected: ) or * or + or - or / or EOF or ^' in str(e2)
+        'Expected: ) or * or + or - or / or STOP or ^' in str(e2)
 
 
 def test_error_recovery_parse_error():
     """In this test we have error that can't be recovered from by a simple
-    dropping of characters as we'll end up with invalid expression at the EOF.
+    dropping of characters as we'll end up with invalid expression at the end
+    of the input.
 
     The current solution is to throw ParseError at the beggining of the last
     error that couldn't be recovered from.
-
     """
     parser = Parser(g, actions=actions, error_recovery=True)
 

@@ -64,14 +64,6 @@ def test_reserved_symbol_names():
     Test that reserved symbol names can't be used.
     """
     grammar = """
-    S: EOF "First";
-    EOF: "eof";
-    """
-    with pytest.raises(GrammarError) as e:
-        Grammar.from_string(grammar)
-    assert 'is reserved' in str(e)
-
-    grammar = """
     S: STOP "First";
     STOP: "stop";
     """

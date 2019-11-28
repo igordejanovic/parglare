@@ -49,7 +49,7 @@ def test_keyword_grammar_init():
 
 def test_keyword_matches_on_word_boundary():
     grammar = r"""
-    S: "for" name=ID "=" from=INT "to" to=INT EOF;
+    S: "for" name=ID "=" from=INT "to" to=INT;
 
     terminals
     ID: /\w+/;
@@ -88,7 +88,7 @@ def test_keyword_preferred_over_regexes():
     """
 
     grammar = r"""
-    S: "for"? name=ID? "=" from=INT "to" to=INT EOF;
+    S: "for"? name=ID? "=" from=INT "to" to=INT;
 
     terminals
     ID: /\w+/;

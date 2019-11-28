@@ -1,12 +1,11 @@
-from parglare import NonTerminal, Terminal, Grammar, EOF
+from parglare import NonTerminal, Terminal, Grammar
 
 
 # Expression grammar
-S, E, T, F = [NonTerminal(name) for name in ['S', 'E', 'T', 'F']]
+E, T, F = [NonTerminal(name) for name in ['E', 'T', 'F']]
 PLUS, MULT, ID, OPEN, CLOSE = [
     Terminal(value) for value in ['+', '*', 'id', '(', ')']]
 productions = [
-    (S, (E, EOF)),
     (E, (E, PLUS, T)),
     (E, (T, )),
     (T, (T, MULT, F)),
@@ -17,4 +16,4 @@ productions = [
 
 
 def get_grammar():
-    return Grammar.from_struct(productions=productions, start_symbol=S)
+    return Grammar.from_struct(productions=productions, start_symbol=E)
