@@ -31,22 +31,19 @@ class GLRParser(Parser):
     """
     A Tomita-style GLR parser.
     """
-    def __init__(self, grammar, actions=None,
-                 layout_actions=None, debug=False, debug_trace=False,
-                 debug_colors=False, debug_layout=False, ws='\n\r\t ',
-                 build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, return_position=False,
-                 prefer_shifts=None, prefer_shifts_over_empty=None,
-                 error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, lexical_disambiguation=None,
-                 force_load_table=False, table=None, **kwargs):
+    def __init__(self, *args, **kwargs):
 
+        table = kwargs.get('table', None)
+        lexical_disambiguation = kwargs.get('lexical_disambiguation', None)
         if table is None:
             # The default for GLR is not to use any strategy preferring shifts
-            # over reduce thus investigating all possibilitites.
+            # over reduce thus investigating all possibilities.
             # These settings are only applicable if parse table is not computed
             # yet. If it is, then leave None values to avoid
             # "parameter overriden" warnings.
+            prefer_shifts = kwargs.get('prefer_shifts', None)
+            prefer_shifts_over_empty = kwargs.get('prefer_shifts_over_empty', None)
+
             prefer_shifts = False \
                 if prefer_shifts is None else prefer_shifts
             prefer_shifts_over_empty = False \
@@ -55,20 +52,12 @@ class GLRParser(Parser):
             if lexical_disambiguation is None:
                 lexical_disambiguation = False
 
-        super(GLRParser, self).__init__(
-            grammar=grammar,
-            actions=actions, layout_actions=layout_actions,
-            debug=debug, debug_trace=debug_trace,
-            debug_colors=debug_colors, debug_layout=debug_layout, ws=ws,
-            build_tree=build_tree,
-            call_actions_during_tree_build=call_actions_during_tree_build,
-            tables=tables, return_position=return_position,
-            prefer_shifts=prefer_shifts,
-            prefer_shifts_over_empty=prefer_shifts_over_empty,
-            error_recovery=error_recovery, dynamic_filter=dynamic_filter,
-            custom_token_recognition=custom_token_recognition,
-            lexical_disambiguation=lexical_disambiguation,
-            force_load_table=force_load_table, table=table, **kwargs)
+            kwargs['prefer_shifts'] = prefer_shifts
+            kwargs['prefer_shifts_over_empty'] = prefer_shifts_over_empty
+
+        kwargs['lexical_disambiguation'] = lexical_disambiguation
+
+        super(GLRParser, self).__init__(*args, **kwargs)
 
     def _check_parser(self):
         """
