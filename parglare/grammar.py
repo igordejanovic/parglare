@@ -31,7 +31,7 @@ MULT_OPTIONAL = '0..1'
 MULT_ONE_OR_MORE = '1..*'
 MULT_ZERO_OR_MORE = '0..*'
 
-RESERVED_SYMBOL_NAMES = ['EOF', 'STOP', 'EMPTY']
+RESERVED_SYMBOL_NAMES = ['STOP', 'EMPTY']
 SPECIAL_SYMBOL_NAMES = ['KEYWORD', 'LAYOUT']
 
 
@@ -266,10 +266,6 @@ def EMPTY_recognizer(input, pos):
     pass
 
 
-def EOF_recognizer(input, pos):
-    pass
-
-
 def STOP_recognizer(input, pos):
     pass
 
@@ -278,13 +274,10 @@ def STOP_recognizer(input, pos):
 AUGSYMBOL = NonTerminal("S'")
 STOP = Terminal("STOP", STOP_recognizer)
 
-# These two terminals are special terminals used in the grammars.
-# EMPTY will match nothing and always succeed.
-# EOF will match only at the end of the input string.
+# EMPTY is a special terminal used in the grammars.
+# It will match nothing and always succeed.
 EMPTY = Terminal("EMPTY", EMPTY_recognizer)
 EMPTY.grammar_action = pass_none
-EOF = Terminal("EOF", EOF_recognizer)
-EOF.grammar_action = pass_none
 
 
 class Production(object):
@@ -555,7 +548,6 @@ class PGFile(object):
 
         # Add special terminals
         self.symbols_by_name['EMPTY'] = EMPTY
-        self.symbols_by_name['EOF'] = EOF
         self.symbols_by_name['STOP'] = STOP
 
     def resolve_references(self):
@@ -873,7 +865,7 @@ class Grammar(PGFile):
         self.nonterminals = {}
         for prod in self.productions:
             self.nonterminals[prod.symbol.fqn] = prod.symbol
-        self.terminals.update([(s.name, s) for s in (EMPTY, EOF, STOP)])
+        self.terminals.update([(s.name, s) for s in (EMPTY, STOP)])
 
         def add_productions(productions):
             for production in productions:
@@ -1378,11 +1370,11 @@ pg_terminals = \
                     ]]
 
 pg_productions = [
-    [PGFILE, [PRODUCTION_RULES, EOF]],
-    [PGFILE, [IMPORTS, PRODUCTION_RULES, EOF]],
-    [PGFILE, [PRODUCTION_RULES, 'terminals', TERMINAL_RULES, EOF]],
-    [PGFILE, [IMPORTS, PRODUCTION_RULES, 'terminals', TERMINAL_RULES, EOF]],
-    [PGFILE, ['terminals', TERMINAL_RULES, EOF]],
+    [PGFILE, [PRODUCTION_RULES]],
+    [PGFILE, [IMPORTS, PRODUCTION_RULES]],
+    [PGFILE, [PRODUCTION_RULES, 'terminals', TERMINAL_RULES]],
+    [PGFILE, [IMPORTS, PRODUCTION_RULES, 'terminals', TERMINAL_RULES]],
+    [PGFILE, ['terminals', TERMINAL_RULES]],
     [IMPORTS, [IMPORTS, IMPORT]],
     [IMPORTS, [IMPORT]],
     [IMPORT, ['import', STR_CONST, ';']],
@@ -1498,7 +1490,6 @@ def get_grammar_parser(debug, debug_colors):
                                 debug=debug,
                                 debug_colors=debug_colors)
     EMPTY.action = pass_none
-    EOF.action = pass_none
     return grammar_parser
 
 
