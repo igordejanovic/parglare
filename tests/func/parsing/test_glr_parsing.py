@@ -261,7 +261,8 @@ def test_no_consume_input_multiple_trees():
     # 1. First = One Two three Second
     # 2. ... Second = Foo Bar Third
     # 3. everything parsed
-    disambig_p = GLRParser(g_nonempty, consume_input=False, lexical_disambiguation=True)
+    disambig_p = GLRParser(g_nonempty, consume_input=False,
+                           lexical_disambiguation=True)
     assert len(disambig_p.parse(txt)) == 3
 
 

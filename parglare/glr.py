@@ -8,7 +8,6 @@ from parglare import termui as t
 from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, Context, Token
 from .common import position_context
 from .common import replace_newlines as _
-from .tables import LALR
 from .export import dot_escape
 from .termui import prints, h_print, a_print
 
@@ -42,7 +41,8 @@ class GLRParser(Parser):
             # yet. If it is, then leave None values to avoid
             # "parameter overriden" warnings.
             prefer_shifts = kwargs.get('prefer_shifts', None)
-            prefer_shifts_over_empty = kwargs.get('prefer_shifts_over_empty', None)
+            prefer_shifts_over_empty = kwargs.get('prefer_shifts_over_empty',
+                                                  None)
 
             prefer_shifts = False \
                 if prefer_shifts is None else prefer_shifts

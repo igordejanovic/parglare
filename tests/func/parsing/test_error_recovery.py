@@ -38,7 +38,8 @@ def test_error_recovery_uncomplete():
     will succeed.
     """
 
-    parser = Parser(g, actions=actions, consume_input=False, error_recovery=True)
+    parser = Parser(g, actions=actions, consume_input=False,
+                    error_recovery=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
 
