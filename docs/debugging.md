@@ -18,7 +18,7 @@ output:
 ```nohighlight
 *** GRAMMAR ***
 Terminals:
-EMPTY - * ^ + STOP ( \d+(\.\d+)? number / EOF )
+EMPTY - * ^ + STOP ( \d+(\.\d+)? number / )
 NonTerminals:
 E S'
 Productions:

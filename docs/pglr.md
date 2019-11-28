@@ -89,7 +89,7 @@ $ pglr --debug compile calc.pg
 
 *** GRAMMAR ***
 Terminals:
-number STOP + - ^ EMPTY ) \d+(\.\d+)? ( EOF / *
+number STOP + - ^ EMPTY ) \d+(\.\d+)? ( / *
 NonTerminals:
 S' E
 Productions:
