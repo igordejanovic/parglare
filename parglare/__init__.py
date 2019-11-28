@@ -5,7 +5,7 @@ from parglare.parser import Parser, Token, pos_to_line_col, \
 from parglare.tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from parglare.glr import GLRParser
 from parglare.grammar import Grammar, NonTerminal, Terminal, \
-    RegExRecognizer, StringRecognizer, EMPTY, EOF, STOP
+    RegExRecognizer, StringRecognizer, EMPTY, STOP
 from parglare.common import get_collector
 from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
     DisambiguationError

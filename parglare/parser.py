@@ -4,7 +4,7 @@ import codecs
 import logging
 import sys
 from copy import copy
-from .grammar import EMPTY, EOF, STOP
+from .grammar import EMPTY, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, SRConflicts, RRConflicts, \
@@ -30,17 +30,17 @@ class Parser(object):
     def __init__(self, grammar, in_layout=False, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
-                 build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, return_position=False,
-                 prefer_shifts=None, prefer_shifts_over_empty=None,
-                 error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, lexical_disambiguation=True,
-                 force_load_table=False, table=None):
+                 consume_input=True, build_tree=False,
+                 call_actions_during_tree_build=False, tables=LALR,
+                 return_position=False, prefer_shifts=None,
+                 prefer_shifts_over_empty=None, error_recovery=False,
+                 dynamic_filter=None, custom_token_recognition=None,
+                 lexical_disambiguation=True, force_load_table=False,
+                 table=None):
         self.grammar = grammar
         self.in_layout = in_layout
 
         EMPTY.action = pass_none
-        EOF.action = pass_none
         if actions:
             self.grammar._resolve_actions(action_overrides=actions,
                                           fail_on_no_resolve=True)
@@ -55,6 +55,7 @@ class Parser(object):
                 self.layout_parser = Parser(
                     grammar,
                     in_layout=True,
+                    consume_input=False,
                     actions=layout_actions,
                     ws=None, return_position=True,
                     prefer_shifts=True,
@@ -69,6 +70,7 @@ class Parser(object):
         termui.colors = debug_colors
         self.debug_layout = debug_layout
 
+        self.consume_input = consume_input
         self.build_tree = build_tree
         self.call_actions_during_tree_build = call_actions_during_tree_build
 
@@ -483,15 +485,15 @@ class Parser(object):
         in_len = len(input_str)
         tokens = []
 
-        # add special tokens (EMPTY, STOP and EOF) if they are applicable
+        # add special tokens (EMPTY and STOP) if they are applicable
         if EMPTY in actions:
             tokens.append(EMPTY_token)
         if STOP in actions:
-            tokens.append(STOP_token)
-        if position == in_len:
-            tokens.append(EOF_token)
-        else:
+            if not self.consume_input \
+               or (self.consume_input and position == in_len):
+                tokens.append(STOP_token)
 
+        if position < in_len:
             # Get tokens by trying recognizers - but only if we are not at
             # the end, because token cannot be empty
             if self.custom_token_recognition:
@@ -725,12 +727,9 @@ class Parser(object):
         if len(tokens) <= 1:
             return tokens
 
-        # prefer STOP over EMPTY and EOF
+        # prefer STOP over EMPTY
         if STOP_token in tokens:
-            tokens = [t for t in tokens if t not in (EMPTY_token, EOF_token)]
-        # prefer EMTPY over EOF
-        elif EMPTY_token in tokens:
-            tokens = [t for t in tokens if t != EOF_token]
+            tokens = [t for t in tokens if t != EMPTY_token]
 
         # Longest-match strategy.
         max_len = max((len(x.value) for x in tokens))
@@ -1031,7 +1030,6 @@ class Token(object):
 
 STOP_token = Token(STOP)
 EMPTY_token = Token(EMPTY)
-EOF_token = Token(EOF)
 
 
 def treebuild_shift_action(context):
