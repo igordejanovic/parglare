@@ -19,6 +19,15 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Changed
+
+  - **(BIC)** Removed special grammar rule `EOF`. parglare by default now parses
+    the whole input ([#64]). To upgrade:
+    - Remove `EOF` reference from your grammar.
+    - Update your grammar actions accordingly
+    - If you have used incomplete parses (no `EOF` reference in your grammar)
+      then set `consume_input` parser parameter to `False`.
+
 
 ## [0.10.0] (released: 2019-10-12)
 
@@ -295,7 +304,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 [#80]: https://github.com/igordejanovic/parglare/issue/80
 [#75]: https://github.com/igordejanovic/parglare/pull/75
 [#74]: https://github.com/igordejanovic/parglare/issue/74
-[#81]: https://github.com/igordejanovic/parglare/pull/81
+[#64]: https://github.com/igordejanovic/parglare/issues/64
 [#52]: https://github.com/igordejanovic/parglare/issues/52
 [#36]: https://github.com/igordejanovic/parglare/issues/36
 [#20]: https://github.com/igordejanovic/parglare/issues/20
