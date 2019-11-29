@@ -14,13 +14,13 @@ number: /\d+(\.\d+)?/;
 """
 
 actions = {
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          lambda _, nodes: nodes[1],
-          lambda _, nodes: nodes[0]],
+    "E": [lambda _, n: n[0] + n[2],
+          lambda _, n: n[0] - n[2],
+          lambda _, n: n[0] * n[2],
+          lambda _, n: n[0] / n[2],
+          lambda _, n: n[0] ** n[2],
+          lambda _, n: n[1],
+          lambda _, n: n[0]],
     "number": lambda _, value: float(value),
 }
 
