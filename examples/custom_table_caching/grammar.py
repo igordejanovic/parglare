@@ -2,7 +2,7 @@ from parglare import Grammar
 
 
 grammar = Grammar.from_string("""
-    start: ab EOF;
+    start: ab;
     ab: "a" ab "b" | EMPTY;
 """)
 

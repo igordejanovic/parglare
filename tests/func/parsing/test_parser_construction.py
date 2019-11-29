@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 import sys
 import pytest  # noqa
-from parglare import Grammar, Parser, GLRParser, EMPTY, EOF
+from parglare import Grammar, Parser, GLRParser, EMPTY
+from parglare.grammar import STOP
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
 from ..grammar.expression_grammar import (OPEN, ID, T, E,
                                           MULT, CLOSE, PLUS, get_grammar)
@@ -70,10 +71,10 @@ def test_follow():
     expression_grammar = get_grammar()
     follow_set = follow(expression_grammar)
 
-    assert follow_set[E] == set([CLOSE, PLUS, EOF])
+    assert follow_set[E] == set([CLOSE, PLUS, STOP])
 
     # Follow of T must contain all of follow of E
-    assert follow_set[T] == set([MULT, CLOSE, PLUS, EOF])
+    assert follow_set[T] == set([MULT, CLOSE, PLUS, STOP])
 
 
 def test_table_construction():
@@ -167,7 +168,7 @@ def test_prefer_shifts_no_sr_conflicts():
     # prefer_shift is set to `True`. This means that the parser will first
     # consume all "a" using A+ and that reduce B at the end.
     grammar = r"""
-    S: B+ EOF;
+    S: B+;
     B: "b"? A+;
 
     terminals
@@ -185,7 +186,7 @@ def test_prefer_shifts_no_sr_conflicts():
 
     # With prefer_shifts we get a greedy behavior
     input_str = 'b a a a b a a'
-    output = [[['b', ['a', 'a', 'a']], ['b', ['a', 'a']]], None]
+    output = [['b', ['a', 'a', 'a']], ['b', ['a', 'a']]]
     parser = Parser(g, prefer_shifts=True)
     result = parser.parse(input_str)
     assert result == output

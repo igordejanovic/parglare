@@ -215,7 +215,6 @@ def test_parglare_builtin_action_override():
     """
     """
     grammar = """
-    S: As EOF;
     @collect
     As: As A | A;
     A: "a";
@@ -232,7 +231,7 @@ def test_parglare_builtin_action_override():
 
     g = Grammar.from_string(grammar)
     p = Parser(g, actions=my_actions)
-    assert p.parse("a a ")
+    assert p.parse("a a ") is None
     assert called[0]
 
 

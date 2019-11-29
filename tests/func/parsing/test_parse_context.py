@@ -7,7 +7,6 @@ from parglare.actions import pass_single
 
 
 grammar = r"""
-Result: E EOF;
 E: E '+' E  {left}
  | number;
 
@@ -15,7 +14,7 @@ terminals
 number: /\d+(\.\d+)?/;
 """
 
-called = [False, False, False]
+called = [False, False]
 node_exists = [False]
 
 
@@ -34,15 +33,8 @@ def act_sum(context, nodes):
         node_exists[0] = True
 
 
-def act_eof(context, nodes):
-    called[1] = True
-    assert context.symbol.name == 'EOF'
-    # The remaining layout at the end of input
-    assert context.layout_content == '  '
-
-
 def act_number(context, value):
-    called[2] = True
+    called[1] = True
     value = float(value)
     assert context.symbol.name == 'number'
     if value == 1:
@@ -60,7 +52,6 @@ actions = {
     "Result": pass_single,
     "E": [act_sum, pass_single],
     "number": act_number,
-    "EOF": act_eof
 }
 
 g = Grammar.from_string(grammar)
@@ -68,7 +59,7 @@ g = Grammar.from_string(grammar)
 
 def test_parse_context():
     global called
-    called = [False, False, False]
+    called = [False, False]
 
     parser = Parser(g, actions=actions, debug=True)
 
@@ -83,7 +74,7 @@ def test_parse_context_call_actions():
     actions using `call_actions`.
     """
     global called
-    called = [False, False, False]
+    called = [False, False]
 
     parser = Parser(g, build_tree=True, actions=actions, debug=True)
 

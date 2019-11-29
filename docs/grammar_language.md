@@ -136,7 +136,7 @@ with numbers) and we have some weird requirement to break those numbers
 according to the following grammar:
 
 ```nohighlight
-Numbers: all_less_than_five  ascending  all_less_than_five EOF;
+Numbers: all_less_than_five  ascending  all_less_than_five;
 all_less_than_five: all_less_than_five  int_less_than_five
                   | int_less_than_five;
 
@@ -472,23 +472,11 @@ Same as `one or more` this operator may use separator modifiers.
     matched `a` and empty list if no match is found.
 
 
-## Special built-in rules
+## `EMPTY` built-in rule
 
-There are two special rules your can reference in your grammars: `EMPTY` and
-`EOF`. `EMPTY` rule will reduce without consuming any input and will always
-succeed, i.e. it is empty recognition. `EOF` rule will match only at the end of
-the input.
-
-!!! tip
-
-    parglare doesn't assume that parse should be complete, i.e. that the whole
-    input should be consumed. Thus, if you want to ensure that the whole input
-    is consumed you must match `EOF` at the end of your input.
-
-    Example:
-
-        MyFile: SomeRootRule EOF;
-        SomeRootRule: ...
+There is a special `EMPTY` rule you can reference in your grammars. `EMPTY` rule
+will reduce without consuming any input and will always succeed, i.e. it is
+empty recognition.
 
 
 ## Named matches (*assignments*)
@@ -753,7 +741,7 @@ the desired behaviour for language keywords.
 For example, lets examine this little grammar:
 
 ```nohighlight
-S: "for" name=ID "=" from=INT "to" to=INT EOF;
+S: "for" name=ID "=" from=INT "to" to=INT;
 
 terminals
 ID: /\w+/;
@@ -784,7 +772,7 @@ match only on word boundary.
 For example:
 
 ```nohighlight
-S: "for" name=ID "=" from=INT "to" to=INT EOF;
+S: "for" name=ID "=" from=INT "to" to=INT;
 
 terminals
 ID: /\w+/;

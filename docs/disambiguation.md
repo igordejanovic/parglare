@@ -355,7 +355,7 @@ non-terminal with the higher score wins but only if the score is above 0.7.
 
 ```python
 grammar = """
-S: Element+ EOF;
+S: Element+;
 Element: Bar | Baz | Number;
 Bar: /Bar. \d+/;
 Baz: /Baz. \d+/;

@@ -21,24 +21,22 @@ def test_parsing_from_file():
 
 def test_partial_parse():
     """
-    Not giving EOF at the end of the sequence enables parsing of the beginning
-    of the input string.
+    Test `consume_input` parser parameter.
     """
     grammar = """
     S: 'a' B;
     B: 'b';
     """
     g = Grammar.from_string(grammar)
-    parser = Parser(g)
+    parser = Parser(g, consume_input=False)
 
-    # Parser should succesfuly parse 'ab' at the beggining.
+    # Parser should succesfuly parse 'ab' at the beginning.
     parser.parse('abc')
 
-    # But if EOF is given it will match only at the end of the string,
-    # thus, the whole string must be parsed in order for parsing to
-    # succeed.
+    # But if `consume_input` is not set to `False` it should be `True` by
+    # default and the parser will not accept partial parses.
     grammar = """
-    S: 'a' B EOF;
+    S: 'a' B;
     B: 'b';
     """
     g = Grammar.from_string(grammar)

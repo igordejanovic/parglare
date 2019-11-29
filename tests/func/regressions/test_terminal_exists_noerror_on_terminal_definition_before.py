@@ -10,7 +10,7 @@ def test_terminal_exists_noerror_on_terminal_definition_before():
     grammar = """
     Program: "begin"
              statements=Statement*
-             ProgramEnd EOF;
+             ProgramEnd;
     Statement: "end" "transaction"  // here we are using inline terminal `end`
                                     // instead of using a name reference
              | "command";

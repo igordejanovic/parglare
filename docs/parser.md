@@ -49,6 +49,20 @@ the parse tree building process.
     Use this parameter with a special care when GLR is used, since actions will
     be called even on trees that can't be completed (unsuccessful parses).
 
+## consume_input
+
+A boolean whose value is `True` by default. If `True` the whole input must be
+consumed for the parse to be considered successful. This is most of the time
+what you want. If set to `False` then LR parser will parse as much as possible
+and leave the rest of the input unconsumed while GLR parser will produce all
+possible parses with both completely and incompletely consumed input.
+
+!!! warning
+
+    Be aware that setting this option to `False` for GLR usually leads to high
+    level of ambiguity and multiple parses as any substring from beginning of
+    the input that parses will be considered a valid parse.
+
 ## prefer_shifts
 
 By default set to `True` for LR parser and to `False` for GLR parser. In case of

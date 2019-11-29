@@ -1,4 +1,4 @@
-PROG: EXPR+ EOF;
+PROG: EXPR+;
 
 ///// SIMPLE EXPRESSIONS /////
 

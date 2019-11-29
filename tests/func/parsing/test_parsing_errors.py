@@ -70,7 +70,6 @@ def test_premature_end(parser_class):
 
 def test_ambiguous_glr():
     grammar = r"""
-    S: E EOF;
     E: E '+' E
      | E '*' E
      | number;

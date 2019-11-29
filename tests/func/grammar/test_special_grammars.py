@@ -146,7 +146,6 @@ def todo_test_cyclic_grammar_2():
 
 def test_cyclic_grammar_3():
     grammar = """
-    start: S EOF;
     S: S A | A;
     A: "a" | EMPTY;
     """
@@ -168,7 +167,6 @@ def test_highly_ambiguous_grammar():
     Shift/Reduce can be resolved by prefer_shifts strategy.
     """
     grammar = """
-    start: S EOF;
     S: "b" | S S | S S S;
     """
 

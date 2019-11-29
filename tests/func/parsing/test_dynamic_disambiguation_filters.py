@@ -4,7 +4,6 @@ from parglare.exceptions import SRConflicts
 
 
 grammar = r"""
-s: E EOF;
 E: E op_sum E {dynamic}
  | E op_mul E {dynamic}
  | number;
@@ -18,7 +17,6 @@ instr1 = '1 + 2 * 5 + 3'
 instr2 = '1 * 2 + 5 * 3'
 
 actions = {
-    's': [lambda _, c: c[0]],
     'E': [lambda _, nodes: nodes[0] + nodes[2],
           lambda _, nodes: nodes[0] * nodes[2],
           lambda _, nodes: float(nodes[0])]
@@ -46,7 +44,7 @@ def custom_disambiguation_filter(context, action, subresults):
 
     op_ahead = context.token_ahead.symbol
     actions = context.state.actions[op_ahead]
-    if op_ahead not in operations and op_ahead.name not in ('STOP', 'EOF'):
+    if op_ahead not in operations and op_ahead.name != 'STOP':
         operations.append(op_ahead)
 
     if action is SHIFT:

@@ -9,7 +9,7 @@ from parglare.actions import pass_single, pass_nochange, collect
 def test_parse_list_of_integers():
 
     grammar = """
-    Numbers: all_less_than_five EOF;
+    Numbers: all_less_than_five;
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
 
@@ -77,7 +77,7 @@ def test_parse_list_of_integers_lexical_disambiguation():
             return input[pos:last]
 
     grammar = """
-    Numbers: all_less_than_five ascending all_less_than_five EOF;
+    Numbers: all_less_than_five ascending all_less_than_five;
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
 
