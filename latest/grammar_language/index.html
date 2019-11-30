@@ -88,7 +88,7 @@
         
             <li><a class="toctree-l4" href="#syntactic-sugar-bnf-extensions">Syntactic sugar - BNF extensions</a></li>
         
-            <li><a class="toctree-l4" href="#special-built-in-rules">Special built-in rules</a></li>
+            <li><a class="toctree-l4" href="#empty-built-in-rule">EMPTY built-in rule</a></li>
         
             <li><a class="toctree-l4" href="#named-matches-assignments">Named matches (assignments)</a></li>
         
@@ -314,7 +314,7 @@ as usual.</p>
 <p>Lets say that we have a list of integers (real list of Python ints, not a text
 with numbers) and we have some weird requirement to break those numbers
 according to the following grammar:</p>
-<pre><code class="nohighlight">Numbers: all_less_than_five  ascending  all_less_than_five EOF;
+<pre><code class="nohighlight">Numbers: all_less_than_five  ascending  all_less_than_five;
 all_less_than_five: all_less_than_five  int_less_than_five
                   | int_less_than_five;
 
@@ -588,21 +588,10 @@ a: "a";
 <p>where action is attached to <code>a_0_comma</code> to provide returning a list of
 matched <code>a</code> and empty list if no match is found.</p>
 </div>
-<h2 id="special-built-in-rules">Special built-in rules<a class="headerlink" href="#special-built-in-rules" title="Permanent link">&para;</a></h2>
-<p>There are two special rules your can reference in your grammars: <code>EMPTY</code> and
-<code>EOF</code>. <code>EMPTY</code> rule will reduce without consuming any input and will always
-succeed, i.e. it is empty recognition. <code>EOF</code> rule will match only at the end of
-the input.</p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>parglare doesn't assume that parse should be complete, i.e. that the whole
-input should be consumed. Thus, if you want to ensure that the whole input
-is consumed you must match <code>EOF</code> at the end of your input.</p>
-<p>Example:</p>
-<pre><code>MyFile: SomeRootRule EOF;
-SomeRootRule: ...
-</code></pre>
-</div>
+<h2 id="empty-built-in-rule"><code>EMPTY</code> built-in rule<a class="headerlink" href="#empty-built-in-rule" title="Permanent link">&para;</a></h2>
+<p>There is a special <code>EMPTY</code> rule you can reference in your grammars. <code>EMPTY</code> rule
+will reduce without consuming any input and will always succeed, i.e. it is
+empty recognition.</p>
 <h2 id="named-matches-assignments">Named matches (<em>assignments</em>)<a class="headerlink" href="#named-matches-assignments" title="Permanent link">&para;</a></h2>
 <p>In section on <a href="../actions/">actions</a> you can see that semantic action (Python
 callable) connected to a rule will be called with two parameters: a context and
@@ -815,7 +804,7 @@ in the previous examples.</p>
 larger word, i.e. it will not require matching on the word boundary. This is not
 the desired behaviour for language keywords.</p>
 <p>For example, lets examine this little grammar:</p>
-<pre><code class="nohighlight">S: &quot;for&quot; name=ID &quot;=&quot; from=INT &quot;to&quot; to=INT EOF;
+<pre><code class="nohighlight">S: &quot;for&quot; name=ID &quot;=&quot; from=INT &quot;to&quot; to=INT;
 
 terminals
 ID: /\w+/;
@@ -837,7 +826,7 @@ Any string recognizer in the grammar that can be also recognized by the <code>KE
 recognizer is treated as a keyword and is changed during grammar construction to
 match only on word boundary.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">S: &quot;for&quot; name=ID &quot;=&quot; from=INT &quot;to&quot; to=INT EOF;
+<pre><code class="nohighlight">S: &quot;for&quot; name=ID &quot;=&quot; from=INT &quot;to&quot; to=INT;
 
 terminals
 ID: /\w+/;

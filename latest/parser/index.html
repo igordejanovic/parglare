@@ -100,6 +100,8 @@
         
             <li><a class="toctree-l4" href="#call_actions_during_tree_build">call_actions_during_tree_build</a></li>
         
+            <li><a class="toctree-l4" href="#consume_input">consume_input</a></li>
+        
             <li><a class="toctree-l4" href="#prefer_shifts">prefer_shifts</a></li>
         
             <li><a class="toctree-l4" href="#prefer_shifts_over_empty">prefer_shifts_over_empty</a></li>
@@ -264,6 +266,18 @@ the parse tree building process.</p>
 <p class="admonition-title">Warning</p>
 <p>Use this parameter with a special care when GLR is used, since actions will
 be called even on trees that can't be completed (unsuccessful parses).</p>
+</div>
+<h2 id="consume_input">consume_input<a class="headerlink" href="#consume_input" title="Permanent link">&para;</a></h2>
+<p>A boolean whose value is <code>True</code> by default. If <code>True</code> the whole input must be
+consumed for the parse to be considered successful. This is most of the time
+what you want. If set to <code>False</code> then LR parser will parse as much as possible
+and leave the rest of the input unconsumed while GLR parser will produce all
+possible parses with both completely and incompletely consumed input.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Be aware that setting this option to <code>False</code> for GLR usually leads to high
+level of ambiguity and multiple parses as any substring from beginning of
+the input that parses will be considered a valid parse.</p>
 </div>
 <h2 id="prefer_shifts">prefer_shifts<a class="headerlink" href="#prefer_shifts" title="Permanent link">&para;</a></h2>
 <p>By default set to <code>True</code> for LR parser and to <code>False</code> for GLR parser. In case of

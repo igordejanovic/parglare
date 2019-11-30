@@ -480,7 +480,7 @@ the token is usually a sub-string of the input string.</p>
 <p>In the following test <code>Bar</code> and <code>Baz</code> non-terminals are fuzzy matched. The
 non-terminal with the higher score wins but only if the score is above 0.7.</p>
 <pre><code class="python">grammar = &quot;&quot;&quot;
-S: Element+ EOF;
+S: Element+;
 Element: Bar | Baz | Number;
 Bar: /Bar. \d+/;
 Baz: /Baz. \d+/;

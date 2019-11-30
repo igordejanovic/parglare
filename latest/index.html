@@ -349,13 +349,13 @@ number: /\d+(\.\d+)?/;
 &quot;&quot;&quot;
 
 actions = {
-    &quot;E&quot;: [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          lambda _, nodes: nodes[1],
-          lambda _, nodes: nodes[0]],
+    &quot;E&quot;: [lambda _, n: n[0] + n[2],
+          lambda _, n: n[0] - n[2],
+          lambda _, n: n[0] * n[2],
+          lambda _, n: n[0] / n[2],
+          lambda _, n: n[0] ** n[2],
+          lambda _, n: n[1],
+          lambda _, n: n[0]],
     &quot;number&quot;: lambda _, value: float(value),
 }
 
@@ -398,7 +398,7 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
 <p>MIT</p>
 <h2 id="python-versions">Python versions<a class="headerlink" href="#python-versions" title="Permanent link">&para;</a></h2>
-<p>Tested with 2.7, 3.3-3.7</p>
+<p>Tested with 2.7, 3.4-3.8</p>
               
             </div>
           </div>
@@ -451,6 +451,6 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 </html>
 
 <!--
-MkDocs version : 1.0.3
-Build Date UTC : 2019-10-12 15:00:00
+MkDocs version : 1.0.4
+Build Date UTC : 2019-11-30 09:28:14
 -->
