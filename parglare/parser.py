@@ -362,7 +362,8 @@ class Parser(object):
             if isinstance(node, NodeTerm):
                 if sem_action:
                     set_context(context, node)
-                    result = sem_action(context, node.value)
+                    result = sem_action(context, node.value,
+                                        *node.additional_data)
                 else:
                     result = node.value
             else:
@@ -534,8 +535,11 @@ class Parser(object):
                 tok = symbol.recognizer(input_str, position)
             except TypeError:
                 tok = symbol.recognizer(context, input_str, position)
+            additional_data = ()
+            if type(tok) is tuple:
+                tok, *additional_data = tok
             if tok:
-                tokens.append(Token(symbol, tok))
+                tokens.append(Token(symbol, tok, additional_data))
                 if finish_flags[idx]:
                     break
         return tokens
@@ -554,8 +558,11 @@ class Parser(object):
                 except TypeError:
                     tok = terminal.recognizer(context, context.input_str,
                                               context.position)
+                additional_data = ()
+                if type(tok) is tuple:
+                    tok, *additional_data = tok
                 if tok:
-                    tokens.append(Token(terminal, tok))
+                    tokens.append(Token(terminal, tok, additional_data))
         return tokens
 
     def _init_dynamic_disambiguation(self, context):
@@ -629,12 +636,12 @@ class Parser(object):
             # discarded. For more info check following issue:
             # https://github.com/igordejanovic/parglare/issues/44
             if self.call_actions_during_tree_build and sem_action:
-                sem_action(context, token.value)
+                sem_action(context, token.value, *token.additional_data)
 
             return treebuild_shift_action(context)
 
         if sem_action:
-            result = sem_action(context, token.value)
+            result = sem_action(context, token.value, *token.additional_data)
 
         else:
             if debug:
@@ -993,6 +1000,10 @@ class NodeTerm(Node):
     def value(self):
         return self.token.value
 
+    @property
+    def additional_data(self):
+        return self.token.additional_data
+
     def tree_str(self, depth=0):
         return '{}[{}->{}, "{}"]'.format(self.symbol,
                                          self.start_position,
@@ -1015,11 +1026,12 @@ class Token(object):
     """
     Token or lexeme matched from the input.
     """
-    __slots__ = ['symbol', 'value', 'length']
+    __slots__ = ['symbol', 'value', 'additional_data', 'length']
 
-    def __init__(self, symbol=None, value='', length=None):
+    def __init__(self, symbol=None, value='', additional_data=(), length=None):
         self.symbol = symbol
         self.value = value
+        self.additional_data = additional_data
         self.length = length if length is not None else len(value)
 
     def __repr__(self):
