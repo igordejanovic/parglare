@@ -136,7 +136,9 @@ class GLRParser(Parser):
                     if self.debug:
                         a_print("*** LEAVING ERROR REPORTING MODE.",
                                 new_line=True)
-                        h_print("Tokens expected:", self.expected, level=1)
+                        h_print("Tokens expected:",
+                                ', '.join([t.name for t in self.expected]),
+                                level=1)
                         h_print("Tokens found:", self.tokens_ahead, level=1)
 
             # After error reporing do error recovery if enabled.
@@ -641,7 +643,8 @@ class GLRParser(Parser):
                 a_print("**Error found. ",
                         "Recovery initiated for head {}.".format(head),
                         level=1, new_line=True)
-                h_print("Symbols expected: ", symbols, level=1)
+                h_print("Symbols expected: ",
+                        [s.name for s in symbols], level=1)
             if type(self.error_recovery) is bool:
                 # Default recovery
                 if debug:

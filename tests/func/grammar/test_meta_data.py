@@ -39,7 +39,7 @@ def test_production_meta_data_must_be_key_value():
     MyRule: 'a' {left, 1, dynamic, nops, label:'My Label', not_allowed};
     '''
 
-    with pytest.raises(ParseError, match=r'ot_allowed\*}'):
+    with pytest.raises(ParseError, match=r'ot_allowed \*\*> }'):
         Grammar.from_string(grammar_str)
 
 
@@ -70,7 +70,7 @@ def test_terminal_meta_data_must_be_key_value():
     a: 'a' {dynamic, 1, label: 'My Label', not_allowed};
     '''
 
-    with pytest.raises(ParseError, match=r'ot_allowed\*}'):
+    with pytest.raises(ParseError, match=r'ot_allowed \*\*> }'):
         Grammar.from_string(grammar_str)
 
 

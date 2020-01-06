@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 import sys
-from parglare.termui import s_attention as _a
+from parglare.termui import s_attention as _a, s_header as _h
 
 if sys.version < '3':
     text = unicode  # NOQA
@@ -65,11 +65,11 @@ class Location(object):
     def __str__(self):
         line, column = self.line, self.column
         if line is not None:
-            return _a('{}{}:{}:"{}"'
-                      .format("{}:".format(self.file_name)
-                              if self.file_name else "",
-                              line, column,
-                              position_context(self)))
+            return ('{}{}:{}:"{}"'
+                    .format("{}:".format(self.file_name)
+                            if self.file_name else "",
+                            line, column,
+                            position_context(self)))
         elif self.file_name:
             return _a(self.file_name)
         else:
@@ -81,7 +81,7 @@ def position_context(context):
     Returns position context string.
     """
     start = max(context.position-10, 0)
-    c = text(context.input_str[start:context.position]) + "*" \
+    c = text(context.input_str[start:context.position]) + _a(" **> ") \
         + text(context.input_str[context.position:context.position+10])
     return replace_newlines(c)
 
