@@ -213,6 +213,10 @@ class Parser(object):
                 h_print("Token ahead:", context.token_ahead, level=1)
 
             actions = cur_state.actions.get(context.token_ahead.symbol)
+            if not actions and not self.consume_input:
+                # If we don't have any action for the current token ahead
+                # see if we can finish without consuming the whole input.
+                actions = cur_state.actions.get(STOP)
 
             if not actions:
 
