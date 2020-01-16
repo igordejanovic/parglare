@@ -763,7 +763,9 @@ def first(grammar):
                 # If we reached the end of the RHS and each
                 # symbol along the way could derive EMPTY than
                 # we must add EMPTY to the first set of LHS symbol.
-                first_sets[nonterm].add(EMPTY)
+                if EMPTY not in first_sets[nonterm]:
+                    first_sets[nonterm].add(EMPTY)
+                    additions = True
 
     grammar._first_sets = first_sets
     return first_sets
