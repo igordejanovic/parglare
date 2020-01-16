@@ -28,6 +28,12 @@ backward incompatible changes will start to apply when the projects goes 1.0
     - If you have used incomplete parses (no `EOF` reference in your grammar)
       then set `consume_input` parser parameter to `False`.
 
+### Fixed
+
+  - Failure for incomplete parses (`consume_input=False`) for LR parsing,
+    reported by amerlyq@GitHub ([#64])
+  - Bug in `first_sets` calculation. Reported by SupraSummus@GitHub ([#73])
+
 
 ## [0.10.0] (released: 2019-10-12)
 
@@ -292,7 +298,6 @@ backward incompatible changes will start to apply when the projects goes 1.0
   - Few examples (see `examples` folder)
 
 
-
 [#97]: https://github.com/igordejanovic/parglare/issues/97
 [c6e3226]: https://github.com/igordejanovic/parglare/commit/c6e3226
 [#91]: https://github.com/igordejanovic/parglare/pull/91
@@ -304,6 +309,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 [#80]: https://github.com/igordejanovic/parglare/issue/80
 [#75]: https://github.com/igordejanovic/parglare/pull/75
 [#74]: https://github.com/igordejanovic/parglare/issue/74
+[#73]: https://github.com/igordejanovic/parglare/issue/73
 [#64]: https://github.com/igordejanovic/parglare/issues/64
 [#52]: https://github.com/igordejanovic/parglare/issues/52
 [#36]: https://github.com/igordejanovic/parglare/issues/36
