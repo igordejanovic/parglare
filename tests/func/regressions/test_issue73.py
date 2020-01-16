@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Tests for issue #73 (see https://github.com/igordejanovic/parglare/issues/73)
 from __future__ import unicode_literals
 import pytest
 from parglare import Grammar, Parser
@@ -7,7 +8,7 @@ from parglare import Grammar, Parser
 @pytest.mark.skip
 def test_recursive_rule():
     grammar = r"""
-    s: as EOF;
+    s: as;
     as: as "a" | EMPTY;
     """
 
@@ -16,10 +17,9 @@ def test_recursive_rule():
     parser.parse('aaa')
 
 
-@pytest.mark.skip
 def test_recursive_rule_other_way():
     grammar = r"""
-    s: as EOF;
+    s: as;
     as: EMPTY | as "a";
     """
 
