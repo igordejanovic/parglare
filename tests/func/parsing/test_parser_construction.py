@@ -224,3 +224,27 @@ def test_precomputed_table():
     else:
         parser = GLRParser(grammar, table=table)
     parser.parse('id+id')
+
+
+@pytest.mark.skip
+def test_recursive_rule():
+    grammar = r"""
+    s: as EOF;
+    as: as "a" | EMPTY;
+    """
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+    parser.parse('aaa')
+
+
+@pytest.mark.skip
+def test_recursive_rule_other_way():
+    grammar = r"""
+    s: as EOF;
+    as: EMPTY | as "a";
+    """
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+    parser.parse('aaa')
