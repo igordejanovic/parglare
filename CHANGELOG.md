@@ -19,6 +19,10 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+## Added
+
+  - Custom recognizer may return additional data which gets passed to actions.
+
 ### Changed
 
   - **(BIC)** Removed special grammar rule `EOF`. parglare by default now parses
@@ -27,6 +31,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
     - Update your grammar actions accordingly
     - If you have used incomplete parses (no `EOF` reference in your grammar)
       then set `consume_input` parser parameter to `False`.
+   - **(BIC)** Dropping Python 2.x support.
 
 ### Fixed
 
