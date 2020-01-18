@@ -362,8 +362,18 @@ class Parser(object):
             if isinstance(node, NodeTerm):
                 if sem_action:
                     set_context(context, node)
-                    result = sem_action(context, node.value,
-                                        *node.additional_data)
+                    try:
+                        result = sem_action(context, node.value,
+                                            *node.additional_data)
+                    except TypeError as e:
+                        raise TypeError('{}: terminal={} action={} params={}'
+                                        .format(
+                                            str(e),
+                                            node.symbol.name,
+                                            repr(sem_action),
+                                            (context, node.value,
+                                             node.additional_data)))\
+                                             .with_traceback(e.__traceback__)
                 else:
                     result = node.value
             else:
