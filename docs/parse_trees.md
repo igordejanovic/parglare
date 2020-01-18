@@ -12,32 +12,36 @@ nodes).
 
 Each node of the tree has following attributes:
 
-- **start_position/end_position** - the start and end position in the input
-  stream where the node starts/ends. It is given in absolute 0-based offset. To
-  convert to line/column format for textual inputs you can use
+- `start_position/end_position` - the start and end position in the input stream
+  where the node starts/ends. It is given in absolute 0-based offset. To convert
+  to line/column format for textual inputs you can use
   `parglare.pos_to_line_col(input_str, position)` function which returns tuple
   `(line, column)`. Of course, this call doesn't make any sense if you are
   parsing a non-textual content.
 
-- **layout_content** -
-  the
-  [layout](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) that
-  preceeds the given tree node. The layout consists of whitespaces/comments.
+- `layout_content` - the
+  [layout](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
+  that preceeds the given tree node. The layout consists of
+  whitespaces/comments.
 
-- **symbol** (property) - a grammar symbol this node is created for.
+- `symbol` (property) - a grammar symbol this node is created for.
 
 
 Additionally, each `NodeTerm` has:
 
-- **value** - the value (a part of input_str) which this terminal represents. It
+- `value` - the value (a part of input_str) which this terminal represents. It
   is equivalent to `input_str[start_position:end_position]`.
+
+- `additional_data` - a list of additional information returned by a custom
+  recognizer. This gets passed to terminal nodes actions if `call_actions` is
+  called for the parse tree.
 
 Additionally, each `NodeNonTerm` has:
 
-- **children** - sub-nodes which are also of `NodeNonTerm`/`NodeTerm` type.
+- `children` - sub-nodes which are also of `NodeNonTerm`/`NodeTerm` type.
   `NodeNonTerm` is iterable. Iterating over it will iterate over its children.
 
-- **production** - a grammar production whose reduction created this node.
+- `production` - a grammar production whose reduction created this node.
 
 Each node has a `tree_str()` method which will return a string representation of
 the sub-tree starting from the given node. If called on a root node it will

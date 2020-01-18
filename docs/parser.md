@@ -163,27 +163,30 @@ textual file `parse_file` is used.
 
 These two calls accepts the following parameters:
 
-- **input_str** - first positional and mandatory parameter only for `parse` call -
+- `input_str` - first positional and mandatory parameter only for `parse` call -
   the input string/list of objects.
 
-- **position** - the start position to parse from. By default 0.
+- `position` - the start position to parse from. By default 0.
 
-- **context** - the [context object](./common.md#the-context-object) to use. By
+- `context` - the [context object](./common.md#the-context-object) to use. By
   default `None` - context object is created by the parser.
 
-- **file_name** - first positional and mandatory parameter only for `parse_file`
+- `file_name` - first positional and mandatory parameter only for `parse_file`
   call - the name/path of the file to parse.
 
 
-# Token
+# `Token` class
 
 This class from `parglare.parser` is used to represent lookahead tokens. Token
 is a concrete matched terminal from the input stream.
 
-## Attributes
+Attributes:
 
-- **symbol** (`Terminal`) - terminal grammar symbol represented by this token,
+- `symbol` (`Terminal`) - terminal grammar symbol represented by this token,
 
-- **value** (`list` or `str`) - matched part of the input stream,
+- `value` (`list` or `str`) - matched part of the input stream,
 
-- **length** (`int`) - length of the matched input.
+- `additional_data` (`list`) - additional information returned by a custom
+  recognizer.
+
+- `length` (`int`) - length of the matched input.

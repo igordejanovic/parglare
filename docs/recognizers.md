@@ -33,11 +33,11 @@ where `context` is the [parsing context object](./common.md#the-context-object)
 and is optional (e.g. you don't have to accept it in your recognizers), `input`
 is the input string or list of objects and `position` is the position in the
 input where match should be performed. The recognizer should return the part of
-the input that is recognized or `None` if it can't recognized at the current
-position. For example, if we have an input stream of objects that are comparable
-(e.g. numbers) and we want to recognize ascending elements starting at the given
-position but such that the recognized token must have at least two object from
-the input, we could write the following:
+the input that is recognized or `None` if it doesn't recognize anything at the
+current position. For example, if we have an input stream of objects that are
+comparable (e.g. numbers) and we want to recognize ascending elements starting
+at the given position but such that the recognized token must have at least two
+object from the input, we could write the following:
 
 ```python
 def ascending_nosingle(input, pos):
@@ -80,7 +80,40 @@ ascending: ;
     file recognizers](./grammar_modularization.md#grammar-file-recognizers).
 
 
+There is a need sometimes to pass additional data from recognizers to
+appropriate [actions](./actions.md). If you need this you can return additional
+information after the matched part of the input. For example:
+
+```python
+def a_rec(input, pos):
+    m = re.compile(r'(\d+)')
+    result = m.match(input[pos:])
+    return result.group(), result
+```
+
+This recognizer returns both the string it matched and the resulting regex match
+so that action can use the match object to extract more information without
+repeating the match:
+
+```python
+def a_act(context, value, match):
+    """
+    Action will get the additional returned information from the a_rec
+    recognizer. In this case a regex match object.
+    """
+    # Do something with `value` and `match` and create the result
+```
+
+You can return more than one additional element. Essentially if a tuple is
+returned by the recognizer, the first element has to be matched input while the
+rest is additional data.
+
+If you are building [parse tree](./parse_trees.md), additional information
+returned by recognizers is kept on `NodeTerm` (and `Token`) as `additional_data`
+attribute which is a list of all additional info returned by the recognizer.
+
+
 !!! tip
 
     If you want more information you can investigate
-    [test_recognizers.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py) test.
+    [recognizer tests](https://github.com/igordejanovic/parglare/tree/master/tests/func/recognizers).
