@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 import sys
-from parglare.termui import s_attention as _a, s_header as _h
+from parglare.termui import s_attention as _a
 
 if sys.version < '3':
     text = unicode  # NOQA
