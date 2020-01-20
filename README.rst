@@ -85,7 +85,7 @@ MIT
 Python versions
 ---------------
 
-Tested with 2.7, 3.4-3.8
+Tested with 3.4-3.8
 
 Credits
 -------
