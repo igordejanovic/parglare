@@ -19,6 +19,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.11.0] (released: 2020-01-20)
+
 ## Added
 
   - Custom recognizer may return additional data which gets passed to actions.
