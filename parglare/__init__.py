@@ -11,4 +11,4 @@ from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
     DisambiguationError
 
 
-__version__ = "0.11.0"
+__version__ = "0.12.0.dev"
