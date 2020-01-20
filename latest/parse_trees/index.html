@@ -199,36 +199,43 @@ nodes).</p>
 <p>Each node of the tree has following attributes:</p>
 <ul>
 <li>
-<p><strong>start_position/end_position</strong> - the start and end position in the input
-  stream where the node starts/ends. It is given in absolute 0-based offset. To
-  convert to line/column format for textual inputs you can use
+<p><code>start_position/end_position</code> - the start and end position in the input stream
+  where the node starts/ends. It is given in absolute 0-based offset. To convert
+  to line/column format for textual inputs you can use
   <code>parglare.pos_to_line_col(input_str, position)</code> function which returns tuple
   <code>(line, column)</code>. Of course, this call doesn't make any sense if you are
   parsing a non-textual content.</p>
 </li>
 <li>
-<p><strong>layout_content</strong> -
-  the
-  <a href="../grammar_language/#handling-whitespaces-and-comments-in-your-language">layout</a> that
-  preceeds the given tree node. The layout consists of whitespaces/comments.</p>
+<p><code>layout_content</code> - the
+  <a href="../grammar_language/#handling-whitespaces-and-comments-in-your-language">layout</a>
+  that preceeds the given tree node. The layout consists of
+  whitespaces/comments.</p>
 </li>
 <li>
-<p><strong>symbol</strong> (property) - a grammar symbol this node is created for.</p>
+<p><code>symbol</code> (property) - a grammar symbol this node is created for.</p>
 </li>
 </ul>
 <p>Additionally, each <code>NodeTerm</code> has:</p>
 <ul>
-<li><strong>value</strong> - the value (a part of input_str) which this terminal represents. It
-  is equivalent to <code>input_str[start_position:end_position]</code>.</li>
+<li>
+<p><code>value</code> - the value (a part of input_str) which this terminal represents. It
+  is equivalent to <code>input_str[start_position:end_position]</code>.</p>
+</li>
+<li>
+<p><code>additional_data</code> - a list of additional information returned by a custom
+  recognizer. This gets passed to terminal nodes actions if <code>call_actions</code> is
+  called for the parse tree.</p>
+</li>
 </ul>
 <p>Additionally, each <code>NodeNonTerm</code> has:</p>
 <ul>
 <li>
-<p><strong>children</strong> - sub-nodes which are also of <code>NodeNonTerm</code>/<code>NodeTerm</code> type.
+<p><code>children</code> - sub-nodes which are also of <code>NodeNonTerm</code>/<code>NodeTerm</code> type.
   <code>NodeNonTerm</code> is iterable. Iterating over it will iterate over its children.</p>
 </li>
 <li>
-<p><strong>production</strong> - a grammar production whose reduction created this node.</p>
+<p><code>production</code> - a grammar production whose reduction created this node.</p>
 </li>
 </ul>
 <p>Each node has a <code>tree_str()</code> method which will return a string representation of

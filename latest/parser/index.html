@@ -124,13 +124,7 @@
     <li class="toctree-l3"><a href="#parse-and-parse_file-calls">parse and parse_file calls</a></li>
     
 
-    <li class="toctree-l3"><a href="#token">Token</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#attributes">Attributes</a></li>
-        
-        </ul>
+    <li class="toctree-l3"><a href="#token-class">Token class</a></li>
     
 
     </ul>
@@ -354,34 +348,38 @@ textual file <code>parse_file</code> is used.</p>
 <p>These two calls accepts the following parameters:</p>
 <ul>
 <li>
-<p><strong>input_str</strong> - first positional and mandatory parameter only for <code>parse</code> call -
+<p><code>input_str</code> - first positional and mandatory parameter only for <code>parse</code> call -
   the input string/list of objects.</p>
 </li>
 <li>
-<p><strong>position</strong> - the start position to parse from. By default 0.</p>
+<p><code>position</code> - the start position to parse from. By default 0.</p>
 </li>
 <li>
-<p><strong>context</strong> - the <a href="../common/#the-context-object">context object</a> to use. By
+<p><code>context</code> - the <a href="../common/#the-context-object">context object</a> to use. By
   default <code>None</code> - context object is created by the parser.</p>
 </li>
 <li>
-<p><strong>file_name</strong> - first positional and mandatory parameter only for <code>parse_file</code>
+<p><code>file_name</code> - first positional and mandatory parameter only for <code>parse_file</code>
   call - the name/path of the file to parse.</p>
 </li>
 </ul>
-<h1 id="token">Token<a class="headerlink" href="#token" title="Permanent link">&para;</a></h1>
+<h1 id="token-class"><code>Token</code> class<a class="headerlink" href="#token-class" title="Permanent link">&para;</a></h1>
 <p>This class from <code>parglare.parser</code> is used to represent lookahead tokens. Token
 is a concrete matched terminal from the input stream.</p>
-<h2 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h2>
+<p>Attributes:</p>
 <ul>
 <li>
-<p><strong>symbol</strong> (<code>Terminal</code>) - terminal grammar symbol represented by this token,</p>
+<p><code>symbol</code> (<code>Terminal</code>) - terminal grammar symbol represented by this token,</p>
 </li>
 <li>
-<p><strong>value</strong> (<code>list</code> or <code>str</code>) - matched part of the input stream,</p>
+<p><code>value</code> (<code>list</code> or <code>str</code>) - matched part of the input stream,</p>
 </li>
 <li>
-<p><strong>length</strong> (<code>int</code>) - length of the matched input.</p>
+<p><code>additional_data</code> (<code>list</code>) - additional information returned by a custom
+  recognizer.</p>
+</li>
+<li>
+<p><code>length</code> (<code>int</code>) - length of the matched input.</p>
 </li>
 </ul>
               
