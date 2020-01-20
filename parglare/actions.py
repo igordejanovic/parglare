@@ -9,15 +9,15 @@ else:
     text = str
 
 
-def pass_none(_, value):
+def pass_none(_, value, *args):
     return None
 
 
-def pass_nochange(_, value):
+def pass_nochange(_, value, *args):
     return value
 
 
-def pass_empty(_, value):
+def pass_empty(_, value, *args):
     """
     Used for EMPTY production alternative in collect.
     """
