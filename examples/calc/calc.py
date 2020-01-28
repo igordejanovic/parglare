@@ -38,7 +38,7 @@ def act_assignment(context, nodes):
 
 
 actions = {
-    "Calc": pass_inner,
+    "Calc": lambda _, nodes: nodes[1],
     "Assignment": act_assignment,
     "E": [lambda _, nodes: nodes[0] + nodes[2],
           lambda _, nodes: nodes[0] - nodes[2],

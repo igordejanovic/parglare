@@ -33,9 +33,15 @@ def pass_single(_, nodes):
 
 def pass_inner(_, nodes):
     """
-    Pass inner value up, e.g. for parentheses '(' token ')'.
+    Pass inner value up, e.g. for stripping parentheses as in
+    `( <some expression> )`.
     """
-    return nodes[1]
+    n = nodes[1:-1]
+    try:
+        n, = n
+    except ValueError:
+        pass
+    return n
 
 
 def collect_first(_, nodes):
