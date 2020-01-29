@@ -196,8 +196,8 @@ Following are parglare built-in actions from the `parglare.actions` module:
 - **pass_single** - returns `nodes[0]`. Used implicitly by rules where all
   productions have only a single rule reference on the RHS;
 
-- **pass_inner** - returns `nodes[1]`. Handy to extract sub-expression value for
-  values in parentheses;
+- **pass_inner** - returns `nodes[1:-1]` or `nodes[1] if len(nodes)==3`. Handy
+  to strip surrounding parentheses;
 
 - **collect** - Used for rules of the form `Elements: Elements Element |
   Element;`. Implicitly used for `+` operator. Returns list;
