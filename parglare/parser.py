@@ -372,8 +372,7 @@ class Parser(object):
                                             node.symbol.name,
                                             repr(sem_action),
                                             (context, node.value,
-                                             node.additional_data)))\
-                                             .with_traceback(e.__traceback__)
+                                             node.additional_data))) from e
                 else:
                     result = node.value
             else:
@@ -544,7 +543,12 @@ class Parser(object):
             try:
                 tok = symbol.recognizer(input_str, position)
             except TypeError:
-                tok = symbol.recognizer(context, input_str, position)
+                try:
+                    tok = symbol.recognizer(context, input_str, position)
+                except TypeError as e:
+                    raise TypeError(
+                        f'In recognizer for "{symbol}": {e}') from e
+
             additional_data = ()
             if type(tok) is tuple:
                 tok, *additional_data = tok
