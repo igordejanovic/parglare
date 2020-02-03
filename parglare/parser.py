@@ -547,7 +547,7 @@ class Parser(object):
                     tok = symbol.recognizer(context, input_str, position)
                 except TypeError as e:
                     raise TypeError(
-                        f'In recognizer for "{symbol}": {e}') from e
+                        'In recognizer for "{}": {}'.format(symbol, e)) from e
 
             additional_data = ()
             if type(tok) is tuple:
