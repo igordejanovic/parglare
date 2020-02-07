@@ -17,12 +17,24 @@ backward incompatible changes will start to apply when the projects goes 1.0
 (i.e. is considered production/stable).
 
 
-## [Unreleased]
+## Unreleased
+
+
+## [0.12.0] (released: 2020-02-07)
+
+### Changed
+
+  - In case of exception in actions or recognizers more contextual information
+    is provided in the message.
+
+### Fixed
+
+  - `pass_inner` now can returns `nodes[1:-1]` or `nodes[1]` if `len(nodes)==3`.
 
 
 ## [0.11.0] (released: 2020-01-20)
 
-## Added
+### Added
 
   - Custom recognizer may return additional data which gets passed to actions.
 
@@ -324,7 +336,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.11.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.12.0...HEAD
+[0.12.0]: https://github.com/igordejanovic/parglare/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/igordejanovic/parglare/compare/0.10.0...0.11.0
 [0.10.0]: https://github.com/igordejanovic/parglare/compare/0.9.2...0.10.0
 [0.9.2]: https://github.com/igordejanovic/parglare/compare/0.9.1...0.9.2
