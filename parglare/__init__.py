@@ -10,5 +10,4 @@ from parglare.common import get_collector
 from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
     DisambiguationError
 
-
-__version__ = "0.12.0"
+from .version import __version__
