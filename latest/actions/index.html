@@ -377,8 +377,8 @@ to reference some of these actions directly.</p>
   productions have only a single rule reference on the RHS;</p>
 </li>
 <li>
-<p><strong>pass_inner</strong> - returns <code>nodes[1]</code>. Handy to extract sub-expression value for
-  values in parentheses;</p>
+<p><strong>pass_inner</strong> - returns <code>nodes[1:-1]</code> or <code>nodes[1] if len(nodes)==3</code>. Handy
+  to strip surrounding parentheses;</p>
 </li>
 <li>
 <p><strong>collect</strong> - Used for rules of the form <code>Elements: Elements Element |
