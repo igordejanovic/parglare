@@ -18,7 +18,6 @@ if sys.argv[-1].startswith('publish'):
         os.system("twine upload -r test dist/*")
     else:
         os.system("twine upload dist/*")
-        print("You probably want to also tag the version now.")
     sys.exit()
 
 if __name__ == "__main__":
