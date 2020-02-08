@@ -20,6 +20,13 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ## Unreleased
 
 
+### Changed
+
+  - Moved project meta-data to `setup.cfg` and introduced git based versioning
+    using [setuptools_scm](https://github.com/pypa/setuptools_scm/). Thanks
+    KOLANICH@GitHub ([#104]).
+
+
 ## [0.12.0] (released: 2020-02-07)
 
 ### Changed
@@ -318,6 +325,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
   - Few examples (see `examples` folder)
 
 
+[#104]: https://github.com/igordejanovic/parglare/pull/104
 [#97]: https://github.com/igordejanovic/parglare/issues/97
 [c6e3226]: https://github.com/igordejanovic/parglare/commit/c6e3226
 [#91]: https://github.com/igordejanovic/parglare/pull/91
