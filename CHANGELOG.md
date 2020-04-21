@@ -19,6 +19,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## Unreleased
 
+### Added
+
+  - `head` attribute of type `GSSNode` to the context object (GLR only).
 
 ### Changed
 

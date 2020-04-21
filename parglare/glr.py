@@ -781,6 +781,7 @@ class GSSNode(object):
 
     def __init__(self, context, number_of_trees=0):
         self.context = context
+        context.head = self
 
         # Initialize to neutral elements
         self.any_empty = False

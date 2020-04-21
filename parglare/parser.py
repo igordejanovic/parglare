@@ -857,6 +857,8 @@ class Context:
         token(Token): Token for shift operation.
         token_ahead(Token): Token recognized ahead at position in given
              state.
+        head(GSSNode): GSS node, used only in GLR parsing. This value is set
+            during creation of GSSNode.
         extra(anything): Used for additional state maintained by the user.
              If not given empty dict is used.
     """
@@ -874,6 +876,7 @@ class Context:
     __t = ['file_name',
            'input_str',
            'parser',
+           'head',
            'extra']
 
     __slots__ = __local + __t
@@ -898,11 +901,13 @@ class Context:
             self.file_name = context.file_name
             self.input_str = context.input_str
             self.parser = context.parser
+            self.head = context.head
         else:
             self.extra = extra if extra is not None else {}
             self.file_name = file_name
             self.input_str = input_str
             self.parser = parser
+            self.head = None
 
     @property
     def symbol(self):
