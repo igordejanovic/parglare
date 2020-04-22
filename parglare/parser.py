@@ -269,8 +269,7 @@ class Parser(object):
                             str(pos_to_line_col(context.input_str,
                                                 context.position)), level=1)
 
-                new_position = context.position \
-                    + len(context.token_ahead.value)
+                new_position = context.position + len(context.token_ahead)
                 context = Context(
                     state=act.state,
                     start_position=context.position,
