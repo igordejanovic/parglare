@@ -49,7 +49,7 @@ def test_keyword_grammar_init():
 
 def test_keyword_matches_on_word_boundary():
     grammar = r"""
-    S: "for" name=ID "=" from=INT "to" to=INT EOF;
+    S: "for" name=ID "=" from=INT "to" to=INT;
 
     terminals
     ID: /\w+/;
@@ -67,14 +67,12 @@ def test_keyword_matches_on_word_boundary():
 
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(ParseError, match='forid=10 t" => Expected: for'):
         # This *will* raise an error
         parser.parse('forid=10 to20')
-    assert '"*forid=10 t" => Expected: for' in str(e)
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(ParseError, match='Expected: to'):
         # This *will* also raise an error
         parser.parse('for id=10 to20')
-    assert 'Expected: to' in str(e)
 
     # But this is OK
     parser.parse('for id=10 to 20')
@@ -88,7 +86,7 @@ def test_keyword_preferred_over_regexes():
     """
 
     grammar = r"""
-    S: "for"? name=ID? "=" from=INT "to" to=INT EOF;
+    S: "for"? name=ID? "=" from=INT "to" to=INT;
 
     terminals
     ID: /\w+/;

@@ -9,7 +9,6 @@ parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 @parsers
 def test_layout_whitespaces(parser_class):
     grammar = r"""
-    S: K EOF;
     K: A | B;
     A: 'a' A | 'a';
     B: 'b' B | 'b';
@@ -34,7 +33,6 @@ def test_layout_whitespaces(parser_class):
 @parsers
 def test_layout_simple_comments(parser_class):
     grammar = r"""
-    S: K EOF;
     K: A | B;
     A: 'a' A | 'a';
     B: 'b' B | 'b';
@@ -61,7 +59,6 @@ def test_layout_simple_comments(parser_class):
 @parsers
 def test_layout_nested_comments(parser_class):
     grammar = r"""
-    S: K EOF;
     K: 'a' B | 'a' C;
     B: 'b' | B 'b';
     C: 'c' | C 'c';
@@ -104,7 +101,6 @@ def test_layout_context(parser_class):
     Test that layout is passed in the action context.
     """
     grammar = r"""
-    S: K EOF;
     K: A | B;
     A: 'a' A | 'a';
     B: 'b' B | 'b';
@@ -149,7 +145,6 @@ def test_layout_actions(parser_class):
     """
 
     grammar = r"""
-    S: K EOF;
     K: A | B;
     A: 'a' A | 'a';
     B: 'b' B | 'b';

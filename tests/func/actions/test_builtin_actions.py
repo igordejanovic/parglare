@@ -183,7 +183,6 @@ def test_parglare_builtin_action_override():
     """
     """
     grammar = """
-    S: As EOF;
     @collect
     As: As A | A;
     A: "a";

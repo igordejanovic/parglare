@@ -36,13 +36,13 @@ The whole expression evaluator is done in under 30 lines of code!
     """
 
     actions = {
-        "E": [lambda _, nodes: nodes[0] + nodes[2],
-              lambda _, nodes: nodes[0] - nodes[2],
-              lambda _, nodes: nodes[0] * nodes[2],
-              lambda _, nodes: nodes[0] / nodes[2],
-              lambda _, nodes: nodes[0] ** nodes[2],
-              lambda _, nodes: nodes[1],
-              lambda _, nodes: nodes[0]],
+        "E": [lambda _, n: n[0] + n[2],
+              lambda _, n: n[0] - n[2],
+              lambda _, n: n[0] * n[2],
+              lambda _, n: n[0] / n[2],
+              lambda _, n: n[0] ** n[2],
+              lambda _, n: n[1],
+              lambda _, n: n[0]],
         "number": lambda _, value: float(value),
     }
 
@@ -85,7 +85,7 @@ MIT
 Python versions
 ---------------
 
-Tested with 2.7, 3.4-3.7
+Tested with 3.4-3.8
 
 Credits
 -------

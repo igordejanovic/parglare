@@ -39,7 +39,6 @@ def cf():
 def test_priority(cf):
 
     grammar = r"""
-    S: M EOF;
     M: First | Second  | Third "5";
 
     terminals
@@ -62,7 +61,6 @@ def test_priority_lower(cf):
     """
 
     grammar = r"""
-    S: M EOF;
     M: First | Second  | Third;
 
     terminals
@@ -205,7 +203,7 @@ def test_nofinish(cf):
     """
 
     # In the previous grammar trying to parse input "*ThirdShouldMatchThis"
-    # will parse only "*" at the beginning as Second will be short-circed by
+    # will parse only "*" at the beginning as Second will be short-circuited by
     # implicit "prefer string match" rule and `finish` flag on Second terminal
     # will be set.
     g = Grammar.from_string(grammar)
@@ -238,7 +236,7 @@ def test_dynamic_lexical_disambiguation():
     tokens posible to appear at given place in the input.
     """
     grammar = r"""
-    S: Element+ EOF;
+    S: Element+;
     Element: Bar | Baz | Number;
 
     terminals
@@ -289,13 +287,13 @@ def test_dynamic_lexical_disambiguation():
 
     # Bar and Baz will be recognized by a fuzzy match
     result = parser.parse('bar. 56 Baz 12')
-    assert result == [['bar. 56', 'Baz 12'], None]
+    assert result == ['bar. 56', 'Baz 12']
 
     result = parser.parse('Buz. 34 bar 56')
-    assert result == [['Buz. 34', 'bar 56'], None]
+    assert result == ['Buz. 34', 'bar 56']
 
     result = parser.parse('Ba. 34 baz 56')
-    assert result == [['Ba. 34', 'baz 56'], None]
+    assert result == ['Ba. 34', 'baz 56']
 
     # But if Bar/Baz are too different from the correct pattern
     # we get ParseError. In this case `bza` score is below 0.7

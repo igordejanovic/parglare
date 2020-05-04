@@ -45,6 +45,9 @@ The following attributes are available on the context object:
 - **parser** - is the reference to the parser instance. You should use this only
   to investigate parser configuration not to alter its state.
 
+- **head** - is a reference to the Graph-structured stack node (`GSSNode`). Only
+  used for GLR parsing.
+
 - **extra** - this attribute can store arbitrary user information for state
   tracking. If not given during initial context creation `dict` is used.
 

@@ -6,7 +6,6 @@ from parglare.parser import NodeNonTerm, Context
 
 
 grammar = r"""
-Result: E EOF;
 E: E '+' E  {left}
  | number;
 
@@ -38,12 +37,6 @@ class MyActions(Actions):
 
     def E(self, nodes):
         return [self.sum, self.pass_single][self.prod_idx](nodes)
-
-    def EOF(self, nodes):
-        self.called[1] = True
-        assert self.context.symbol.name == 'EOF'
-        # The remaining layout at the end of input
-        assert self.context.layout_content == '  '
 
     def number(self, value):
         self.called[2] = True

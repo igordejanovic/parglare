@@ -143,7 +143,6 @@ from parglare import Parser, Grammar, Actions
 from operator import add, sub, mul, truediv, pow
 
 grammar = r"""
-@pass_single Exp: E EOF;
 @op E: E '+' E  {left, 1}
      | E '-' E  {left, 1}
      | E '*' E  {left, 2}
@@ -155,7 +154,6 @@ grammar = r"""
 terminals
 number: /\d+(\.\d+)?/;
 """
-
 
 class MyActions(Actions):
     def op(self, n):
@@ -221,4 +219,4 @@ MIT
 
 ## Python versions
 
-Tested with 2.7, 3.4-3.7
+Tested with 3.4-3.8

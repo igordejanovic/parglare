@@ -5,12 +5,6 @@ from parglare.lang import _
 expression_grammar = {
     'start': 'S',
     'rules': {
-        'S': {
-            'productions': [
-                {'action': 'pass_single',
-                 'production': ['E', 'EOF']},
-            ]
-        },
         'E': {
             'productions': [
                 {'production': ['E', 'PLUS', 'T']},

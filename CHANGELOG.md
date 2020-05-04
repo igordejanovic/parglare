@@ -17,7 +17,68 @@ backward incompatible changes will start to apply when the projects goes 1.0
 (i.e. is considered production/stable).
 
 
-## [Unreleased]
+## Unreleased
+
+### Added
+
+  - `head` attribute of type `GSSNode` to the context object (GLR only).
+
+### Changed
+
+  - Moved project meta-data to `setup.cfg` and introduced git based versioning
+    using [setuptools_scm](https://github.com/pypa/setuptools_scm/). Thanks
+    KOLANICH@GitHub ([#104]).
+
+
+## [0.12.0] (released: 2020-02-07)
+
+### Changed
+
+  - In case of exception in actions or recognizers more contextual information
+    is provided in the message.
+
+### Fixed
+
+  - `pass_inner` now can returns `nodes[1:-1]` or `nodes[1]` if `len(nodes)==3`.
+
+
+## [0.11.0] (released: 2020-01-20)
+
+### Added
+
+  - Custom recognizer may return additional data which gets passed to actions.
+
+### Changed
+
+  - **(BIC)** Removed special grammar rule `EOF`. parglare by default now parses
+    the whole input ([#64]). To upgrade:
+    - Remove `EOF` reference from your grammar.
+    - Update your grammar actions accordingly
+    - If you have used incomplete parses (no `EOF` reference in your grammar)
+      then set `consume_input` parser parameter to `False`.
+   - **(BIC)** Dropping Python 2.x support.
+
+### Fixed
+
+  - Failure for incomplete parses (`consume_input=False`) for LR parsing,
+    reported by amerlyq@GitHub ([#64])
+  - Bug in `first_sets` calculation. Reported by SupraSummus@GitHub ([#73])
+
+
+## [0.10.0] (released: 2019-10-12)
+
+### Added
+
+  - Attributes `last_heads` and `grammar` added to the `ParseError` class. This
+    can be used for a more elaborate error reports if needed.
+
+
+## [0.9.2] (released: 2019-06-05)
+
+### Fixed
+
+  - `KeyError` when using one-or-more multiplicity with imported grammars
+    ([#97])
 
 
 ## [0.9.1] (released: 2019-05-03)
@@ -26,6 +87,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
   - Non-deterministic parses and LR table cache when terminal priorities are
     used due to unordered LR state actions ([c6e3226])
+
 
 ## [0.9.0] (released: 2019-04-29)
 
@@ -266,7 +328,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
   - Few examples (see `examples` folder)
 
 
-
+[#104]: https://github.com/igordejanovic/parglare/pull/104
+[#97]: https://github.com/igordejanovic/parglare/issues/97
 [c6e3226]: https://github.com/igordejanovic/parglare/commit/c6e3226
 [#91]: https://github.com/igordejanovic/parglare/pull/91
 [#90]: https://github.com/igordejanovic/parglare/pull/90
@@ -277,13 +340,18 @@ backward incompatible changes will start to apply when the projects goes 1.0
 [#80]: https://github.com/igordejanovic/parglare/issue/80
 [#75]: https://github.com/igordejanovic/parglare/pull/75
 [#74]: https://github.com/igordejanovic/parglare/issue/74
-[#81]: https://github.com/igordejanovic/parglare/pull/81
+[#73]: https://github.com/igordejanovic/parglare/issue/73
+[#64]: https://github.com/igordejanovic/parglare/issues/64
 [#52]: https://github.com/igordejanovic/parglare/issues/52
 [#36]: https://github.com/igordejanovic/parglare/issues/36
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.9.1...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.12.0...HEAD
+[0.12.0]: https://github.com/igordejanovic/parglare/compare/0.11.0...0.12.0
+[0.11.0]: https://github.com/igordejanovic/parglare/compare/0.10.0...0.11.0
+[0.10.0]: https://github.com/igordejanovic/parglare/compare/0.9.2...0.10.0
+[0.9.2]: https://github.com/igordejanovic/parglare/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/igordejanovic/parglare/compare/0.9.0...0.9.1
 [0.9.0]: https://github.com/igordejanovic/parglare/compare/0.8.0...0.9.0
 [0.8.0]: https://github.com/igordejanovic/parglare/compare/0.7.0...0.8.0

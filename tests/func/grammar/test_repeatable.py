@@ -120,7 +120,7 @@ def test_optional():
     """
 
     grammar = """
-    S: "2" b? "3"? EOF;
+    S: "2" b? "3"?;
 
     terminals
     b: "1";
@@ -133,15 +133,15 @@ def test_optional():
 
     input_str = '2 1 3'
     result = p.parse(input_str)
-    assert result == ["2", "1", "3", None]
+    assert result == ["2", "1", "3"]
 
     input_str = '2 3'
     result = p.parse(input_str)
-    assert result == ["2", None, "3", None]
+    assert result == ["2", None, "3"]
 
     input_str = '2 1'
     result = p.parse(input_str)
-    assert result == ["2", "1", None, None]
+    assert result == ["2", "1", None]
 
     input_str = ' 1 3'
     with pytest.raises(ParseError) as e:
@@ -155,7 +155,7 @@ def test_optional_no_modifiers():
     """
 
     grammar = """
-    S: "2" b?[comma] "3"? EOF;
+    S: "2" b?[comma] "3"?;
 
     terminals
     b: "1";
@@ -173,7 +173,7 @@ def test_multiple_repetition_operators():
     Test using of multiple repetition operators.
     """
     grammar = """
-    S: "2" b*[comma] c+ "3"? EOF;
+    S: "2" b*[comma] c+ "3"?;
 
     terminals
     b: "b";
@@ -189,7 +189,7 @@ def test_multiple_repetition_operators():
 
     input_str = '2 b, b  c 3'
     result = p.parse(input_str)
-    assert result == ["2", ["b", "b"], ["c"], "3", None]
+    assert result == ["2", ["b", "b"], ["c"], "3"]
 
 
 def test_repetition_operator_many_times_same():
@@ -198,7 +198,7 @@ def test_repetition_operator_many_times_same():
     """
 
     grammar = """
-    S: "2" b*[comma] "3"? b*[comma] EOF;
+    S: "2" b*[comma] "3"? b*[comma];
 
     terminals
     b: "b";
@@ -212,7 +212,7 @@ def test_repetition_operator_many_times_same():
 
     input_str = '2 b  3 b, b'
     result = p.parse(input_str)
-    assert result == ["2", ["b"], "3", ["b", "b"], None]
+    assert result == ["2", ["b"], "3", ["b", "b"]]
 
 
 def test_repeatable_one_zero_rr_conflicts():

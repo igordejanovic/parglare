@@ -5,11 +5,9 @@ from itertools import chain, takewhile
 from copy import copy
 from parglare import Parser
 from parglare import termui as t
-from .exceptions import ParseError
 from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, Context, Token
-from .common import Location, position_context
+from .common import position_context
 from .common import replace_newlines as _
-from .tables import LALR
 from .export import dot_escape
 from .termui import prints, h_print, a_print
 
@@ -32,22 +30,20 @@ class GLRParser(Parser):
     """
     A Tomita-style GLR parser.
     """
-    def __init__(self, grammar, actions=None,
-                 layout_actions=None, debug=False, debug_trace=False,
-                 debug_colors=False, debug_layout=False, ws='\n\r\t ',
-                 build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, return_position=False,
-                 prefer_shifts=None, prefer_shifts_over_empty=None,
-                 error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, lexical_disambiguation=None,
-                 force_load_table=False, table=None, **kwargs):
+    def __init__(self, *args, **kwargs):
 
+        table = kwargs.get('table', None)
+        lexical_disambiguation = kwargs.get('lexical_disambiguation', None)
         if table is None:
             # The default for GLR is not to use any strategy preferring shifts
-            # over reduce thus investigating all possibilitites.
+            # over reduce thus investigating all possibilities.
             # These settings are only applicable if parse table is not computed
             # yet. If it is, then leave None values to avoid
             # "parameter overriden" warnings.
+            prefer_shifts = kwargs.get('prefer_shifts', None)
+            prefer_shifts_over_empty = kwargs.get('prefer_shifts_over_empty',
+                                                  None)
+
             prefer_shifts = False \
                 if prefer_shifts is None else prefer_shifts
             prefer_shifts_over_empty = False \
@@ -56,20 +52,12 @@ class GLRParser(Parser):
             if lexical_disambiguation is None:
                 lexical_disambiguation = False
 
-        super(GLRParser, self).__init__(
-            grammar=grammar,
-            actions=actions, layout_actions=layout_actions,
-            debug=debug, debug_trace=debug_trace,
-            debug_colors=debug_colors, debug_layout=debug_layout, ws=ws,
-            build_tree=build_tree,
-            call_actions_during_tree_build=call_actions_during_tree_build,
-            tables=tables, return_position=return_position,
-            prefer_shifts=prefer_shifts,
-            prefer_shifts_over_empty=prefer_shifts_over_empty,
-            error_recovery=error_recovery, dynamic_filter=dynamic_filter,
-            custom_token_recognition=custom_token_recognition,
-            lexical_disambiguation=lexical_disambiguation,
-            force_load_table=force_load_table, table=table, **kwargs)
+            kwargs['prefer_shifts'] = prefer_shifts
+            kwargs['prefer_shifts_over_empty'] = prefer_shifts_over_empty
+
+        kwargs['lexical_disambiguation'] = lexical_disambiguation
+
+        super(GLRParser, self).__init__(*args, **kwargs)
 
     def _check_parser(self):
         """
@@ -148,7 +136,9 @@ class GLRParser(Parser):
                     if self.debug:
                         a_print("*** LEAVING ERROR REPORTING MODE.",
                                 new_line=True)
-                        h_print("Tokens expected:", self.expected, level=1)
+                        h_print("Tokens expected:",
+                                ', '.join([t.name for t in self.expected]),
+                                level=1)
                         h_print("Tokens found:", self.tokens_ahead, level=1)
 
             # After error reporing do error recovery if enabled.
@@ -187,10 +177,13 @@ class GLRParser(Parser):
             context.start_position = context.end_position = context.position
             last_heads_for_reduce = self.last_heads_for_reduce
             self._remove_transient_state()
-            raise ParseError(Location(context=context),
-                             self.expected, self.tokens_ahead,
-                             list({h.context.state.symbol
-                                   for h in last_heads_for_reduce}))
+            raise self._create_error(context, self.expected,
+                                     tokens_ahead=self.tokens_ahead,
+                                     symbols_before=list(
+                                         {h.context.state.symbol
+                                          for h in last_heads_for_reduce}),
+                                     last_heads=last_heads_for_reduce,
+                                     store=False)
 
         results = [x[1] for x in self.finish_head.parents]
         self._remove_transient_state()
@@ -650,7 +643,8 @@ class GLRParser(Parser):
                 a_print("**Error found. ",
                         "Recovery initiated for head {}.".format(head),
                         level=1, new_line=True)
-                h_print("Symbols expected: ", symbols, level=1)
+                h_print("Symbols expected: ",
+                        [s.name for s in symbols], level=1)
             if type(self.error_recovery) is bool:
                 # Default recovery
                 if debug:
@@ -787,6 +781,7 @@ class GSSNode(object):
 
     def __init__(self, context, number_of_trees=0):
         self.context = context
+        context.head = self
 
         # Initialize to neutral elements
         self.any_empty = False

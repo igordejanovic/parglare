@@ -5,7 +5,6 @@ from parglare import GLRParser, Grammar, ParseError, Actions
 from parglare.parser import Token
 
 grammar = r"""
-Result: E EOF;
 E: E '+' E
  | E '-' E
  | E '*' E
@@ -96,7 +95,7 @@ def test_glr_recovery_custom_new_token():
 
     def custom_recovery(context, error):
         # Here we will introduce missing operation token
-        return Token(g.get_terminal('-'), '-', 0), None
+        return Token(g.get_terminal('-'), '-', length=0), None
 
     parser = GLRParser(g, actions=MyActions(), error_recovery=custom_recovery)
 

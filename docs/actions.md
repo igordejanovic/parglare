@@ -163,8 +163,8 @@ Following are parglare built-in actions from the `parglare.Actions` class:
 - **pass_single** - returns `n[0]`. Used implicitly by rules where all
   productions have only a single rule reference on the RHS;
 
-- **pass_inner** - returns `n[1]`. Handy to extract sub-expression value for
-  values in parentheses;
+- **pass_inner** - returns `n[1:-1]` or `n[1] if len(nodes)==3`. Handy to
+  extract sub-expression value for values in parentheses;
 
 - **collect** - Used for rules of the form `Elements: Elements Element |
   Element;`. Implicitly used for `+` operator (one-or-more). Returns list;

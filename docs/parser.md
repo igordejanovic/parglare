@@ -49,6 +49,20 @@ the parse tree building process.
     Use this parameter with a special care when GLR is used, since actions will
     be called even on trees that can't be completed (unsuccessful parses).
 
+## consume_input
+
+A boolean whose value is `True` by default. If `True` the whole input must be
+consumed for the parse to be considered successful. This is most of the time
+what you want. If set to `False` then LR parser will parse as much as possible
+and leave the rest of the input unconsumed while GLR parser will produce all
+possible parses with both completely and incompletely consumed input.
+
+!!! warning
+
+    Be aware that setting this option to `False` for GLR usually leads to high
+    level of ambiguity and multiple parses as any substring from beginning of
+    the input that parses will be considered a valid parse.
+
 ## prefer_shifts
 
 By default set to `True` for LR parser and to `False` for GLR parser. In case of
@@ -149,27 +163,30 @@ textual file `parse_file` is used.
 
 These two calls accepts the following parameters:
 
-- **input_str** - first positional and mandatory parameter only for `parse` call -
+- `input_str` - first positional and mandatory parameter only for `parse` call -
   the input string/list of objects.
 
-- **position** - the start position to parse from. By default 0.
+- `position` - the start position to parse from. By default 0.
 
-- **context** - the [context object](./common.md#the-context-object) to use. By
+- `context` - the [context object](./common.md#the-context-object) to use. By
   default `None` - context object is created by the parser.
 
-- **file_name** - first positional and mandatory parameter only for `parse_file`
+- `file_name` - first positional and mandatory parameter only for `parse_file`
   call - the name/path of the file to parse.
 
 
-# Token
+# `Token` class
 
 This class from `parglare.parser` is used to represent lookahead tokens. Token
 is a concrete matched terminal from the input stream.
 
-## Attributes
+Attributes:
 
-- **symbol** (`Terminal`) - terminal grammar symbol represented by this token,
+- `symbol` (`Terminal`) - terminal grammar symbol represented by this token,
 
-- **value** (`list` or `str`) - matched part of the input stream,
+- `value` (`list` or `str`) - matched part of the input stream,
 
-- **length** (`int`) - length of the matched input.
+- `additional_data` (`list`) - additional information returned by a custom
+  recognizer.
+
+- `length` (`int`) - length of the matched input.

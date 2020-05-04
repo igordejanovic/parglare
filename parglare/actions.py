@@ -34,9 +34,15 @@ class Actions(object):
 
     def pass_inner(self, nodes):
         """
-        Pass inner value up, e.g. for parentheses `'(' token ')'`.
+        Pass inner value up, e.g. for stripping parentheses as in
+        `( <some expression> )`.
         """
-        return nodes[1]
+        n = nodes[1:-1]
+        try:
+            n, = n
+        except ValueError:
+            pass
+        return n
 
     def collect_first(self, nodes):
         """
@@ -165,7 +171,4 @@ class Actions(object):
         return instance
 
     def EMPTY(self, nodes):
-        return self.pass_none(nodes)
-
-    def EOF(self, nodes):
         return self.pass_none(nodes)

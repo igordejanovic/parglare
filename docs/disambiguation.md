@@ -313,10 +313,10 @@ number: /\d+/ {dynamic};
 
 ## Custom token recognition and lexical disambiguation
 
-In the previous section is explained built-in parglare lexical disambiguation
-strategy. There are use-cases when this strategy is not sufficient. For example,
-if we want to do fuzzy match of tokens and choose the most similar token at the
-position.
+In the previous section a built-in parglare lexical disambiguation strategy is
+explained. There are use-cases when this strategy is not sufficient. For
+example, if we want to do fuzzy match of tokens and choose the most similar
+token at the position.
 
 parglare solves this problem by enabling you to implement a custom token
 recognition by registering a callable during parser instantiation that will,
@@ -355,8 +355,10 @@ non-terminal with the higher score wins but only if the score is above 0.7.
 
 ```python
 grammar = """
-S: Element+ EOF;
+S: Element+;
 Element: Bar | Baz | Number;
+
+terminals
 Bar: /Bar. \d+/;
 Baz: /Baz. \d+/;
 Number: /\d+/;
@@ -403,15 +405,16 @@ def custom_token_recognition(context, get_tokens):
 parser = Parser(
     g, custom_token_recognition=custom_token_recognition)
 
+
 # Bar and Baz will be recognized by a fuzzy match
 result = parser.parse('bar. 56 Baz 12')
-assert result == [['bar. 56', 'Baz 12'], None]
+assert result == ['bar. 56', 'Baz 12']
 
 result = parser.parse('Buz. 34 bar 56')
-assert result == [['Buz. 34', 'bar 56'], None]
+assert result == ['Buz. 34', 'bar 56']
 
 result = parser.parse('Ba. 34 baz 56')
-assert result == [['Ba. 34', 'baz 56'], None]
+assert result == ['Ba. 34', 'baz 56']
 
 # But if Bar/Baz are too different from the correct pattern
 # we get ParseError. In this case `bza` score is below 0.7

@@ -10,6 +10,29 @@ parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
 
 @parsers
+def test_grammar_in_error(parser_class):
+
+    grammar = get_grammar()
+    p = parser_class(grammar)
+
+    with pytest.raises(ParseError) as e:
+        p.parse("id+id*+id")
+
+    assert e.value.grammar is grammar
+
+
+def test_glr_last_heads_in_error():
+
+    grammar = get_grammar()
+    p = GLRParser(grammar)
+
+    with pytest.raises(ParseError) as e:
+        p.parse("id+id*+id")
+
+    assert len(e.value.last_heads) == 1
+
+
+@parsers
 def test_invalid_input(parser_class):
 
     grammar = get_grammar()
@@ -47,7 +70,6 @@ def test_premature_end(parser_class):
 
 def test_ambiguous_glr():
     grammar = r"""
-    S: E EOF;
     E: E '+' E
      | E '*' E
      | number;

@@ -742,6 +742,10 @@ def first(grammar):
     assert isinstance(grammar, Grammar), \
         "grammar parameter should be Grammar instance."
 
+    if hasattr(grammar, '_first_sets'):
+        # If first sets is already calculated return it
+        return grammar._first_sets
+
     first_sets = {}
     for t in grammar.terminals.values():
         first_sets[t] = set([t])
@@ -769,8 +773,11 @@ def first(grammar):
                 # If we reached the end of the RHS and each
                 # symbol along the way could derive EMPTY than
                 # we must add EMPTY to the first set of LHS symbol.
-                first_sets[nonterm].add(grammar.EMPTY)
+                if grammar.EMPTY not in first_sets[nonterm]:
+                    first_sets[nonterm].add(grammar.EMPTY)
+                    additions = True
 
+    grammar._first_sets = first_sets
     return first_sets
 
 
