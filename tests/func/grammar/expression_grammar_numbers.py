@@ -4,14 +4,8 @@ from parglare.lang import _
 
 # Expression grammar with float numbers
 expression_grammar = {
-    'start': 'S',
+    'start': 'E',
     'rules': {
-        'S': {
-            'productions': [
-                {'action': 'pass_single',
-                 'production': ['E', 'EOF']},
-            ]
-        },
         'E': {
             'productions': [
                 {'production': ['E', 'PLUS', 'T']},

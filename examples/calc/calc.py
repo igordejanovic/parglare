@@ -3,7 +3,7 @@ from parglare import Grammar, Parser, Actions
 from operator import add, sub, mul, truediv
 
 grammar = r"""
-@pass_inner Calc: Assignments E;
+Calc: Assignments E;
 Assignments: Assignment | Assignments Assignment | EMPTY;
 Assignment: VariableName "=" Number;
 
@@ -26,7 +26,9 @@ Number: /\d+(\.\d+)?/;
 
 class MyActions(Actions):
 
-    # Semantic Actions
+    def Calc(self, n):
+        return n[-1]
+
     def Assignment(self, n):
         """Semantic action for variable assignment."""
 

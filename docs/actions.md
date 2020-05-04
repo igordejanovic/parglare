@@ -34,7 +34,6 @@ from parglare import Parser, Grammar, Actions
 from operator import add, sub, mul, truediv, pow
 
 grammar = r"""
-@pass_single Exp: E EOF;
 @op E: E '+' E  {left, 1}
      | E '-' E  {left, 1}
      | E '*' E  {left, 2}

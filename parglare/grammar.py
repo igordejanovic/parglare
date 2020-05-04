@@ -31,7 +31,7 @@ MULT_OPTIONAL = '?'
 MULT_ONE_OR_MORE = '+'
 MULT_ZERO_OR_MORE = '*'
 
-RESERVED_SYMBOL_NAMES = ['EOF', 'STOP', 'EMPTY']
+RESERVED_SYMBOL_NAMES = ['STOP', 'EMPTY']
 SPECIAL_SYMBOL_NAMES = ['KEYWORD', 'LAYOUT']
 
 MODIFIERS = ['left', 'right', 'shift', 'reduce', 'dynamic', 'ps', 'nops',
@@ -500,11 +500,8 @@ class Grammar(object):
 
         # These two terminals are special terminals used in the grammars.
         # EMPTY will match nothing and always succeed.
-        # EOF will match only at the end of the input string.
         self.EMPTY = Terminal("EMPTY", recognizer=self.recognizers.EMPTY)
-        self.EOF = Terminal("EOF", recognizer=self.recognizers.EOF)
-        self.terminals.update([(s.name, s) for s in (self.EMPTY, self.EOF,
-                                                     self.STOP)])
+        self.terminals.update([(s.name, s) for s in (self.EMPTY, self.STOP)])
 
         for terminal_name, terminal_struct \
                 in self.grammar_struct.get('terminals', {}).items():

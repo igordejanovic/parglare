@@ -207,7 +207,7 @@ def test_nofinish(cf):
     # implicit "prefer string match" rule and `finish` flag on Second terminal
     # will be set.
     g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=MyActions())
+    parser = Parser(g, actions=MyActions(), consume_input=False)
     parser.parse('*ThirdShouldMatchThis')
     assert MyActions.called == [False, True, False]
 

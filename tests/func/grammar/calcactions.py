@@ -3,7 +3,7 @@ from parglare import Actions
 
 class MyActions(Actions):
     def Calc(self, nodes):
-        return self.pass_inner(nodes)
+        return nodes[-1]
 
     def Assignment(self, nodes):
         name = nodes[0]

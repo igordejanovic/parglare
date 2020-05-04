@@ -1,4 +1,4 @@
-Calc: Assignments E EOF;
+Calc: Assignments E;
 Assignments: Assignment | Assignments Assignment | EMPTY;
 Assignment: VariableName "=" Number;
 

@@ -1,6 +1,6 @@
 import 'variable.pg';
 
-Calc: Assignments E EOF;
+Calc: Assignments E;
 @collect_optional
 Assignments: Assignments Assignment | Assignment | EMPTY;
 Assignment: VariableName "=" Number;

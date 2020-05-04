@@ -9,6 +9,7 @@ def test_parse_list_of_integers():
 
     grammar = """
     Numbers: all_less_than_five;
+    @collect
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
 
@@ -71,6 +72,7 @@ def test_parse_list_of_integers_lexical_disambiguation():
 
     grammar = """
     Numbers: all_less_than_five ascending all_less_than_five;
+    @collect
     all_less_than_five: all_less_than_five int_less_than_five
                       | int_less_than_five;
 
@@ -109,7 +111,7 @@ def test_parse_list_of_integers_lexical_disambiguation():
     # Parsing now must pass
     p = parser.parse(ints)
 
-    assert p == [[3, 4], [1, 4, 7, 8, 9], [3], None]
+    assert p == [[3, 4], [1, 4, 7, 8, 9], [3]]
 
 
 def test_terminals_with_empty_bodies_require_recognizers():

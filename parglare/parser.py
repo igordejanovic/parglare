@@ -30,16 +30,16 @@ class Parser(object):
     def __init__(self, grammar, in_layout=False, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
-                 build_tree=False, call_actions_during_tree_build=False,
-                 tables=LALR, return_position=False, start_prod_id=None,
-                 prefer_shifts=None, prefer_shifts_over_empty=None,
-                 error_recovery=False, dynamic_filter=None,
-                 custom_token_recognition=None, lexical_disambiguation=True,
-                 force_load_table=False, table=None):
+                 consume_input=True, build_tree=False,
+                 call_actions_during_tree_build=False, tables=LALR,
+                 return_position=False, start_prod_id=None, prefer_shifts=None,
+                 prefer_shifts_over_empty=None, error_recovery=False,
+                 dynamic_filter=None, custom_token_recognition=None,
+                 lexical_disambiguation=True, force_load_table=False,
+                 table=None):
         self.grammar = grammar
         self.STOP_token = Token(grammar.STOP)
         self.EMPTY_token = Token(grammar.EMPTY)
-        self.EOF_token = Token(grammar.EOF)
 
         self.in_layout = in_layout
 
@@ -62,6 +62,7 @@ class Parser(object):
                 self.layout_parser = Parser(
                     grammar,
                     in_layout=True,
+                    consume_input=False,
                     actions=layout_actions,
                     ws=None, return_position=True,
                     prefer_shifts=True,
@@ -76,6 +77,7 @@ class Parser(object):
         termui.colors = debug_colors
         self.debug_layout = debug_layout
 
+        self.consume_input = consume_input
         self.build_tree = build_tree
         self.call_actions_during_tree_build = call_actions_during_tree_build
 
@@ -507,15 +509,15 @@ class Parser(object):
         in_len = len(input_str)
         tokens = []
 
-        # add special tokens (EMPTY, STOP and EOF) if they are applicable
+        # add special tokens (EMPTY and STOP) if they are applicable
         if self.grammar.EMPTY in actions:
             tokens.append(self.EMPTY_token)
         if self.grammar.STOP in actions:
-            tokens.append(self.STOP_token)
-        if position == in_len:
-            tokens.append(self.EOF_token)
-        else:
+            if not self.consume_input \
+               or (self.consume_input and position == in_len):
+                tokens.append(self.STOP_token)
 
+        if position < in_len:
             # Get tokens by trying recognizers - but only if we are not at
             # the end, because token cannot be empty
             if self.custom_token_recognition:
@@ -746,13 +748,9 @@ class Parser(object):
         if len(tokens) <= 1:
             return tokens
 
-        # prefer STOP over EMPTY and EOF
+        # prefer STOP over EMPTY
         if self.STOP_token in tokens:
-            tokens = [t for t in tokens if t not in (self.EMPTY_token,
-                                                     self.EOF_token)]
-        # prefer EMTPY over EOF
-        elif self.EMPTY_token in tokens:
-            tokens = [t for t in tokens if t != self.EOF_token]
+            tokens = [t for t in tokens if t != self.EMPTY_token]
 
         # Longest-match strategy.
         max_len = max((len(x.value) for x in tokens))
@@ -820,20 +818,23 @@ class Parser(object):
         return None, context.position + 1 \
             if context.position < len(context.input_str) else None
 
-    def _create_error(self, context, symbols_expected, tokens_ahead,
-                      symbols_before):
+    def _create_error(self, context, symbols_expected, tokens_ahead=None,
+                      symbols_before=None, last_heads=None, store=True):
         context = copy(context)
         context.start_position = context.position
         context.end_position = context.position
         error = ParseError(Location(context=context),
                            symbols_expected,
                            tokens_ahead,
-                           symbols_before=symbols_before)
+                           symbols_before=symbols_before,
+                           last_heads=last_heads,
+                           grammar=self.grammar)
 
         if self.debug:
             a_print("Error: ", error, level=1)
 
-        self.errors.append(error)
+        if store:
+            self.errors.append(error)
 
         return error
 
@@ -857,6 +858,7 @@ class Context:
     __t = ['file_name',
            'input_str',
            'parser',
+           'head',
            'extra']
 
     __slots__ = __local + __t
@@ -903,11 +905,13 @@ class Context:
             self.file_name = context.file_name
             self.input_str = context.input_str
             self.parser = context.parser
+            self.head = context.head
         else:
             self.extra = extra if extra is not None else {}
             self.file_name = file_name
             self.input_str = input_str
             self.parser = parser
+            self.head = None
 
     @property
     def symbol(self):

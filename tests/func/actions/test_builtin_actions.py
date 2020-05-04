@@ -193,10 +193,11 @@ def test_parglare_builtin_action_override():
 
         def collect(self, _):
             self.called[0] = True
+            return True
 
     g = Grammar.from_string(grammar)
     p = Parser(g, actions=MyActions())
-    assert p.parse("a a ")
+    assert p.parse("a a ") is True
     assert MyActions.called[0]
 
 

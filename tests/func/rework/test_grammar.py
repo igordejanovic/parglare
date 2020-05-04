@@ -8,7 +8,7 @@ from parglare.grammar import (Grammar, MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE,
                               MULT_OPTIONAL)
 
 test_grammar = r'''
-A: B C+[COMMA, nogreedy] EOF;
+A: B C+[COMMA, nogreedy];
 B: C* D? | D;
 terminals
 C: 'c';
@@ -27,8 +27,7 @@ def test_grammar_struct():
                 'productions': [
                     {'production': ['B', {'symbol': 'C',
                                           'mult': MULT_ONE_OR_MORE,
-                                          'modifiers': ['COMMA', 'nogreedy']},
-                                    'EOF']}
+                                          'modifiers': ['COMMA', 'nogreedy']}]}
                 ]
             },
             'B': {
@@ -59,7 +58,7 @@ test_grammar_struct_desugared = {
         },
         'A': {
             'productions': [
-                {'production': ['B', 'C_1_COMMA_nogreedy', 'EOF']}
+                {'production': ['B', 'C_1_COMMA_nogreedy']}
             ]
         },
         'B': {
@@ -124,4 +123,4 @@ def test_grammar_from_string():
     assert grammar
     parser = Parser(grammar)
     result = parser.parse('c c c c 34/44 c,c,c ')
-    assert result == [[['c', 'c', 'c', 'c'], '34/44'], ['c', 'c', 'c'], None]
+    assert result == [[['c', 'c', 'c', 'c'], '34/44'], ['c', 'c', 'c']]

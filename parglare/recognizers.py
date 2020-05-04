@@ -42,9 +42,6 @@ class Recognizers(object):
     def EMPTY(self, input, pos):
         pass
 
-    def EOF(self, input, pos):
-        pass
-
     def STOP(self, input, pos):
         pass
 

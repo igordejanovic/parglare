@@ -2,8 +2,7 @@
 from __future__ import unicode_literals
 import sys
 import pytest  # noqa
-from parglare import Grammar, Parser, GLRParser, EMPTY
-from parglare.grammar import STOP
+from parglare import Grammar, Parser, GLRParser
 from parglare.tables import first, follow, create_table, SHIFT, REDUCE
 from ..grammar.expression_grammar import get_grammar
 
@@ -21,6 +20,7 @@ PLUS = expression_grammar.get_symbol('PLUS')
 MULT = expression_grammar.get_symbol('MULT')
 ID = expression_grammar.get_symbol('ID')
 EMPTY = expression_grammar.get_symbol('EMPTY')
+STOP = expression_grammar.get_symbol('STOP')
 
 
 def test_first():

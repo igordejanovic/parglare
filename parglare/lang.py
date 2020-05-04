@@ -24,13 +24,13 @@ pg_grammar = {
     'rules': {
         'PGFile': {
             'productions': [
-                {'production': ['ProductionRules', 'EOF']},
-                {'production': ['Imports', 'ProductionRules', 'EOF']},
+                {'production': ['ProductionRules']},
+                {'production': ['Imports', 'ProductionRules']},
                 {'production': ['ProductionRules',
-                                'TERMINALS', 'TerminalRules', 'EOF']},
+                                'TERMINALS', 'TerminalRules']},
                 {'production': ['Imports', 'ProductionRules',
-                                'TERMINALS', 'TerminalRules', 'EOF']},
-                {'production': ['TERMINALS', 'TerminalRules', 'EOF']},
+                                'TERMINALS', 'TerminalRules']},
+                {'production': ['TERMINALS', 'TerminalRules']},
             ]
         },
         'Imports': {

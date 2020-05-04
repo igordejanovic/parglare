@@ -3,7 +3,7 @@ from parglare.lang import _
 
 # Expression grammar
 expression_grammar = {
-    'start': 'S',
+    'start': 'E',
     'rules': {
         'E': {
             'productions': [
