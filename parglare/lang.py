@@ -406,6 +406,20 @@ class PGGrammarActions(Actions):
                 else:
                     terminals[inline_term_name] = inline_term
 
+            # Check terminal string recognizers overlapping
+            # If multiple string recognizers match the same we have lexical ambiguity
+            collected_rec = {}
+            for term_name, term in terminals.items():
+                rec = term['recognizer']
+                if rec is not None and not (rec.startswith('/') and rec.endswith('/')):
+                    previous_term = collected_rec.get(rec)
+                    if previous_term:
+                        raise GrammarError(
+                            location=term.get('location'),
+                            message='Terminals "{}" and "{}" match the same string.'
+                            .format(previous_term, term_name))
+                    collected_rec[rec] = term_name
+
         return pgfile, self.imported_files
 
     def Import(self, nodes):
