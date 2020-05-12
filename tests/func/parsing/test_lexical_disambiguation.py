@@ -158,10 +158,10 @@ def test_failed_disambiguation(cf):
     with pytest.raises(DisambiguationError) as e:
         parser.parse('14.75')
 
-    assert 'disambiguate' in str(e)
-    assert 'First' in str(e)
-    assert 'Second' not in str(e)
-    assert 'Third' in str(e)
+    assert 'disambiguate' in str(e.value)
+    assert 'First' in str(e.value)
+    assert 'Second' not in str(e.value)
+    assert 'Third' in str(e.value)
 
 
 def test_longest_match_prefer(cf):

@@ -1253,7 +1253,7 @@ def check_name(context, name):
     if '.' in name:
         raise GrammarError(
             location=Location(context),
-            message='Using dot in names is not allowed.'.format(name))
+            message='Using dot in names is not allowed ("{}").'.format(name))
 
 
 class GrammarContext:
