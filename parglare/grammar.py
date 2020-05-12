@@ -404,13 +404,13 @@ class Grammar(object):
                                 location=self._get_location(production_struct),
                                 message='"symbol" key must be given in '
                                 'reference in rule "{}".'.format(rule_name))
-                        self._degugar_multiplicity_ref(ref, production_struct)
+                        self._desugar_multiplicity_ref(ref, production_struct)
                         if len(ref) == 1:
                             # If we are reduced a reference only on symbol name
                             # replace with just a simple string
                             rhs[ref_idx] = ref['symbol']  # noqa
 
-    def _degugar_multiplicity_ref(self, ref, production_struct):
+    def _desugar_multiplicity_ref(self, ref, production_struct):
         """
         Desugar complex suggared reference containing multiplicity and
         separator definition to a canonical form of a reference.  Create

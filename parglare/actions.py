@@ -17,7 +17,7 @@ class Actions(object):
     def pass_none(self, value):
         return None
 
-    def pass_nochange(_, value):
+    def pass_nochange(self, value):
         return value
 
     def pass_empty(self, value):
