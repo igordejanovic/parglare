@@ -5,6 +5,7 @@ helps, and credit will always be given.
 
 You can contribute in many ways:
 
+
 ## Types of Contributions
 
 ### Report Bugs
@@ -17,21 +18,25 @@ If you are reporting a bug, please include:
 - Any details about your local setup that might be helpful in troubleshooting.
 - Detailed steps to reproduce the bug.
 
+
 ### Fix Bugs
 
 Look through the GitHub issues for bugs. Anything tagged with "bug" and "help
 wanted" is open to whoever wants to implement it.
+
 
 ### Implement Features
 
 Look through the GitHub issues for features. Anything tagged with "enhancement"
 and "help wanted" is open to whoever wants to implement it.
 
+
 ### Write Documentation
 
 parglare could always use more documentation, whether as part of the official
 parglare docs, in docstrings, or even on the web in blog posts, articles, and
 such.
+
 
 ### Submit Feedback
 
@@ -45,6 +50,7 @@ If you are proposing a feature:
 - Remember that this is a volunteer-driven project, and that contributions are
   welcome :)
 
+
 ## Get Started!
 
 Ready to contribute? Here's how to set up `parglare` for local development.
@@ -54,13 +60,19 @@ Ready to contribute? Here's how to set up `parglare` for local development.
 
         $ git clone git@github.com:your_name_here/parglare.git
 
-3. Install your local copy into a virtualenv. Assuming you have
-   virtualenvwrapper installed, this is how you set up your fork for local
-   development:
+3. Install your local copy into a virtual environment. This is how you set up
+   your fork for local development:
 
-        $ mkvirtualenv parglare
         $ cd parglare/
-        $ python setup.py develop
+        $ python -m venv venv
+        $ source venv/bin/activate
+        $ ./install-dev.sh
+
+   This is needed just the first time. To work on parglare later you just need
+   to activate the virtual environment for each new terminal session:
+
+        $ cd parglare/
+        $ source venv/bin/activate
 
 4. Create a branch for local development::
 
@@ -68,17 +80,11 @@ Ready to contribute? Here's how to set up `parglare` for local development.
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
-   tests, including testing other Python versions with tox:
+5. When you're done making changes, run tests:
 
-        $ flake8
-        $ py.test tests/func/
+        $ ./runtests.sh
 
-    To run tests for all environments:
-
-        $ tox
-
-   To get flake8 and tox, just pip install them into your virtualenv.
+   and verify that all tests pass.
 
 6. Commit your changes and push your branch to GitHub:
 
@@ -86,7 +92,12 @@ Ready to contribute? Here's how to set up `parglare` for local development.
         $ git commit -m "Your detailed description of your changes."
         $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+   Check [this](https://chris.beams.io/posts/git-commit/) on how to write nice
+   git log messages.
+
+7. Submit a pull request through the GitHub website. CI will run the tests for
+   all supported Python versions. Check in the GitHub UI that all pipelines pass.
+
 
 ## Pull Request Guidelines
 
@@ -97,6 +108,7 @@ Before you submit a pull request, check that it meets these guidelines:
 3. The pull request should work for Python 3.4-3.8. Check
    https://travis-ci.org/igordejanovic/parglare/pull_requests and make sure that
    the tests pass for all supported Python versions.
+
 
 ## Tips
 

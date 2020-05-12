@@ -42,8 +42,8 @@ def test_invalid_input(parser_class):
         p.parse("id+id*+id")
 
     assert e.value.location.start_position == 6
-    assert "(" in str(e)
-    assert "id" in str(e)
+    assert "(" in str(e.value)
+    assert "id" in str(e.value)
     assert 'MULT' in [s.name for s in e.value.symbols_before]
     assert '+' in [t.value for t in e.value.tokens_ahead]
     expected_names = [s.name for s in e.value.symbols_expected]

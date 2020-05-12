@@ -238,4 +238,4 @@ def test_unexisting_builtin_action_raises_exception():
     with pytest.raises(ParserInitError) as e:
         Parser(g, actions=Actions())
 
-    assert 'a_action_unexisting' in str(e)
+    assert 'a_action_unexisting' in str(e.value)
