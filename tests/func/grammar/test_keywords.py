@@ -21,7 +21,7 @@ def test_keyword_must_be_regex():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'must have a regex recognizer defined' in str(e)
+    assert 'must have a regex recognizer defined' in str(e.value)
 
 
 def test_keyword_grammar_init():

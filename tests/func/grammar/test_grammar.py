@@ -41,8 +41,8 @@ def test_undefined_grammar_symbol():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Unknown symbol' in str(e)
-    assert 'id' in str(e)
+    assert 'Unknown symbol' in str(e.value)
+    assert 'id' in str(e.value)
 
 
 def test_multiple_terminal_definition():
@@ -69,7 +69,7 @@ def test_reserved_symbol_names():
     """
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
-    assert 'is reserved' in str(e)
+    assert 'is reserved' in str(e.value)
 
     grammar = """
     S: EMPTY "First";
@@ -77,7 +77,7 @@ def test_reserved_symbol_names():
     """
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
-    assert 'is reserved' in str(e)
+    assert 'is reserved' in str(e.value)
 
 
 def test_assoc_prior():
@@ -154,7 +154,7 @@ def test_no_terminal_associavitity():
         Grammar.from_string(grammar)
 
     assert 'Expected: : but found <NotComment(};)> or <}(})>' \
-        in str(e)
+        in str(e.value)
 
 
 def test_terminal_empty_body():
@@ -238,7 +238,7 @@ def test_multiple_grammar_action_raises_error():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Multiple' in str(e)
+    assert 'Multiple' in str(e.value)
 
 
 def test_action_override():

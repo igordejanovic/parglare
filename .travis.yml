@@ -1,4 +1,3 @@
-sudo: false
 language: python
 python:
     - "3.4"
@@ -6,8 +5,12 @@ python:
     - "3.6"
     - "3.7"
     - "3.8"
+
 install:
-    - pip install -U tox-travis pip setuptools setuptools_scm wheel
-    - python3 ./setup.py bdist_wheel
-    - pip install ./dist/*.whl
-script: tox
+    - ./install-test.sh
+
+script:
+    - ./runtests.sh
+
+after_success:
+    - coveralls

@@ -111,8 +111,7 @@ def compile_get_grammar_table(grammar_file, debug, colors, prefer_shifts,
                           .format(len(table.sr_conflicts))
             a_print(message)
             prints("Either use 'prefer_shifts' parser mode, try to resolve "
-                   "manually, or use GLR parsing.".format(
-                       len(table.sr_conflicts)))
+                   "manually, or use GLR parsing.")
         if table.rr_conflicts:
             if len(table.rr_conflicts) == 1:
                 message = 'There is 1 Reduce/Reduce conflict.'

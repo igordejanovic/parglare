@@ -26,8 +26,8 @@ def test_infinite_recursions():
     with pytest.raises(GrammarError) as e:
         Parser(g)
 
-    assert 'First set empty for grammar symbol "Elements"' in str(e)
-    assert 'infinite recursion' in str(e)
+    assert 'First set empty for grammar symbol "Elements"' in str(e.value)
+    assert 'infinite recursion' in str(e.value)
 
 
 def test_terminals_with_different_names():
@@ -46,9 +46,9 @@ def test_terminals_with_different_names():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'B' in str(e)
-    assert 'd' in str(e)
-    assert 'match the same string' in str(e)
+    assert 'B' in str(e.value)
+    assert 'd' in str(e.value)
+    assert 'match the same string' in str(e.value)
 
 
 def todo_test_grammar_without_valid_inputs():
