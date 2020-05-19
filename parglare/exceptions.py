@@ -54,7 +54,7 @@ def expected_symbols_str(symbols):
 
 
 def disambiguation_error(tokens):
-    return 'Can\'t disambiguate between: {}'.format(
+    return "Can't disambiguate between: {}".format(
                 _(' or ').join(sorted([str(t) for t in tokens])))
 
 

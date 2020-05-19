@@ -65,6 +65,7 @@ class GLRParser(Parser):
         """
         pass
 
+    # noinspection PyAttributeOutsideInit
     def parse(self, input_str, position=0, file_name=None, context=None):
         """
         Parses the given input string.
@@ -278,8 +279,8 @@ class GLRParser(Parser):
                             else:
                                 self.finish_head = head
 
-                        # This break is supicious.
-                        # It prevents from ivestigating posibilities past
+                        # This break is suspicious.
+                        # It prevents from investigating possibilities past
                         # accepting state. Without it test_cyclic_grammar_1
                         # fails returning more than one parse.
                         break
@@ -298,7 +299,8 @@ class GLRParser(Parser):
                             " token:", _(str(token)), level=1, new_line=True)
 
     def _do_shifts(self):
-        """Perform all shifts.
+        """
+        Perform all shifts.
 
         Heads that are shifted successfully will be new candidates for
         reducing. If head is not shifted we have a dying head. They will be
@@ -342,7 +344,8 @@ class GLRParser(Parser):
                 assert False, "No shift operation possible."
 
     def _reduce(self, head, production):
-        """Executes reduce operation for the given head and production.
+        """
+        Executes reduce operation for the given head and production.
         """
         debug = self.debug
         self.context = context = head.context
@@ -463,7 +466,8 @@ class GLRParser(Parser):
                     print()
 
     def _shift(self, head, state, context):
-        """Execute shift operation at the given position to the given state.
+        """
+        Execute shift operation at the given position to the given state.
 
         Shift token determined by the given state from input at given position
         and create the new head. Parents will be all nodes that had shift
@@ -548,7 +552,8 @@ class GLRParser(Parser):
 
     def _merge_create_head(self, new_head, old_head, root_head, subresults,
                            any_empty, all_empty):
-        """Adds new head or merges if already exist on the stack. Executes semantic
+        """
+        Adds new head or merges if already exist on the stack. Executes semantic
         actions. Detects automata looping.
         """
 
@@ -610,7 +615,7 @@ class GLRParser(Parser):
           report (what is found ahead if anything can be recognized).
         - for all last shifted heads, simulate parsing for each of possible
           lookaheads in the head's state until either SHIFT or ACCEPT is
-          successfuly executed. Collect each possible lookahead where this is
+          successfully executed. Collect each possible lookahead where this is
           achieved for reporting. This will be another part of the error
           report (what is expected).
         """
@@ -895,7 +900,7 @@ class GSSNode(object):
 
     @property
     def key(self):
-        """Head unique idenfier used for dot trace."""
+        """Head unique identifier used for dot trace."""
         return "head_{}_{}_{}".format(self.context.state.state_id,
                                       self.context.start_position,
                                       self.context.end_position)

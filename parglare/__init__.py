@@ -9,3 +9,5 @@ from parglare.grammar import Grammar, NonTerminal, Terminal, \
 from parglare.common import get_collector
 from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
     DisambiguationError
+
+from .version import __version__
