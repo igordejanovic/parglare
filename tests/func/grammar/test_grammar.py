@@ -256,11 +256,11 @@ def test_action_override():
     """
     grammar = """
     S: Foo Bar;
-    @pass_nochange
+    @nochange
     Bar: "1" a;
 
     terminals
-    @pass_nochange
+    @nochange
     Foo: 'foo';
     a: "a";
     """
@@ -272,7 +272,7 @@ def test_action_override():
     assert result == ["foo", ["1", "a"]]
 
     class MyActions(Actions):
-        def pass_nochange(self, nodes):
+        def nochange(self, nodes):
             if self.context.symbol.name == 'Foo':
                 return "eggs"
             elif self.context.symbol.name == 'Bar':
@@ -295,7 +295,7 @@ def test_production_actions():
     action.
     """
     grammar = """
-    @pass_single
+    @single
     E: E '+' E {@add}
      | E '-' E {@sub}
      | num;
@@ -309,7 +309,7 @@ def test_production_actions():
 
     class MyActions(Actions):
         def __init__(self):
-            self.pass_single_calls = 0
+            self.single_calls = 0
 
         def num(self, value):
             self.num_called = True
@@ -323,8 +323,8 @@ def test_production_actions():
             self.sub_called = True
             return n[0] - n[2]
 
-        def pass_single(self, n):
-            self.pass_single_calls += 1
+        def single(self, n):
+            self.single_calls += 1
             assert self.context.symbol.name == 'E'
             assert len(n) == 1
             return n[0]
@@ -333,7 +333,7 @@ def test_production_actions():
     p = Parser(g, actions=actions)
     result = p.parse(input_str)
     assert result == 1
-    assert actions.pass_single_calls == 3
+    assert actions.single_calls == 3
     assert all([actions.num_called,
                 actions.add_called,
                 actions.sub_called])

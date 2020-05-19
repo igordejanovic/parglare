@@ -14,25 +14,25 @@ class Actions(object):
     Default base class for parglare actions subclasses. Defines
     common actions.
     """
-    def pass_none(self, value):
+    def none(self, value):
         return None
 
-    def pass_nochange(self, value):
+    def nochange(self, value):
         return value
 
-    def pass_empty(self, value):
+    def empty(self, value):
         """
         Used for EMPTY production alternative in collect.
         """
         return []
 
-    def pass_single(self, nodes):
+    def single(self, nodes):
         """
         Unpack single value and pass up.
         """
         return nodes[0]
 
-    def pass_inner(self, nodes):
+    def inner(self, nodes):
         """
         Pass inner value up, e.g. for stripping parentheses as in
         `( <some expression> )`.
@@ -89,7 +89,7 @@ class Actions(object):
         Used for productions of the form - one or more elements:
         Elements: Elements Element | Element;
         """
-        return [self.collect_first, self.pass_nochange][self.prod_idx](nodes)
+        return [self.collect_first, self.nochange][self.prod_idx](nodes)
 
     def collect_sep(self, nodes):
         """
@@ -97,7 +97,7 @@ class Actions(object):
         Elements: Elements "," Element | Element;
         """
         return [self.collect_first_sep,
-                self.pass_nochange][self.prod_idx](nodes)
+                self.nochange][self.prod_idx](nodes)
 
     def collect_optional(self, nodes):
         """
@@ -105,7 +105,7 @@ class Actions(object):
         Elements: Elements Element | Element | EMPTY;
         """
         return [self.collect_first,
-                self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
+                self.nochange, self.empty][self.prod_idx](nodes)
 
     def collect_sep_optional(self, nodes):
         """
@@ -113,7 +113,7 @@ class Actions(object):
         Elements: Elements "," Element | Element | EMPTY;
         """
         return [self.collect_first_sep,
-                self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
+                self.nochange, self.empty][self.prod_idx](nodes)
 
     def collect_right(self, nodes):
         """
@@ -121,7 +121,7 @@ class Actions(object):
         Elements: Element Elements | Element;
         """
         return [self.collect_right_first,
-                self.pass_nochange][self.prod_idx](nodes)
+                self.nochange][self.prod_idx](nodes)
 
     def collect_right_sep(self, nodes):
         """
@@ -129,7 +129,7 @@ class Actions(object):
         Elements: Element "," Elements | Element;
         """
         return [self.collect_right_first_sep,
-                self.pass_nochange][self.prod_idx](nodes)
+                self.nochange][self.prod_idx](nodes)
 
     def collect_right_optional(self, nodes):
         """
@@ -137,7 +137,7 @@ class Actions(object):
         Elements: Element Elements | Element | EMPTY;
         """
         return [self.collect_right_first,
-                self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
+                self.nochange, self.empty][self.prod_idx](nodes)
 
     def collect_right_sep_optional(self, nodes):
         """
@@ -145,14 +145,14 @@ class Actions(object):
         Elements: Element "," Elements | Element | EMPTY;
         """
         return [self.collect_right_first_sep,
-                self.pass_nochange, self.pass_empty][self.prod_idx](nodes)
+                self.nochange, self.empty][self.prod_idx](nodes)
 
     def optional(self, nodes):
         """
         Used for the production of the form:
         OptionalElement: Element | EMPTY;
         """
-        return [self.pass_single, self.pass_none][self.prod_idx](nodes)
+        return [self.single, self.none][self.prod_idx](nodes)
 
     def obj(self, nodes, **attrs):
         """
@@ -171,4 +171,4 @@ class Actions(object):
         return instance
 
     def EMPTY(self, nodes):
-        return self.pass_none(nodes)
+        return self.none(nodes)

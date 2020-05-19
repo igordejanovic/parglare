@@ -7,8 +7,8 @@ grammar = r"""
      | E '*' E  {left, 2}
      | E '/' E  {left, 2}
      | E '^' E  {right, 3}
-     | '(' E ')' {@pass_inner}
-     | number {@pass_single};
+     | '(' E ')' {@inner}
+     | number {@single};
 
 terminals
 number: /\d+(\.\d+)?/;

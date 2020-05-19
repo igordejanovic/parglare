@@ -117,7 +117,7 @@ def test_expressions():
 
     class MyActions(Actions):
         def s(self, nodes):
-            return self.pass_single(nodes)
+            return self.single(nodes)
 
         def E(self, nodes):
             return [

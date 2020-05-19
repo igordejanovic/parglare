@@ -37,7 +37,7 @@ class MyActions(Actions):
 
     def E(self, nodes):
         self.called[1] = True
-        return [self.sum, self.pass_single][self.prod_idx](nodes)
+        return [self.sum, self.single][self.prod_idx](nodes)
 
     def number(self, value):
         self.called[2] = True

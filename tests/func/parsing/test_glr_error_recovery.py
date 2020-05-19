@@ -20,7 +20,7 @@ number: /\d+(\.\d+)?/;
 
 class MyActions(Actions):
     def Result(self, n):
-        return self.pass_single(n)
+        return self.single(n)
 
     def E(self, n):
         return [lambda n: n[0] + n[2],

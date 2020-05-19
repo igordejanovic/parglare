@@ -12,7 +12,7 @@ def get_actions():
             return float(value)
 
         def E(self, nodes):
-            return [self.sum_act, self.pass_act][self.prod_idx](nodes)
+            return [self.sum_act, self.act][self.prod_idx](nodes)
 
         def sum_act(self, nodes):
             return nodes[0] + nodes[2]
@@ -24,12 +24,12 @@ def get_actions():
                 return nodes[0]
 
         def F(self, nodes):
-            return [self.parenthesses_act, self.pass_act][self.prod_idx](nodes)
+            return [self.parenthesses_act, self.act][self.prod_idx](nodes)
 
         def parenthesses_act(self, nodes):
             return nodes[1]
 
-        def pass_act(self, nodes):
+        def act(self, nodes):
             return nodes[0]
 
     return MyActions()

@@ -39,8 +39,8 @@ grammar = r"""
      | E '*' E  {left, 2}
      | E '/' E  {left, 2}
      | E '^' E  {right, 3}
-     | '(' E ')' {@pass_inner}
-     | number {@pass_single};
+     | '(' E ')' {@inner}
+     | number {@single};
 
 terminals
 number: /\d+(\.\d+)?/;
@@ -72,10 +72,10 @@ The actions for the grammar is defined as class `MyActions` which inherits
 defined for rule `E` by specifying `@op` before the rule name. By default
 parglare will match the action by the rule name, but if different action name is
 provided in the grammar it will be used instead. We can also see that the action
-can be defined per production (as `@pass_inner` given for production `'(' E
-')'`). If the action is defined for production it will take precedence over rule
-level action. Thus, in this example for each production of rule `E` action `op`
-will be called except for the two last production where action is redefined.
+can be defined per production (as `@inner` given for production `'(' E ')'`). If
+the action is defined for production it will take precedence over rule level
+action. Thus, in this example for each production of rule `E` action `op` will
+be called except for the two last production where action is redefined.
 
 The `MyActions` class has `op` and `number` methods. `op` method is the action
 referenced by the `E` rule while `number` will be called for terminal rule
@@ -152,18 +152,18 @@ to reference some of these actions directly.
 
 Following are parglare built-in actions from the `parglare.Actions` class:
 
-- **pass_none** - returns `None`;
+- **none** - returns `None`;
 
-- **pass_nochange** - returns parameter of action callable (`value` or `nodes`)
+- **nochange** - returns parameter of action callable (`value` or `nodes`)
   unchanged;
 
-- **pass_empty** - returns an empty list `[]`;
+- **empty** - returns an empty list `[]`;
 
-- **pass_single** - returns `n[0]`. Used implicitly by rules where all
-  productions have only a single rule reference on the RHS;
+- **single** - returns `n[0]`. Used implicitly by rules where all productions
+  have only a single rule reference on the RHS;
 
-- **pass_inner** - returns `n[1:-1]` or `n[1] if len(nodes)==3`. Handy to
-  extract sub-expression value for values in parentheses;
+- **inner** - returns `n[1:-1]` or `n[1] if len(nodes)==3`. Handy to extract
+  sub-expression value for values in parentheses;
 
 - **collect** - Used for rules of the form `Elements: Elements Element |
   Element;`. Implicitly used for `+` operator (one-or-more). Returns list;

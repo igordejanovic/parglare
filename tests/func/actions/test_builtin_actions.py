@@ -7,7 +7,7 @@ def test_collect_left():
     grammar = """
     @collect
     Elements: Elements Element | Element;
-    @pass_single
+    @single
     Element: "a" | "b";
     """
 
@@ -24,7 +24,7 @@ def test_collect_left_optional():
     grammar = """
     @collect_optional
     Elements: Elements Element | Element | EMPTY;
-    @pass_single
+    @single
     Element: "a" | "b";
     """
 
@@ -44,7 +44,7 @@ def test_collect_left_sep():
     grammar = """
     @collect_sep
     Elements: Elements "," Element | Element;
-    @pass_single
+    @single
     Element: "a" | "b";
     """
 
@@ -61,7 +61,7 @@ def test_collect_left_sep_optional():
     grammar = """
     @collect_sep_optional
     Elements: Elements "," Element | Element | EMPTY;
-    @pass_single
+    @single
     Element: "a" | "b";
     """
 
@@ -81,7 +81,7 @@ def test_collect_right():
     grammar = """
     @collect_right
     Elements: Element Elements | Element;
-    @pass_single
+    @single
     Element: "a" | "b";
     """
 
@@ -98,7 +98,7 @@ def test_collect_right_optional():
     grammar = """
     @collect_right_optional
     Elements: Element Elements | Element | EMPTY;
-    @pass_single
+    @single
     Element: "a" | "b";
     """
 
@@ -118,7 +118,7 @@ def test_collect_right_sep():
     grammar = """
     @collect_right_sep
     Elements: Element "," Elements | Element;
-    @pass_single
+    @single
     Element: "a" | "b";
     """
 
@@ -135,7 +135,7 @@ def test_collect_right_sep_optional():
     grammar = """
     @collect_right_sep_optional
     Elements: Element "," Elements | Element | EMPTY;
-    @pass_single
+    @single
     Element: "a" | "b";
     """
 

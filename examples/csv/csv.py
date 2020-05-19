@@ -2,18 +2,18 @@ from __future__ import unicode_literals
 from parglare import Grammar, Parser
 
 grammar = r"""
-@pass_inner
+@inner
 CSVFile: OptionalNewLines Records OptionalNewLines;
 @collect_sep
 Records: Records OptionalNewLines Record| Record;
-@pass_single
+@single
 Record: Fields NewLine;
 @collect_sep
 Fields: Fields "," Field | Field;
 Field: QuotedField | FieldContent;
 NewLines: NewLine | NewLines NewLine;
 OptionalNewLines: NewLines | EMPTY;
-@pass_inner
+@inner
 QuotedField: "\"" FieldContentQuoted "\"";
 
 terminals

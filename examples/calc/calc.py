@@ -11,9 +11,9 @@ Assignment: VariableName "=" Number;
      | E "-" E {left, 1}
      | E "*" E {left, 2}
      | E "/" E {left, 2}
-     | "(" E ")" {@pass_inner}
-     | VariableRef {@pass_single}
-     | Number {@pass_single}
+     | "(" E ")" {@inner}
+     | VariableRef {@single}
+     | Number {@single}
 ;
 
 VariableRef: VariableName;

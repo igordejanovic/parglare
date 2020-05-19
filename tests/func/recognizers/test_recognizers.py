@@ -14,7 +14,7 @@ def test_parse_list_of_integers():
                       | int_less_than_five;
 
     terminals
-    @pass_single
+    @single
     int_less_than_five:;
     """
 
@@ -77,7 +77,7 @@ def test_parse_list_of_integers_lexical_disambiguation():
                       | int_less_than_five;
 
     terminals
-    @pass_single int_less_than_five:;
+    @single int_less_than_five:;
     ascending:;
     """
 

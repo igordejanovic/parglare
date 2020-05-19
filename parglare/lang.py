@@ -128,8 +128,8 @@ pg_grammar = {
                 {'production': ['NOPSE']},
                 {'production': ['PSE']},
                 {'production': ['INT'], 'action': 'meta_data_priority'},
-                {'production': ['ACTION'], 'action': 'pass_single'},
-                {'production': ['UserMetaData'], 'action': 'pass_single'},
+                {'production': ['ACTION'], 'action': 'single'},
+                {'production': ['UserMetaData'], 'action': 'single'},
             ]
         },
         'ProdMetaDatas': {
@@ -151,7 +151,7 @@ pg_grammar = {
                 {'production': ['NOFINISH']},
                 {'production': ['DYNAMIC']},
                 {'production': ['INT'], 'action': 'meta_data_priority'},
-                {'production': ['UserMetaData'], 'action': 'pass_single'},
+                {'production': ['UserMetaData'], 'action': 'single'},
             ]
         },
         'TermMetaDatas': {
@@ -189,13 +189,13 @@ pg_grammar = {
             ]
         },
         'PlainAssignment': {
-            'action': 'pass_nochange',
+            'action': 'nochange',
             'productions': [
                 {'production': ['NAME', 'EQUAL', 'GSymbolReference']},
             ]
         },
         'BoolAssignment': {
-            'action': 'pass_nochange',
+            'action': 'nochange',
             'productions': [
                 {'production': ['NAME', 'BOOLEQUAL', 'GSymbolReference']},
             ]
@@ -232,7 +232,7 @@ pg_grammar = {
             'productions': [
                 {'production': ['OPENSQUARED', 'OptRepModifiers',
                                 'CLOSEDSQUARED'],
-                 'action': 'pass_inner'},
+                 'action': 'inner'},
                 {'production': ['EMPTY']},
             ]
         },
@@ -257,7 +257,7 @@ pg_grammar = {
         'Recognizer': {
             'productions': [
                 {'production': ['STR'], 'action': 'RecognizerStr'},
-                {'production': ['REGEX'], 'action': 'pass_single'},
+                {'production': ['REGEX'], 'action': 'single'},
             ]
         },
 
