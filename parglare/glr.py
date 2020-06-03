@@ -14,7 +14,7 @@ from .termui import prints, h_print, a_print
 
 def no_colors(f):
     """
-    Decorator for trace methods to prevent ANSI COLOR codes apearing in
+    Decorator for trace methods to prevent ANSI COLOR codes appearing in
     the trace dot output.
     """
     def nc_f(*args, **kwargs):
@@ -141,7 +141,7 @@ class GLRParser(Parser):
                                 level=1)
                         h_print("Tokens found:", self.tokens_ahead, level=1)
 
-            # After error reporing do error recovery if enabled.
+            # After error reporting do error recovery if enabled.
             if self.error_recovery:
                 if not self.heads_for_reduce and not self.finish_head:
                     if self.heads_for_recovery:
@@ -195,9 +195,7 @@ class GLRParser(Parser):
         return results
 
     def _do_reductions(self):
-        """
-        Reduces active heads until no more heads can be reduced.
-        """
+        """Reduces active heads until no more heads can be reduced."""
         debug = self.debug
         if debug:
             a_print("**REDUCING HEADS", new_line=True)
@@ -278,8 +276,8 @@ class GLRParser(Parser):
                             else:
                                 self.finish_head = head
 
-                        # This break is supicious.
-                        # It prevents from ivestigating posibilities past
+                        # This break is suspicious.
+                        # It prevents from investigating possibilities past
                         # accepting state. Without it test_cyclic_grammar_1
                         # fails returning more than one parse.
                         break
@@ -298,12 +296,12 @@ class GLRParser(Parser):
                             " token:", _(str(token)), level=1, new_line=True)
 
     def _do_shifts(self):
-        """Perform all shifts.
+        """
+        Perform all shifts.
 
         Heads that are shifted successfully will be new candidates for
         reducing. If head is not shifted we have a dying head. They will be
         collected for error recovery if enabled.
-
         """
         debug = self.debug
         if self.debug:
@@ -342,8 +340,7 @@ class GLRParser(Parser):
                 assert False, "No shift operation possible."
 
     def _reduce(self, head, production):
-        """Executes reduce operation for the given head and production.
-        """
+        """Executes reduce operation for the given head and production."""
         debug = self.debug
         self.context = context = head.context
 
@@ -416,7 +413,7 @@ class GLRParser(Parser):
                                       parent_subres, path_has_empty,
                                       path_all_empty))
 
-            # Favour non-empty paths if exists or partialy empty.
+            # Favour non-empty paths if exists or partially empty.
             # In none of those exist use empty paths.
             non_empty = [r for r in roots if not r[3] and not r[4]]
             if non_empty:
@@ -463,7 +460,8 @@ class GLRParser(Parser):
                     print()
 
     def _shift(self, head, state, context):
-        """Execute shift operation at the given position to the given state.
+        """
+        Execute shift operation at the given position to the given state.
 
         Shift token determined by the given state from input at given position
         and create the new head. Parents will be all nodes that had shift
@@ -548,8 +546,9 @@ class GLRParser(Parser):
 
     def _merge_create_head(self, new_head, old_head, root_head, subresults,
                            any_empty, all_empty):
-        """Adds new head or merges if already exist on the stack. Executes semantic
-        actions. Detects automata looping.
+        """
+        Adds new head or merges if already exist on the stack. Executes
+        semantic actions. Detects automata looping.
         """
 
         debug = self.debug
@@ -610,7 +609,7 @@ class GLRParser(Parser):
           report (what is found ahead if anything can be recognized).
         - for all last shifted heads, simulate parsing for each of possible
           lookaheads in the head's state until either SHIFT or ACCEPT is
-          successfuly executed. Collect each possible lookahead where this is
+          successfully executed. Collect each possible lookahead where this is
           achieved for reporting. This will be another part of the error
           report (what is expected).
         """
@@ -630,9 +629,9 @@ class GLRParser(Parser):
                     head.for_token(Token(possible_lookahead, [])))
 
     def _do_recovery(self, error):
-        """If recovery is enabled, does error recovery for the heads in
+        """
+        If recovery is enabled, does error recovery for the heads in
         heads_for_recovery.
-
         """
         debug = self.debug
         for head in self.heads_for_recovery:
@@ -762,7 +761,8 @@ class GLRParser(Parser):
 
 
 class GSSNode(object):
-    """Graphs Structured Stack node.
+    """
+    Graphs Structured Stack node.
 
     Attributes:
         context(Context): The parsing context.
@@ -799,7 +799,8 @@ class GSSNode(object):
             (other.any_empty and not self.any_empty)
 
     def merge_head(self, other, parser):
-        """Merge same top stack nodes.
+        """
+        Merge same top stack nodes.
 
         Merge will be succesfull only if this node is "more empty" than the
         other node.
@@ -842,13 +843,13 @@ class GSSNode(object):
             h_print("  to head:", parent, level=4)
 
     def for_token(self, token):
-        """Create head for the given token either by returning this head if the
+        """
+        Create head for the given token either by returning this head if the
         token is appropriate or making a clone.
 
         This is used to support lexical ambiguity. Multiple tokens might be
         matched at the same state and position. In this case parser should
         fork and this is done by cloning stack head.
-
         """
         if self.context.token_ahead is None:
             self.context.token_ahead = token
@@ -865,9 +866,9 @@ class GSSNode(object):
             return new_head
 
     def __eq__(self, other):
-        """Stack nodes are equal if they are on the same position in the
+        """
+        Stack nodes are equal if they are on the same position in the
         same state for the same lookahead token.
-
         """
         return self.context.state.state_id == other.context.state.state_id \
             and self.context.start_position == other.context.start_position \
@@ -895,7 +896,7 @@ class GSSNode(object):
 
     @property
     def key(self):
-        """Head unique idenfier used for dot trace."""
+        """Head unique identifier used for dot trace."""
         return "head_{}_{}_{}".format(self.context.state.state_id,
                                       self.context.start_position,
                                       self.context.end_position)
