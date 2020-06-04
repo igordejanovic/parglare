@@ -25,9 +25,21 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ### Changed
 
+  - GLR implementation rework and cleanup. Corrected handling of EMPTY
+    reductions. Support for full CFG set. Better tracing output. (possible
+    **(BIC)**)
+  - Dynamic disambiguation filter parameters change (**(BIC)**, see the docs)
   - Moved project meta-data to `setup.cfg` and introduced git based versioning
     using [setuptools_scm](https://github.com/pypa/setuptools_scm/). Thanks
     KOLANICH@GitHub ([#104]).
+
+### Fixes
+
+  - During GLR rework several bugs are fixed:
+    - Wrong positions reported with GLR and EMPTY. Reported by Hyldrean@GitHub
+      (see [#110])
+    - Issue with handling of EMPTY productions in ambiguous grammars. Reported
+      by johnw3d@GitHub and stuartlangridge@GitHub (see [#112], [#114])
 
 
 ## [0.12.0] (released: 2020-02-07)

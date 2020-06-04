@@ -29,23 +29,29 @@ g = Grammar.from_string(grammar)
 operations = []
 
 
-def custom_disambiguation_filter(context, action, subresults):
-    """Make first operation that appears in the input as lower priority.
+def custom_disambiguation_filter(context, from_state, to_state, action,
+                                 subresults):
+    """
+    Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
     """
     global operations
 
-    # At the start of parsing this function is called with actions set to
-    # None to give a change for the strategy to initialize.
+    # At the start of parsing this function is called with actions set to None
+    # to give a chance for the strategy to initialize.
     if action is None:
         operations = []
         return
 
-    op_ahead = context.token_ahead.symbol
-    actions = context.state.actions[op_ahead]
-    if op_ahead not in operations and op_ahead.name != 'STOP':
-        operations.append(op_ahead)
+    if action is SHIFT:
+        operation = context.token.symbol
+    else:
+        operation = context.token_ahead.symbol
+
+    actions = from_state.actions[operation]
+    if operation not in operations and operation.name != 'STOP':
+        operations.append(operation)
 
     if action is SHIFT:
         shifts = [a for a in actions if a.action is SHIFT]
@@ -57,7 +63,7 @@ def custom_disambiguation_filter(context, action, subresults):
             return True
 
         red_op = reductions[0].prod.rhs[1]
-        return operations.index(op_ahead) > operations.index(red_op)
+        return operations.index(operation) > operations.index(red_op)
 
     elif action is REDUCE:
 
@@ -65,8 +71,8 @@ def custom_disambiguation_filter(context, action, subresults):
         red_op = context.production.rhs[1]
 
         # If operation ahead is STOP or is of less or equal priority -> reduce.
-        return ((op_ahead not in operations)
-                or (operations.index(op_ahead)
+        return ((operation not in operations)
+                or (operations.index(operation)
                     <= operations.index(red_op)))
 
 

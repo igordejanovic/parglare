@@ -69,20 +69,21 @@ class Location(object):
                     .format("{}:".format(self.file_name)
                             if self.file_name else "",
                             line, column,
-                            position_context(self)))
+                            position_context(self.input_str,
+                                             self.position)))
         elif self.file_name:
             return _a(self.file_name)
         else:
             return "<Unknown location>"
 
 
-def position_context(context):
+def position_context(input_str, position):
     """
     Returns position context string.
     """
-    start = max(context.position-10, 0)
-    c = text(context.input_str[start:context.position]) + _a(" **> ") \
-        + text(context.input_str[context.position:context.position+10])
+    start = max(position-10, 0)
+    c = text(input_str[start:position]) + _a(" **> ") \
+        + text(input_str[position:position+10])
     return replace_newlines(c)
 
 

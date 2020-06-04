@@ -197,7 +197,7 @@ class Parser(object):
 
             if context.token_ahead is None:
                 if not self.in_layout:
-                    self._skipws(context)
+                    self._skipws(context, input_str)
                     if self.debug:
                         h_print("Layout content:",
                                 "'{}'".format(context.layout_content),
@@ -437,40 +437,37 @@ class Parser(object):
 
         return context
 
-    def _skipws(self, context):
+    def _skipws(self, head, input_str):
 
-        in_len = len(context.input_str)
-        context.layout_content_ahead = ''
+        in_len = len(input_str)
+        layout_content_ahead = ''
 
         if self.layout_parser:
-            _, pos = self.layout_parser.parse(
-                context.input_str, context.position, context=copy(context))
-            if pos > context.position:
-                context.layout_content_ahead = \
-                    context.input_str[context.position:pos]
-                context.position = pos
+            _, pos = self.layout_parser.parse(input_str, head.position)
+            if pos > head.position:
+                layout_content_ahead = input_str[head.position:pos]
+                head.position = pos
         elif self.ws:
-            old_pos = context.position
+            old_pos = head.position
             try:
-                while context.position < in_len \
-                      and context.input_str[context.position] in self.ws:
-                    context.position += 1
+                while head.position < in_len \
+                      and input_str[head.position] in self.ws:
+                    head.position += 1
             except TypeError:
                 raise ParserInitError(
                     "For parsing non-textual content please "
                     "set `ws` to `None`.")
-            context.layout_content_ahead = \
-                context.input_str[old_pos:context.position]
+            layout_content_ahead = input_str[old_pos:head.position]
 
         if self.debug:
-            content = context.layout_content_ahead
-            if type(context.layout_content_ahead) is text:
+            content = layout_content_ahead
+            if type(layout_content_ahead) is text:
                 content = content.replace("\n", "\\n")
             h_print("Skipping whitespaces:",
-                    "'{}'".format(content), level=1)
-            h_print("New position:", pos_to_line_col(context.input_str,
-                                                     context.position),
-                    level=1)
+                    "'{}'".format(content))
+            h_print("New position:", pos_to_line_col(input_str,
+                                                     head.position))
+        head.layout_content_ahead = layout_content_ahead
 
     def _next_token(self, context):
         tokens = self._next_tokens(context)

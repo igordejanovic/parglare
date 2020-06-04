@@ -132,7 +132,7 @@ def test_expressions():
     Number: /\d+/;
     """
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, actions=actions, debug=True)
+    p = GLRParser(g, actions=actions)
 
     # Even this simple expression has 2 different interpretations
     # (4 + 2) * 3 and
@@ -201,7 +201,7 @@ def test_epsilon_grammar():
     """
 
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, debug=True)
+    p = GLRParser(g)
 
     txt = """
     First = One Two three
@@ -240,7 +240,7 @@ def test_no_consume_input_multiple_trees():
     Third = Baz
     """
 
-    p = GLRParser(g_nonempty, consume_input=False, debug=True)
+    p = GLRParser(g_nonempty, consume_input=False)
     results = p.parse(txt)
     # There are eight succesful parses:
     # 1. First = One
