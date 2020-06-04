@@ -382,10 +382,9 @@ class GLRParser(Parser):
                         "choose only non-empty if possible:"
                         .format(prod_len), level=1)
                 h_print("start node=",
-                        "[{}], symbol={}, empty=[{},{}], "
+                        "[{}], symbol={}, "
                         "length={}".format(head, context.state.symbol,
-                                           head.any_empty,
-                                           head.all_empty, prod_len), level=2)
+                                           prod_len), level=2)
             roots = []
             while to_process:
                 node, first_head_context, subresults, length, path_has_empty,\
@@ -397,14 +396,9 @@ class GLRParser(Parser):
                             .format(prod_len - length,
                                     " - ROOT" if not length else ""),
                             level=2)
-                for parent, res, any_empty, all_empty in node.parents:
-                    path_has_empty = path_has_empty or any_empty
-                    path_all_empty = path_all_empty and all_empty
+                for parent, res in node.parents:
                     if debug:
-                        h_print("", "parent=[{}]: path_any_empty={}, "
-                                "path_all_empty={}"
-                                .format(parent,
-                                        path_has_empty, path_all_empty),
+                        h_print("", "parent=[{}]: ".format(parent),
                                 level=3)
                     parent_subres = [res] + subresults
                     if length:
@@ -481,7 +475,7 @@ class GLRParser(Parser):
             # If this token has already been shifted connect
             # shifted head to this head.
             result = shifted_head.parents[0][1]
-            shifted_head.create_link(head, result, False, False, self)
+            shifted_head.create_link(head, result, self)
             if debug and self.debug_trace:
                 self._trace_step(head, shifted_head, head,
                                  "S:{}({})".format(
@@ -530,7 +524,7 @@ class GLRParser(Parser):
                                          dot_escape(token.symbol.name),
                                          dot_escape(token.value)))
 
-            new_head.create_link(head, result, False, False, self)
+            new_head.create_link(head, result, self)
 
     def _add_to_heads_for_shift(self, new_head):
         """Adds new head for shift or merges if already added."""
@@ -546,10 +540,9 @@ class GLRParser(Parser):
                         level=1, new_line=True)
             self.heads_for_shift.append(new_head)
 
-    def _merge_create_head(self, new_head, old_head, root_head, subresults,
-                           any_empty, all_empty):
+    def _merge_create_head(self, new_head, old_head, root_head, subresults):
         """Adds new head or merges if already exist on the stack. Executes semantic
-        actions. Detects automata looping.
+        actions.
         """
 
         debug = self.debug
@@ -562,17 +555,6 @@ class GLRParser(Parser):
                 a_print("Looping automata transition.", level=1)
             result = self._call_reduce_action(context, subresults)
             old_head.parents.append((old_head, result, True, True))
-
-        if all_empty and new_head in self.reducing_heads:
-            # Detect automata loop. If we are reducing to the head we already
-            # had and the new head is empty we have a loop due to EMPTY
-            # reductions.
-            if debug:
-                a_print("Automata loop detected. ",
-                        "Rejecting the new head: {}".format(str(new_head)),
-                        level=1)
-                if self.debug_trace:
-                    self._trace_step_kill(old_head)
             return
 
         result = self._call_reduce_action(context, subresults)
@@ -580,13 +562,12 @@ class GLRParser(Parser):
         for head in chain(self.heads_for_reduce,
                           [self.finish_head] if self.finish_head else []):
             if head == new_head:
-                new_head.create_link(root_head, result, any_empty, all_empty,
-                                     self)
-                if head.merge_head(new_head, self):
-                    if self.debug and self.debug_trace:
-                        self._trace_step(
-                            old_head, head, root_head,
-                            "R:{}".format(dot_escape(context.production)))
+                new_head.create_link(root_head, result, self)
+                head.merge_head(new_head, self)
+                if self.debug and self.debug_trace:
+                    self._trace_step(
+                        old_head, head, root_head,
+                        "R:{}".format(dot_escape(context.production)))
                 break
         else:
             self.heads_for_reduce.append(new_head)
@@ -596,7 +577,7 @@ class GLRParser(Parser):
                     self._trace_head(new_head, "{}:{}".format(
                         new_head.context.state.state_id,
                         dot_escape(new_head.context.state.symbol.name)))
-            new_head.create_link(root_head, result, any_empty, all_empty, self)
+            new_head.create_link(root_head, result, self)
 
             if self.debug and self.debug_trace:
                 self._trace_step(old_head, new_head, root_head,
@@ -766,9 +747,7 @@ class GSSNode(object):
 
     Attributes:
         context(Context): The parsing context.
-        any_empty(bool): If some of this node parent links results are empty.
-        all_empty(bool): If all of this node parent link results are empty.
-        parents(list): list of (parent GSSNode, result, any_empty, all_empty)
+        parents(list): list of (parent GSSNode, result)
              Each stack node might have multiple parents which represent
              multiple path parse took to reach the current state. Each
              parent link keeps a result of semantic action executed during
@@ -776,16 +755,11 @@ class GSSNode(object):
              flag if any part of the result is obtained using epsilon/empty
              production.
     """
-    __slots__ = ['context', 'parents', 'any_empty', 'all_empty',
-                 'number_of_trees', '_hash']
+    __slots__ = ['context', 'parents', 'number_of_trees', '_hash']
 
     def __init__(self, context, number_of_trees=0):
         self.context = context
         context.head = self
-
-        # Initialize to neutral elements
-        self.any_empty = False
-        self.all_empty = True
 
         self.parents = []
         self.number_of_trees = number_of_trees
@@ -794,49 +768,20 @@ class GSSNode(object):
                            self.context.start_position,
                            self.context.token_ahead))
 
-    def less_empty(self, other):
-        return (other.all_empty and not self.all_empty) or \
-            (other.any_empty and not self.any_empty)
-
     def merge_head(self, other, parser):
-        """Merge same top stack nodes.
-
-        Merge will be succesfull only if this node is "more empty" than the
-        other node.
         """
-        # Reject merging if other node is "more empty"
-        if other.all_empty or self.less_empty(other):
-            if parser.debug:
-                h_print("Rejected merging of empty head: ", other, level=1)
-            return False
-        else:
-            if self.parents and other.less_empty(self):
-                if parser.debug:
-                    h_print("Merging less empty head to more empty",
-                            " -> less empty head wins.", level=1)
-                    if parser.debug_trace:
-                        for p in self.parents:
-                            parser._trace_step_drop(self, p[0])
-                self.any_empty = False
-                self.all_empty = True
-                self.parents = []
-                self.number_of_trees = 0
+        Merge same top stack nodes.
+        """
+        self.number_of_trees += other.number_of_trees
+        self.parents.extend(other.parents)
 
-            self.any_empty |= other.any_empty
-            self.all_empty &= other.all_empty
-            self.number_of_trees += other.number_of_trees
-            self.parents.extend(other.parents)
+        if parser.debug:
+            h_print("Merging head ", other, level=1)
+            h_print("to head", self, level=2)
 
-            if parser.debug:
-                h_print("Merging head ", other, level=1)
-                h_print("to head", self, level=2)
-            return True
-
-    def create_link(self, parent, result, any_empty, all_empty, parser):
-        self.parents.append((parent, result, any_empty, all_empty))
+    def create_link(self, parent, result, parser):
+        self.parents.append((parent, result))
         self.number_of_trees += parent.number_of_trees
-        self.any_empty |= any_empty
-        self.all_empty &= all_empty
         if parser.debug:
             h_print("Creating link \tfrom head:", self, level=2)
             h_print("  to head:", parent, level=4)
@@ -860,8 +805,6 @@ class GSSNode(object):
             context.token_ahead = token
             new_head = GSSNode(context, self.number_of_trees)
             new_head.parents = list(self.parents)
-            new_head.any_empty = self.any_empty
-            new_head.all_empty = self.all_empty
             return new_head
 
     def __eq__(self, other):
@@ -877,14 +820,14 @@ class GSSNode(object):
         return not self == other
 
     def __str__(self):
-        return _("<state={}:{}, id={}, pos={}, endpos={}{}, empty=[{},{}], "
+        return _("<state={}:{}, id={}, pos={}, endpos={}{}, "
                  "parents={}, trees={}>".format(
                      self.context.state.state_id, self.context.state.symbol,
                      id(self),
                      self.context.start_position, self.context.end_position,
                      ", token ahead={}".format(self.context.token_ahead)
                      if self.context.token_ahead is not None else "",
-                     self.any_empty, self.all_empty, len(self.parents),
+                     len(self.parents),
                      self.number_of_trees))
 
     def __repr__(self):
