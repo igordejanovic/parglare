@@ -545,17 +545,7 @@ class GLRParser(Parser):
         actions.
         """
 
-        debug = self.debug
         context = new_head.context
-
-        if new_head == old_head:
-            # Special case is reduction of empty production. For automata state
-            # self-reference create stack node loop.
-            if debug:
-                a_print("Looping automata transition.", level=1)
-            result = self._call_reduce_action(context, subresults)
-            old_head.parents.append((old_head, result, True, True))
-            return
 
         result = self._call_reduce_action(context, subresults)
 
