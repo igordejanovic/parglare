@@ -3,13 +3,12 @@ from __future__ import unicode_literals, print_function
 import codecs
 import logging
 import sys
-from copy import copy
 from .grammar import EMPTY, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, SRConflicts, RRConflicts, \
     expected_symbols_str
-from .common import Location, position_context
+from .common import Location, position_context, pos_to_line_col
 from .actions import pass_none
 from .termui import prints, h_print, a_print
 from parglare import termui
@@ -349,28 +348,16 @@ class Parser(object):
                 else:
                     return state_stack[1].results
 
-    def call_actions(self, node, context=None):
+    def call_actions(self, node):
         """
         Calls semantic actions for the given tree node.
         """
-        self.context = context = context if context else Context()
-        context.parser = self
-
-        def set_context(context, node):
-            context.start_position = node.start_position
-            context.end_position = node.end_position
-            context.node = node
-            context.production = None
-            context.token = None
-            context.layout_content = node.layout_content
-
         def inner_call_actions(node):
             sem_action = node.symbol.action
             if isinstance(node, NodeTerm):
                 if sem_action:
-                    set_context(context, node)
                     try:
-                        result = sem_action(context, node.value,
+                        result = sem_action(node.context, node.value,
                                             *node.additional_data)
                     except TypeError as e:
                         raise TypeError('{}: terminal={} action={} params={}'
@@ -378,7 +365,7 @@ class Parser(object):
                                             str(e),
                                             node.symbol.name,
                                             repr(sem_action),
-                                            (context, node.value,
+                                            (node.context, node.value,
                                              node.additional_data))) from e
                 else:
                     result = node.value
@@ -391,8 +378,6 @@ class Parser(object):
                 subresults.reverse()
 
                 if sem_action:
-                    set_context(context, node)
-                    context.production = node.production
                     assignments = node.production.assignments
                     if assignments:
                         assgn_results = {}
@@ -407,18 +392,18 @@ class Parser(object):
                             result = \
                                 sem_action[
                                     node.production.prod_symbol_id](
-                                        context, subresults, **assgn_results)
+                                        node, subresults, **assgn_results)
                         else:
                             result = \
                                 sem_action[
-                                    node.production.prod_symbol_id](context,
-                                                                    subresults)
+                                    node.production.prod_symbol_id](
+                                        node.context, subresults)
                     else:
                         if assignments:
-                            result = sem_action(context, subresults,
+                            result = sem_action(node.context, subresults,
                                                 **assgn_results)
                         else:
-                            result = sem_action(context, subresults)
+                            result = sem_action(node.context, subresults)
                 else:
                     if len(subresults) == 1:
                         # Unpack if single subresult
@@ -660,7 +645,7 @@ class Parser(object):
             if self.call_actions_during_tree_build and sem_action:
                 sem_action(context, token.value, *token.additional_data)
 
-            return treebuild_shift_action(context)
+            return NodeTerm(context)
 
         if sem_action:
             result = sem_action(context, token.value, *token.additional_data)
@@ -695,14 +680,11 @@ class Parser(object):
                 h_print("Building non-terminal node",
                         "'{}'.".format(production.symbol.name), level=2)
 
-            bt_result = treebuild_reduce_action(context, nodes=subresults)
+            bt_result = NodeNonTerm(context, children=subresults)
             if not self.call_actions_during_tree_build:
                 return bt_result
 
-        try:
-            sem_action = production.symbol.action
-        except:
-            import pdb; pdb.set_trace()
+        sem_action = production.symbol.action
         if sem_action:
             assignments = production.assignments
             if assignments:
@@ -837,9 +819,6 @@ class Parser(object):
 
     def _create_error(self, context, symbols_expected, tokens_ahead=None,
                       symbols_before=None, last_heads=None, store=True):
-        context = copy(context)
-        context.start_position = context.position
-        context.end_position = context.position
         error = ParseError(Location(context=context),
                            symbols_expected,
                            tokens_ahead,
@@ -854,88 +833,6 @@ class Parser(object):
             self.errors.append(error)
 
         return error
-
-
-class Context:
-    """
-    Args:
-        state(LRState):
-        file_name(str):
-        position(int):
-        start_position, end_position(int):
-        layout_content(str): Layout content preceeding current token.
-        layout_content_ahead(str): Layout content preceeding token_ahead.
-        token(Token): Token for shift operation.
-        token_ahead(Token): Token recognized ahead at position in given
-             state.
-        head(GSSNode): GSS node, used only in GLR parsing. This value is set
-            during creation of GSSNode.
-        extra(anything): Used for additional state maintained by the user.
-             If not given empty dict is used.
-    """
-
-    __local = ['state',
-               'position',
-               'start_position',
-               'end_position',
-               'token',
-               'token_ahead',
-               'production',
-               'layout_content',
-               'layout_content_ahead',
-               'node']
-    __t = ['file_name',
-           'input_str',
-           'parser',
-           'head',
-           'extra']
-
-    __slots__ = __local + __t
-
-    def __init__(self, state=None, position=None, start_position=None,
-                 end_position=None, token=None, token_ahead=None,
-                 production=None, layout_content=None,
-                 layout_content_ahead=None, node=None, file_name=None,
-                 input_str=None, parser=None, extra=None, context=None):
-        self.state = state
-        self.position = position
-        self.start_position = start_position
-        self.end_position = end_position
-        self.token = token
-        self.token_ahead = token_ahead
-        self.production = production
-        self.layout_content = layout_content
-        self.layout_content_ahead = layout_content_ahead
-        self.node = node
-        if context:
-            self.extra = context.extra
-            self.file_name = context.file_name
-            self.input_str = context.input_str
-            self.parser = context.parser
-            self.head = context.head
-        else:
-            self.extra = extra if extra is not None else {}
-            self.file_name = file_name
-            self.input_str = input_str
-            self.parser = parser
-            self.head = None
-
-    @property
-    def symbol(self):
-        if self.token is not None:
-            return self.token.symbol
-        elif self.production is not None:
-            return self.production.symbol
-        elif self.node is not None:
-            return self.node.symbol
-
-    def __str__(self):
-        if self.symbol:
-            return str(self.symbol)
-        elif self.token:
-            return str(self.token)
-        else:
-            return str(self.production)
 
 
 class LRStackNode(object):
@@ -997,16 +894,13 @@ class LRStackNode(object):
         self.parser.extra = new_value
 
 
-
 class Node(object):
     """A node of the parse tree."""
 
-    __slots__ = ['start_position', 'end_position', 'layout_content']
+    __slots__ = ['context']
 
-    def __init__(self, start_position, end_position, layout_content=None):
-        self.start_position = start_position
-        self.end_position = end_position
-        self.layout_content = layout_content
+    def __init__(self, context):
+        self.context = context
 
     def __repr__(self):
         return str(self)
@@ -1017,16 +911,15 @@ class Node(object):
     def __reversed__(self):
         return iter([])
 
+    def __getattr__(self, name):
+        return getattr(self.context, name)
+
 
 class NodeNonTerm(Node):
     __slots__ = ['production', 'children']
 
-    def __init__(self, start_position, end_position, production, children,
-                 layout_content=None):
-        super(NodeNonTerm, self).__init__(start_position,
-                                          end_position,
-                                          layout_content=layout_content)
-        self.production = production
+    def __init__(self, context, children):
+        super(NodeNonTerm, self).__init__(context)
         self.children = children
 
     def tree_str(self, depth=0):
@@ -1060,26 +953,20 @@ class NodeNonTerm(Node):
 
 
 class NodeTerm(Node):
-    __slots__ = ['token']
-
-    def __init__(self, start_position, end_position, token,
-                 layout_content=None):
-        super(NodeTerm, self).__init__(start_position,
-                                       end_position,
-                                       layout_content=layout_content)
-        self.token = token
+    def __init__(self, context):
+        super(NodeTerm, self).__init__(context)
 
     @property
     def symbol(self):
-        return self.token.symbol
+        return self.context.token.symbol
 
     @property
     def value(self):
-        return self.token.value
+        return self.context.token.value
 
     @property
     def additional_data(self):
-        return self.token.additional_data
+        return self.context.token.additional_data
 
     def tree_str(self, depth=0):
         return '{}[{}->{}, "{}"]'.format(self.symbol,
@@ -1123,43 +1010,3 @@ class Token(object):
 
 STOP_token = Token(STOP)
 EMPTY_token = Token(EMPTY)
-
-
-def treebuild_shift_action(context):
-    return NodeTerm(context.start_position, context.end_position,
-                    context.token, context.layout_content)
-
-
-def treebuild_reduce_action(context, nodes):
-    if nodes:
-        return NodeNonTerm(nodes[0].start_position, nodes[-1].end_position,
-                           context.production, nodes, context.layout_content)
-    else:
-        return NodeNonTerm(context.start_position, context.end_position,
-                           context.production, nodes, context.layout_content)
-
-
-def pos_to_line_col(input_str, position):
-    """
-    Returns position in the (line,column) form.
-    """
-
-    if position is None:
-        return None, None
-
-    if type(input_str) is not text:
-        # If we are not parsing string
-        return 1, position
-
-    line = 1
-    old_pos = 0
-    try:
-        cur_pos = input_str.index("\n")
-        while cur_pos < position:
-            line += 1
-            old_pos = cur_pos + 1
-            cur_pos = input_str.index("\n", cur_pos + 1)
-    except ValueError:
-        pass
-
-    return line, position - old_pos

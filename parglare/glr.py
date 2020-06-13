@@ -4,9 +4,8 @@ import codecs
 from itertools import takewhile
 from parglare import Parser
 from parglare import termui as t
-from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, Context, Token
-from .common import position_context
-from .common import replace_newlines as _
+from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, Token
+from .common import replace_newlines as _, position_context
 from .export import dot_escape
 from .termui import prints, h_print, a_print
 
@@ -160,7 +159,7 @@ class GLRParser(Parser):
             if self.debug and self.debug_trace:
                 self._export_dot_trace()
             last_reducing_heads = self.last_reducing_heads
-            context = last_reducing_heads[0].parents[0].context
+            context = last_reducing_heads[0]
             self._remove_transient_state()
             raise self._create_error(context, self.expected,
                                      tokens_ahead=self.tokens_ahead,
@@ -555,8 +554,7 @@ class GLRParser(Parser):
             lambda h: h.position == last_head.position,
             self.last_reducing_heads)
 
-        self.tokens_ahead = self._get_all_possible_tokens_ahead(
-            last_head.parents[0].context)
+        self.tokens_ahead = self._get_all_possible_tokens_ahead(last_head)
 
         for head in farthest_heads:
             for possible_lookahead in head.state.actions.keys():
@@ -701,7 +699,7 @@ class GLRParser(Parser):
         h_print("dot -Tpdf {0} -O {0}.pdf".format(file_name))
 
 
-class GSSNodeParent(Context):
+class GSSNodeParent(object):
     """
     A link to the parent node in GSS stack.
     """
@@ -868,6 +866,14 @@ class GSSNode(object):
     @extra.setter
     def extra(self, new_value):
         self.parser.extra = new_value
+
+    @property
+    def input_str(self):
+        return self.parser.input_str
+
+    @property
+    def file_name(self):
+        return self.parser.file_name
 
 
 DOT_HEADER = """

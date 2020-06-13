@@ -15,10 +15,10 @@ class Location(object):
 
     Args:
     context(Context): Parsing context used to populate this object.
-    file_name(str): The name (path) to the file this location refers to.
 
     Attributes:
     input_str: The input string (from context) being parsed.
+    file_name(str): The name (path) to the file this location refers to.
     start_position(int): The position of the span if applicable
     end_position(int): The end of the span if applicable.
     position(int): An absolute position of this location inside the file.
@@ -26,24 +26,22 @@ class Location(object):
         input_str.
     """
 
-    __slots__ = ['input_str', 'start_position', 'end_position', 'position',
-                 'file_name', '_line', '_column']
+    __slots__ = ['context', 'file_name',
+                 '_line', '_column',
+                 '_line_end', '_column_end']
 
     def __init__(self, context=None, file_name=None):
 
-        self.input_str = context.input_str if context else None
-        self.start_position = context.start_position if context else None
-        self.end_position = context.end_position if context else None
-        self.position = context.position if context else None
-        if file_name:
-            self.file_name = file_name
-        elif context:
-            self.file_name = context.file_name
+        self.context = context
+        self.file_name = file_name
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting
         self._line = None
         self._column = None
+
+        self._line_end = None
+        self._column_end = None
 
     @property
     def line(self):
@@ -52,29 +50,60 @@ class Location(object):
         return self._line
 
     @property
+    def line_end(self):
+        if self._line_end is None:
+            self.evaluate_line_col_end()
+        return self._line_end
+
+    @property
     def column(self):
         if self._column is None:
             self.evaluate_line_col()
         return self._column
 
+    @property
+    def column_end(self):
+        if self._column_end is None:
+            self.evaluate_line_col_end()
+        return self._column_end
+
     def evaluate_line_col(self):
-        from parglare.parser import pos_to_line_col
-        self._line, self._column = \
-            pos_to_line_col(self.input_str, self.start_position)
+        context = self.context
+        if hasattr(context, 'start_position') \
+                and context.start_position:
+            position = context.start_position
+        else:
+            position = context.position
+        self._line, self._column = pos_to_line_col(context.input_str,
+                                                   position)
+
+    def evaluate_line_col_end(self):
+        context = self.context
+        if hasattr(context, 'end_position') \
+                and context.end_position:
+            self._line_end, self._column_end = \
+                pos_to_line_col(context.end_position)
+
+    def __getattr__(self, name):
+        return getattr(self.context, name)
 
     def __str__(self):
         line, column = self.line, self.column
+        context = self.context
         if line is not None:
             return ('{}{}:{}:"{}"'
                     .format("{}:".format(self.file_name)
                             if self.file_name else "",
                             line, column,
-                            position_context(self.input_str,
-                                             self.position)))
+                            position_context(context.input_str,
+                                             context.position)))
         elif self.file_name:
             return _a(self.file_name)
         else:
             return "<Unknown location>"
+
+    def __repr__(self):
+        return str(self)
 
 
 def position_context(input_str, position):
@@ -153,3 +182,29 @@ def get_collector():
     objects = Collector()
     objects.all = all
     return objects
+
+
+def pos_to_line_col(input_str, position):
+    """
+    Returns position in the (line,column) form.
+    """
+
+    if position is None:
+        return None, None
+
+    if type(input_str) is not text:
+        # If we are not parsing string
+        return 1, position
+
+    line = 1
+    old_pos = 0
+    try:
+        cur_pos = input_str.index("\n")
+        while cur_pos < position:
+            line += 1
+            old_pos = cur_pos + 1
+            cur_pos = input_str.index("\n", cur_pos + 1)
+    except ValueError:
+        pass
+
+    return line, position - old_pos

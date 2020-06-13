@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import Grammar, Parser
-from parglare.parser import NodeNonTerm, Context
+from parglare.parser import NodeNonTerm
 from parglare.actions import pass_single
 
 
@@ -79,10 +79,8 @@ def test_parse_context_call_actions():
     parser = Parser(g, build_tree=True, actions=actions, debug=True)
 
     tree = parser.parse("   1 + 2  ")
-    context = Context()
 
-    context.extra = True
-    parser.call_actions(tree, context=context)
+    parser.call_actions(tree)
 
     assert all(called)
     assert node_exists[0]
