@@ -4,7 +4,7 @@ from os import path
 import sys
 import re
 import itertools
-from copy import copy
+import copy
 from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError, ParserInitError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
@@ -1068,9 +1068,7 @@ class Grammar(PGFile):
                ignore_case=False, re_flags=re.MULTILINE, debug=False,
                debug_parse=False, debug_colors=False,
                _no_check_recognizers=False):
-        from .parser import Context
-        context = Context()
-        context.extra = extra = GrammarContext()
+        extra = GrammarContext()
         extra.re_flags = re_flags
         extra.ignore_case = ignore_case
         extra.debug = debug
@@ -1082,7 +1080,7 @@ class Grammar(PGFile):
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
         imports, productions, terminals, classes = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
-                                                    context=context)
+                                                    extra=extra)
         g = Grammar(productions=productions,
                     terminals=terminals,
                     classes=classes,
@@ -1126,18 +1124,18 @@ class PGFileImport(object):
     module_name (str): Name of this import. By default is the name of grammar
         file without .pg extension.
     file_path (str): A canonical full path of the imported .pg file.
-    context (Context): The parsing context.
+    extra: grammar parsing extra state.
     imported_with (PGFileImport): First import this import is imported from.
         Used for FQN calculation.
     grammar (Grammar): Grammar object under construction.
     pgfile (PGFile instance or None):
 
     """
-    def __init__(self, module_name, file_path, context):
+    def __init__(self, module_name, file_path, extra):
         self.module_name = module_name
         self.file_path = file_path
-        self.context = context
-        self.imported_with = context.extra.imported_with
+        self.extra = extra
+        self.imported_with = extra.imported_with
         self.grammar = None
         self.pgfile = None
 
@@ -1156,16 +1154,15 @@ class PGFileImport(object):
                 self.pgfile = self.grammar.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
-                from .parser import Context
-                context = Context(extra=self.context.extra,
-                                  file_name=self.file_path)
-                context.extra.inline_terminals = {}
-                context.extra.imported_with = self
+                extra = copy.copy(self.extra)
+                extra.file_name = self.file_path
+                extra.inline_terminals = {}
+                extra.imported_with = self
                 imports, productions, terminals, classes = \
                     get_grammar_parser(
-                        self.context.extra.debug,
-                        self.context.extra.debug_colors).parse_file(
-                            self.file_path, context=context)
+                        self.extra.debug,
+                        self.extra.debug_colors).parse_file(
+                            self.file_path, extra=extra)
                 self.pgfile = PGFile(productions=productions,
                                      terminals=terminals,
                                      classes=classes,
@@ -1257,10 +1254,7 @@ def check_name(context, name):
 
 
 class GrammarContext:
-    def __deepcopy__(self, memo):
-        # Use shallow copy for grammar context
-        return copy(self)
-
+    pass
 
 # Grammar for grammars
 
@@ -1526,7 +1520,7 @@ def act_import(context, nodes):
     else:
         import_path = path.realpath(import_path)
 
-    return PGFileImport(module_name, import_path, context)
+    return PGFileImport(module_name, import_path, context.extra)
 
 
 def act_production_rules(_, nodes):

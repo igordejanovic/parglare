@@ -2,7 +2,6 @@
 from __future__ import print_function, unicode_literals
 import codecs
 from itertools import takewhile
-from collections import namedtuple
 from parglare import Parser
 from parglare import termui as t
 from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, Context, Token
@@ -65,14 +64,15 @@ class GLRParser(Parser):
         """
         pass
 
-    def parse(self, input_str, position=0, file_name=None, context=None):
+    def parse(self, input_str, position=0, file_name=None, extra=None):
         """
         Parses the given input string.
         Args:
             input_str(str): A string to parse.
             position(int): Position to start from.
             file_name(str): File name if applicable. Used in error reporting.
-            context(Context): An object used to keep parser context info.
+            extra: An object that keeps custom parsing state. If not given
+                initialized to dict.
         """
 
         if self.debug:
@@ -82,10 +82,12 @@ class GLRParser(Parser):
                 self.dot_trace = ""
 
         self.input_str = input_str
+        self.file_name = file_name
+        self.extra = {} if extra is None else extra
+
+        # Error reporting and recovery
         self.errors = []
         self.in_error_recovery = None
-
-        # Error reporting
         self.in_error_reporting = False
         self.expected = set()
         self.tokens_ahead = []
@@ -110,17 +112,10 @@ class GLRParser(Parser):
         # Accepted (finished) heads
         self.accepted_heads = []
 
-        self.file_name = file_name
-
-        context = self._get_init_context(context, input_str, position,
-                                         file_name)
-        assert isinstance(context, Context)
-
-        self._init_dynamic_disambiguation(context)
-
         # We start with a single parser head in state 0.
-        self.shift_level = 0
-        start_head = GSSNode(context.state, 0, position, number_of_trees=1)
+        start_head = GSSNode(self, self.table.states[0], 0, position,
+                             number_of_trees=1)
+        self._init_dynamic_disambiguation(start_head)
         self.shifted_heads.append(start_head)
 
         if self.debug and self.debug_trace:
@@ -129,8 +124,8 @@ class GLRParser(Parser):
 
         # The main loop
         while True:
-            self._do_reductions(context)
-            self._do_shifts_accepts(context)
+            self._do_reductions()
+            self._do_shifts_accepts()
             if self.in_error_reporting:
                 if self.debug:
                     a_print("*** LEAVING ERROR REPORTING MODE.",
@@ -175,7 +170,7 @@ class GLRParser(Parser):
                                      last_heads=last_reducing_heads,
                                      store=False)
 
-    def _do_reductions(self, context):
+    def _do_reductions(self):
         """
         Perform all possible reductions for this shift level.
         """
@@ -197,15 +192,7 @@ class GLRParser(Parser):
                     h_print("Finding lookaheads", new_line=True)
                 layout_content_ahead = self._skipws(head, self.input_str)
 
-                # TODO: make @property for accessing head info
-                for parent in head.parents:
-                    parent.context.position = head.position
-                    parent.context.layout_content_ahead = layout_content_ahead
-
-                # TODO: _next_tokens should accept head
-                if head.parents:
-                    context = head.parents[0].context
-                tokens = self._next_tokens(context)
+                tokens = self._next_tokens(head)
 
                 if debug:
                     self._debug_context(
@@ -229,14 +216,14 @@ class GLRParser(Parser):
 
         while shifted_heads:
             head = shifted_heads.pop()
-            self._prepare_reductions(head, context)
+            self._prepare_reductions(head)
             while self.reducing_stack:
                 while self.reducing_stack[-1][1]:
                     reduction = self.reducing_stack[-1][1].pop()
                     new_head = self._reduce(head, reduction)
                     if new_head is not None:
                         head = new_head
-                        self._prepare_reductions(head, context)
+                        self._prepare_reductions(head)
 
                 # No more reduction for top of the stack head.
                 # Pop of the stack and merge to reduced heads.
@@ -253,7 +240,7 @@ class GLRParser(Parser):
                 else:
                     reduced_head.merge_head(head, self)
 
-    def _do_shifts_accepts(self, context):
+    def _do_shifts_accepts(self):
         """
         Do shifts and accepts of the reduced heads
         """
@@ -278,12 +265,12 @@ class GLRParser(Parser):
                     self.accepted_heads.append(head)
 
                 else:
-                    self._shift(head, context, action.state)
+                    self._shift(head, action.state)
 
                 if self.in_error_reporting:
                     self.expected.add(head.token_ahead.symbol)
 
-    def _prepare_reductions(self, head, context):
+    def _prepare_reductions(self, head):
         """
         Finds all possible reduction for the given head and make a new stack
         entry with pending reductions.
@@ -308,24 +295,13 @@ class GLRParser(Parser):
         reductions = []
         for production in productions:
             if debug:
-                h_print('Processing production:', str(production), level=1)
+                h_print('Processing production:', str(production),
+                        level=1, new_line=True)
             prod_len = len(production.rhs)
-            roots = []
             if prod_len == 0:
                 # Special case, empty reduction
-                context = Context(
-                    state=head.state.gotos[production.symbol],
-                    production=production,
-                    start_position=head.position,
-                    end_position=head.position,
-                    position=head.position,
-                    layout_content=head.layout_content_ahead,
-                    token_ahead=head.token_ahead,
-                    layout_content_ahead=head.layout_content_ahead,
-                    context=context)
-                if debug:
-                    h_print("Adding reduction:", (head, production), level=1)
-                reductions.append((context, head, production, []))
+                reductions.append((head, production, [],
+                                   head.position, head.position))
             else:
                 # Find roots of possible reductions by going backwards for
                 # prod_len steps following all possible paths. Collect
@@ -338,12 +314,11 @@ class GLRParser(Parser):
                             "[{}], symbol={}, "
                             "length={}".format(head, head.state.symbol,
                                                prod_len), level=2)
-                roots = []
                 while to_process:
                     (node,
-                     subresults,
+                     results,
                      length,
-                     first_parent_context) = to_process.pop()
+                     last_parent) = to_process.pop()
                     length = length - 1
                     if debug:
                         h_print("node = {}".format(node), level=2,
@@ -352,54 +327,40 @@ class GLRParser(Parser):
                                 .format(prod_len - length,
                                         " - ROOT" if not length else ""),
                                 level=2)
-                    for parent, parent_context, res in node.parents:
-                        if debug:
-                            h_print("", str(parent), level=3)
-                        parent_subres = [res] + subresults
 
-                        if first_parent_context is None:
-                            first_parent_context = parent_context
+                    first_parent = None
+                    for parent in node.parents:
+                        if debug:
+                            h_print("", str(parent.head), level=3)
+
+                        new_results = [parent.results] + results
+
+                        if first_parent is None:
+                            first_parent = parent
+
+                        if last_parent is None:
+                            last_parent = parent
 
                         if length:
-                            to_process.append((parent, parent_subres, length,
-                                               first_parent_context))
+                            to_process.append((parent.parent, new_results,
+                                               length, last_parent))
                         else:
-                            roots.append((parent, parent_subres,
-                                          first_parent_context,
-                                          parent_context))
+                            reductions.append((parent.parent,
+                                               production,
+                                               new_results,
+                                               first_parent.start_position,
+                                               last_parent.end_position))
+                        first_parent = parent
 
-                if debug:
-                    h_print("Reduction paths = ", len(roots), level=1,
-                            new_line=True)
-                    h_print("Roots:", level=1)
-                    for idx, r in enumerate(roots):
-                        h_print("{}.".format(idx+1), r[0], level=2)
+            if debug:
+                h_print("Reduction paths = ", len(reductions), level=1,
+                        new_line=True)
 
-                for idx, (root, subresults,
-                          first_parent_context,
-                          last_parent_context) in enumerate(roots):
-
+                for idx, reduction in enumerate(reductions):
                     if debug:
-                        h_print("Adding reduction:", (root, production),
+                        h_print("Reduction {}:".format(idx + 1),
+                                reductions,
                                 level=1)
-
-                    # try:
-                    #     state=root.state.gotos[production.symbol]
-                    # except:
-                    #     # import pdb; pdb.set_trace()
-                    #     pass
-                    context = Context(
-                        state=root.state.gotos[production.symbol],
-                        production=production,
-                        start_position=last_parent_context.start_position,
-                        end_position=first_parent_context.end_position,
-                        position=head.position,
-                        layout_content=last_parent_context.layout_content,
-                        token_ahead=head.token_ahead,
-                        layout_content_ahead=head.layout_content_ahead,  # noqa
-                        context=first_parent_context)
-                    reductions.append((context, root, production, subresults))
-
         self.reducing_stack.append((head, reductions))
         self.reducing_stack_states.append(head.state.state_id)
 
@@ -408,28 +369,37 @@ class GLRParser(Parser):
         Executes the given reduction.
         """
 
-        context, root_head, production, subresults = reduction
-        context.token_ahead = head.token_ahead
+        root_head, production, results, \
+            start_position, end_position = reduction
+        if start_position is None:
+            start_position = end_position = root_head.position
+        state = root_head.state.gotos[production.symbol]
 
         if self.debug:
             self.debug_step += 1
             a_print("{}. REDUCING head ".format(self.debug_step), str(head),
                     new_line=True)
             a_print("by prod ", production, level=1)
-            a_print("to state {}:{}".format(context.state.state_id,
-                                            context.state.symbol), level=1)
+            a_print("to state {}:{}".format(state.state_id,
+                                            state.symbol), level=1)
             a_print("root is ", root_head, level=1)
+            a_print("Position span: {} - {}".format(start_position,
+                                                    end_position), level=1)
+
+        new_head = GSSNode(self, state, head.position,
+                           head.shift_level,
+                           number_of_trees=head.number_of_trees,
+                           token_ahead=head.token_ahead)
+
+        parent = GSSNodeParent(root_head, new_head, results,
+                               start_position, end_position,
+                               production=production)
 
         if not self.dynamic_filter or \
-                self._call_dynamic_filter(context, head.state, context.state,
-                                          REDUCE, subresults):
+                self._call_dynamic_filter(parent, head.state, state,
+                                          REDUCE, results):
 
-            new_head = GSSNode(context.state, head.position,
-                               head.shift_level,
-                               number_of_trees=head.number_of_trees,
-                               token_ahead=head.token_ahead)
-
-            result = self._call_reduce_action(context, subresults)
+            parent.results = self._call_reduce_action(parent, results)
 
             # Check for possible automata loops for the newly reduced head.
             # Handle loops by creating GSS loops for empty reduction loops or
@@ -451,11 +421,12 @@ class GLRParser(Parser):
                                 if self.debug:
                                     h_print('Looping due to empty reduction.'
                                             ' Making GSS loop.', level=1)
-                                shead.create_link(head, context, result, self)
+                                shead.create_link(parent)
                             else:
-                                h_print(
-                                    'Looping with an empty tree reduction.',
-                                    level=1)
+                                if self.debug:
+                                    h_print(
+                                        'Looping with an empty tree reduction.',
+                                        level=1)
 
                             if self.debug:
                                 h_print('Not processing further this head.',
@@ -479,19 +450,16 @@ class GLRParser(Parser):
             # No cycles. Do the reduction.
             if self.debug:
                 a_print("New head: ", new_head, level=1, new_line=True)
-                # TODO: Fix tracing
                 if self.debug_trace:
                     self._trace_head(new_head, "{}:{}".format(
-                        new_head.state.state_id,
-                        dot_escape(new_head.state.symbol.name)))
-                    self._trace_step(
-                        head, new_head, root_head,
-                        "R:{}".format(dot_escape(production)))
+                        state.state_id, dot_escape(state.symbol.name)))
+                    self._trace_step(head, new_head, root_head,
+                                     "R:{}".format(dot_escape(production)))
 
-            new_head.create_link(root_head, context, result, self)
+            new_head.create_link(parent)
             return new_head
 
-    def _shift(self, head, context, to_state):
+    def _shift(self, head, to_state):
         """
         Shifts the head and executes semantic actions.
         """
@@ -510,13 +478,16 @@ class GLRParser(Parser):
         if shifted_head:
             # If this token has already been shifted connect
             # shifted head to this head.
-            parent = shifted_head.parents[0]
+            shead_parent = shifted_head.parents[0]
+            parent = GSSNodeParent(head, shifted_head, shead_parent.results,
+                                   shead_parent.start_position,
+                                   shead_parent.end_position,
+                                   token=shead_parent.token)
             if not self.dynamic_filter or \
-                    self._call_dynamic_filter(parent.context, head.state,
-                                              to_state, SHIFT, None):
+                    self._call_dynamic_filter(parent, head.state, to_state,
+                                              SHIFT, None):
 
-                shifted_head.create_link(head, parent.context, parent.results,
-                                         self)
+                shifted_head.create_link(parent)
                 if debug and self.debug_trace:
                     token = head.token_ahead
                     self._trace_step(head, shifted_head, head,
@@ -525,18 +496,6 @@ class GLRParser(Parser):
                                         dot_escape(token.value)))
         else:
             # We need to create new shifted head
-            end_position = head.position + len(head.token_ahead)
-            context = Context(
-                state=to_state,
-                token=head.token_ahead,
-                start_position=head.position,
-                end_position=end_position,
-                position=end_position,
-                layout_content=head.layout_content_ahead,
-                token_ahead=None,
-                layout_content_ahead='',
-                context=context)
-
             if debug:
                 self._debug_context(head.position,
                                     lookahead_tokens=head.token_ahead,
@@ -546,9 +505,14 @@ class GLRParser(Parser):
                     self._call_dynamic_filter(context, head.state, to_state,
                                               SHIFT, None):
 
-                new_head = GSSNode(to_state, end_position,
+                end_position = head.position + len(head.token_ahead)
+                new_head = GSSNode(self, to_state, end_position,
                                    head.shift_level + 1)
-                result = self._call_shift_action(context)
+                parent = GSSNodeParent(head, new_head, None,
+                                       head.position, end_position,
+                                       token=head.token_ahead)
+
+                parent.results = self._call_shift_action(parent)
 
                 if self.debug:
                     token = head.token_ahead
@@ -563,7 +527,7 @@ class GLRParser(Parser):
                                             dot_escape(token.symbol.name),
                                             dot_escape(token.value)))
 
-                new_head.create_link(head, context, result, self)
+                new_head.create_link(parent)
                 self.shifted_heads.append(new_head)
 
     def _setup_error_reporting(self):
@@ -737,20 +701,59 @@ class GLRParser(Parser):
         h_print("dot -Tpdf {0} -O {0}.pdf".format(file_name))
 
 
-# The GSS node parent link. Keeps link to the parent, action results and the
-# information of the reduction that produced this node.
-# context - Context instance
-# parent - GSSNode
-# results - list of results
-GSSNodeParent = namedtuple('GSSNodeParent',
-                           'parent context results')
+class GSSNodeParent(Context):
+    """
+    A link to the parent node in GSS stack.
+    """
+
+    __slots__ = ['parent', 'head', 'results', 'start_position', 'end_position',
+                 'token', 'production', 'extra']
+
+    def __init__(self, parent, head, results, start_position,
+                 end_position=None, token=None, production=None):
+        self.parent = parent
+        self.head = head
+        self.results = results
+        self.start_position = start_position
+        self.end_position = end_position \
+            if end_position is not None else start_position
+
+        # For shift nodes
+        self.token = token
+
+        # For reduced nodes
+        self.production = production
+
+        # Caching extra for faster access
+        self.extra = self.head.parser.extra
+
+    @property
+    def layout_content(self):
+        return self.parent.layout_content_ahead
+
+    def __getattr__(self, name):
+        """
+        All other property access is delegated to the parsing head.
+        """
+        return getattr(self.head, name)
+
+    def __str__(self):
+        return "start_position={}, end_position={}".format(
+            self.start_position, self.end_position)
+
+    def __repr__(self):
+        return str(self)
 
 
 class GSSNode(object):
-    """Graphs Structured Stack node.
+    """
+    Graphs Structured Stack node.
 
     Attributes:
-        context(Context): The parsing context.
+        parser(GLRParser):
+        state(LRState):
+        position(int):
+        shift_level(int):
         parents(list of GSSNodeParent):
              Each stack node might have multiple parents which represent
              multiple path parse took to reach the current state. Each
@@ -763,12 +766,13 @@ class GSSNode(object):
         number_of_trees(int): Total number of trees/solution defined by this
              head.
     """
-    __slots__ = ['node_id', 'state', 'position', 'shift_level', 'parents',
-                 'number_of_trees', 'token_ahead', 'layout_content_ahead',
-                 '_hash']
+    __slots__ = ['parser', 'node_id', 'state', 'position', 'shift_level',
+                 'parents', 'number_of_trees', 'token_ahead',
+                 'layout_content_ahead', '_hash']
 
-    def __init__(self, state, position, shift_level, number_of_trees=0,
-                 token_ahead=None):
+    def __init__(self, parser, state, position, shift_level, number_of_trees=0,
+                 token=None, token_ahead=None):
+        self.parser = parser
         self.state = state
         self.position = position
         self.shift_level = shift_level
@@ -795,12 +799,12 @@ class GSSNode(object):
             h_print("Merging head ", other)
             h_print("to head", self, level=1)
 
-    def create_link(self, parent, context, result, parser):
-        self.parents.append(GSSNodeParent(parent, context, result))
+    def create_link(self, parent):
+        self.parents.append(parent)
         self.number_of_trees = parent.number_of_trees
-        if parser.debug:
+        if self.parser.debug:
             h_print("Creating link \tfrom head:", self, level=1)
-            h_print("  to head:", parent, level=3)
+            h_print("  to head:", parent.parent, level=3)
 
     def for_token(self, token):
         """
@@ -818,8 +822,8 @@ class GSSNode(object):
         elif self.token_ahead == token:
             return self
         else:
-            new_head = GSSNode(self.state, self.position, self.shift_level,
-                               self.number_of_trees, token)
+            new_head = GSSNode(self.parser, self.state, self.position,
+                               self.shift_level, self.number_of_trees, token)
             new_head.parents = list(self.parents)
             return new_head
 
@@ -855,6 +859,14 @@ class GSSNode(object):
     def key(self):
         """Head unique idenfier used for dot trace."""
         return "head_{}_{}".format(self.node_id, self.token_ahead.symbol.name)
+
+    @property
+    def extra(self):
+        return self.parser.extra
+
+    @extra.setter
+    def extra(self, new_value):
+        self.parser.extra = new_value
 
 
 DOT_HEADER = """

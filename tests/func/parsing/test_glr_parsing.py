@@ -201,7 +201,7 @@ def test_epsilon_grammar():
     """
 
     g = Grammar.from_string(grammar)
-    p = GLRParser(g)
+    p = GLRParser(g, debug=True, debug_colors=True)
 
     txt = """
     First = One Two three
