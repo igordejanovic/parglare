@@ -190,14 +190,14 @@ class GLRParser(Parser):
                 head = self.shifted_heads.pop()
                 if debug:
                     h_print("Finding lookaheads", new_line=True)
-                layout_content_ahead = self._skipws(head, self.input_str)
+                self._skipws(head, self.input_str)
 
                 tokens = self._next_tokens(head)
 
                 if debug:
                     self._debug_context(
                         head.position,
-                        layout_content_ahead,
+                        head.layout_content_ahead,
                         lookahead_tokens=tokens,
                         expected_symbols=head.state.actions.keys())
 
@@ -823,7 +823,8 @@ class GSSNode(object):
             return self
         else:
             new_head = GSSNode(self.parser, self.state, self.position,
-                               self.shift_level, self.number_of_trees, token)
+                               self.shift_level, self.number_of_trees,
+                               token_ahead=token)
             new_head.parents = list(self.parents)
             return new_head
 
