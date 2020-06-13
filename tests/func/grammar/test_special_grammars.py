@@ -139,9 +139,23 @@ def test_cyclic_grammar_2():
     p = GLRParser(g)
     results = p.parse('xx')
 
-    # This grammar has infinite ambiguity but by minimizing empty reductions
-    # we shall get only one result xx -> xS -> SS -> S
-    assert len(results) == 1
+    # We have 11 valid solutions
+    assert len(results) == 11
+    expected = [
+        ['x', 'x'],
+        [[[], 'x'], 'x'],
+        [[[], [[], 'x']], 'x'],
+        ['x', [[], 'x']],
+        [[[], 'x'], [[], 'x']],
+        [[], ['x', 'x']],
+        [[], [[], ['x', 'x']]],
+        ['x', [[], 'x']],
+        [[[], 'x'], [[], 'x']],
+        [[[], [[], 'x']], [[], 'x']],
+        [[], [[[], 'x'], 'x']]
+    ]
+
+    assert expected == results
 
 
 def test_cyclic_grammar_3():
@@ -158,10 +172,16 @@ def test_cyclic_grammar_3():
 
     Parser(g)
 
-    p = GLRParser(g, build_tree=True)
+    p = GLRParser(g)
     results = p.parse('aa')
 
-    assert len(results) == 1
+    assert len(results) == 2
+    expected = [
+        ['a', 'a'],
+        [[[], 'a'], 'a']
+    ]
+
+    assert results == expected
 
 
 def test_highly_ambiguous_grammar():
