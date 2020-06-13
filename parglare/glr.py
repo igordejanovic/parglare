@@ -501,16 +501,16 @@ class GLRParser(Parser):
                                     lookahead_tokens=head.token_ahead,
                                     expected_symbols=None)
 
-            if not self.dynamic_filter or \
-                    self._call_dynamic_filter(context, head.state, to_state,
-                                              SHIFT, None):
+            end_position = head.position + len(head.token_ahead)
+            new_head = GSSNode(self, to_state, end_position,
+                               head.shift_level + 1)
+            parent = GSSNodeParent(head, new_head, None,
+                                   head.position, end_position,
+                                   token=head.token_ahead)
 
-                end_position = head.position + len(head.token_ahead)
-                new_head = GSSNode(self, to_state, end_position,
-                                   head.shift_level + 1)
-                parent = GSSNodeParent(head, new_head, None,
-                                       head.position, end_position,
-                                       token=head.token_ahead)
+            if not self.dynamic_filter or \
+                    self._call_dynamic_filter(parent, head.state, to_state,
+                                              SHIFT, None):
 
                 parent.results = self._call_shift_action(parent)
 
