@@ -11,7 +11,7 @@ def test_glr_list_building_bug():
         A: "a";
     """
     g = Grammar.from_string(grammar)
-    parser = GLRParser(g)
+    parser = GLRParser(g, prefer_shifts=True)
     result = parser.parse('b a b a a a')
     assert len(result) == 1
     assert result[0] == [['b', ['a']], ['b', ['a', 'a', 'a']]]
