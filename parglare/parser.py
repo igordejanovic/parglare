@@ -8,7 +8,7 @@ from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
     DynamicDisambiguationConflict, SRConflicts, RRConflicts, \
     expected_symbols_str
-from .common import Location, position_context, pos_to_line_col
+from .common import Location, position_context, pos_to_line_col, ErrorContext
 from .actions import pass_none
 from .termui import prints, h_print, a_print
 from parglare import termui
@@ -790,7 +790,7 @@ class Parser(object):
         # might decide to fill in missing tokens.
         if position:
             last_error = self.errors[-1]
-            last_error.location.end_position = position
+            last_error.location.context.end_position = position
             context.position = position
             if debug:
                 h_print("Advancing position to ",
@@ -819,7 +819,7 @@ class Parser(object):
 
     def _create_error(self, context, symbols_expected, tokens_ahead=None,
                       symbols_before=None, last_heads=None, store=True):
-        error = ParseError(Location(context=context),
+        error = ParseError(Location(context=ErrorContext(context)),
                            symbols_expected,
                            tokens_ahead,
                            symbols_before=symbols_before,

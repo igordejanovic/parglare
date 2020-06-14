@@ -21,9 +21,10 @@ class Location(object):
     file_name(str): The name (path) to the file this location refers to.
     start_position(int): The position of the span if applicable
     end_position(int): The end of the span if applicable.
-    position(int): An absolute position of this location inside the file.
-    line, column (int): The line/column calculated from the position and
+    line, column (int): The line/column calculated from the position start and
         input_str.
+    line_end, column_end (int): The line/column calculated from the position
+        end and input_str.
     """
 
     __slots__ = ['context', 'file_name',
@@ -69,26 +70,27 @@ class Location(object):
 
     def evaluate_line_col(self):
         context = self.context
-        if hasattr(context, 'start_position') \
-                and context.start_position:
-            position = context.start_position
-        else:
-            position = context.position
-        self._line, self._column = pos_to_line_col(context.input_str,
-                                                   position)
+        self._line, self._column = pos_to_line_col(
+            context.input_str, context.start_position)
 
     def evaluate_line_col_end(self):
         context = self.context
         if hasattr(context, 'end_position') \
                 and context.end_position:
             self._line_end, self._column_end = \
-                pos_to_line_col(context.end_position)
+                pos_to_line_col(context.input_str, context.end_position)
 
     def __getattr__(self, name):
-        return getattr(self.context, name)
+        if self.context is not None:
+            return getattr(self.context, name)
+        else:
+            raise AttributeError(name)
 
     def __str__(self):
-        line, column = self.line, self.column
+        if self.context is None:
+            line, column = None, None
+        else:
+            line, column = self.line, self.column
         context = self.context
         if line is not None:
             return ('{}{}:{}:"{}"'
@@ -96,7 +98,7 @@ class Location(object):
                             if self.file_name else "",
                             line, column,
                             position_context(context.input_str,
-                                             context.position)))
+                                             context.start_position)))
         elif self.file_name:
             return _a(self.file_name)
         else:
@@ -208,3 +210,19 @@ def pos_to_line_col(input_str, position):
         pass
 
     return line, position - old_pos
+
+
+class ErrorContext(object):
+    """
+    Context for errors.  Errors are constructed from parsing heads and are
+    represented as location span.  Initially, the start and end of the span are
+    set to the position where the error is found but end of the span can be
+    moved forward during error recovery.
+    """
+
+    __slots__ = ['input_str', 'file_name', 'start_position', 'end_position']
+
+    def __init__(self, context):
+        self.start_position = self.end_position = context.position
+        self.input_str = context.input_str
+        self.file_name = context.file_name
