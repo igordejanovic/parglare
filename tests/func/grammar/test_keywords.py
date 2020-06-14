@@ -2,7 +2,6 @@
 Test special KEYWORD rule.
 """
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import pytest
 from parglare import Parser, Grammar, RegExRecognizer, StringRecognizer
 from parglare.exceptions import GrammarError, ParseError

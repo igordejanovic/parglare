@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import os
-from parglare import Grammar
-from parglare import Parser
+from parglare import Grammar, Parser
 
 
 def test_grammar_with_unicode():

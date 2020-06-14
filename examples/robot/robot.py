@@ -13,7 +13,6 @@ An example of the robot program:
    end
 
 """
-from __future__ import unicode_literals, print_function
 import os
 from parglare import Grammar, Parser
 from parglare import get_collector

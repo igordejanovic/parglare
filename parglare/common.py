@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function
 import sys
 from parglare.termui import s_attention as _a
-
-if sys.version < '3':
-    text = unicode  # NOQA
-else:
-    text = str
 
 
 class Location(object):
@@ -113,8 +107,8 @@ def position_context(input_str, position):
     Returns position context string.
     """
     start = max(position-10, 0)
-    c = text(input_str[start:position]) + _a(" **> ") \
-        + text(input_str[position:position+10])
+    c = str(input_str[start:position]) + _a(" **> ") \
+        + str(input_str[position:position+10])
     return replace_newlines(c)
 
 
@@ -160,7 +154,7 @@ def get_collector():
             If called with action/recognizer name return decorator.
             If called over function apply decorator.
             """
-            is_name = type(name_or_f) in [str, text]
+            is_name = type(name_or_f) is str
 
             def decorator(f):
                 if is_name:
@@ -194,7 +188,7 @@ def pos_to_line_col(input_str, position):
     if position is None:
         return None, None
 
-    if type(input_str) is not text:
+    if type(input_str) is not str:
         # If we are not parsing string
         return 1, position
 

@@ -1,21 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function
 from os import path
-import sys
 import re
 import itertools
 import copy
-from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError, ParserInitError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.common import Location, load_python_module
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
-
-if sys.version < '3':
-    text = unicode  # NOQA
-else:
-    text = str
 
 # Associativity
 ASSOC_NONE = 0
@@ -1107,13 +1099,13 @@ class Grammar(PGFile):
     def print_debug(self):
         a_print("*** GRAMMAR ***", new_line=True)
         h_print("Terminals:")
-        prints(" ".join([text(t) for t in self.terminals]))
+        prints(" ".join([str(t) for t in self.terminals]))
         h_print("NonTerminals:")
-        prints(" ".join([text(n) for n in self.nonterminals]))
+        prints(" ".join([str(n) for n in self.nonterminals]))
 
         h_print("Productions:")
         for p in self.productions:
-            prints(text(p))
+            prints(str(p))
 
 
 class PGFileImport(object):
@@ -1199,7 +1191,7 @@ def create_productions_terminals(productions):
             raise GrammarError(
                 location=None,
                 message="Invalid production symbol '{}' "
-                "for production '{}'".format(symbol, text(p)))
+                "for production '{}'".format(symbol, str(p)))
         rhs = ProductionRHS(p[1])
         if len(p) > 2:
             assoc = p[2]
@@ -1208,7 +1200,7 @@ def create_productions_terminals(productions):
 
         # Convert strings to string recognizers
         for idx, t in enumerate(rhs):
-            if isinstance(t, text):
+            if isinstance(t, str):
                 if t not in inline_terminals:
                     inline_terminals[t] = \
                         Terminal(recognizer=StringRecognizer(t), name=t)
@@ -1609,8 +1601,7 @@ def act_production_rule(context, nodes):
             def __repr__(cls):
                 return '<parglare:{} class at {}>'.format(name, id(cls))
 
-        @add_metaclass(ParglareMetaClass)
-        class ParglareClass(object):
+        class ParglareClass(object, metaclass=ParglareMetaClass):
             """Dynamically created class. Each parglare rule that uses named
             matches by default uses this action that will create Python object
             of this class.

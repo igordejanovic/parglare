@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Tests for issue #73 (see https://github.com/igordejanovic/parglare/issues/73)
-from __future__ import unicode_literals
 from parglare import Grammar, Parser
 
 

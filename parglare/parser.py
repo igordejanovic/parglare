@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function
 import codecs
 import logging
-import sys
 from .grammar import EMPTY, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
@@ -12,11 +10,6 @@ from .common import Location, position_context, pos_to_line_col, ErrorContext
 from .actions import pass_none
 from .termui import prints, h_print, a_print
 from parglare import termui
-
-if sys.version < '3':
-    text = unicode  # NOQA
-else:
-    text = str
 
 
 logger = logging.getLogger(__name__)
@@ -453,7 +446,7 @@ class Parser(object):
 
         if self.debug:
             content = layout_content_ahead
-            if type(layout_content_ahead) is text:
+            if type(layout_content_ahead) is str:
                 content = content.replace("\n", "\\n")
             h_print("Skipping whitespaces:",
                     "'{}'".format(content))
@@ -1018,7 +1011,7 @@ class Token(object):
         self.length = length if length is not None else len(value)
 
     def __repr__(self):
-        return "<{}({})>".format(text(self.symbol), text(self.value))
+        return "<{}({})>".format(str(self.symbol), str(self.value))
 
     def __len__(self):
         return self.length

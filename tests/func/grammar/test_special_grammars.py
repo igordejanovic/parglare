@@ -2,8 +2,8 @@
 """
 Test non-deterministic parsing.
 """
-from __future__ import unicode_literals
 import pytest  # noqa
+import sys
 from parglare import Parser, GLRParser, Grammar, SLR, LALR
 from parglare.exceptions import ParseError, SRConflicts, RRConflicts
 
@@ -121,6 +121,9 @@ def test_cyclic_grammar_1():
     assert len(results) == 1
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
 def test_cyclic_grammar_2():
     """
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
