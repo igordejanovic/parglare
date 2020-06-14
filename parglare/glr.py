@@ -800,7 +800,7 @@ class GSSNode(object):
         self.state = state
         self.position = position
         self.shift_level = shift_level
-        self.node_id = 100_000_000 * state.state_id + shift_level
+        self.node_id = 100000000 * state.state_id + shift_level
 
         self.token_ahead = token_ahead
         self.layout_content_ahead = ''
