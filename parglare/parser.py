@@ -852,7 +852,8 @@ class LRStackNode(object):
 
     __slots__ = ['parser', 'state', 'shift_level', 'position', 'results',
                  'start_position', 'end_position', 'token_ahead', 'token',
-                 'production', 'layout_content', 'layout_content_ahead']
+                 'production', 'layout_content', 'layout_content_ahead',
+                 'node']
 
     def __init__(self, parser, state, shift_level, position, results=None,
                  start_position=None, end_position=None, token=None,
@@ -879,6 +880,9 @@ class LRStackNode(object):
         self.layout_content = layout_content
         self.layout_content_ahead = layout_content_ahead
 
+        # Parse tree node used if parse tree is produced
+        self.node = None
+
     def __repr__(self):
         return "<LRStackNode({}:{}{})>"\
             .format(self.state.state_id, self.state.symbol,
@@ -886,6 +890,10 @@ class LRStackNode(object):
                         self.start_position,
                         self.end_position)
                     if self.start_position is not None else "")
+
+    @property
+    def symbol(self):
+        return self.state.symbol
 
     @property
     def input_str(self):
@@ -910,6 +918,7 @@ class Node(object):
     __slots__ = ['context']
 
     def __init__(self, context):
+        context.node = self
         self.context = context
 
     def __repr__(self):

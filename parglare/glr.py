@@ -728,7 +728,7 @@ class GSSNodeParent(object):
     """
 
     __slots__ = ['parent', 'head', 'results', 'start_position', 'end_position',
-                 'token', 'production', 'extra']
+                 'token', 'production', 'node', 'extra']
 
     def __init__(self, parent, head, results, start_position,
                  end_position=None, token=None, production=None):
@@ -747,6 +747,9 @@ class GSSNodeParent(object):
 
         # Caching extra for faster access
         self.extra = self.head.parser.extra
+
+        # Parse tree node used if parse tree is produced
+        self.node = None
 
     @property
     def layout_content(self):
@@ -897,6 +900,10 @@ class GSSNode(object):
     @property
     def file_name(self):
         return self.parser.file_name
+
+    @property
+    def symbol(self):
+        return self.state.symbol
 
 
 DOT_HEADER = """
