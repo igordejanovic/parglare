@@ -124,8 +124,9 @@ class GLRParser(Parser):
         # The main loop
         while True:
             self._do_reductions()
-            self._do_shifts_accepts()
             if self.in_error_reporting:
+                self.expected = set([h.token_ahead.symbol for
+                                     h in self.reduced_heads])
                 if self.debug:
                     a_print("*** LEAVING ERROR REPORTING MODE.",
                             new_line=True)
@@ -134,14 +135,16 @@ class GLRParser(Parser):
                             level=1)
                     h_print("Tokens found:", self.tokens_ahead, level=1)
                 break
-            if not self.shifted_heads:
-                if not self.accepted_heads:
-                    if self.debug:
-                        a_print("*** ENTERING ERROR REPORTING MODE.",
-                                new_line=True)
-                    self._setup_error_reporting()
-                    continue
-                break
+            else:
+                self._do_shifts_accepts()
+                if not self.shifted_heads:
+                    if not self.accepted_heads:
+                        if self.debug:
+                            a_print("*** ENTERING ERROR REPORTING MODE.",
+                                    new_line=True)
+                        self._enter_error_reporting()
+                        continue
+                    break
 
         if self.accepted_heads:
             # Return results
@@ -265,9 +268,6 @@ class GLRParser(Parser):
 
                 else:
                     self._shift(head, action.state)
-
-                if self.in_error_reporting:
-                    self.expected.add(head.token_ahead.symbol)
 
     def _prepare_reductions(self, head):
         """
@@ -529,7 +529,7 @@ class GLRParser(Parser):
                 new_head.create_link(parent)
                 self.shifted_heads.append(new_head)
 
-    def _setup_error_reporting(self):
+    def _enter_error_reporting(self):
         """
         To correctly report what is found ahead and what is expected we shall:
 
