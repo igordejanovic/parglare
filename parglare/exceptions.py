@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from parglare.termui import s_header as _
 
 
@@ -11,7 +10,6 @@ class LocationError(Exception):
 
 class GrammarError(LocationError):
     def __init__(self, location, message):
-        location.position = location.start_position
         super(GrammarError, self).__init__(location, message)
 
 

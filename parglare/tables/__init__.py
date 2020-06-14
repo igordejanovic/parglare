@@ -1,4 +1,3 @@
-from __future__ import print_function, unicode_literals
 import logging
 import os
 from collections import OrderedDict
@@ -10,16 +9,6 @@ from parglare.exceptions import GrammarError, SRConflict, RRConflict
 from parglare.closure import closure, LR_1
 from parglare.termui import prints, s_header, h_print, a_print, s_emph
 from parglare.tables.persist import load_table, save_table
-
-try:
-    text = unicode  # noqa
-except:  # noqa
-    text = str
-
-try:
-    ioerror = PermissionError
-except:  # noqa
-    ioerror = IOError
 
 
 logger = logging.getLogger(__name__)
@@ -89,7 +78,7 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
         if table_file_name:
             try:
                 save_table(table_file_name, table)
-            except ioerror:
+            except PermissionError:
                 pass
     else:
         table = load_table(table_file_name, grammar)
@@ -717,7 +706,7 @@ class LRState(object):
         return "<LRState({}:{})>".format(self.state_id, self.symbol.name)
 
     def print_debug(self):
-        prints(text(self))
+        prints(str(self))
 
 
 def first(grammar):

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import re
 from parglare import get_collector
 

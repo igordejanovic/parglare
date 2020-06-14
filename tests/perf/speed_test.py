@@ -6,8 +6,6 @@
 # Copyright: (c) 2017 Igor R. Dejanovic <igor DOT dejanovic AT gmail DOT com>
 # License: MIT License
 #######################################################################
-from __future__ import print_function, unicode_literals
-
 import time
 from os.path import dirname, join, getsize
 from parglare import Grammar

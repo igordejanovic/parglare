@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import sys
 import pytest  # noqa
 from parglare import Grammar, Parser, GLRParser, EMPTY
@@ -156,6 +155,9 @@ def test_priority_conflicts_resolving():
     """
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
 def test_prefer_shifts_no_sr_conflicts():
     """
     Test that grammar with S/R conflict will be resolved to SHIFT actions
@@ -192,13 +194,25 @@ def test_prefer_shifts_no_sr_conflicts():
     assert result == output
 
     # GLR parser can parse without prefer_shifts strategy. This grammar is
-    # ambiguous but, in this case, implicit elimination of empty trees (due to
-    # optional "b") will yield a single result.
+    # ambiguous and yields 11 solutions for the given input.
     parser = GLRParser(g)
-    result = parser.parse(input_str)
-    assert len(result) == 1
-    assert result[0] == output
+    results = parser.parse(input_str)
+    expected = [
+        [['b', ['a']], [None, ['a']], [None, ['a']], ['b', ['a', 'a']]],
+        [['b', ['a', 'a']], [None, ['a']], ['b', ['a', 'a']]],
+        [['b', ['a', 'a', 'a']], ['b', ['a', 'a']]],
+        [['b', ['a']], [None, ['a', 'a']], ['b', ['a', 'a']]],
+        [['b', ['a']], [None, ['a', 'a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a', 'a', 'a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a', 'a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a']], [None, ['a', 'a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a', 'a', 'a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a', 'a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a']], [None, ['a']], [None, ['a']], ['b', ['a']], [None, ['a']]]  # noqa
+    ]
+    assert results == expected
 
+    # But if `prefer_shift` is used we get only one solution
     parser = GLRParser(g, prefer_shifts=True)
     result = parser.parse(input_str)
     assert len(result) == 1

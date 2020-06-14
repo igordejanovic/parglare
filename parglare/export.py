@@ -1,12 +1,6 @@
-from __future__ import unicode_literals
 from parglare.parser import REDUCE, SHIFT, ACCEPT
 import codecs
-import sys
 from parglare import termui as t
-if sys.version < '3':
-    text = unicode  # noqa
-else:
-    text = str
 
 
 HEADER = '''
@@ -29,7 +23,7 @@ HEADER = '''
 def dot_escape(s):
     colors = t.colors
     t.colors = False
-    s = text(s)
+    s = str(s)
     out = s.replace('\n', r'\n')\
            .replace('\\', '\\\\')\
            .replace('"', r'\"')\
@@ -52,11 +46,11 @@ def grammar_pda_export(table, file_name):
 
             kernel_items = ""
             for item in state.kernel_items:
-                kernel_items += "{}\\l".format(dot_escape(text(item)))
+                kernel_items += "{}\\l".format(dot_escape(str(item)))
 
             nonkernel_items = "|" if state.nonkernel_items else ""
             for item in state.nonkernel_items:
-                nonkernel_items += "{}\\l".format(dot_escape(text(item)))
+                nonkernel_items += "{}\\l".format(dot_escape(str(item)))
 
             # SHIFT actions and GOTOs will be encoded in links.
             # REDUCE actions will be presented inside each node.

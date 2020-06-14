@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import unicode_literals, print_function
 import sys
 import click
 from parglare import Grammar, ParseError, GrammarError, GLRParser

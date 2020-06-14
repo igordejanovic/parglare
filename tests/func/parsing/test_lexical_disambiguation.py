@@ -7,7 +7,6 @@ If ambiguity is still unresolved priority is checked as the last resort.
 At the end disambiguation error is reported.
 
 """
-from __future__ import unicode_literals
 import pytest  # noqa
 import difflib
 import re

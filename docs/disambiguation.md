@@ -182,13 +182,14 @@ op_mul: '*' {dynamic};
 This tells parglare that those production are candidates for dynamic ambiguity
 resolution.
 
-Second step is to register a function, during parser construction, that will be
-used for resolution. This function operates as a filter for actions in a given
-state and lookahead token. It receives the current action, a token ahead,
-production (for REDUCE action), sub-results (for REDUCE action), and current LR
-automata state and returns either `True` if the action is acceptable or `False`
-otherwise. This function sometimes need to maintain some kind of state. To
-initialize its state at the beginning it is called with `None` as parameters.
+Second step is to register a predicate function, during parser construction,
+that will be used for resolution. This function operates as a filter for
+actions. It receives the parsing context for the action, the LR automata states
+between whom the transition is about to occur, and the sub-results in the case
+of a reduction. The function should return `True` if the transition is allowed
+or `False` otherwise. This function sometimes need to maintain some kind of
+state. To initialize its state at the beginning it is called with `None` as
+parameters.
 
 ```
 parser = Parser(grammar, dynamic_filter=custom_disambiguation_filter)
@@ -197,23 +198,29 @@ parser = Parser(grammar, dynamic_filter=custom_disambiguation_filter)
 Where resolution function is of the following form:
 
 ```python
-def custom_disambiguation_filter(context, action, subresults):
-    """Make first operation that appears in the input as lower priority.
+def custom_disambiguation_filter(context, from_state, to_state, action,
+                                 production, subresults):
+    """
+    Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
     """
     global operations
 
-    # At the start of parsing this function is called with actions set to
-    # None to give a change for the strategy to initialize.
+    # At the start of parsing this function is called with actions set to None
+    # to give a chance for the strategy to initialize.
     if action is None:
         operations = []
         return
 
-    op_ahead = context.token_ahead.symbol
-    actions = context.state.actions[op_ahead]
-    if op_ahead not in operations and op_ahead.name != 'STOP':
-        operations.append(op_ahead)
+    if action is SHIFT:
+        operation = context.token.symbol
+    else:
+        operation = context.token_ahead.symbol
+
+    actions = from_state.actions[operation]
+    if operation not in operations and operation.name != 'STOP':
+        operations.append(operation)
 
     if action is SHIFT:
         shifts = [a for a in actions if a.action is SHIFT]
@@ -225,16 +232,16 @@ def custom_disambiguation_filter(context, action, subresults):
             return True
 
         red_op = reductions[0].prod.rhs[1]
-        return operations.index(op_ahead) > operations.index(red_op)
+        return operations.index(operation) > operations.index(red_op)
 
     elif action is REDUCE:
 
         # Current reduction operation
-        red_op = context.production.rhs[1]
+        red_op = production.rhs[1]
 
         # If operation ahead is STOP or is of less or equal priority -> reduce.
-        return ((op_ahead not in operations)
-                or (operations.index(op_ahead)
+        return ((operation not in operations)
+                or (operations.index(operation)
                     <= operations.index(red_op)))
 ```
 
@@ -248,7 +255,12 @@ Parameters are:
 
 - **context** - [the parsing context object](./common.md#the-context-object).
 
+- **from_state/to_state** -- `LRState` instances for the transition,
+
 - **action** - either SHIFT or REDUCE constant from `parglare` module,
+
+- **production** - a production used for the REDUCE operation. Valid only if
+  action is REDUCE.
 
 - **subresults (list)** - a sub-results for the reduction. Valid only for
   REDUCE. The length of this list is equal to `len(production.rhs)`.

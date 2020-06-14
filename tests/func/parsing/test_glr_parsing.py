@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import pytest
+import sys
 from parglare import GLRParser, Grammar, Parser, ParseError
 from parglare.exceptions import SRConflicts
 
@@ -132,7 +132,7 @@ def test_expressions():
     Number: /\d+/;
     """
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, actions=actions, debug=True)
+    p = GLRParser(g, actions=actions)
 
     # Even this simple expression has 2 different interpretations
     # (4 + 2) * 3 and
@@ -188,6 +188,9 @@ def test_expressions():
     assert results[0] == 4 + 2 * 3 + 8 * 5 * 3
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
 def test_epsilon_grammar():
 
     grammar = r"""
@@ -201,7 +204,7 @@ def test_epsilon_grammar():
     """
 
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, debug=True)
+    p = GLRParser(g)
 
     txt = """
     First = One Two three
@@ -210,7 +213,19 @@ def test_epsilon_grammar():
     """
 
     results = p.parse(txt)
-    assert len(results) == 1
+
+    expected = [
+        # First solution
+        [[[[], ['First', '=', [['One', 'Two'], 'three']]],
+          ['Second', '=', ['Foo', 'Bar']]],
+         ['Third', '=', 'Baz']],
+
+        # Second solution
+        [[['First', '=', [['One', 'Two'], 'three']],
+          ['Second', '=', ['Foo', 'Bar']]],
+         ['Third', '=', 'Baz']]
+    ]
+    assert results == expected
 
     results = p.parse("")
     assert len(results) == 1
@@ -240,7 +255,7 @@ def test_no_consume_input_multiple_trees():
     Third = Baz
     """
 
-    p = GLRParser(g_nonempty, consume_input=False, debug=True)
+    p = GLRParser(g_nonempty, consume_input=False)
     results = p.parse(txt)
     # There are eight succesful parses:
     # 1. First = One

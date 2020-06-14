@@ -81,17 +81,17 @@ def _new_item_follow(item, first_sets):
     for s in item.production.rhs[item.position + 1:]:
         new_follow.update(first_sets[s])
         if EMPTY not in new_follow:
-            # If EMPTY can't be derived at current position than we have found
+            # If EMPTY can't be derived at current position then we have found
             # the whole follow set.
             break
         else:
             # If the EMPTY is possible at current position in this loop we must
-            # continue to include firsts of the next grammar symbol.
-            # EMTPY can't be a member of the follow set.
+            # continue to include firsts of the next grammar symbol. EMPTY
+            # can't be a member of the follow set.
             new_follow.remove(EMPTY)
     else:
-        # If the rest of production can be EMPTY we shall inherit
-        # all elements of the source item follow set.
+        # If the rest of production can be EMPTY we shall inherit all elements
+        # of the source item follow set.
         new_follow.update(item.follow)
 
     return new_follow

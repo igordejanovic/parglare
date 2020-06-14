@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import pytest  # noqa
 from parglare import GLRParser, Grammar, ParseError
 from parglare.parser import Token
@@ -39,20 +38,20 @@ def test_glr_recovery_default():
     In case of multiple subsequent errouneous chars only one error should be
     reported.
     """
-    parser = GLRParser(g, actions=actions, error_recovery=True, debug=True)
+    parser = GLRParser(g, actions=actions, error_recovery=True)
 
     results = parser.parse('1 + 2 + * 3 & 89 - 5')
 
     assert len(parser.errors) == 2
     e1, e2 = parser.errors
 
-    # First errors is '*' at position 8 and of length 1
+    # First errors is '*' at position 8 and of length 2
     assert e1.location.start_position == 8
-    assert e1.location.end_position == 9
+    assert e1.location.end_position == 10
 
-    # Second error is '& 89' at position 12 and length 4
+    # Second error is '& 89' at position 12 and length 5
     assert e2.location.start_position == 12
-    assert e2.location.end_position == 16
+    assert e2.location.end_position == 17
 
     # There are 5 trees for '1 + 2 + 3 - 5'
     # All results are the same
@@ -66,12 +65,12 @@ def test_glr_recovery_custom_new_position():
     Test that custom recovery that increment position works.
     """
 
-    def custom_recovery(context, error):
+    def custom_recovery(head, error):
         # This recovery will just skip over erroneous part of input '& 89'.
-        return None, context.position + 4
+        head.position += 4
+        return head.parser.default_error_recovery(head)
 
-    parser = GLRParser(g, actions=actions, error_recovery=custom_recovery,
-                       debug=True)
+    parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 
     results = parser.parse('1 + 5 & 89 - 2')
 
@@ -87,9 +86,10 @@ def test_glr_recovery_custom_new_token():
     Test that custom recovery that introduces new token works.
     """
 
-    def custom_recovery(context, error):
+    def custom_recovery(head, error):
         # Here we will introduce missing operation token
-        return Token(g.get_terminal('-'), '-', length=0), None
+        head.token_ahead = Token(g.get_terminal('-'), '-', length=0)
+        return True
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 
@@ -107,8 +107,8 @@ def test_glr_recovery_custom_unsuccessful():
     Test unsuccessful error recovery.
     """
 
-    def custom_recovery(context, error):
-        return None, None
+    def custom_recovery(head, error):
+        return False
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 

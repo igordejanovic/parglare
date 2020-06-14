@@ -2,8 +2,8 @@
 """
 Test non-deterministic parsing.
 """
-from __future__ import unicode_literals
 import pytest  # noqa
+import sys
 from parglare import Parser, GLRParser, Grammar, SLR, LALR
 from parglare.exceptions import ParseError, SRConflicts, RRConflicts
 
@@ -121,7 +121,10 @@ def test_cyclic_grammar_1():
     assert len(results) == 1
 
 
-def todo_test_cyclic_grammar_2():
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
+def test_cyclic_grammar_2():
     """
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
 
@@ -136,15 +139,36 @@ def todo_test_cyclic_grammar_2():
     with pytest.raises(SRConflicts):
         Parser(g, prefer_shifts=False)
 
-    p = GLRParser(g, debug=True)
+    p = GLRParser(g)
     results = p.parse('xx')
 
-    # This grammar has infinite ambiguity but by minimizing empty reductions
-    # we shall get only one result xx -> xS -> SS -> S
-    assert len(results) == 1
+    # We have 11 valid solutions
+    assert len(results) == 11
+    expected = [
+        ['x', 'x'],
+        [[[], 'x'], 'x'],
+        [[[], [[], 'x']], 'x'],
+        ['x', [[], 'x']],
+        [[[], 'x'], [[], 'x']],
+        [[], ['x', 'x']],
+        [[], [[], ['x', 'x']]],
+        ['x', [[], 'x']],
+        [[[], 'x'], [[], 'x']],
+        [[[], [[], 'x']], [[], 'x']],
+        [[], [[[], 'x'], 'x']]
+    ]
+
+    assert expected == results
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
 def test_cyclic_grammar_3():
+    """
+    Grammar with indirect cycle.
+    r:EMPTY->A ; r:A->S; r:EMPTY->A; r:SA->S; r:EMPTY->A; r:SA->S;...
+    """
     grammar = """
     S: S A | A;
     A: "a" | EMPTY;
@@ -154,10 +178,16 @@ def test_cyclic_grammar_3():
 
     Parser(g)
 
-    p = GLRParser(g, debug=True)
+    p = GLRParser(g)
     results = p.parse('aa')
 
-    assert len(results) == 1
+    assert len(results) == 2
+    expected = [
+        ['a', 'a'],
+        [[[], 'a'], 'a']
+    ]
+
+    assert results == expected
 
 
 def test_highly_ambiguous_grammar():
@@ -181,7 +211,7 @@ def test_highly_ambiguous_grammar():
         Parser(g, prefer_shifts=True)
 
     # GLR parser handles this fine.
-    p = GLRParser(g)
+    p = GLRParser(g, build_tree=True)
 
     # For three tokens we have 3 valid derivations/trees.
     results = p.parse("bbb")
@@ -196,7 +226,7 @@ def test_indirect_left_recursive():
     """Grammar with indirect/hidden left recursion.
 
     parglare LR parser will handle this using implicit disambiguation by
-    prefering shifts over empty reductions. It will greadily match "b" tokens
+    preferring shifts over empty reductions. It will greadily match "b" tokens
     and than reduce EMPTY before "a" and start to reduce by 'B="b" B'
     production.
 
@@ -212,13 +242,14 @@ def test_indirect_left_recursive():
     p = Parser(g)
     p.parse("bbbbbbbbbbbba")
 
-    p = GLRParser(g, debug=True)
+    p = GLRParser(g)
     results = p.parse("bbbbbbbbbbbba")
     assert len(results) == 1
 
 
 def test_reduce_enough_empty():
-    """In this unambiguous grammar parser must reduce as many empty A productions
+    """
+    In this unambiguous grammar parser must reduce as many empty A productions
     as there are "b" tokens ahead to be able to finish successfully, thus it
     needs unlimited lookahead
 
@@ -240,7 +271,28 @@ def test_reduce_enough_empty():
     """
     g = Grammar.from_string(grammar)
 
-    p = GLRParser(g, debug=True)
+    p = GLRParser(g)
+    results = p.parse("xbbb")
+
+    assert len(results) == 1
+
+
+def test_reduce_enough_many_empty():
+    """
+    This is a generalization of the previous grammar where parser must reduce
+    enough A B pairs to succeed.
+
+    The language is the same: xb^n, n>=0
+    """
+    grammar = """
+    S: A B S "b";
+    S: "x";
+    A: EMPTY;
+    B: EMPTY;
+    """
+    g = Grammar.from_string(grammar)
+
+    p = GLRParser(g)
     results = p.parse("xbbb")
 
     assert len(results) == 1

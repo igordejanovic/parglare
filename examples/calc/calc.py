@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from parglare import Grammar, Parser
 from parglare.actions import pass_inner, pass_single
 
