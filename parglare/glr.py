@@ -174,7 +174,7 @@ class GLRParser(Parser):
                     self._enter_error_reporting()
                     continue
 
-                if self.accepted_heads:
+                if not self.shifted_heads:
                     break
 
         if self.debug and self.debug_trace:
