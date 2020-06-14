@@ -201,7 +201,7 @@ def test_epsilon_grammar():
     """
 
     g = Grammar.from_string(grammar)
-    p = GLRParser(g, debug=True, debug_colors=True)
+    p = GLRParser(g)
 
     txt = """
     First = One Two three
@@ -210,7 +210,19 @@ def test_epsilon_grammar():
     """
 
     results = p.parse(txt)
-    assert len(results) == 1
+
+    expected = [
+        # First solution
+        [[[[], ['First', '=', [['One', 'Two'], 'three']]],
+          ['Second', '=', ['Foo', 'Bar']]],
+         ['Third', '=', 'Baz']],
+
+        # Second solution
+        [[['First', '=', [['One', 'Two'], 'three']],
+          ['Second', '=', ['Foo', 'Bar']]],
+         ['Third', '=', 'Baz']]
+    ]
+    assert results == expected
 
     results = p.parse("")
     assert len(results) == 1
