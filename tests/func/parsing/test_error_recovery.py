@@ -54,7 +54,7 @@ def test_error_recovery_uncomplete():
     e = parser.errors[0]
 
     assert e.location.start_position == 8
-    assert e.location.end_position == 9
+    assert e.location.end_position == 10
     assert 'Error at 1:8:"1 + 2 +  **> * 3 & 89 -" => '\
         'Expected: ( or number but found <*(*)>' in str(e)
 
@@ -76,18 +76,19 @@ def test_error_recovery_complete():
     e1, e2 = parser.errors
 
     assert e1.location.start_position == 8
-    assert e1.location.end_position == 9
+    assert e1.location.end_position == 10
 
     # Characters of the second error should be packed as a single error
     # spanning the whole erroneous region. Whitespaces should be included too.
     assert e2.location.start_position == 12
-    assert e2.location.end_position == 16
+    assert e2.location.end_position == 17
     assert 'Error at 1:12:"+ 2 + * 3  **> & 89 - 5" => '\
         'Expected: ) or * or + or - or / or STOP or ^' in str(e2)
 
 
 def test_error_recovery_parse_error():
-    """In this test we have error that can't be recovered from by a simple
+    """
+    In this test we have error that can't be recovered from by a simple
     dropping of characters as we'll end up with invalid expression at the end
     of the input.
 
@@ -120,9 +121,10 @@ def test_custom_error_recovery():
         assert open_par in expected_symbols
         number = g.get_terminal('number')
         assert number in expected_symbols
-        return None, context.position + 1
+        context.position += 1
+        return True
 
-    parser = Parser(g, actions=actions, error_recovery=my_recovery, debug=True)
+    parser = Parser(g, actions=actions, error_recovery=my_recovery)
 
     result = parser.parse("1 + 2 + * 3 - 5")
 
@@ -138,7 +140,7 @@ def test_recovery_custom_unsuccessful():
     """
 
     def custom_recovery(context, error):
-        return None, None
+        return False
 
     parser = Parser(g, actions=actions, error_recovery=custom_recovery)
 

@@ -181,16 +181,17 @@ class Parser(object):
 
         self.errors = []
         self.in_error_recovery = False
+        self.accepted_head = None
 
         next_token = self._next_token
         debug = self.debug
 
         start_head = LRStackNode(self, self.table.states[0], 0, position)
         self._init_dynamic_disambiguation(start_head)
-        self.state_stack = state_stack = [start_head]
+        self.parse_stack = parse_stack = [start_head]
 
         while True:
-            head = state_stack[-1]
+            head = parse_stack[-1]
             cur_state = head.state
             if debug:
                 a_print("Current state:", str(cur_state.state_id),
@@ -215,7 +216,9 @@ class Parser(object):
                         level=1)
                 h_print("Token ahead:", head.token_ahead, level=1)
 
-            actions = cur_state.actions.get(head.token_ahead.symbol)
+            actions = None
+            if head.token_ahead is not None:
+                actions = cur_state.actions.get(head.token_ahead.symbol)
             if not actions and not self.consume_input:
                 # If we don't have any action for the current token ahead
                 # see if we can finish without consuming the whole input.
@@ -225,20 +228,26 @@ class Parser(object):
 
                 symbols_expected = list(cur_state.actions.keys())
                 tokens_ahead = self._get_all_possible_tokens_ahead(head)
-                if not self.in_error_recovery:
-                    error = self._create_error(
-                        head, symbols_expected,
-                        tokens_ahead,
-                        symbols_before=[cur_state.symbol])
-                else:
-                    error = self.errors[-1]
+                self.errors.append(self._create_error(
+                    head, symbols_expected,
+                    tokens_ahead,
+                    symbols_before=[cur_state.symbol]))
 
                 if self.error_recovery:
-                    if self._do_recovery(head, error):
-                        self.in_error_recovery = True
+                    if self.debug:
+                        a_print("*** STARTING ERROR RECOVERY.",
+                                new_line=True)
+                    if self._do_recovery():
+                        # Error recovery succeeded
+                        if self.debug:
+                            a_print(
+                                "*** ERROR RECOVERY SUCCEEDED. CONTINUING.",
+                                new_line=True)
                         continue
-
-                raise error
+                    else:
+                        break
+                else:
+                    break
 
             # Dynamic disambiguation
             if self.dynamic_filter:
@@ -284,7 +293,7 @@ class Parser(object):
                     end_position=new_position
                 )
                 new_head.results = self._call_shift_action(new_head)
-                state_stack.append(new_head)
+                parse_stack.append(new_head)
 
                 self.in_error_recovery = False
 
@@ -302,10 +311,10 @@ class Parser(object):
 
                 r_length = len(production.rhs)
                 if r_length:
-                    start_reduction_head = state_stack[-r_length]
-                    results = [x.results for x in state_stack[-r_length:]]
-                    del state_stack[-r_length:]
-                    next_state = state_stack[-1].state.gotos[production.symbol]
+                    start_reduction_head = parse_stack[-r_length]
+                    results = [x.results for x in parse_stack[-r_length:]]
+                    del parse_stack[-r_length:]
+                    next_state = parse_stack[-1].state.gotos[production.symbol]
                     new_head = LRStackNode(
                         self,
                         state=next_state,
@@ -337,16 +346,21 @@ class Parser(object):
 
                 # Calling reduce action
                 new_head.results = self._call_reduce_action(new_head, results)
-                state_stack.append(new_head)
+                parse_stack.append(new_head)
 
             elif act.action is ACCEPT:
-                if debug:
-                    a_print("SUCCESS!!!")
-                assert len(state_stack) == 2
-                if self.return_position:
-                    return state_stack[1].results, state_stack[1].position
-                else:
-                    return state_stack[1].results
+                self.accepted_head = head
+                break
+
+        if self.accepted_head:
+            if debug:
+                a_print("SUCCESS!!!")
+            if self.return_position:
+                return parse_stack[1].results, parse_stack[1].position
+            else:
+                return parse_stack[1].results
+        else:
+            raise self.errors[-1]
 
     def call_actions(self, node):
         """
@@ -450,10 +464,7 @@ class Parser(object):
     def _next_token(self, head):
         tokens = self._next_tokens(head)
         if not tokens:
-            # We have to return something.
-            # Returning EMPTY token is not a lie (EMPTY can always be matched)
-            # and will cause proper parse error to be raised.
-            return EMPTY_token
+            return None
         elif len(tokens) == 1:
             return tokens[0]
         else:
@@ -574,7 +585,7 @@ class Parser(object):
                 r_len = len(a.prod.rhs)
                 if r_len:
                     results = [x.results
-                               for x in self.state_stack[-r_len:]]
+                               for x in self.parse_stack[-r_len:]]
                 else:
                     results = []
                 context.production = a.prod
@@ -768,40 +779,40 @@ class Parser(object):
 
         return tokens
 
-    def _do_recovery(self, context, error):
+    def _do_recovery(self):
 
         debug = self.debug
         if debug:
             a_print("**Recovery initiated.**")
 
+        head = self.parse_stack[-1]
+        error = self.errors[-1]
+
         if type(self.error_recovery) is bool:
             # Default recovery
             if debug:
                 prints("\tDoing default error recovery.")
-            token, position = self.default_error_recovery(context)
+            successful = self.default_error_recovery(head)
         else:
             # Custom recovery provided during parser construction
             if debug:
                 prints("\tDoing custom error recovery.")
-            token, position = self.error_recovery(context, error)
+            successful = self.error_recovery(head, error)
 
         # The recovery may either decide to skip erroneous part of
         # the input and resume at the place that can continue or it
         # might decide to fill in missing tokens.
-        if position:
-            last_error = self.errors[-1]
-            last_error.location.context.end_position = position
-            context.position = position
+        if successful:
             if debug:
-                h_print("Advancing position to ",
-                        pos_to_line_col(context.input_str, position),
+                h_print("Recovery ")
+            error.location.context.end_position = head.position
+            if debug:
+                a_print("New position is ",
+                        pos_to_line_col(head.input_str, head.position),
                         level=1)
-
-        context.token_ahead = token
-        if token and debug:
-            h_print("Introducing token {}", repr(token), level=1)
-
-        return bool(token or position)
+                a_print("New lookahead token is ", head.token_ahead,
+                        level=1)
+        return successful
 
     def default_error_recovery(self, head):
         """

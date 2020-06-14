@@ -30,7 +30,7 @@ def test_whitespace_redefinition():
         +id  )
         """)
     except ParseError as e:
-        assert e.location.position == 13
+        assert e.location.start_position == 13
 
 
 def test_whitespace_not_used_if_layout():
