@@ -161,6 +161,9 @@ def test_cyclic_grammar_2():
     assert expected == results
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
 def test_cyclic_grammar_3():
     """
     Grammar with indirect cycle.

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+import sys
 from parglare import GLRParser, Grammar, Parser, ParseError
 from parglare.exceptions import SRConflicts
 
@@ -187,6 +188,9 @@ def test_expressions():
     assert results[0] == 4 + 2 * 3 + 8 * 5 * 3
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
 def test_epsilon_grammar():
 
     grammar = r"""

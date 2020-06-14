@@ -1,3 +1,5 @@
+import pytest
+import sys
 from parglare import Grammar, GLRParser
 
 grammar = r"""
@@ -13,6 +15,9 @@ DOT: ".";
 """  # noqa
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
 def test_issue_114_empty_and_lexical_ambiguity():
 
     g = Grammar.from_string(grammar)

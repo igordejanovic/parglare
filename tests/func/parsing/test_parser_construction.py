@@ -155,6 +155,9 @@ def test_priority_conflicts_resolving():
     """
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
 def test_prefer_shifts_no_sr_conflicts():
     """
     Test that grammar with S/R conflict will be resolved to SHIFT actions
