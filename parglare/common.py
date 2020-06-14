@@ -34,7 +34,7 @@ class Location(object):
     def __init__(self, context=None, file_name=None):
 
         self.context = context
-        self.file_name = file_name
+        self.file_name = file_name or context.file_name
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting
