@@ -199,7 +199,7 @@ Where resolution function is of the following form:
 
 ```python
 def custom_disambiguation_filter(context, from_state, to_state, action,
-                                 subresults):
+                                 production, subresults):
     """
     Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
@@ -237,7 +237,7 @@ def custom_disambiguation_filter(context, from_state, to_state, action,
     elif action is REDUCE:
 
         # Current reduction operation
-        red_op = context.production.rhs[1]
+        red_op = production.rhs[1]
 
         # If operation ahead is STOP or is of less or equal priority -> reduce.
         return ((operation not in operations)
@@ -258,6 +258,9 @@ Parameters are:
 - **from_state/to_state** -- `LRState` instances for the transition,
 
 - **action** - either SHIFT or REDUCE constant from `parglare` module,
+
+- **production** - a production used for the REDUCE operation. Valid only if
+  action is REDUCE.
 
 - **subresults (list)** - a sub-results for the reduction. Valid only for
   REDUCE. The length of this list is equal to `len(production.rhs)`.

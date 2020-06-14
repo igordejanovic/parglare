@@ -2,10 +2,9 @@
 
 ## The Context object
 
-Most of the parser state is kept in the context object. This object is
-passed to various callback functions (actions, recognizers, error recovery etc.).
-
-The following attributes are available on the context object:
+An object of this kind object is passed to various callback functions (actions,
+recognizers, error recovery etc.). It is not always an instance of the same
+class, but all context objects have the following properties:
 
 - **start_position/end_position** - the beginning and the end in the input
   stream where the match occurred. `start_position` is the location of the first
@@ -21,8 +20,7 @@ The following attributes are available on the context object:
 - **input_str** - the input string (or list of objects) that is being parsed.
 
 - **layout_content** - is the layout (whitespaces, comments etc.) that are
-  collected from the previous non-layout match. Default actions for building the
-  parse tree will attach these layouts to the tree nodes.
+  collected from the previous non-layout match.
 
 - **layout_content_ahead** - layout content before `token_ahead`.
 
@@ -49,7 +47,7 @@ The following attributes are available on the context object:
   used for GLR parsing.
 
 - **extra** - this attribute can store arbitrary user information for state
-  tracking. If not given during initial context creation `dict` is used.
+  tracking. If not given as a parameter to `parse` call a `dict` is used.
 
 
 ## Location class
@@ -65,9 +63,12 @@ Used at various places in parglare to define location and span in the files
   is parsed),
 
 - **start_position/end_position** - an absolute position in the input where the
-  error occurred,
+  span starts/ends,
 
-- **line**/**column** (properites) - line and column where the error starts.
+- **line**/**column** (properites) - line and column where the span starts.
+
+- **line_end**/**column_end** (properites) - line and column where the span
+  starts ends.
 
 
 If there is an error in the grammar itself parglare will raise
