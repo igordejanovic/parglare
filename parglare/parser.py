@@ -803,22 +803,24 @@ class Parser(object):
 
         return bool(token or position)
 
-    def default_error_recovery(self, context):
-        """The default recovery strategy is to drop char/object at current position
-        and try to continue.
-
-        Args:
-            context(Context): The parsing context
-
-        Returns:
-            (None for new Token, new position)
-
+    def default_error_recovery(self, head):
         """
-        return None, context.position + 1 \
-            if context.position < len(context.input_str) else None
+        The default recovery strategy is to search from the current location
+        for expected terminals.
+
+        Returns True if successful, False otherwise.
+        """
+
+        while head.position < len(head.input_str):
+            head.position += 1
+            token = self._next_token(head)
+            if token and token is not EMPTY_token:
+                head.token_ahead = token
+                return True
+        return False
 
     def _create_error(self, context, symbols_expected, tokens_ahead=None,
-                      symbols_before=None, last_heads=None, store=True):
+                      symbols_before=None, last_heads=None):
         error = ParseError(Location(context=ErrorContext(context)),
                            symbols_expected,
                            tokens_ahead,
@@ -828,9 +830,6 @@ class Parser(object):
 
         if self.debug:
             a_print("Error: ", error, level=1)
-
-        if store:
-            self.errors.append(error)
 
         return error
 

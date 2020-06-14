@@ -86,11 +86,10 @@ class GLRParser(Parser):
 
         # Error reporting and recovery
         self.errors = []
-        self.in_error_recovery = None
         self.in_error_reporting = False
         self.expected = set()
         self.tokens_ahead = []
-        self.last_reducing_heads = []
+        self.last_shifted_heads = []
 
         # A stack of heads being reduced. Contains tuples (head, list of
         # pending reductions). Used to perform reductions in a depth-first
@@ -123,6 +122,8 @@ class GLRParser(Parser):
 
         # The main loop
         while True:
+            if not self.in_error_reporting:
+                self.last_shifted_heads = list(self.shifted_heads)
             self._do_reductions()
             if self.in_error_reporting:
                 self.expected = set([h.token_ahead.symbol for
@@ -134,43 +135,64 @@ class GLRParser(Parser):
                             ', '.join([t.name for t in self.expected]),
                             level=1)
                     h_print("Tokens found:", self.tokens_ahead, level=1)
-                break
+
+                self.reduced_heads = {}
+                self.in_error_reporting = False
+
+                # After leaving error reporting mode, register error and try
+                # recovery if enabled
+                context = self.last_shifted_heads[0]
+                self.errors.append(
+                    self._create_error(
+                        context, self.expected,
+                        tokens_ahead=self.tokens_ahead,
+                        symbols_before=list(
+                            {h.state.symbol
+                             for h in self.last_shifted_heads}),
+                        last_heads=self.last_shifted_heads))
+                if self.error_recovery:
+                    if self.debug:
+                        a_print("*** STARTING ERROR RECOVERY.",
+                                new_line=True)
+                    if self._do_recovery():
+                        # Error recovery succeeded
+                        if self.debug:
+                            a_print(
+                                "*** ERROR RECOVERY SUCCEEDED. CONTINUING.",
+                                new_line=True)
+                        continue
+                    else:
+                        break
+                else:
+                    break
             else:
                 self._do_shifts_accepts()
-                if not self.shifted_heads:
-                    if not self.accepted_heads:
-                        if self.debug:
-                            a_print("*** ENTERING ERROR REPORTING MODE.",
-                                    new_line=True)
-                        self._enter_error_reporting()
-                        continue
+                if not self.shifted_heads and not self.accepted_heads:
+                    if self.debug:
+                        a_print("*** ENTERING ERROR REPORTING MODE.",
+                                new_line=True)
+                    self._enter_error_reporting()
+                    continue
+
+                if self.accepted_heads:
                     break
+
+        if self.debug and self.debug_trace:
+            self._export_dot_trace()
 
         if self.accepted_heads:
             # Return results
             results = [x.results for head in self.accepted_heads
                        for x in head.parents]
-            self._remove_transient_state()
             if self.debug:
                 a_print("*** {} sucessful parse(s).".format(len(results)))
-                if self.debug_trace:
-                    self._export_dot_trace()
 
+            self._remove_transient_state()
             return results
         else:
             # Report error
-            if self.debug and self.debug_trace:
-                self._export_dot_trace()
-            last_reducing_heads = self.last_reducing_heads
-            context = last_reducing_heads[0]
             self._remove_transient_state()
-            raise self._create_error(context, self.expected,
-                                     tokens_ahead=self.tokens_ahead,
-                                     symbols_before=list(
-                                         {h.state.symbol
-                                          for h in last_reducing_heads}),
-                                     last_heads=last_reducing_heads,
-                                     store=False)
+            raise self.errors[-1]
 
     def _do_reductions(self):
         """
@@ -182,14 +204,18 @@ class GLRParser(Parser):
             a_print("** REDUCING", new_line=True)
             self._debug_active_heads(self.shifted_heads)
 
-        self.last_reducing_heads = list(self.shifted_heads)
-
         if not self.in_error_reporting:
             # First we shall find lookaheads for all shifted heads and split
             # heads on lexical ambiguity.
             shifted_heads = []
             while self.shifted_heads:
                 head = self.shifted_heads.pop()
+                if head.token_ahead is not None:
+                    # This might happen if this head is produced by error
+                    # recovery
+                    shifted_heads.append(head)
+                    continue
+
                 if debug:
                     h_print("Finding lookaheads", new_line=True)
                 self._skipws(head, self.input_str)
@@ -548,11 +574,11 @@ class GLRParser(Parser):
         self.in_error_reporting = True
 
         # Start with the last shifted heads sorted by position.
-        self.last_reducing_heads.sort(key=lambda h: h.position, reverse=True)
-        last_head = self.last_reducing_heads[0]
+        self.last_shifted_heads.sort(key=lambda h: h.position, reverse=True)
+        last_head = self.last_shifted_heads[0]
         farthest_heads = takewhile(
             lambda h: h.position == last_head.position,
-            self.last_reducing_heads)
+            self.last_shifted_heads)
 
         self.tokens_ahead = self._get_all_possible_tokens_ahead(last_head)
 
@@ -561,19 +587,20 @@ class GLRParser(Parser):
                 h = head.for_token(Token(possible_lookahead, []))
                 self.shifted_heads.append(h)
 
-    def _do_recovery(self, error):
-        """If recovery is enabled, does error recovery for the heads in
-        heads_for_recovery.
+    def _do_recovery(self):
+        """
+        If recovery is enabled, does error recovery for the heads in
+        last_shifted_heads.
 
         """
+        error = self.errors[-1]
         debug = self.debug
-        for head in self.heads_for_recovery:
-            context = head.context
-            input_str = context.input_str
-            symbols = context.state.actions.keys()
+        self.shifted_heads = []
+        for head in self.last_shifted_heads:
             if debug:
-                a_print("**Error found. ",
-                        "Recovery initiated for head {}.".format(head),
+                input_str = head.input_str
+                symbols = head.state.actions.keys()
+                h_print("Recovery initiated for head {}.".format(head),
                         level=1, new_line=True)
                 h_print("Symbols expected: ",
                         [s.name for s in symbols], level=1)
@@ -581,36 +608,28 @@ class GLRParser(Parser):
                 # Default recovery
                 if debug:
                     prints("\tDoing default error recovery.")
-                token, position = self.default_error_recovery(context)
+                successful = self.default_error_recovery(head)
             else:
                 # Custom recovery provided during parser construction
                 if debug:
                     prints("\tDoing custom error recovery.")
-                token, position = self.error_recovery(context, error)
+                successful = self.error_recovery(head, error)
 
-            if position is not None or token is not None:
-                if position:
-                    last_error = self.errors[-1]
-                    last_error.location.end_position = position
-                    context.position = position
-                    if debug:
-                        h_print("Advancing position to ",
-                                pos_to_line_col(input_str, position),
-                                level=1)
-                context.token_ahead = token
-
-                if token and debug:
-                    h_print("Introducing token {}", repr(token), level=1)
-
-                self._add_merge_head_for_reduction(head)
-
+            if successful:
+                error.location.context.end_position = head.position
+                if debug:
+                    a_print("New position is ",
+                            pos_to_line_col(input_str, head.position),
+                            level=1)
+                    a_print("New lookahead token is ", head.token_ahead,
+                            level=1)
+                self.shifted_heads.append(head)
             else:
                 if debug:
                     a_print("Killing head: ", head, level=1)
                     if self.debug_trace:
                         self._trace_step_kill(head)
-
-        return bool(token or position)
+        return bool(self.shifted_heads)
 
     def _remove_transient_state(self):
         """
@@ -621,13 +640,17 @@ class GLRParser(Parser):
         del self.shifted_heads
         del self.reducing_stack
         del self.reducing_stack_states
-        del self.last_reducing_heads
+        del self.last_shifted_heads
 
     def _debug_active_heads(self, heads):
-        h_print("Active heads = ", len(heads))
-        for head in heads:
-            prints("\t{}".format(head))
-        h_print("Number of trees = ", sum([h.number_of_trees for h in heads]))
+        if not heads:
+            h_print('No active heads.')
+        else:
+            h_print("Active heads = ", len(heads))
+            for head in heads:
+                prints("\t{}".format(head))
+            h_print("Number of trees = {}".format(
+                sum([h.number_of_trees for h in heads])))
 
     def _debug_reduce_heads(self):
         heads = list(self.reduced_heads.values())
