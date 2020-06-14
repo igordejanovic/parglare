@@ -30,7 +30,7 @@ operations = []
 
 
 def custom_disambiguation_filter(context, from_state, to_state, action,
-                                 subresults):
+                                 production, subresults):
     """
     Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
@@ -68,7 +68,7 @@ def custom_disambiguation_filter(context, from_state, to_state, action,
     elif action is REDUCE:
 
         # Current reduction operation
-        red_op = context.production.rhs[1]
+        red_op = production.rhs[1]
 
         # If operation ahead is STOP or is of less or equal priority -> reduce.
         return ((operation not in operations)

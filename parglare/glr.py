@@ -422,7 +422,7 @@ class GLRParser(Parser):
 
         if not self.dynamic_filter or \
                 self._call_dynamic_filter(parent, head.state, state,
-                                          REDUCE, results):
+                                          REDUCE, production, results):
 
             parent.results = self._call_reduce_action(parent, results)
 
@@ -510,7 +510,7 @@ class GLRParser(Parser):
                                    token=shead_parent.token)
             if not self.dynamic_filter or \
                     self._call_dynamic_filter(parent, head.state, to_state,
-                                              SHIFT, None):
+                                              SHIFT):
 
                 shifted_head.create_link(parent)
                 if debug and self.debug_trace:
@@ -535,7 +535,7 @@ class GLRParser(Parser):
 
             if not self.dynamic_filter or \
                     self._call_dynamic_filter(parent, head.state, to_state,
-                                              SHIFT, None):
+                                              SHIFT):
 
                 parent.results = self._call_shift_action(parent)
 

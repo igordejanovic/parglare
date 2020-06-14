@@ -568,7 +568,7 @@ class Parser(object):
         if self.dynamic_filter:
             if self.debug:
                 prints("\tInitializing dynamic disambiguation.")
-            self.dynamic_filter(context, None, None, None, None)
+            self.dynamic_filter(context, None, None, None, None, None)
 
     def _dynamic_disambiguation(self, context, actions):
 
@@ -578,8 +578,7 @@ class Parser(object):
                 if self._call_dynamic_filter(context,
                                              context.state,
                                              a.state,
-                                             SHIFT,
-                                             None):
+                                             SHIFT):
                     dyn_actions.append(a)
             elif a.action is REDUCE:
                 r_len = len(a.prod.rhs)
@@ -593,6 +592,7 @@ class Parser(object):
                                              context.state,
                                              a.state,
                                              REDUCE,
+                                             a.prod,
                                              results):
                     dyn_actions.append(a)
             else:
@@ -600,12 +600,12 @@ class Parser(object):
         return dyn_actions
 
     def _call_dynamic_filter(self, context, from_state, to_state, action,
-                             subresults):
+                             production=None, subresults=None):
         token = context.token
         if context.token is None:
             context.token = context.token_ahead
-        if (action is SHIFT and not context.token.symbol.dynamic)\
-           or (action is REDUCE and not context.production.dynamic):
+        if (action is SHIFT and not to_state.symbol.dynamic)\
+           or (action is REDUCE and not production.dynamic):
             return True
 
         if self.debug:
@@ -626,7 +626,7 @@ class Parser(object):
                     level=2)
 
         accepted = self.dynamic_filter(context, from_state, to_state,
-                                       action, subresults)
+                                       action, production, subresults)
         if self.debug:
             if accepted:
                 a_print("Action accepted.", level=2)
