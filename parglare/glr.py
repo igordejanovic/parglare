@@ -450,7 +450,7 @@ class GLRParser(Parser):
                             else:
                                 if self.debug:
                                     h_print(
-                                        'Looping with an empty tree reduction.',
+                                        'Looping with an empty tree reduction',
                                         level=1)
 
                             if self.debug:

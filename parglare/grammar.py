@@ -1256,6 +1256,7 @@ def check_name(context, name):
 class GrammarContext:
     pass
 
+
 # Grammar for grammars
 
 (PGFILE,
