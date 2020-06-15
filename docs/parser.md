@@ -168,8 +168,9 @@ These two calls accepts the following parameters:
 
 - `position` - the start position to parse from. By default 0.
 
-- `context` - the [context object](./common.md#the-context-object) to use. By
-  default `None` - context object is created by the parser.
+- `extra` - an object used for arbitrary user state kept during parsing. It will
+  be accessible on context-like objects. If not given an instance of `dict` will
+  be created.
 
 - `file_name` - first positional and mandatory parameter only for `parse_file`
   call - the name/path of the file to parse.

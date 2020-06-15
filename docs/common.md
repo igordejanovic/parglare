@@ -68,7 +68,7 @@ Used at various places in parglare to define location and span in the files
 - **line**/**column** (properites) - line and column where the span starts.
 
 - **line_end**/**column_end** (properites) - line and column where the span
-  starts ends.
+  ends.
 
 
 If there is an error in the grammar itself parglare will raise
