@@ -299,8 +299,9 @@ textual file <code>parse_file</code> is used.</p>
 <p><code>position</code> - the start position to parse from. By default 0.</p>
 </li>
 <li>
-<p><code>context</code> - the <a href="../common/#the-context-object">context object</a> to use. By
-  default <code>None</code> - context object is created by the parser.</p>
+<p><code>extra</code> - an object used for arbitrary user state kept during parsing. It will
+  be accessible on context-like objects. If not given an instance of <code>dict</code> will
+  be created.</p>
 </li>
 <li>
 <p><code>file_name</code> - first positional and mandatory parameter only for <code>parse_file</code>
