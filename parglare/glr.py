@@ -124,8 +124,14 @@ class GLRParser(Parser):
                 self.last_shifted_heads = list(self.shifted_heads)
             self._do_reductions()
             if self.in_error_reporting:
-                self.expected = set([h.token_ahead.symbol for
-                                     h in self.reduced_heads])
+                # Expected symbols are only those that can cause reduced head
+                # to shift.
+                self.expected = set([
+                    h.token_ahead.symbol for h in self.reduced_heads
+                    if h.token_ahead.symbol in h.state.actions
+                    and SHIFT in [action.action
+                                  for action
+                                  in h.state.actions[h.token_ahead.symbol]]])
                 if self.debug:
                     a_print("*** LEAVING ERROR REPORTING MODE.",
                             new_line=True)
