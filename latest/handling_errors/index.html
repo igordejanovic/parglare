@@ -7,15 +7,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <meta name="author" content="Igor Dejanović">
+  
   <link rel="shortcut icon" href="../img/favicon.ico">
   <title>Handling errors - parglare</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
-  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
-  <link href="../style.css" rel="stylesheet">
-  <link href="../css/version-select.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../style.css" rel="stylesheet" />
+  <link href="../css/version-select.css" rel="stylesheet" />
   
   <script>
     // Current page data
@@ -26,7 +27,7 @@
   
   <script src="../js/jquery-2.1.1.min.js" defer></script>
   <script src="../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script> 
   
   <script>
@@ -47,6 +48,7 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
         <a href=".." class="icon icon-home"> parglare</a>
         <div role="search">
@@ -57,110 +59,52 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="..">Home</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">User Guide</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../getting_started/">Getting started</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar_language/">Grammar language</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar/">Grammar class</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../parser/">Parser</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../actions/">Actions</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../common/">Common API</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../recognizers/">Recognizers</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar_modularization/">Modularization</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../disambiguation/">Disambiguation</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../parse_trees/">Parse trees</a>
-                </li>
-                <li class=" current">
-                    
-    <a class="current" href="./">Handling errors</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#handling-errors">Handling errors</a></li>
-    
-
-    <li class="toctree-l3"><a href="#error-recovery">Error recovery</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#custom-recovery-strategy">Custom recovery strategy</a></li>
-        
-        </ul>
-    
-
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">User Guide</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../getting_started/">Getting started</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar/">Grammar class</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../actions/">Actions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar_modularization/">Modularization</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../lr_parsing/">LR parsing and conflicts</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../parse_trees/">Parse trees</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Handling errors</a>
+    <ul class="current">
     </ul>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../pglr/">pglr command</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../debugging/">Debugging</a>
-                </li>
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">About</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../about/CONTRIBUTING/">Contributing</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../about/LICENSE/">License</a>
-                </li>
-    </ul>
-	    </li>
-          
-        </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                    </li>
+                </ul>
       </div>
-      &nbsp;
+    </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -192,6 +136,7 @@
       
     </li>
   </ul>
+  
   <hr/>
 </div>
           <div role="main">
@@ -205,7 +150,7 @@ be performed it will report an error by raising an instance of
 <ul>
 <li>
 <p><strong>location</strong> - an instance of the <a href="../common/#location-class">Location class</a>
-  with information of the position and span of the error.</p>
+  with information of the span of the error.</p>
 </li>
 <li>
 <p><strong>symbols_expected (list)</strong> - a list of expected symbol at the location.</p>
@@ -236,40 +181,35 @@ errors in one go. To do this, parser has to recover from errors, i.e. get to
 the valid state and continue.</p>
 <p>To enable error recovery set <code>error_recovery</code> <a href="../parser/#error_recovery">parameter of parser
 construction</a> to <code>True</code>. This will enable implicit
-error recovery strategy that will simply drop characther/object at the place of
-the error and try to continue. All errors will be collected as an <code>errors</code> list
-on the parser instance.</p>
+error recovery strategy that will try to search for expected tokens in the input
+ahead and when the first is found the parsing will continue. All errors will be
+collected as an <code>errors</code> list on the parser instance.</p>
 <p>Each error is an instance of <a href="#handling-errors"><code>ParseError</code> class</a>. In case no
-recovery is possible last <code>ParseError</code> will be raised.</p>
+recovery is possible last <code>ParseError</code> will be raised. <code>ParserError</code> has a
+location which represents the span of the error in the input (e.g.
+<code>error.location.start_position</code> and <code>error.location.end_position</code>).</p>
 <h2 id="custom-recovery-strategy">Custom recovery strategy<a class="headerlink" href="#custom-recovery-strategy" title="Permanent link">&para;</a></h2>
-<p>To provide a custom strategy for error recovery set <code>error_recovery</code> to a Python
-function. This function should have the following signature:</p>
+<p>To provide a custom strategy for error recovery set <code>error_recovery</code> parser
+constructor parameter to a Python function. This function should have the
+following signature:</p>
 <pre><code>def error_recovery_strategy(context, error):
     ...
 </code></pre>
 <ul>
-<li><strong>context</strong> - the <a href="../common/#the-context-object">context object</a> at the
-  place where error occurred.</li>
+<li><strong>context</strong>*- context like object (usually the parser head).</li>
 <li><strong>error</strong> - <a href="#handling-errors"><code>ParseError</code> instance</a>.</li>
 </ul>
-<p>Using the context object you can query the state of the parser. E.g. to get the
+<p>Using the head object you can query the state of the parser. E.g. to get the
 position use <code>context.position</code>, to get the parser state use <code>context.state</code>, to
 get expected symbols in this state use <code>context.state.actions.keys()</code>.</p>
 <p>To get information about the error use <code>error</code> object. E.g. to get expected
 symbols at this position for which parser can succesfully continue use
 <code>error.symbols_expected</code>.</p>
-<p>The recovery function should return the tuple <code>(token, position)</code>. <code>position</code>
-should be a new position where the parser should continue or <code>None</code> if position
-should not change. <code>token</code> should be a new token introduced at the given
-position or <code>None</code> if no new token is introduced. If both <code>token</code> and <code>position</code>
-are <code>None</code> error recovery didn't succeed.</p>
-<p>The <code>token</code> symbol should be from the <code>error.symbols_expected</code> for the parser to
-recover successfully. <code>token</code> should be an instance of
-<a href="../parser/#token"><code>parser.Token</code></a>. This class constructor accepts <code>symbol</code>,
-<code>value</code> and <code>length</code>. <code>symbol</code> should be a grammar symbol from
-<code>expected_symbols</code>, <code>value</code> should be a matched part of the input (actually, in
-the context of error recovery this value is a made-up value) and length is the
-length of the token. For introduced tokens, length should be set to 0.</p>
+<p>The recovery function should modify the head (e.g. its position and/or
+<code>token_ahead</code>) and bring it to a state which can continue. If the recovery is
+successful the function should return <code>True</code>, otherwise <code>False</code>.</p>
+<p>You can call a default error recovery from your custom recovery by
+<code>context.parser.default_error_recovery(context)</code></p>
               
             </div>
           </div>
@@ -294,7 +234,7 @@ length of the token. For introduced tokens, length should be set to 0.</p>
     
   </div>
 
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
       
         </div>
@@ -304,7 +244,7 @@ length of the token. For introduced tokens, length should be set to 0.</p>
 
   </div>
 
-  <div class="rst-versions" role="note" style="cursor: pointer">
+  <div class="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
           <a href="https://github.com/igordejanovic/parglare/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
@@ -321,6 +261,11 @@ length of the token. For introduced tokens, length should be set to 0.</p>
     <script src="../js/theme.js" defer></script>
       <script src="../js/version-select.js" defer></script>
       <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
 
 </body>
 </html>

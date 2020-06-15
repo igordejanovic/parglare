@@ -7,15 +7,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <meta name="author" content="Igor Dejanović">
+  
   <link rel="shortcut icon" href="../img/favicon.ico">
   <title>Actions - parglare</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
-  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
-  <link href="../style.css" rel="stylesheet">
-  <link href="../css/version-select.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../style.css" rel="stylesheet" />
+  <link href="../css/version-select.css" rel="stylesheet" />
   
   <script>
     // Current page data
@@ -26,7 +27,7 @@
   
   <script src="../js/jquery-2.1.1.min.js" defer></script>
   <script src="../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script> 
   
   <script>
@@ -47,6 +48,7 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
         <a href=".." class="icon icon-home"> parglare</a>
         <div role="search">
@@ -57,115 +59,62 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="..">Home</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">User Guide</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../getting_started/">Getting started</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar_language/">Grammar language</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar/">Grammar class</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../parser/">Parser</a>
-                </li>
-                <li class=" current">
-                    
-    <a class="current" href="./">Actions</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#actions">Actions</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#custom-actions-and-built-in-actions">Custom actions and built-in actions</a></li>
-        
-            <li><a class="toctree-l4" href="#action-decorator">action decorator</a></li>
-        
-            <li><a class="toctree-l4" href="#time-of-actions-call">Time of actions call</a></li>
-        
-            <li><a class="toctree-l4" href="#built-in-actions">Built-in actions</a></li>
-        
-            <li><a class="toctree-l4" href="#actions-for-rules-using-named-matches">Actions for rules using named matches</a></li>
-        
-        </ul>
-    
-
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">User Guide</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../getting_started/">Getting started</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar/">Grammar class</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Actions</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#custom-actions-and-built-in-actions">Custom actions and built-in actions</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#action-decorator">action decorator</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#time-of-actions-call">Time of actions call</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#built-in-actions">Built-in actions</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#actions-for-rules-using-named-matches">Actions for rules using named matches</a>
+    </li>
     </ul>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../common/">Common API</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../recognizers/">Recognizers</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar_modularization/">Modularization</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../disambiguation/">Disambiguation</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../parse_trees/">Parse trees</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../handling_errors/">Handling errors</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../pglr/">pglr command</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../debugging/">Debugging</a>
-                </li>
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">About</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../about/CONTRIBUTING/">Contributing</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../about/LICENSE/">License</a>
-                </li>
-    </ul>
-	    </li>
-          
-        </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar_modularization/">Modularization</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../lr_parsing/">LR parsing and conflicts</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../parse_trees/">Parse trees</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                    </li>
+                </ul>
       </div>
-      &nbsp;
+    </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -197,6 +146,7 @@
       
     </li>
   </ul>
+  
   <hr/>
 </div>
           <div role="main">
@@ -477,7 +427,7 @@ digit: /\d+/;
     
   </div>
 
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
       
         </div>
@@ -487,7 +437,7 @@ digit: /\d+/;
 
   </div>
 
-  <div class="rst-versions" role="note" style="cursor: pointer">
+  <div class="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
           <a href="https://github.com/igordejanovic/parglare/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
@@ -504,6 +454,11 @@ digit: /\d+/;
     <script src="../js/theme.js" defer></script>
       <script src="../js/version-select.js" defer></script>
       <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
 
 </body>
 </html>

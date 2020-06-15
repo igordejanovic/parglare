@@ -7,15 +7,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <meta name="author" content="Igor Dejanović">
+  
   <link rel="shortcut icon" href="../img/favicon.ico">
   <title>Disambiguation - parglare</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
-  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
-  <link href="../style.css" rel="stylesheet">
-  <link href="../css/version-select.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../style.css" rel="stylesheet" />
+  <link href="../css/version-select.css" rel="stylesheet" />
   
   <script>
     // Current page data
@@ -26,7 +27,7 @@
   
   <script src="../js/jquery-2.1.1.min.js" defer></script>
   <script src="../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script> 
   
   <script>
@@ -47,6 +48,7 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
         <a href=".." class="icon icon-home"> parglare</a>
         <div role="search">
@@ -57,113 +59,70 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="..">Home</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">User Guide</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../getting_started/">Getting started</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar_language/">Grammar language</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar/">Grammar class</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../parser/">Parser</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../actions/">Actions</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../common/">Common API</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../recognizers/">Recognizers</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../grammar_modularization/">Modularization</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../lr_parsing/">LR parsing and conflicts</a>
-                </li>
-                <li class=" current">
-                    
-    <a class="current" href="./">Disambiguation</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#disambiguation">Disambiguation</a></li>
-    
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">User Guide</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../getting_started/">Getting started</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar/">Grammar class</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../actions/">Actions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar_modularization/">Modularization</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../lr_parsing/">LR parsing and conflicts</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Disambiguation</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#static-disambiguation-filters">Static disambiguation filters</a>
         <ul>
-        
-            <li><a class="toctree-l4" href="#static-disambiguation-filters">Static disambiguation filters</a></li>
-        
-            <li><a class="toctree-l4" href="#dynamic-disambiguation-filter">Dynamic disambiguation filter</a></li>
-        
-            <li><a class="toctree-l4" href="#lexical-ambiguities">Lexical ambiguities</a></li>
-        
-            <li><a class="toctree-l4" href="#custom-token-recognition-and-lexical-disambiguation">Custom token recognition and lexical disambiguation</a></li>
-        
+    <li class="toctree-l3"><a class="reference internal" href="#priority">priority</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#associativity">associativity</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#nops-and-nopse">nops and nopse</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#prefer">prefer</a>
+    </li>
         </ul>
-    
-
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#dynamic-disambiguation-filter">Dynamic disambiguation filter</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#lexical-ambiguities">Lexical ambiguities</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#custom-token-recognition-and-lexical-disambiguation">Custom token recognition and lexical disambiguation</a>
+    </li>
     </ul>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../parse_trees/">Parse trees</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../handling_errors/">Handling errors</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../pglr/">pglr command</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../debugging/">Debugging</a>
-                </li>
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <span class="caption-text">About</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../about/CONTRIBUTING/">Contributing</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../about/LICENSE/">License</a>
-                </li>
-    </ul>
-	    </li>
-          
-        </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../parse_trees/">Parse trees</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                    </li>
+                </ul>
       </div>
-      &nbsp;
+    </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -195,6 +154,7 @@
       
     </li>
   </ul>
+  
   <hr/>
 </div>
           <div role="main">
@@ -331,34 +291,41 @@ op_mul: '*' {dynamic};
 
 <p>This tells parglare that those production are candidates for dynamic ambiguity
 resolution.</p>
-<p>Second step is to register a function, during parser construction, that will be
-used for resolution. This function operates as a filter for actions in a given
-state and lookahead token. It receives the current action, a token ahead,
-production (for REDUCE action), sub-results (for REDUCE action), and current LR
-automata state and returns either <code>True</code> if the action is acceptable or <code>False</code>
-otherwise. This function sometimes need to maintain some kind of state. To
-initialize its state at the beginning it is called with <code>None</code> as parameters.</p>
+<p>Second step is to register a predicate function, during parser construction,
+that will be used for resolution. This function operates as a filter for
+actions. It receives the parsing context for the action, the LR automata states
+between whom the transition is about to occur, and the sub-results in the case
+of a reduction. The function should return <code>True</code> if the transition is allowed
+or <code>False</code> otherwise. This function sometimes need to maintain some kind of
+state. To initialize its state at the beginning it is called with <code>None</code> as
+parameters.</p>
 <pre><code>parser = Parser(grammar, dynamic_filter=custom_disambiguation_filter)
 </code></pre>
 
 <p>Where resolution function is of the following form:</p>
-<pre><code class="python">def custom_disambiguation_filter(context, action, subresults):
-    &quot;&quot;&quot;Make first operation that appears in the input as lower priority.
+<pre><code class="python">def custom_disambiguation_filter(context, from_state, to_state, action,
+                                 production, subresults):
+    &quot;&quot;&quot;
+    Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
     on the input.
     &quot;&quot;&quot;
     global operations
 
-    # At the start of parsing this function is called with actions set to
-    # None to give a change for the strategy to initialize.
+    # At the start of parsing this function is called with actions set to None
+    # to give a chance for the strategy to initialize.
     if action is None:
         operations = []
         return
 
-    op_ahead = context.token_ahead.symbol
-    actions = context.state.actions[op_ahead]
-    if op_ahead not in operations and op_ahead.name != 'STOP':
-        operations.append(op_ahead)
+    if action is SHIFT:
+        operation = context.token.symbol
+    else:
+        operation = context.token_ahead.symbol
+
+    actions = from_state.actions[operation]
+    if operation not in operations and operation.name != 'STOP':
+        operations.append(operation)
 
     if action is SHIFT:
         shifts = [a for a in actions if a.action is SHIFT]
@@ -370,16 +337,16 @@ initialize its state at the beginning it is called with <code>None</code> as par
             return True
 
         red_op = reductions[0].prod.rhs[1]
-        return operations.index(op_ahead) &gt; operations.index(red_op)
+        return operations.index(operation) &gt; operations.index(red_op)
 
     elif action is REDUCE:
 
         # Current reduction operation
-        red_op = context.production.rhs[1]
+        red_op = production.rhs[1]
 
         # If operation ahead is STOP or is of less or equal priority -&gt; reduce.
-        return ((op_ahead not in operations)
-                or (operations.index(op_ahead)
+        return ((operation not in operations)
+                or (operations.index(operation)
                     &lt;= operations.index(red_op)))
 </code></pre>
 
@@ -394,7 +361,14 @@ operation.</p>
 <p><strong>context</strong> - <a href="../common/#the-context-object">the parsing context object</a>.</p>
 </li>
 <li>
+<p><strong>from_state/to_state</strong> -- <code>LRState</code> instances for the transition,</p>
+</li>
+<li>
 <p><strong>action</strong> - either SHIFT or REDUCE constant from <code>parglare</code> module,</p>
+</li>
+<li>
+<p><strong>production</strong> - a production used for the REDUCE operation. Valid only if
+  action is REDUCE.</p>
 </li>
 <li>
 <p><strong>subresults (list)</strong> - a sub-results for the reduction. Valid only for
@@ -445,10 +419,10 @@ disambiguation:</p>
 </code></pre>
 
 <h2 id="custom-token-recognition-and-lexical-disambiguation">Custom token recognition and lexical disambiguation<a class="headerlink" href="#custom-token-recognition-and-lexical-disambiguation" title="Permanent link">&para;</a></h2>
-<p>In the previous section is explained built-in parglare lexical disambiguation
-strategy. There are use-cases when this strategy is not sufficient. For example,
-if we want to do fuzzy match of tokens and choose the most similar token at the
-position.</p>
+<p>In the previous section a built-in parglare lexical disambiguation strategy is
+explained. There are use-cases when this strategy is not sufficient. For
+example, if we want to do fuzzy match of tokens and choose the most similar
+token at the position.</p>
 <p>parglare solves this problem by enabling you to implement a custom token
 recognition by registering a callable during parser instantiation that will,
 during parsing, get all the symbols expected at the current location and return
@@ -482,6 +456,8 @@ non-terminal with the higher score wins but only if the score is above 0.7.</p>
 <pre><code class="python">grammar = &quot;&quot;&quot;
 S: Element+;
 Element: Bar | Baz | Number;
+
+terminals
 Bar: /Bar. \d+/;
 Baz: /Baz. \d+/;
 Number: /\d+/;
@@ -528,15 +504,16 @@ def custom_token_recognition(context, get_tokens):
 parser = Parser(
     g, custom_token_recognition=custom_token_recognition)
 
+
 # Bar and Baz will be recognized by a fuzzy match
 result = parser.parse('bar. 56 Baz 12')
-assert result == [['bar. 56', 'Baz 12'], None]
+assert result == ['bar. 56', 'Baz 12']
 
 result = parser.parse('Buz. 34 bar 56')
-assert result == [['Buz. 34', 'bar 56'], None]
+assert result == ['Buz. 34', 'bar 56']
 
 result = parser.parse('Ba. 34 baz 56')
-assert result == [['Ba. 34', 'baz 56'], None]
+assert result == ['Ba. 34', 'baz 56']
 
 # But if Bar/Baz are too different from the correct pattern
 # we get ParseError. In this case `bza` score is below 0.7
@@ -575,7 +552,7 @@ list with a single result.</p>
     
   </div>
 
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
       
         </div>
@@ -585,7 +562,7 @@ list with a single result.</p>
 
   </div>
 
-  <div class="rst-versions" role="note" style="cursor: pointer">
+  <div class="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
           <a href="https://github.com/igordejanovic/parglare/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
@@ -602,6 +579,11 @@ list with a single result.</p>
     <script src="../js/theme.js" defer></script>
       <script src="../js/version-select.js" defer></script>
       <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
 
 </body>
 </html>
