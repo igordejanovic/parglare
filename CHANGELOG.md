@@ -26,10 +26,10 @@ backward incompatible changes will start to apply when the projects goes 1.0
     **(BIC)**)
   - Removed `context` parameter to `parse*` calls. Added `extra` parameter for
     keeping of additional state during parsing. If `extra` is not given it is
-    `dict` by default.
+    `dict` by default. (**(BIC)**)
   - Dynamic disambiguation filter parameters change (**(BIC)**, see the docs)
   - Removed explicit `Context` class. Now, there are context-like objects (
-    parser head, error context, GSS node parent etc.)
+    parser head, error context, GSS node parent etc.) (possible **(BIC)**)
   - Moved project meta-data to `setup.cfg` and introduced git based versioning
     using [setuptools_scm](https://github.com/pypa/setuptools_scm/). Thanks
     KOLANICH@GitHub ([#104]).
@@ -341,6 +341,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
   - Few examples (see `examples` folder)
 
 
+[#114]: https://github.com/igordejanovic/parglare/issues/114
+[#112]: https://github.com/igordejanovic/parglare/issues/112
+[#110]: https://github.com/igordejanovic/parglare/issues/110
 [#104]: https://github.com/igordejanovic/parglare/pull/104
 [#97]: https://github.com/igordejanovic/parglare/issues/97
 [c6e3226]: https://github.com/igordejanovic/parglare/commit/c6e3226
