@@ -116,8 +116,7 @@ class GLRParser(Parser):
         self.shifted_heads.append(start_head)
 
         if self.debug and self.debug_trace:
-            self._trace_head(start_head,
-                             str(start_head.context.state.state_id))
+            self._trace_head(start_head)
 
         # The main loop
         while True:
@@ -475,8 +474,7 @@ class GLRParser(Parser):
             if self.debug:
                 a_print("New head: ", new_head, level=1, new_line=True)
                 if self.debug_trace:
-                    self._trace_head(new_head, "{}:{}".format(
-                        state.state_id, dot_escape(state.symbol.name)))
+                    self._trace_head(new_head)
                     self._trace_step(head, new_head, root_head,
                                      "R:{}".format(dot_escape(production)))
 
@@ -542,10 +540,7 @@ class GLRParser(Parser):
                     token = head.token_ahead
                     a_print("New shifted head ", new_head, level=1)
                     if self.debug_trace:
-                        self._trace_head(
-                            new_head,
-                            "{}:{}".format(to_state.state_id,
-                                           dot_escape(to_state.symbol.name)))
+                        self._trace_head(new_head)
                         self._trace_step(head, new_head, head,
                                          "S:{}({})".format(
                                             dot_escape(token.symbol.name),
@@ -677,8 +672,10 @@ class GLRParser(Parser):
             h_print("Token(s) ahead:", _(str(lookahead_tokens)))
 
     @no_colors
-    def _trace_head(self, new_head, label):
-        self.dot_trace += '{} [label="{}"];\n'.format(new_head.key, label)
+    def _trace_head(self, head):
+        self.dot_trace += '{} [label="{}:{}"];\n'\
+            .format(head.key, head.state.state_id,
+                    dot_escape(head.state.symbol.name))
 
     @no_colors
     def _trace_step(self, old_head, new_head, root_head, label=''):
@@ -879,7 +876,7 @@ class GSSNode(object):
     @property
     def key(self):
         """Head unique idenfier used for dot trace."""
-        return "head_{}_{}".format(self.node_id, self.token_ahead.symbol.name)
+        return "head_{}".format(id(self))
 
     @property
     def extra(self):
