@@ -807,8 +807,6 @@ class GSSNode(object):
         self.parents = []
         self.number_of_trees = number_of_trees
 
-        self._hash = hash((self.node_id, self.token_ahead))
-
     def merge_head(self, other, parser):
         """
         Merge same top stack nodes.
@@ -876,7 +874,7 @@ class GSSNode(object):
         return str(self)
 
     def __hash__(self):
-        return self._hash
+        return hash((self.node_id, self.token_ahead.symbol))
 
     @property
     def key(self):
