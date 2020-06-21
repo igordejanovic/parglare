@@ -95,7 +95,7 @@ def compile_get_grammar_table(grammar_file, debug, colors, prefer_shifts,
         table = create_load_table(
             g, prefer_shifts=prefer_shifts,
             prefer_shifts_over_empty=prefer_shifts_over_empty,
-            force_create=True)
+            force_create=True, debug=debug)
         if debug or table.sr_conflicts or table.rr_conflicts:
             table.print_debug()
 

@@ -26,7 +26,7 @@ LALR = 1
 def create_load_table(grammar, itemset_type=LR_1, start_production=1,
                       prefer_shifts=False, prefer_shifts_over_empty=True,
                       force_create=False, force_load=False, in_layout=False,
-                      **kwargs):
+                      debug=False, **kwargs):
     """
     Construct table by loading from file if present and newer than the grammar.
     If table file is older than the grammar or non-existent calculate the table
@@ -47,8 +47,14 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
         # For layout grammars always calculate table.
         # Those are usually very small grammars so there is no point in
         # using cached tables.
+        if debug:
+            a_print("** Calculating LR table for the layout parser...",
+                    new_line=True)
         return create_table(grammar, itemset_type, start_production,
                             prefer_shifts, prefer_shifts_over_empty)
+    else:
+        if debug:
+            a_print("** Calculating LR table...", new_line=True)
 
     table_file_name = None
     if grammar.file_path:
@@ -74,13 +80,15 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
     if (create_table_file or force_create) and not force_load:
         table = create_table(grammar, itemset_type, start_production,
                              prefer_shifts, prefer_shifts_over_empty,
-                             **kwargs)
+                             debug=debug, **kwargs)
         if table_file_name:
             try:
                 save_table(table_file_name, table)
             except PermissionError:
                 pass
     else:
+        if debug:
+            h_print("Loading LR table from '{}'".format(table_file_name))
         table = load_table(table_file_name, grammar)
 
     return table
@@ -88,7 +96,7 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
 
 def create_table(grammar, itemset_type=LR_1, start_production=1,
                  prefer_shifts=False, prefer_shifts_over_empty=True,
-                 **kwargs):
+                 debug=False, **kwargs):
     """
     Arguments:
     grammar (Grammar):
@@ -128,6 +136,8 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
     states = []
 
+    if debug:
+        h_print("Constructing LR automata states...")
     while state_queue:
         # For each state calculate its closure first, i.e. starting from a
         # so called "kernel items" expand collection with non-kernel items.
@@ -204,6 +214,10 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                     # ACTION table.
                     state.actions[symbol] = [Action(SHIFT, state=target_state)]
 
+    if debug:
+        h_print("{} LR automata states constructed".format(len(states)))
+        h_print("Finishing LALR calculation...")
+
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
     # merging might change item's follow in previous states
     if itemset_type is LR_1:
@@ -232,9 +246,13 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                             update = True
                             next_item.follow.update(this_item.follow)
 
+    if debug:
+        h_print("Calculate REDUCTION entries in ACTION tables and"
+                " resolve possible conflicts.")
+
     # Calculate REDUCTION entries in ACTION tables and resolve possible
     # conflicts.
-    for state in states:
+    for idx, state in enumerate(states):
         actions = state.actions
 
         for item in state.items:
@@ -367,6 +385,7 @@ class LRTable(object):
         # lexical_disambiguation defaults to True, when
         # calc_finish_flags is set
         lexical_disambiguation=None,
+        debug=False
     ):
         self.states = states
         if calc_finish_flags:
@@ -382,7 +401,7 @@ class LRTable(object):
             if lexical_disambiguation is not None:
                 logger.warn('lexical_disambiguation flag ignored '
                             'because calc_finish_flags is not set')
-        self.calc_conflicts_and_dynamic_terminals()
+        self.calc_conflicts_and_dynamic_terminals(debug)
 
     def sort_state_actions(self):
         """
@@ -433,12 +452,16 @@ class LRTable(object):
             finish_flags.reverse()
             state.finish_flags = finish_flags
 
-    def calc_conflicts_and_dynamic_terminals(self):
+    def calc_conflicts_and_dynamic_terminals(self, debug=False):
         """
         Determine S/R and R/R conflicts and states dynamic terminals.
         """
         self.sr_conflicts = []
         self.rr_conflicts = []
+
+        if debug:
+            h_print("Calculating conflicts and dynamic terminals...")
+
         for state in self.states:
 
             for term, actions in state.actions.items():

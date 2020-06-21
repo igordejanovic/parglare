@@ -92,7 +92,8 @@ class Parser(object):
                 prefer_shifts_over_empty=prefer_shifts_over_empty,
                 lexical_disambiguation=lexical_disambiguation,
                 force_load=force_load_table,
-                in_layout=self.in_layout)
+                in_layout=self.in_layout,
+                debug=debug)
         else:
             self.table = table
 
