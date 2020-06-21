@@ -506,7 +506,7 @@ class LRTable(object):
                 message = 'There are {} S/R conflicts.'
             h_print(message.format(len(self.sr_conflicts)))
             for src in self.sr_conflicts:
-                print(src.message)
+                print(src)
 
         if self.rr_conflicts:
             a_print("*** R/R conflicts ***", new_line=True)
@@ -516,7 +516,7 @@ class LRTable(object):
                 message = 'There are {} R/R conflicts.'
             h_print(message.format(len(self.rr_conflicts)))
             for rrc in self.rr_conflicts:
-                print(rrc.message)
+                print(rrc)
 
 
 class Action(object):

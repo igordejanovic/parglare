@@ -95,7 +95,6 @@ class DynamicDisambiguationConflict(Exception):
 
 class LRConflict(object):
     def __init__(self, state, term, productions):
-        self.message = ""
         self.state = state
         self.term = term
         self.productions = productions
@@ -108,28 +107,34 @@ class LRConflict(object):
 class SRConflict(LRConflict):
     def __init__(self, state, term, productions):
         super(SRConflict, self).__init__(state, term, productions)
+
+    def __str__(self):
         prod_str = " or ".join(["'{}'".format(str(p))
-                                for p in productions])
+                                for p in self.productions])
         message = "{}\nIn state {}:{} and input symbol '{}' can't " \
-                  "decide whether to shift or reduce by production(s) {}." \
-            .format(str(state), state.state_id, state.symbol, term, prod_str)
-        if self.dynamic:
-            message += " Dynamic disambiguation strategy will be called."
-        self.message = message
+                  "decide whether to shift or reduce by production(s) {}.{}" \
+            .format(str(self.state), self.state.state_id, self.state.symbol,
+                    self.term, prod_str,
+                    " Dynamic disambiguation strategy will be called."
+                    if self.dynamic else "")
+
+        return message
 
 
 class RRConflict(LRConflict):
     def __init__(self, state, term, productions):
         super(RRConflict, self).__init__(state, term, productions)
+
+    def __str__(self):
         prod_str = " or ".join(["'{}'".format(str(p))
-                                for p in productions])
+                                for p in self.productions])
         message = "{}\nIn state {}:{} and input symbol '{}' can't " \
-                  "decide which reduction to perform: {}." \
-                  .format(str(state), state.state_id, state.symbol, term,
-                          prod_str)
-        if self.dynamic:
-            message += " Dynamic disambiguation strategy will be called."
-        self.message = message
+                  "decide which reduction to perform: {}.{}" \
+                  .format(str(self.state), self.state.state_id,
+                          self.state.symbol, self.term, prod_str,
+                          " Dynamic disambiguation strategy will be called."
+                          if self.dynamic else "")
+        return message
 
 
 class LRConflicts(Exception):
