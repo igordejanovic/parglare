@@ -348,3 +348,21 @@ def test_lexical_ambiguity():
     disambig_p = GLRParser(g, lexical_disambiguation=True)
 
     assert disambig_p.parse("xx") == ['xx']
+
+
+def test_number_of_trees():
+    """
+    Test that number_of_trees is correctly calculated.
+    """
+    g = Grammar.from_string(r"""
+    E: E '+' E | E '-' E | number;
+    terminals
+    number: /\d+/;
+    """)
+
+    p = GLRParser(g, build_tree=True)
+
+    results = p.parse('1 + 2 + 3 - 7')
+    assert len(results) == 5
+    assert all([p.context.head == results[0].context.head for p in results])
+    assert results[0].context.head.number_of_trees == 5

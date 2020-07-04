@@ -817,6 +817,8 @@ class GSSNode(object):
         if self is other:
             pass
         self.number_of_trees += other.number_of_trees
+        for p in other.parents:
+            p.head = self
         self.parents.extend(other.parents)
 
         if parser.debug:
@@ -825,7 +827,7 @@ class GSSNode(object):
 
     def create_link(self, parent):
         self.parents.append(parent)
-        self.number_of_trees = parent.number_of_trees
+        self.number_of_trees = parent.parent.number_of_trees
         if self.parser.debug:
             h_print("Creating link \tfrom head:", self, level=1)
             h_print("  to head:", parent.parent, level=3)
