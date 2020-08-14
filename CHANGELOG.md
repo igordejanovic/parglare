@@ -17,7 +17,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 (i.e. is considered production/stable).
 
 
-## Unreleased
+## [Unreleased]
 
 ### Changed
 
