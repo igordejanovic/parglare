@@ -68,3 +68,9 @@ site
 issues-temp
 tests/perf/*.pstats
 *.pgt
+
+# JetBrains IDE (PyCharm)
+.idea/
+
+# Virtual Environment
+venv/

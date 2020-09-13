@@ -16,6 +16,10 @@ class GrammarError(LocationError):
         super(GrammarError, self).__init__(location, message)
 
 
+class GrammarBuilderValidationError(ValueError):
+    pass
+
+
 class ParseError(LocationError):
     def __init__(self, location, symbols_expected, tokens_ahead=None,
                  symbols_before=None, last_heads=None, grammar=None):
