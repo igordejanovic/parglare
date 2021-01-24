@@ -192,18 +192,11 @@ def pos_to_line_col(input_str, position):
         # If we are not parsing string
         return 1, position
 
-    line = 1
-    old_pos = 0
-    try:
-        cur_pos = input_str.index("\n")
-        while cur_pos < position:
-            line += 1
-            old_pos = cur_pos + 1
-            cur_pos = input_str.index("\n", cur_pos + 1)
-    except ValueError:
-        pass
+    line = input_str[: position].count('\n') + 1
+    line_start_pos = input_str.rfind('\n', 0, position)
+    column = position - line_start_pos - 1
 
-    return line, position - old_pos
+    return line, column
 
 
 class ErrorContext(object):
