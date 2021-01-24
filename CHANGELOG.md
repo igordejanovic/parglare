@@ -21,6 +21,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ### Changed
 
+  - Optimized calculating line/column from a position ([#131]). Thanks
+    xor2003@GitHub.
   - LR/GLR implementation rework and cleanup. Corrected handling of EMPTY
     reductions. Support for full CFG set. Better tracing output. (possible
     **(BIC)**)
@@ -341,6 +343,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
   - Few examples (see `examples` folder)
 
 
+[#131]: https://github.com/igordejanovic/parglare/pull/131
 [#114]: https://github.com/igordejanovic/parglare/issues/114
 [#112]: https://github.com/igordejanovic/parglare/issues/112
 [#110]: https://github.com/igordejanovic/parglare/issues/110
