@@ -440,3 +440,9 @@ with pytest.raises(ParseError):
     `custom_token_recognition` can be used to implement custom lexical
     disambiguation by calling `get_tokens` and then reducing returned list to a
     list with a single result.
+
+
+!!! tip
+
+    See the end of [the parse trees section](parse_trees.md) for a tip on how to
+    investigate ambiguities in GLR parsing.

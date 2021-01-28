@@ -71,4 +71,20 @@ with `tree_str()`:
 
     You can use `tree_str()` on the root of the parse tree to get the string
     representation of the parse tree. This can be handy to compare multiple
-    trees returned by GLR parser to analyse ambiguity.
+    trees returned by GLR parser to analyze ambiguity.
+    
+    For example:
+    
+        # Here we have GLR parser which returns multiple parse trees due to ambiguity.
+        # It is important to turn on tree building.
+        parser = GLRParser(g, build_tree=True)
+        trees = parser.parse_file('some_file')
+        for idx, tree in enumerate(trees):
+            with open(f'tree_{idx:03d}.txt', 'w') as f:
+                f.write(tree.tree_str())
+    
+    Now you can run any diff tool on the produced outputs to see where are the ambiguities:
+    
+        $ meld tree_000.txt tree_001.txt
+    
+    
