@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Igor Dejanović">
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Grammar class - parglare</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../style.css" rel="stylesheet" />
+  <link href="../css/version-select.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Grammar class";
+    var mkdocs_page_input_path = "grammar.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+  <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-68681917-1', 'igordejanovic.net');
+      ga('send', 'pageview');
+  </script>
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> parglare</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">User Guide</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../getting_started/">Getting started</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Grammar class</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#grammar-factory-methods-additional-parameters">Grammar factory methods additional parameters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#grammar-class">Grammar class</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#attributes">Attributes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#methods">Methods</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#grammarsymbol-class">GrammarSymbol class</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#attributes_1">Attributes</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#terminal-class">Terminal class</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#attributes_2">Attributes</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#nonterminal-class">NonTerminal class</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#attributes_3">Attributes</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#production-class">Production class</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#attributes_4">Attributes</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#productionrhs-class">ProductionRHS class</a>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../actions/">Actions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../grammar_modularization/">Modularization</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../lr_parsing/">LR parsing and conflicts</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../parse_trees/">Parse trees</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">parglare</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>User Guide &raquo;</li>
+        
+      
+    
+    <li>Grammar class</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/grammar.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="the-grammar-class-and-related-apis">The grammar class and related APIs<a class="headerlink" href="#the-grammar-class-and-related-apis" title="Permanent link">&para;</a></h1>
+<p>After you write your grammar either as a Python string or as a separate file the
+next step is to instantiate the grammar object that will be used to create the
+parser.</p>
+<p>There are two factory methods defined on the <code>Grammar</code> class for creating the
+<code>Grammar</code> instance:</p>
+<ul>
+<li><code>Grammar.from_string(grammar_string)</code> - if your grammar is given as a Python
+  string,</li>
+<li><code>Grammar.from_file(file_path)</code> - if the grammar is given as a separate file.</li>
+</ul>
+<p>Both methods return initialized <code>Grammar</code> object that is passed as the first and
+the only mandatory parameter for the <code>Parser/GLRParser</code> constructor.</p>
+<h2 id="grammar-factory-methods-additional-parameters">Grammar factory methods additional parameters<a class="headerlink" href="#grammar-factory-methods-additional-parameters" title="Permanent link">&para;</a></h2>
+<p>Both methods <code>from_string</code> and <code>from_file</code> accept additional optional
+parameters:</p>
+<ul>
+<li>
+<p><strong>recognizers</strong> - a dict of custom recognizers. These recognizers are mandatory
+  if a non-textual content is being parsed and the grammar terminals don't
+  provide recognizers. See <a href="../recognizers/">recognizers section</a> for more
+  information.</p>
+</li>
+<li>
+<p><strong>debug</strong> - set to <code>True</code> to put the grammar in debug/trace mode. <code>False</code> by
+  default. See <a href="../debugging/">debugging section</a> for more information.</p>
+</li>
+<li>
+<p><strong>debug_parse</strong> - set to <code>True</code> to debug/trace grammar file/string parsing.
+  <code>False</code> by default.</p>
+</li>
+<li>
+<p><strong>debug_colors</strong> - set to <code>True</code> to enable terminal colors in debug/trace
+  output. <code>False</code> by default.</p>
+</li>
+<li>
+<p><strong>re_flags</strong> - regex flags used for regex recognizers. See Python <code>re</code> module.
+  By default flags is set to <code>re.MULTILINE</code>.</p>
+</li>
+<li>
+<p><strong>ignore_case</strong> - By default parsing is case sensitive. Set this param to
+  <code>True</code> for case-insensitive parsing.</p>
+</li>
+</ul>
+<h2 id="grammar-class">Grammar class<a class="headerlink" href="#grammar-class" title="Permanent link">&para;</a></h2>
+<h3 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>terminals</strong> - a dict of terminals (instances of <a href="#terminal"><code>Terminal</code></a>)
+  keyed by fully qualified name;</p>
+</li>
+<li>
+<p><strong>nonterminals</strong> - a dict of non-terminal (instances
+  of <a href="#nonterminal"><code>NonTerminal</code></a>) keyed by fully qualified name;</p>
+</li>
+<li>
+<p><strong>start_symbol</strong> - a grammar symbol of the start/root rule. By default this is
+  the first rule in the grammar;</p>
+</li>
+<li>
+<p><strong>productions</strong> - a list of productions (<a href="#production"><code>Production</code></a>
+  instances);</p>
+</li>
+<li>
+<p><strong>recognizers</strong> - a dict of <a href="../recognizers/">user supplied recognizers</a>
+  keyed by the terminal rule name;</p>
+</li>
+<li>
+<p><strong>classes</strong> - a dict of Python classes dynamically created for rules
+  using <a href="../grammar_language/#named-matches-assignments">named matches</a> keyed
+  by the rule name.</p>
+</li>
+</ul>
+<h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>print_debug()</strong> - prints detailed debug/trace info;</p>
+</li>
+<li>
+<p><strong>get_terminal(name)</strong> - gets the terminal by the given fully qualified name
+  or <code>None</code> if not found;</p>
+</li>
+<li>
+<p><strong>get_nonterminal(name)</strong> - gets the non-terminal by the given fully qualified
+  name or <code>None</code> if not found;</p>
+</li>
+<li>
+<p><strong>get_symbol(name)</strong> - gets either a terminal or non-terminal by the given
+  fully qualified name or <code>None</code> if not found.</p>
+</li>
+</ul>
+<h2 id="grammarsymbol-class">GrammarSymbol class<a class="headerlink" href="#grammarsymbol-class" title="Permanent link">&para;</a></h2>
+<p>This is a base class for <code>Terminal</code> and <code>NonTerminal</code>.</p>
+<h3 id="attributes_1">Attributes<a class="headerlink" href="#attributes_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>name</strong> - the name of the grammar symbol,</p>
+</li>
+<li>
+<p><strong>fqn</strong> (property) - fully qualified name of the symbol. Qualified by import
+  module names.</p>
+</li>
+<li>
+<p><strong>location</strong> - an instance of <code>parglare.common.Location</code>. Gives information
+  about location in the file (position and span).</p>
+</li>
+<li>
+<p><strong>action_name</strong> - the action name assigned for the symbol. This is given in
+  the grammar using the <a href="../grammar_language/"><code>@</code> syntax</a>. If action name is
+  not provided in the grammar symbol name is used.</p>
+</li>
+<li>
+<p><strong>action_fqn</strong> (property) - the fully qualiifed action name for the symbol.
+  Qualified by the names of import modules.</p>
+</li>
+<li>
+<p><strong>action</strong> - resolved reference to the action function given by the user using
+  <code>actions</code> parameter of the parser. Overrides grammar action if provided. If
+  not given will be the same as <code>grammar_action</code>.</p>
+</li>
+<li>
+<p><strong>grammar_action</strong> - resolved reference to the action function specified in
+  the grammar. Not used if <code>action</code> attribute is defined, i.e. <code>action</code>
+  overrides <code>grammar_action</code>.</p>
+</li>
+</ul>
+<h2 id="terminal-class">Terminal class<a class="headerlink" href="#terminal-class" title="Permanent link">&para;</a></h2>
+<h3 id="attributes_2">Attributes<a class="headerlink" href="#attributes_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>prior (int)</strong> - a priority used in disambiguation,</p>
+</li>
+<li>
+<p><strong>recognizer (callable)</strong> - a callable in charge of recognition of this terminal
+  in the input stream,</p>
+</li>
+<li>
+<p><strong>prefer (bool)</strong> - If <code>True</code> this recognizer/terminal is preferred in case of
+  conflict where multiple recognizer match at the same place and implicit
+  disambiguation doesn't resolve the conflict.</p>
+</li>
+<li>
+<p><strong>dynamic (bool)</strong> - <code>True</code> if disambiguation should
+  be <a href="../disambiguation/#dynamic-disambiguation-filter">resolved dynamically</a>.</p>
+</li>
+</ul>
+<h2 id="nonterminal-class">NonTerminal class<a class="headerlink" href="#nonterminal-class" title="Permanent link">&para;</a></h2>
+<h3 id="attributes_3">Attributes<a class="headerlink" href="#attributes_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>productions (list)</strong> - A list of alternative productions for this
+  non-terminal symbol.</li>
+</ul>
+<h2 id="production-class">Production class<a class="headerlink" href="#production-class" title="Permanent link">&para;</a></h2>
+<h3 id="attributes_4">Attributes<a class="headerlink" href="#attributes_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>symbol (GrammarSymbol)</strong> - LHS of the production,</p>
+</li>
+<li>
+<p><strong>rhs (ProductionRHS)</strong> - RHS of this production,</p>
+</li>
+<li>
+<p><strong>assignments (dict)</strong> - <code>Assignment</code> instances keyed by match name. Created
+  by <a href="../grammar_language/#named-matches-assignments">named matches</a>,</p>
+</li>
+<li>
+<p><strong>assoc (int)</strong> - associativity of the production. See
+  <code>parglare.grammar.ASSOC_{NONE|LEFT|RIGHT}</code></p>
+</li>
+<li>
+<p><strong>prior (int)</strong> - integer defining priority of this production. Default
+  priority is 10.</p>
+</li>
+<li>
+<p><strong>dynamic (bool)</strong> - <code>True</code> if this production disambiguation should
+  be <a href="">resolved dynamically</a>.</p>
+</li>
+<li>
+<p><strong>prod_id (int)</strong> - ordinal number of the production in the grammar,</p>
+</li>
+<li>
+<p><strong>prod_symbol_id</strong> - zero-based ordinal of the production for the <code>symbol</code>
+  grammar symbol, i.e. the ordinal for the alternative choice for this symbol.</p>
+</li>
+</ul>
+<h2 id="productionrhs-class">ProductionRHS class<a class="headerlink" href="#productionrhs-class" title="Permanent link">&para;</a></h2>
+<p>Represents right hand side of the production. Inherits list and keeps symbols
+from the production but doesn't count nor returns by index EMPTY symbols in the
+production.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../parser/" class="btn btn-neutral float-right" title="Parser">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../grammar_language/" class="btn btn-neutral" title="Grammar language"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/igordejanovic/parglare/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../grammar_language/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../parser/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../js/version-select.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
