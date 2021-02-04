@@ -19,6 +19,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.13.0] (released: 2020-02-04)
+
 ### Changed
 
   - Optimized calculating line/column from a position ([#131]). Thanks
@@ -366,7 +369,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.12.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.13.0...HEAD
+[0.13.0]: https://github.com/igordejanovic/parglare/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/igordejanovic/parglare/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/igordejanovic/parglare/compare/0.10.0...0.11.0
 [0.10.0]: https://github.com/igordejanovic/parglare/compare/0.9.2...0.10.0
