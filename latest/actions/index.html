@@ -176,7 +176,7 @@ additional actions that are not named after the grammar rule names, these
 actions may be referenced from the grammar using <a href="../grammar_language/#referencing-semantic-actions-from-a-grammar"><code>@</code> syntax for action
 specification</a>.</p>
 <p>Lets take a closer look at the quick intro example:</p>
-<pre><code class="python">grammar = r&quot;&quot;&quot;
+<pre><code class="language-python">grammar = r&quot;&quot;&quot;
 E: E '+' E  {left, 1}
   | E '-' E  {left, 1}
   | E '*' E  {left, 2}
@@ -204,7 +204,6 @@ g = Grammar.from_string(grammar)
 parser = Parser(g, actions=actions)
 result = parser.parse(&quot;34 + 4.6 / 2 * 4^2^2 + 78&quot;)
 </code></pre>
-
 <p>Here you can see that for rule <code>E</code> we provide a list of lambdas, one lambda for
 each operation. The first element of the list corresponds to the first
 production of the <code>E</code> rule (<code>E '+' E {left, 1}</code>), the second to the second and
@@ -220,9 +219,8 @@ the start and end position where the match occurred, the parser instance etc.).
 The second parameters <code>nodes</code> is a list of actual results of sub-expressions
 given in the order defined in the grammar.</p>
 <p>For example:</p>
-<pre><code class="python">lambda _, nodes: nodes[0] * nodes[2],
+<pre><code class="language-python">lambda _, nodes: nodes[0] * nodes[2],
 </code></pre>
-
 <p>In this line we don't care about the context thus giving it the <code>_</code> name.
 <code>nodes[0]</code> will cary the value of the left sub-expression while <code>nodes[2]</code> will
 carry the result of the right sub-expression. <code>nodes[1]</code> must be <code>*</code> and we
@@ -239,7 +237,7 @@ non-terminals and terminals respectively.</p>
 <h2 id="action-decorator"><code>action</code> decorator<a class="headerlink" href="#action-decorator" title="Permanent link">&para;</a></h2>
 <p>You can use a special decorator/collector factory <code>parglare.get_collector</code> to
 create decorator that can be used to collect all actions.</p>
-<pre><code class="python">from parglare import get_collector
+<pre><code class="language-python">from parglare import get_collector
 
 action = get_collector()
 
@@ -272,7 +270,6 @@ def pass_act_F(_, nodes):
 
 p = Parser(grammar, actions=action.all)
 </code></pre>
-
 <p>In the previous example <code>action</code> decorator is created using <code>get_collector</code>
 factory. This decorator is parametrized where optional parameter is the name of
 the action. If the name is not given the name of the decorated function will be
@@ -385,23 +382,21 @@ Python class corresponding to the grammar rule. See more in the section
 on <a href="../grammar_language/#named-matches-assignments">named matches</a>.</p>
 <p>If for some reason you want to override default behavior that create Python
 object you can create action like this:</p>
-<pre><code class="nohighlight">S: first=a second=digit+[comma];
+<pre><code class="language-nohighlight">S: first=a second=digit+[comma];
 
 terminals
 a: &quot;a&quot;;
 digit: /\d+/;
 </code></pre>
-
 <p>now create action function that accepts additional params:</p>
-<pre><code class="python">def s_action(context, nodes, first, second):
+<pre><code class="language-python">def s_action(context, nodes, first, second):
     ... do some transformation and return the result of S evaluation
     ... nodes will contain subexpression results by position while
     ... first and second will contain the values of corresponding
     ... sub-expressions
 </code></pre>
-
 <p>register action on <code>Parser</code> instance as usual:</p>
-<pre><code class="python">parser = Parser(grammar, actions={&quot;S&quot;: s_action})
+<pre><code class="language-python">parser = Parser(grammar, actions={&quot;S&quot;: s_action})
 </code></pre>
               
             </div>

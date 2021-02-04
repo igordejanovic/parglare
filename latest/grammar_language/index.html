@@ -204,27 +204,23 @@ the <a href="../lr_parsing/#resolving-conflicts">section on conflicts</a>).</p>
 - one or more derivation/production rules
 - zero or more terminal definitions</p>
 <p>Each derivation/production rule is of the form:</p>
-<pre><code class="nohighlight">&lt;symbol&gt;: &lt;expression&gt; ;
+<pre><code class="language-nohighlight">&lt;symbol&gt;: &lt;expression&gt; ;
 </code></pre>
-
 <p>where <code>&lt;symbol&gt;</code> is grammar non-terminal and <code>&lt;expression&gt;</code> is a sequence of
 terminals and non-terminals separated by choice operator <code>|</code>.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">Fields: Field | Fields &quot;,&quot; Field;
+<pre><code class="language-nohighlight">Fields: Field | Fields &quot;,&quot; Field;
 </code></pre>
-
 <p>Here <code>Fields</code> is a non-terminal grammar symbol and it is defined as either a
 single <code>Field</code> or, recursively, as <code>Fields</code> followed by a string terminal <code>,</code>
 and than by another <code>Field</code>. It is not given here but <code>Field</code> could also be
 defined as a non-terminal. For example:</p>
-<pre><code class="nohighlight">Field: QuotedField | FieldContent;
+<pre><code class="language-nohighlight">Field: QuotedField | FieldContent;
 </code></pre>
-
 <p>Or it could be defined as a terminal in terminals section:</p>
-<pre><code class="nohighlight">terminals
+<pre><code class="language-nohighlight">terminals
 Field: /[A-Z]*/;
 </code></pre>
-
 <p>This terminal definition uses regular expression recognizer.</p>
 <h2 id="terminals">Terminals<a class="headerlink" href="#terminals" title="Permanent link">&para;</a></h2>
 <p>Terminal symbols of the grammar define the fundamental or atomic elements of
@@ -241,20 +237,18 @@ built-in and there are two type of textual recognizers:</p>
 following the keyword <code>terminals</code>.</p>
 <h3 id="string-recognizer">String recognizer<a class="headerlink" href="#string-recognizer" title="Permanent link">&para;</a></h3>
 <p>String recognizer is defined as a plain string inside of double quotes:</p>
-<pre><code class="nohighlight">my_rule: &quot;start&quot; other_rule &quot;end&quot;;
+<pre><code class="language-nohighlight">my_rule: &quot;start&quot; other_rule &quot;end&quot;;
 </code></pre>
-
 <p>In this example <code>"start"</code> and <code>"end"</code> will be terminals with string recognizers
 that match exactly the words <code>start</code> and <code>end</code>.</p>
 <p>You can write string recognizing terminal directly in the rule expression or you
 can define terminal separately and reference it by name, like:</p>
-<pre><code class="nohighlight">my_rule: start other_rule end;
+<pre><code class="language-nohighlight">my_rule: start other_rule end;
 
 terminals
 start: &quot;start&quot;;
 end: &quot;end&quot;;
 </code></pre>
-
 <p>Either way it will be the same terminal. You can't mix those two approaches for
 a single terminal. If you defined a terminal in the <code>terminals</code> section than you
 can't use inline string matches for that terminal.</p>
@@ -265,9 +259,8 @@ terminal (priority, <code>prefer</code> etc.).</p>
 <p>Or regex recognizer for short is a regex pattern written inside slashes
 (<code>/.../</code>).</p>
 <p>For example:</p>
-<pre><code class="nohighlight">number: /\d+/;
+<pre><code class="language-nohighlight">number: /\d+/;
 </code></pre>
-
 <p>This rule defines terminal symbol <code>number</code> which has a regex recognizer and will
 recognize one or more digits as a number.</p>
 <div class="admonition note">
@@ -288,7 +281,7 @@ as usual.</p>
 <p>Lets say that we have a list of integers (real list of Python ints, not a text
 with numbers) and we have some weird requirement to break those numbers
 according to the following grammar:</p>
-<pre><code class="nohighlight">Numbers: all_less_than_five  ascending  all_less_than_five;
+<pre><code class="language-nohighlight">Numbers: all_less_than_five  ascending  all_less_than_five;
 all_less_than_five: all_less_than_five  int_less_than_five
                   | int_less_than_five;
 
@@ -298,7 +291,6 @@ terminals
 ascending: ;
 int_less_than_five: ;
 </code></pre>
-
 <p>So, we should first match all numbers less than five and collect those, than we
 should match a list of ascending numbers and than list of less than five again.
 <code>int_less_than_five</code> and <code>ascending</code> are terminals/recognizers that will be
@@ -313,10 +305,9 @@ see
 <p>This section explains how some common grammar patterns can be written using just
 a plain BNF notation.</p>
 <h3 id="one-or-more">One or more<a class="headerlink" href="#one-or-more" title="Permanent link">&para;</a></h3>
-<pre><code class="nohighlight">// sections rule below will match one or more section.
+<pre><code class="language-nohighlight">// sections rule below will match one or more section.
 sections: sections section | section;
 </code></pre>
-
 <p>In this example <code>sections</code> will match one or more <code>section</code>. Notice the
 recursive definition of the rule. You can read this as <em><code>sections</code> is either a
 single section or <code>sections</code> and a <code>section</code></em>.</p>
@@ -336,19 +327,17 @@ about this so use the first version as it is more efficient and parglare
 provides built-in actions for these common cases.</p>
 </div>
 <h3 id="zero-or-more">Zero or more<a class="headerlink" href="#zero-or-more" title="Permanent link">&para;</a></h3>
-<pre><code class="nohighlight">// sections rule below will match zero or more section.
+<pre><code class="language-nohighlight">// sections rule below will match zero or more section.
 sections: sections section | section | EMPTY;
 </code></pre>
-
 <p>In this example <code>sections</code> will match zero or more <code>section</code>. Notice the
 addition of the <code>EMPTY</code> choice at the end. This means that matching nothing is a
 valid <code>sections</code> non-terminal.</p>
 <p>Same note from above applies here to.</p>
 <h3 id="optional">Optional<a class="headerlink" href="#optional" title="Permanent link">&para;</a></h3>
-<pre><code class="nohighlight">document: optheader body;
+<pre><code class="language-nohighlight">document: optheader body;
 optheader: header | EMPTY;
 </code></pre>
-
 <p>In this example <code>optheader</code> is either a header or nothing.</p>
 <h2 id="syntactic-sugar-bnf-extensions">Syntactic sugar - BNF extensions<a class="headerlink" href="#syntactic-sugar-bnf-extensions" title="Permanent link">&para;</a></h2>
 <p>Previous section gives the overview of the basic BNF syntax. If you got to use
@@ -360,17 +349,16 @@ provides syntactic sugar for this common idioms using a well known regular
 expression syntax.</p>
 <h3 id="optional_1">Optional<a class="headerlink" href="#optional_1" title="Permanent link">&para;</a></h3>
 <p><code>Optional</code> can be specified using <code>?</code>. For example:</p>
-<pre><code class="nohighlight">S: &quot;2&quot; b? &quot;3&quot;?;
+<pre><code class="language-nohighlight">S: &quot;2&quot; b? &quot;3&quot;?;
 
 terminals
 b: &quot;1&quot;;
 </code></pre>
-
 <p>Here, after <code>2</code> we might have terminal <code>b</code> but it is optional, as well as <code>3</code>
 that follows.</p>
 <p>Lets see what the parser will return for various inputs (the <code>grammar</code> variable
 is a string holding grammar from above):</p>
-<pre><code class="python">g = Grammar.from_string(grammar)
+<pre><code class="language-python">g = Grammar.from_string(grammar)
 p = Parser(g)
 
 input_str = '2 1 3'
@@ -381,7 +369,6 @@ input_str = '2 3'
 result = p.parse(input_str)
 assert result == [&quot;2&quot;, None, &quot;3&quot;]
 </code></pre>
-
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Syntax equivalence for <code>optional</code> operator:</p>
@@ -403,16 +390,15 @@ grammar during table construction.</p>
 </div>
 <h3 id="one-or-more_1">One or more<a class="headerlink" href="#one-or-more_1" title="Permanent link">&para;</a></h3>
 <p><code>One or more</code> match is specified using <code>+</code> operator. For example:</p>
-<pre><code class="nohighlight">S: &quot;2&quot; c+;
+<pre><code class="language-nohighlight">S: &quot;2&quot; c+;
 
 terminals
 c: &quot;c&quot;;
 </code></pre>
-
 <p>After <code>2</code> we expect to see one or more <code>c</code> terminals.</p>
 <p>Lets see what the parser will return for various inputs (the <code>grammar</code> variable
 is a string holding grammar from above):</p>
-<pre><code class="python">g = Grammar.from_string(grammar)
+<pre><code class="language-python">g = Grammar.from_string(grammar)
 p = Parser(g)
 
 input_str = '2 c c c'
@@ -423,7 +409,6 @@ input_str = '2 c'
 result = p.parse(input_str)
 assert result == [&quot;2&quot;, [&quot;c&quot;]]
 </code></pre>
-
 <p>So the sub-expression on the second position (<code>c+</code> sub-rule) will by default
 produce a list of matched <code>c</code> terminals. If <code>c</code> is missing
 a <a href="../handling_errors/">parse error</a> will be raised.</p>
@@ -445,18 +430,17 @@ a: "a";
 </code></pre>
 </div>
 <p><code>+</code> operator allows repetition modifier for separators. For example:</p>
-<pre><code class="nohighlight">S: &quot;2&quot; c+[comma];
+<pre><code class="language-nohighlight">S: &quot;2&quot; c+[comma];
 
 terminals
 c: &quot;c&quot;;
 comma: &quot;,&quot;;
 </code></pre>
-
 <p><code>c+[comma]</code> will match one or more <code>c</code> terminals separated by whatever is
 matched by the <code>comma</code> rule.</p>
 <p>Lets see what the parser will return for various inputs (the <code>grammar</code> variable
 is a string holding grammar from above):</p>
-<pre><code class="python">g = Grammar.from_string(grammar)
+<pre><code class="language-python">g = Grammar.from_string(grammar)
 p = Parser(g)
 
 input_str = '2 c, c,  c'
@@ -467,7 +451,6 @@ input_str = '2 c'
 result = p.parse(input_str)
 assert result == [&quot;2&quot;, [&quot;c&quot;]]
 </code></pre>
-
 <p>As you can see giving a separator modifier allows us to parse a list of items
 separated by the whatever is matched by the rule given inside <code>[]</code>.</p>
 <div class="admonition note">
@@ -495,16 +478,15 @@ same separator.</p>
 </div>
 <h3 id="zero-or-more_1">Zero or more<a class="headerlink" href="#zero-or-more_1" title="Permanent link">&para;</a></h3>
 <p><code>Zero or more</code> match is specified using <code>*</code> operator. For example:</p>
-<pre><code class="nohighlight">S: &quot;2&quot; c*;
+<pre><code class="language-nohighlight">S: &quot;2&quot; c*;
 
 terminals
 c: &quot;c&quot;;
 </code></pre>
-
 <p>This syntactic addition is similar to <code>+</code> except that it doesn't require rule to
 match at least once. If there is no match, resulting sub-expression will be an
 empty list. For example:</p>
-<pre><code class="python">g = Grammar.from_string(grammar)
+<pre><code class="language-python">g = Grammar.from_string(grammar)
 p = Parser(g)
 
 input_str = '2 c c c'
@@ -515,7 +497,6 @@ input_str = '2'
 result = p.parse(input_str)
 assert result == [&quot;2&quot;, []]
 </code></pre>
-
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Syntax equivalence <code>zero or more</code>:</p>
@@ -574,13 +555,12 @@ access in the list of sub-expressions.</p>
 <p><code>Named matches</code> (a.k.a <code>assignments</code>) enable giving a name to the sub-expression
 directly in the grammar.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">S: first=a second=digit+[comma];
+<pre><code class="language-nohighlight">S: first=a second=digit+[comma];
 
 terminals
 a: &quot;a&quot;;
 digit: /\d+/;
 </code></pre>
-
 <p>In this example root rule matches one <code>a</code> and then one or more digit separated
 by a comma. You can see that the first sub-expression (<code>a</code> match) is assigned to
 <code>first</code> while the second sub-expression <code>digit+[comma]</code> is assigned to <code>second</code>.</p>
@@ -617,10 +597,9 @@ dict</a>. You can override this by specifying action name for
 the rule directly in the grammar using <code>@</code> syntax. In that case a name given
 after <code>@</code> will be used instead of a rule name.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">@myaction
+<pre><code class="language-nohighlight">@myaction
 some_rule: first second;
 </code></pre>
-
 <p>For rule <code>some_rule</code> action with the name <code>myaction</code> will be searched in the
 <code>&lt;grammar&gt;_actions.py</code> module, <code>actions</code> dict or <a href="#built-in-actions">built-in
 actions</a> provided by the <code>parglare.actions</code> module. This is
@@ -635,7 +614,7 @@ disambiguation strategies, error reporting etc.</p>
 terminal in the form of <code>name: value</code>, where <code>name</code> is a valid ID and <code>value</code> is
 integer, float, bool (<code>true</code> or <code>false</code>) or string in single quotes.</p>
 <p>For example:</p>
-<pre><code class="python">grammar_str = r'''
+<pre><code class="language-python">grammar_str = r'''
 MyRule: 'a' {left, 1, dynamic, nops,
               some_string:'My Label',
               some_bool: true,
@@ -652,7 +631,6 @@ assert prod.some_bool is True
 assert prod.some_int == 3
 assert prod.some_float == 4.5
 </code></pre>
-
 <p>In this example, user meta-data <code>some_string</code> with value <code>My Label</code> is defined
 on the first production of rule <code>MyRule</code>. Please note that user defined
 meta-data is accessed as an ordinary Python attribute. In the example you can
@@ -660,7 +638,7 @@ also see the definition of meta-data of various supported types.</p>
 <p>User meta-data can be defined at the rule level in which case all production for
 the given rule inherit the meta-data.</p>
 <p>For example:</p>
-<pre><code class="python">grammar_str = r'''
+<pre><code class="language-python">grammar_str = r'''
 MyRule {label: 'My Label', nops}: 'a' {left, 1, dynamic};
 '''
 
@@ -679,12 +657,11 @@ assert prod.dynamic
 # Rule-level meta-data are propagated to productions
 assert prod.label == 'My Label'
 </code></pre>
-
 <p>Meta-data defined on the rule level can be overriden on the production level.
 Also, rule can be specified multiple times. Propagation of each rule meta-data
 is done only to the productions specified in the rule.</p>
 <p>For example:</p>
-<pre><code class="python">grammar_str = r'''
+<pre><code class="language-python">grammar_str = r'''
 MyRule {label: 'My Label', left}: 'first' {right,
                                             label: 'My overriden label'}
                                 | 'second';
@@ -721,39 +698,36 @@ prod4 = my_rule.productions[3]
 assert prod4.label == 'Fourth prod'
 assert prod4.assoc == ASSOC_NONE
 </code></pre>
-
 <h2 id="grammar-comments">Grammar comments<a class="headerlink" href="#grammar-comments" title="Permanent link">&para;</a></h2>
 <p>In parglare grammar, comments are available as both line comments and block
 comments:</p>
-<pre><code class="nohighlight">// This is a line comment. Everything from the '//' to the end of line is a comment.
+<pre><code class="language-nohighlight">// This is a line comment. Everything from the '//' to the end of line is a comment.
 
 /*
   This is a block comment.
   Everything in between `/*`  and '*/' is a comment.
 */
 </code></pre>
-
 <h2 id="handling-whitespaces-and-comments-in-your-language">Handling whitespaces and comments in your language<a class="headerlink" href="#handling-whitespaces-and-comments-in-your-language" title="Permanent link">&para;</a></h2>
 <p>By default parser will skip whitespaces. Whitespace skipping is controlled
 by <a href="../parser/#ws"><code>ws</code> parameter to the parser</a> which is by default set to
 <code>'\n\t '</code>.</p>
 <p>If you need more control of the layout, i.e. handling of not only whitespaces
 but comments also, you can use a special rule <code>LAYOUT</code>:</p>
-<pre><code class="nohighlight">LAYOUT: LayoutItem | LAYOUT LayoutItem;
+<pre><code class="language-nohighlight">LAYOUT: LayoutItem | LAYOUT LayoutItem;
 LayoutItem: WS | Comment | EMPTY;
 
 terminals
 WS: /\s+/;
 Comment: /\/\/.*/;
 </code></pre>
-
 <p>This will form a separate layout parser that will parse in-between each matched
 tokens. In this example whitespaces and line-comments will be consumed by the
 layout parser.</p>
 <p>If this special rule is found in the grammar <code>ws</code> parser parameter is ignored.</p>
 <p>Here is another example that gives support for both line comments and block
 comments like the one used in the grammar language itself:</p>
-<pre><code class="nohighlight">LAYOUT: LayoutItem | LAYOUT LayoutItem;
+<pre><code class="language-nohighlight">LAYOUT: LayoutItem | LAYOUT LayoutItem;
 LayoutItem: WS | Comment | EMPTY;
 Comment: '/*' CorNCs '*/' | LineComment;
 CorNCs: CorNC | CorNCs CorNC | EMPTY;
@@ -764,7 +738,6 @@ WS: /\s+/;
 LineComment: /\/\/.*/;
 NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
 </code></pre>
-
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>If <code>LAYOUT</code> is provided it <em>must</em> match before the first token, between any
@@ -778,21 +751,18 @@ in the previous examples.</p>
 larger word, i.e. it will not require matching on the word boundary. This is not
 the desired behaviour for language keywords.</p>
 <p>For example, lets examine this little grammar:</p>
-<pre><code class="nohighlight">S: &quot;for&quot; name=ID &quot;=&quot; from=INT &quot;to&quot; to=INT;
+<pre><code class="language-nohighlight">S: &quot;for&quot; name=ID &quot;=&quot; from=INT &quot;to&quot; to=INT;
 
 terminals
 ID: /\w+/;
 INT: /\d+/;
 </code></pre>
-
 <p>This grammar is intended to match statement like this one:</p>
-<pre><code class="nohighlight">for a=10 to 20
+<pre><code class="language-nohighlight">for a=10 to 20
 </code></pre>
-
 <p>But it will also match:</p>
-<pre><code class="nohighlight">fora=10 to20
+<pre><code class="language-nohighlight">fora=10 to20
 </code></pre>
-
 <p>which is not what we wanted.</p>
 <p>parglare allows the definition of a special terminal rule <code>KEYWORD</code>. This rule
 must define a <a href="#regular-expression-recognizer">regular expression recognizer</a>.
@@ -800,24 +770,21 @@ Any string recognizer in the grammar that can be also recognized by the <code>KE
 recognizer is treated as a keyword and is changed during grammar construction to
 match only on word boundary.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">S: &quot;for&quot; name=ID &quot;=&quot; from=INT &quot;to&quot; to=INT;
+<pre><code class="language-nohighlight">S: &quot;for&quot; name=ID &quot;=&quot; from=INT &quot;to&quot; to=INT;
 
 terminals
 ID: /\w+/;
 INT: /\d+/;
 KEYWORD: /\w+/;
 </code></pre>
-
 <p>Now,</p>
-<pre><code class="nohighlight">fora=10 to20
+<pre><code class="language-nohighlight">fora=10 to20
 </code></pre>
-
 <p>will not be recognized as the words <code>for</code> and <code>to</code> are recognized to be keywords
 (they can be matched by the <code>KEYWORD</code> rule).</p>
 <p>This will be parsed correctly:</p>
-<pre><code class="nohighlight">for a=10 to 20
+<pre><code class="language-nohighlight">for a=10 to 20
 </code></pre>
-
 <p>As <code>=</code> is not matched by the <code>KEYWORD</code> rule and thus doesn't require to be
 separated from the surrounding tokens.</p>
 <div class="admonition note">

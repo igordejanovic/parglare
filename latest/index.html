@@ -269,7 +269,7 @@ $ pip install -e parglare</code></p>
 parse and evaluate expressions with 5 operations with different priority and
 associativity. Evaluation is done using semantic/reduction actions.</p>
 <p>The whole expression evaluator is done in under 30 lines of code!</p>
-<pre><code class="python">from parglare import Parser, Grammar
+<pre><code class="language-python">from parglare import Parser, Grammar
 
 grammar = r&quot;&quot;&quot;
 E: E '+' E  {left, 1}
@@ -308,7 +308,6 @@ print(&quot;Result = &quot;, result)
 # -- and at the end of the output:
 # Result = 700.8
 </code></pre>
-
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><strong>LR tables calculation</strong></p>
@@ -334,7 +333,7 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
 <p>MIT</p>
 <h2 id="python-versions">Python versions<a class="headerlink" href="#python-versions" title="Permanent link">&para;</a></h2>
-<p>Tested with 3.4-3.8</p>
+<p>Tested with 3.4-3.9</p>
               
             </div>
           </div>
@@ -393,5 +392,5 @@ would regrow a couple of new heads. That reminds me a lot of the GLR parsing ;)<
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2020-06-15 19:08:38.885332+00:00
+Build Date UTC : 2021-02-04 13:44:15.646066+00:00
 -->

@@ -155,12 +155,11 @@ have <code>.pg</code> extension.</p>
 by importing the <code>Grammar</code> class and calling either <code>from_file</code> or <code>from_str</code>
 methods supplying the file name for the former and the Python string for the
 later call.</p>
-<pre><code class="python">from parglare import Grammar
+<pre><code class="language-python">from parglare import Grammar
 
 file_name = .....
 grammar = Grammar.from_file(file_name)
 </code></pre>
-
 <p>If there is no errors in the grammar you now have the grammar instance. For more
 information see the <a href="../grammar/">section about <code>Grammar</code> class</a>.</p>
 <div class="admonition tip">
@@ -171,15 +170,13 @@ used for grammar checking, visualization and debugging.</p>
 <p>The next step is to create an instance of the parser. There are two options. If
 you want to use LR parser instantiate <code>Parser</code> class. For GLR instantiate
 <code>GLRParser</code> class.</p>
-<pre><code class="python">from parglare import Parser
+<pre><code class="language-python">from parglare import Parser
 parser = Parser(grammar)
 </code></pre>
-
 <p>or</p>
-<pre><code class="python">from parglare import GLRParser
+<pre><code class="language-python">from parglare import GLRParser
 parser = GLRParser(grammar)
 </code></pre>
-
 <p>You can provide additional <a href="../parser/">parser parameters</a> during instantiation.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -192,9 +189,8 @@ nice <a href="../lr_parsing/#resolving-conflicts">disambiguation features</a> in
 that will help you resolve some of those conflicts.</p>
 </div>
 <p>Now parse your input calling <code>parse</code> method on the parser instance.</p>
-<pre><code class="python">result = parser.parse(input_str)
+<pre><code class="language-python">result = parser.parse(input_str)
 </code></pre>
-
 <p>Depending on whether you have configured <a href="../actions/">actions</a> and what
 parameters you used for parser instance you will
 get either:</p>

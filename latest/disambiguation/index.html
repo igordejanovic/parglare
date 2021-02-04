@@ -201,7 +201,6 @@ will favor the one associated with the production with a higher priority.</p>
 <pre><code>E: E &quot;*&quot; E {2};
 E: E &quot;+&quot; E {1};
 </code></pre>
-
 <p>This gives priority of <code>2</code> to the production <code>E "*" E</code> and <code>1</code> to the production
 <code>E "+" E</code>. When parglare needs to decide, e.g. between shifting <code>+</code> or reducing
 <code>*</code> it saw, it will choose reduce as the multiplication production has higher
@@ -212,7 +211,6 @@ priority.</p>
 priority. In the grammar fragment above we still have ambiguity for expression:</p>
 <pre><code>2 + 3 + 5
 </code></pre>
-
 <p>There are two interpretations <code>(2 + 3) + 5</code> and <code>2 + (3 + 5)</code>. Of course, with
 arithmetic <code>+</code> operation the result will be the same but that's not true for
 each operation. Anyway, parse trees will be different so some choice has to be
@@ -222,7 +220,6 @@ left associative (i.e. the operation is evaluated from left to right).</p>
 <pre><code>E: E &quot;*&quot; E {2, left};
 E: E &quot;+&quot; E {1, left};
 </code></pre>
-
 <p>Now, the expression above is not ambiguous anymore. It is interpreted as <code>(2 +
 3) + 5</code>.</p>
 <p>The associativity given in the grammar is either <code>left</code> or <code>right</code>. Default is
@@ -253,7 +250,6 @@ of <a href="#lexical-ambiguities">lexical ambiguity</a>.</p>
 <pre><code>INT: /[-+]?[0-9]+\b/ {prefer};
 FLOAT: /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
 </code></pre>
-
 <p>If in the grammar we have a possibility that both recognizers are tried, both
 will succeed for input <code>23</code>, but we want <code>INT</code> to be choosen in this case.</p>
 <h2 id="dynamic-disambiguation-filter">Dynamic disambiguation filter<a class="headerlink" href="#dynamic-disambiguation-filter" title="Permanent link">&para;</a></h2>
@@ -266,19 +262,15 @@ operation priority increase for operations that are introduced later in the
 input.</p>
 <pre><code>1 + 2 * 3 - 4 + 5
 </code></pre>
-
 <p>Should be parsed as:</p>
 <pre><code>((1 + (2 * (3 - 4))) + 5)
 </code></pre>
-
 <p>While</p>
 <pre><code>1 - 2 + 3 * 4 + 5
 </code></pre>
-
 <p>should be parsed as:</p>
 <pre><code>(1 - ((2 + (3 * 4)) + 5))
 </code></pre>
-
 <p>As you can see, operations that appears later in the input are of higher priority.</p>
 <p>In parglare you can implement this dynamic behavior in two steps:</p>
 <p>First, mark productions in your grammar by <code>dynamic</code> rule:</p>
@@ -288,7 +280,6 @@ input.</p>
 op_sum: '+' {dynamic};
 op_mul: '*' {dynamic};
 </code></pre>
-
 <p>This tells parglare that those production are candidates for dynamic ambiguity
 resolution.</p>
 <p>Second step is to register a predicate function, during parser construction,
@@ -301,9 +292,8 @@ state. To initialize its state at the beginning it is called with <code>None</co
 parameters.</p>
 <pre><code>parser = Parser(grammar, dynamic_filter=custom_disambiguation_filter)
 </code></pre>
-
 <p>Where resolution function is of the following form:</p>
-<pre><code class="python">def custom_disambiguation_filter(context, from_state, to_state, action,
+<pre><code class="language-python">def custom_disambiguation_filter(context, from_state, to_state, action,
                                  production, subresults):
     &quot;&quot;&quot;
     Make first operation that appears in the input as lower priority.
@@ -349,7 +339,6 @@ parameters.</p>
                 or (operations.index(operation)
                     &lt;= operations.index(red_op)))
 </code></pre>
-
 <p>This function is a predicate that will be called for each action for productions
 marked with <code>dynamic</code> (SHIFT action for dynamic terminal production and REDUCE
 action for dynamic non-terminal productions). You are provided with enough
@@ -400,13 +389,11 @@ disambiguation strategy as follows:</p>
 recognizers, or we can use <code>prefer</code> to favor recognizer if there are multiple
 matches of the same length.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">number: /\d+/ {15};
+<pre><code class="language-nohighlight">number: /\d+/ {15};
 </code></pre>
-
 <p>or:</p>
-<pre><code class="nohighlight">number: /\d+/ {prefer};
+<pre><code class="language-nohighlight">number: /\d+/ {prefer};
 </code></pre>
-
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Implicit lexical disambiguation is controlled by <code>lexical_disambiguation</code>
@@ -415,9 +402,8 @@ uses implict disambiguation while <code>GLRParser</code> doesn't.</p>
 </div>
 <p>In addition, you can also specify that the terminal takes part in dynamic
 disambiguation:</p>
-<pre><code class="nohighlight">number: /\d+/ {dynamic};
+<pre><code class="language-nohighlight">number: /\d+/ {dynamic};
 </code></pre>
-
 <h2 id="custom-token-recognition-and-lexical-disambiguation">Custom token recognition and lexical disambiguation<a class="headerlink" href="#custom-token-recognition-and-lexical-disambiguation" title="Permanent link">&para;</a></h2>
 <p>In the previous section a built-in parglare lexical disambiguation strategy is
 explained. There are use-cases when this strategy is not sufficient. For
@@ -433,7 +419,6 @@ empty list if no symbol is found at the location.</p>
 <pre><code>parser = Parser(
     grammar, custom_token_recognition=custom_token_recognition)
 </code></pre>
-
 <p>The callable accepts:</p>
 <ul>
 <li>
@@ -453,7 +438,7 @@ empty list if no symbol is found at the location.</p>
 the token is usually a sub-string of the input string.</p>
 <p>In the following test <code>Bar</code> and <code>Baz</code> non-terminals are fuzzy matched. The
 non-terminal with the higher score wins but only if the score is above 0.7.</p>
-<pre><code class="python">grammar = &quot;&quot;&quot;
+<pre><code class="language-python">grammar = &quot;&quot;&quot;
 S: Element+;
 Element: Bar | Baz | Number;
 
@@ -521,12 +506,16 @@ assert result == ['Ba. 34', 'baz 56']
 with pytest.raises(ParseError):
     parser.parse('Bar. 34 bza 56')
 </code></pre>
-
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><code>custom_token_recognition</code> can be used to implement custom lexical
 disambiguation by calling <code>get_tokens</code> and then reducing returned list to a
 list with a single result.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>See the end of <a href="../parse_trees/">the parse trees section</a> for a tip on how to
+investigate ambiguities in GLR parsing.</p>
 </div>
               
             </div>

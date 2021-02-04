@@ -155,7 +155,7 @@
 to debug the grammar, visualize the LR automata and make a visual trace of the
 GLR parsing.</p>
 <p>To get the help on the command run:</p>
-<pre><code class="nohighlight">$ pglr
+<pre><code class="language-nohighlight">$ pglr
 Usage: pglr [OPTIONS] COMMAND [ARGS]...
 
   Command line interface for working with parglare grammars.
@@ -172,7 +172,6 @@ Commands:
   trace
   viz
 </code></pre>
-
 <h2 id="compiling-the-grammar">Compiling the grammar<a class="headerlink" href="#compiling-the-grammar" title="Permanent link">&para;</a></h2>
 <p><code>compile</code> command is used for checking the grammar, reporting conflicts and
 producing LR table <code>.pgt</code> files. It is not mandatory to compile the grammar as
@@ -181,7 +180,7 @@ exist or is not newer than all of the grammar files. But it is recommended to
 use this command during development to investigate possible conflicts and
 calculate table in advance.</p>
 <p>To get help on the command run:</p>
-<pre><code class="nohighlight">$ pglr compile --help
+<pre><code class="language-nohighlight">$ pglr compile --help
 Usage: pglr compile [OPTIONS] GRAMMAR_FILE
 
 Options:
@@ -191,7 +190,6 @@ To compile and check your grammar run:
 
     $ pglr compile &lt;grammar_file&gt;
 </code></pre>
-
 <p>where <code>&lt;grammar_file&gt;</code> is the path to your grammar file.</p>
 <p>If there is no error in the grammar you will get <code>Grammar OK.</code> message. In case
 of LR conflicts you will get a detailed information on all Shift/Reduce and
@@ -201,12 +199,11 @@ conflicts or to go with GLR if the grammar is not LR(1).</p>
 <p>In case of error you will get error message with the information what is the
 error and where it is in the grammar.</p>
 <p>For example:</p>
-<pre><code class="nohighlight">$ pglr compile calc.pg
+<pre><code class="language-nohighlight">$ pglr compile calc.pg
 Error in the grammar file.
 Error in file &quot;calc.pg&quot; at position 4,16 =&gt; &quot;/' E  left*, 2}\n | E &quot;.
 Expected: { or | or ; or Name or RegExTerm or StrTerm
 </code></pre>
-
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>Be sure to deploy <code>.pgt</code> file to production as you will avoid unnecessary
@@ -219,7 +216,7 @@ whenever started.</p>
 the state in which conflict occurs, lookaheads and actions.</p>
 <p>To get the full information about the grammar you can run <code>pglr</code> command in the
 debug mode.</p>
-<pre><code class="nohighlight">$ pglr --debug compile calc.pg
+<pre><code class="language-nohighlight">$ pglr --debug compile calc.pg
 
 *** GRAMMAR ***
 Terminals:
@@ -260,7 +257,6 @@ State 0
 ...
 
 </code></pre>
-
 <p>This will give enumerated all the productions of your grammars and all the
 states. For each state you get the LR items with lookahead, elements of GOTO
 table and elements of ACTIONS table. In the previous example state 0 will have a
@@ -274,12 +270,11 @@ in the debug mode and get a detailed output.</p>
 <h2 id="visualizing-lr-automata">Visualizing LR automata<a class="headerlink" href="#visualizing-lr-automata" title="Permanent link">&para;</a></h2>
 <p>To visualize your automata with all the states and possible transitions run the
 command:</p>
-<pre><code class="nohighlight">$ pglr viz calc.pg
+<pre><code class="language-nohighlight">$ pglr viz calc.pg
 Grammar OK.
 Generating 'calc.pg.dot' file for the grammar PDA.
 Use dot viewer (e.g. xdot) or convert to pdf by running 'dot -Tpdf -O calc.pg.dot'
 </code></pre>
-
 <p>As given in the output you will get a <code>dot</code> file which represents LR automata
 visualization. You can see this diagram using dot viewers (e.g.
 <a href="https://github.com/jrfonseca/xdot.py">xdot</a>) or you can transform it to other
@@ -293,7 +288,7 @@ quick intro (click on the image to enlarge):</p>
 understand what's going on during GLR operation GLR parser and <code>pglr</code> command
 provide a way to trace the GSS.</p>
 <p>To get a help on the <code>trace</code> command run:</p>
-<pre><code class="nohighlight">$ pglr trace --help
+<pre><code class="language-nohighlight">$ pglr trace --help
 Usage: pglr trace [OPTIONS] GRAMMAR_FILE
 
 Options:
@@ -301,13 +296,11 @@ Options:
   -i, --input TEXT       Input string for tracing
   --help                 Show this message and exit.
 </code></pre>
-
 <p>You either give your input using file (<code>-f</code>) or using string provided in the
 command (<code>-i</code>), but not both.</p>
 <p>To run the GLR trace for the calc grammar and some input:</p>
-<pre><code class="bash">$ pglr trace calc.pg -i &quot;2 + 3 * 5&quot;
+<pre><code class="language-bash">$ pglr trace calc.pg -i &quot;2 + 3 * 5&quot;
 </code></pre>
-
 <p>The <code>-i</code> switch tells the command to treat the last parameter as the input
 string to parse.</p>
 <div class="admonition tip">
