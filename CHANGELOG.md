@@ -20,7 +20,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ## [Unreleased]
 
 
-## [0.13.0] (released: 2020-02-04)
+## [0.13.0] (released: 2021-02-04)
 
 ### Changed
 
