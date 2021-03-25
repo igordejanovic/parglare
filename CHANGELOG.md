@@ -19,6 +19,10 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Changed
+
+  - Dropping support for deprecated Python 3.4 and 3.5 versions.
+
 
 ## [0.13.0] (released: 2020-02-04)
 
