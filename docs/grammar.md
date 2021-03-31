@@ -93,7 +93,7 @@ This is a base class for `Terminal` and `NonTerminal`.
   about location in the file (position and span).
 
 - **action_name** - the action name assigned for the symbol. This is given in
-  the grammar using the [`@` syntax](./grammar_language.md#). If action name is
+  the grammar using the [`@` syntax](./grammar_language.md/#referencing-semantic-actions-from-a-grammar). If action name is
   not provided in the grammar symbol name is used.
 
 - **action_fqn** (property) - the fully qualiifed action name for the symbol.
@@ -152,7 +152,7 @@ This is a base class for `Terminal` and `NonTerminal`.
   priority is 10.
 
 - **dynamic (bool)** - `True` if this production disambiguation should
-  be [resolved dynamically]().
+  be [resolved dynamically](./disambiguation.md#dynamic-disambiguation-filter).
 
 - **prod_id (int)** - ordinal number of the production in the grammar,
 

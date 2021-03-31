@@ -156,7 +156,7 @@ recognize a sublist of integers in ascending order.
 
 For more details on the usage
 see
-[this test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py).
+[this test](https://github.com/igordejanovic/parglare/blob/master/tests/func/recognizers/test_recognizers.py).
 
 More on this topic can be found in [a separate section](./recognizers.md).
 
@@ -551,7 +551,7 @@ some_rule: first second;
 
 For rule `some_rule` action with the name `myaction` will be searched in the
 `<grammar>_actions.py` module, `actions` dict or [built-in
-actions](#built-in-actions) provided by the `parglare.actions` module. This is
+actions](./actions.md/#built-in-actions) provided by the `parglare.actions` module. This is
 helpful if you have some common action that can be used for multiple rules in
 your grammar. Also this can be used to specify built-in action to be used for a
 rule directly in the grammar.

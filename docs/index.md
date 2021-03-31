@@ -52,7 +52,7 @@ A pure Python LR/GLR parser.
     recognizers](./recognizers.md) for your input stream. The built-in
     recognizers are string and regex recognizers for parsing textual inputs. See
     `recognizers` parameter to grammar construction in the [test_recognizers.py
-    test](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py).
+    test](https://github.com/igordejanovic/parglare/blob/master/tests/func/recognizers/test_recognizers.py).
 
 * [**Flexible actions calling strategies**](./actions.md)
 

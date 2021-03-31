@@ -38,7 +38,7 @@ our language with a single interpretation for each of them and nothing more.
 
 Static disambiguation filters are given in the grammar at the end of the
 production using `{}` syntax. There is also
-a [dynamic disambiguation filter](./dynamic-disambiguation-filter) that is most
+a [dynamic disambiguation filter](#dynamic-disambiguation-filter) that is most
 powerful and is specified as a Python function.
 
 
@@ -265,7 +265,7 @@ Parameters are:
 - **subresults (list)** - a sub-results for the reduction. Valid only for
   REDUCE. The length of this list is equal to `len(production.rhs)`.
 
-For details see [test_dynamic_disambiguation_filters.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation_filters.py).
+For details see [test_dynamic_disambiguation_filters.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/parsing/test_dynamic_disambiguation_filters.py).
 
 
 ## Lexical ambiguities
@@ -333,7 +333,7 @@ token at the position.
 parglare solves this problem by enabling you to implement a custom token
 recognition by registering a callable during parser instantiation that will,
 during parsing, get all the symbols expected at the current location and return
-a list of tokens (instances of [`Token` class](./parser.md#token)) or `None`/
+a list of tokens (instances of [`Token` class](./parser.md#token-class)) or `None`/
 empty list if no symbol is found at the location.
 
 This callable is registered during parser instantiation as the parameter
@@ -354,7 +354,7 @@ The callable accepts:
   extend it with new tokens. See the example below how to return list with a
   token only if the default recognition doesn't succeed.
 
-**Returns:** a list of [`Token` class instances](./parser.md#token) or
+**Returns:** a list of [`Token` class instances](./parser.md#token-class) or
 `None`/empty list if no token is found.
 
 To instantiate `Token` pass in the symbol and the value of the token. Value of

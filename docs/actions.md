@@ -178,7 +178,7 @@ method of the parser object to execute actions. For example:
 
 parglare provides some common actions in the module `parglare.actions`. You can
 [reference these actions directly from the
-grammar](./grammar_language.md#referencing-rule-actions-from-a-grammar).
+grammar](./grammar_language.md#referencing-semantic-actions-from-a-grammar).
 Built-in actions are used implicitly by parglare as default actions in
 particular case (e.g. for [syntactic
 sugar](./grammar_language.md#syntactic-sugar-bnf-extensions)) but you might want

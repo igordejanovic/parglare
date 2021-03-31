@@ -165,7 +165,7 @@ all actions decorated by it and that dictionary will be provided as
 
 By default, a name of a decorated function will serve as a grammar symbol name
 or in-grammar defined action name (using `@`, see [syntax for action
-specification](./grammar_language.md#referencing-rule-actions-from-a-grammar))
+specification](./grammar_language.md#referencing-semantic-actions-from-a-grammar))
 this action is defined for. But, you can provide different name using a string
 parameter to `action` decorator:
 

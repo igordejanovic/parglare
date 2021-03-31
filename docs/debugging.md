@@ -54,7 +54,7 @@ parser = Parser(grammar, debug=True)
 
 
 To debug [layout
-grammar](./grammar_language.md#handling-whitespaces-and-comments) do:
+grammar](./grammar_language.md#handling-whitespaces-and-comments-in-your-language) do:
 
 ```python
 parser = Parser(grammar, debug_layout=True)
