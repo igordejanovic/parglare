@@ -299,7 +299,7 @@ recognize Python integer that is, well, less than five. <code>ascending</code> w
 recognize a sublist of integers in ascending order.</p>
 <p>For more details on the usage
 see
-<a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_recognizers.py">this test</a>.</p>
+<a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/recognizers/test_recognizers.py">this test</a>.</p>
 <p>More on this topic can be found in <a href="../recognizers/">a separate section</a>.</p>
 <h2 id="usual-patterns">Usual patterns<a class="headerlink" href="#usual-patterns" title="Permanent link">&para;</a></h2>
 <p>This section explains how some common grammar patterns can be written using just
@@ -601,7 +601,7 @@ after <code>@</code> will be used instead of a rule name.</p>
 some_rule: first second;
 </code></pre>
 <p>For rule <code>some_rule</code> action with the name <code>myaction</code> will be searched in the
-<code>&lt;grammar&gt;_actions.py</code> module, <code>actions</code> dict or <a href="#built-in-actions">built-in
+<code>&lt;grammar&gt;_actions.py</code> module, <code>actions</code> dict or <a href="./actions.md/#built-in-actions">built-in
 actions</a> provided by the <code>parglare.actions</code> module. This is
 helpful if you have some common action that can be used for multiple rules in
 your grammar. Also this can be used to specify built-in action to be used for a

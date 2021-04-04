@@ -190,7 +190,7 @@ our language with a single interpretation for each of them and nothing more.</p>
 <h2 id="static-disambiguation-filters">Static disambiguation filters<a class="headerlink" href="#static-disambiguation-filters" title="Permanent link">&para;</a></h2>
 <p>Static disambiguation filters are given in the grammar at the end of the
 production using <code>{}</code> syntax. There is also
-a <a href="./dynamic-disambiguation-filter">dynamic disambiguation filter</a> that is most
+a <a href="#dynamic-disambiguation-filter">dynamic disambiguation filter</a> that is most
 powerful and is specified as a Python function.</p>
 <h3 id="priority">priority<a class="headerlink" href="#priority" title="Permanent link">&para;</a></h3>
 <p>Priority is probably the simplest form of disambiguation. It is also the
@@ -364,7 +364,7 @@ operation.</p>
   REDUCE. The length of this list is equal to <code>len(production.rhs)</code>.</p>
 </li>
 </ul>
-<p>For details see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/test_dynamic_disambiguation_filters.py">test_dynamic_disambiguation_filters.py</a>.</p>
+<p>For details see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/parsing/test_dynamic_disambiguation_filters.py">test_dynamic_disambiguation_filters.py</a>.</p>
 <h2 id="lexical-ambiguities">Lexical ambiguities<a class="headerlink" href="#lexical-ambiguities" title="Permanent link">&para;</a></h2>
 <p>There is another source of ambiguities.</p>
 <p>Parglare uses integrated scanner, thus tokens are determined on the fly. This
@@ -412,7 +412,7 @@ token at the position.</p>
 <p>parglare solves this problem by enabling you to implement a custom token
 recognition by registering a callable during parser instantiation that will,
 during parsing, get all the symbols expected at the current location and return
-a list of tokens (instances of <a href="../parser/#token"><code>Token</code> class</a>) or <code>None</code>/
+a list of tokens (instances of <a href="../parser/#token-class"><code>Token</code> class</a>) or <code>None</code>/
 empty list if no symbol is found at the location.</p>
 <p>This callable is registered during parser instantiation as the parameter
 <code>custom_token_recognition</code>.</p>
@@ -432,7 +432,7 @@ empty list if no symbol is found at the location.</p>
   token only if the default recognition doesn't succeed.</p>
 </li>
 </ul>
-<p><strong>Returns:</strong> a list of <a href="../parser/#token"><code>Token</code> class instances</a> or
+<p><strong>Returns:</strong> a list of <a href="../parser/#token-class"><code>Token</code> class instances</a> or
 <code>None</code>/empty list if no token is found.</p>
 <p>To instantiate <code>Token</code> pass in the symbol and the value of the token. Value of
 the token is usually a sub-string of the input string.</p>
