@@ -270,7 +270,7 @@ class GLRParser(Parser):
                         h_print('Adding head to reduced heads.', level=1)
                     self.reduced_heads[head] = head
                 else:
-                    reduced_head.merge_head(head, self)
+                    reduced_head.merge_head(head)
 
     def _do_shifts_accepts(self):
         """
@@ -810,7 +810,7 @@ class GSSNode(object):
         self.parents = []
         self.number_of_trees = number_of_trees
 
-    def merge_head(self, other, parser):
+    def merge_head(self, other):
         """
         Merge same top stack nodes.
         """
@@ -821,7 +821,7 @@ class GSSNode(object):
             p.head = self
         self.parents.extend(other.parents)
 
-        if parser.debug:
+        if self.parser.debug:
             h_print("Merging head ", other)
             h_print("to head", self, level=1)
 
