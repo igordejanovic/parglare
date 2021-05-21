@@ -310,12 +310,10 @@ class GLRParser(Parser):
             a_print("Preparing reductions for head: ", str(head),
                     new_line=True)
 
-        productions = []
         symbol_actions = head.state.actions.get(head.token_ahead.symbol, [])
-        for symbol_action in symbol_actions:
-            action = symbol_action.action
-            if action is REDUCE:
-                productions.append(symbol_action.prod)
+        productions = [symbol_action.prod
+                       for symbol_action in symbol_actions
+                       if symbol_action.action is REDUCE]
 
         if debug:
             h_print("\tProductions:\n\t\t",
