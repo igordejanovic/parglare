@@ -35,7 +35,7 @@ def test_rr_empty_conflict():
         Parser(g)
 
     # For B and D empty reductions both "A B C" and "A D C" can reduce to S
-    assert "'4: B = EMPTY' or '6: D = EMPTY'" \
+    assert "'6: D = EMPTY' or '4: B = EMPTY'" \
         in str(e.value.conflicts[0])
 
 
@@ -54,5 +54,5 @@ def test_rr_nonempty_conflict():
         Parser(g)
 
     # "A1 B1" can reduce to both A and B
-    assert "'3: A = A1 B1' or '4: B = A1 B1'" \
+    assert "'4: B = A1 B1' or '3: A = A1 B1'" \
         in str(e.value.conflicts[0])

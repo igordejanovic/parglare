@@ -15,54 +15,38 @@ def closure(state, itemset_type, first_sets=None):
     """
     from parglare.tables import LRItem
 
-    while True:
+    items_to_process = list(state.items)
+    while items_to_process:
+        item = items_to_process.pop()
+        symbol = item.symbol_at_position
+        if not isinstance(symbol, NonTerminal):
+            continue
 
-        has_additions = False
-        to_add = []
-        for item in state.items:
-            gs = item.symbol_at_position
-            if isinstance(gs, NonTerminal):
-                for p in state.grammar.productions:
-
-                    if p.symbol == gs:
-
-                        if itemset_type is LR_1:
-                            # Calculate follow set that is possible after the
-                            # non-terminal at the given position of the current
-                            # item.
-                            follow = _new_item_follow(item, first_sets)
-                            new_item = LRItem(p, 0, follow)
-                        else:
-                            new_item = LRItem(p, 0)
-
-                        if new_item not in state.items \
-                                and new_item not in to_add:
-
-                            # If the item doesn't exists yet add it.
-                            to_add.append(new_item)
-                            has_additions = True
-
-                        else:
-                            # If the item already exists, this newly created
-                            # item might still have a wider follows set. If so,
-                            # update with the current new item follows set if
-                            # we are building LR_1 items set.
-                            if itemset_type is LR_1:
-                                try:
-                                    existing_item = state.items[
-                                        state.items.index(new_item)]
-                                except ValueError:
-                                    existing_item = to_add[
-                                        to_add.index(new_item)]
-
-                                if not follow.issubset(existing_item.follow):
-                                    existing_item.follow.update(follow)
-                                    has_additions = True
-
-        if has_additions:
-            state.items.extend(to_add)
-        else:
-            break
+        # Calculate follow set that is possible after the
+        # non-terminal at the given position of the current
+        # item.
+        if itemset_type is LR_1:
+            follow = _new_item_follow(item, first_sets)
+        for prod in [p for p in state.grammar.productions
+                     if p.symbol == symbol]:
+            new_item = LRItem(prod, 0,
+                              follow if itemset_type is LR_1 else None)
+            if new_item not in state.items:
+                # If the item doesn't exists yet add it and reprocess it.
+                state.items.append(new_item)
+                items_to_process.append(new_item)
+            elif itemset_type is LR_1:
+                # If the item already exists, this newly created item might
+                # still have a wider follows set. If so, update with the
+                # current new item follows set if we are building LR_1 items
+                # set.
+                existing_item = next(i for i in state.items if i == new_item)
+                if not follow.issubset(existing_item.follow):
+                    existing_item.follow.update(follow)
+                    # If there was an update in the follow set of the existing
+                    # item we have to process it again as we have to update
+                    # follows of all items that were created from it.
+                    items_to_process.append(existing_item)
 
 
 def _new_item_follow(item, first_sets):
