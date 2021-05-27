@@ -36,8 +36,8 @@ def test_layout_simple_comments(parser_class):
     A: 'a' A | 'a';
     B: 'b' B | 'b';
 
-    LAYOUT: LayoutItem | LAYOUT LayoutItem;
-    LayoutItem: WS | Comment | EMPTY;
+    LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+    LayoutItem: WS | Comment;
 
     terminals
     WS: /\s+/;
@@ -62,8 +62,8 @@ def test_layout_nested_comments(parser_class):
     B: 'b' | B 'b';
     C: 'c' | C 'c';
 
-    LAYOUT: LayoutItem | LAYOUT LayoutItem;
-    LayoutItem: WS | Comment | EMPTY;
+    LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+    LayoutItem: WS | Comment;
     Comment: '/*' CorNCs '*/' | LineComment;
     CorNCs: CorNC | CorNCs CorNC | EMPTY;
     CorNC: Comment | NotComment | WS;
@@ -104,8 +104,8 @@ def test_layout_context(parser_class):
     A: 'a' A | 'a';
     B: 'b' B | 'b';
 
-    LAYOUT: LayoutItem | LAYOUT LayoutItem;
-    LayoutItem: WS | Comment | EMPTY;
+    LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+    LayoutItem: WS | Comment;
 
     terminals
     WS: /\s+/;
@@ -150,8 +150,8 @@ def test_layout_actions(parser_class):
     A: 'a' A | 'a';
     B: 'b' B | 'b';
 
-    LAYOUT: LayoutItem | LAYOUT LayoutItem;
-    LayoutItem: WS | Comment | EMPTY;
+    LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+    LayoutItem: WS | Comment;
 
     terminals
     WS: /\s+/;

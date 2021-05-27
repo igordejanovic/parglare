@@ -692,8 +692,8 @@ but comments also, you can use a special rule `LAYOUT`:
 
 
 ```nohighlight
-LAYOUT: LayoutItem | LAYOUT LayoutItem;
-LayoutItem: WS | Comment | EMPTY;
+LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+LayoutItem: WS | Comment;
 
 terminals
 WS: /\s+/;
@@ -710,8 +710,8 @@ Here is another example that gives support for both line comments and block
 comments like the one used in the grammar language itself:
 
 ```nohighlight
-LAYOUT: LayoutItem | LAYOUT LayoutItem;
-LayoutItem: WS | Comment | EMPTY;
+LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+LayoutItem: WS | Comment;
 Comment: '/*' CorNCs '*/' | LineComment;
 CorNCs: CorNC | CorNCs CorNC | EMPTY;
 CorNC: Comment | NotComment | WS;

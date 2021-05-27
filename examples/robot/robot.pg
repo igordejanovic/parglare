@@ -5,8 +5,8 @@ move: direction=direction steps=INT?;
 direction: "up" | "down" | "left" | "right";
 
 // Support for C-like comments
-LAYOUT: LayoutItem | LAYOUT LayoutItem;
-LayoutItem: WS | Comment | EMPTY;
+LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+LayoutItem: WS | Comment;
 
 terminals
 INT: /\d+/;
