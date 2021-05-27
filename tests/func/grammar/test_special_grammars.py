@@ -176,6 +176,14 @@ def test_cyclic_grammar_3():
 
     g = Grammar.from_string(grammar)
 
+    # In this grammar we have 3 S/R conflicts where each reduction is EMPTY.
+    # If we turn off prefer shifts over empty strategy in LR parser
+    # we will get S/R conflict
+    with pytest.raises(SRConflicts):
+        Parser(g, prefer_shifts_over_empty=False)
+
+    # By default there is no S/R conflict with prefer shifts over
+    # empty strategy
     Parser(g)
 
     p = GLRParser(g)

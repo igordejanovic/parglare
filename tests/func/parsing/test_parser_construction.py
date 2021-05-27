@@ -93,7 +93,7 @@ def test_table_construction():
     c = g.get_terminal('c')
     d = g.get_terminal('d')
 
-    assert len(table.states) == 11
+    assert len(table.states) == 10
     assert table.states[0].symbol.name == "S'"
     state = table.states[2]
     assert state.symbol.name == 'a'
@@ -103,9 +103,9 @@ def test_table_construction():
     assert len(state.actions[c]) == 1
     action = list(state.actions.values())[0][0]
     assert action.action == SHIFT
-    assert action.state.state_id == 6
+    assert action.state.state_id == 5
 
-    state = table.states[6]
+    state = table.states[5]
     assert state.symbol.name == 'c'
     assert len(state.kernel_items) == 2
     assert len(state.items) == 4
@@ -117,7 +117,7 @@ def test_table_construction():
     assert action.prod.prod_id == 4
     action = list(state.actions.values())[1][0]
     assert action.action == SHIFT
-    assert action.state.state_id == 6
+    assert action.state.state_id == 5
 
 
 def test_associativity_conflicts_resolving():

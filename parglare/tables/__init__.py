@@ -4,7 +4,7 @@ from collections import OrderedDict
 from itertools import chain
 from parglare.grammar import ProductionRHS, AUGSYMBOL, \
     ASSOC_LEFT, ASSOC_RIGHT, STOP, StringRecognizer, RegExRecognizer, \
-    Grammar, EMPTY, NonTerminal
+    Grammar, EMPTY, NonTerminal, DEFAULT_PRIORITY
 from parglare.exceptions import GrammarError, SRConflict, RRConflict
 from parglare.closure import closure, LR_1
 from parglare.termui import prints, s_header, h_print, a_print, s_emph
@@ -137,13 +137,14 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
     states = []
 
     if debug:
-        h_print("Constructing LR automata states...")
+        h_print("Constructing LR automaton states...")
     while state_queue:
+        state = state_queue.pop(0)
+
         # For each state calculate its closure first, i.e. starting from a
         # so called "kernel items" expand collection with non-kernel items.
         # We will also calculate GOTO and ACTIONS dicts for each state. These
         # dicts will be keyed by a grammar symbol.
-        state = state_queue.pop(0)
         closure(state, itemset_type, first_sets)
         states.append(state)
 
@@ -173,6 +174,9 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
         # For each group symbol we create new state and form its kernel
         # items from the group items with positions moved one step ahead.
         for symbol, items in state._per_next_symbol.items():
+            if symbol is STOP:
+                state.actions[symbol] = [Action(ACCEPT)]
+                continue
             inc_items = [item.get_pos_inc() for item in items]
             maybe_new_state = LRState(grammar, state_id, symbol, inc_items)
             target_state = maybe_new_state
@@ -206,13 +210,9 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                 state.gotos[symbol] = target_state
 
             else:
-                if symbol is STOP:
-                    state.actions[symbol] = [Action(ACCEPT,
-                                                    state=target_state)]
-                else:
-                    # For each terminal symbol we create SHIFT action in the
-                    # ACTION table.
-                    state.actions[symbol] = [Action(SHIFT, state=target_state)]
+                # For each terminal symbol we create SHIFT action in the
+                # ACTION table.
+                state.actions[symbol] = [Action(SHIFT, state=target_state)]
 
     if debug:
         h_print("{} LR automata states constructed".format(len(states)))
@@ -294,8 +294,13 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                         if t_shift:
                             # SHIFT/REDUCE conflict. Use assoc and priority to
                             # resolve
-                            sh_prior = state._max_prior_per_symbol[
-                                t_shift.state.symbol]
+                            # For disambiguation treat ACCEPT action the same
+                            # as SHIFT.
+                            if t_shift.action is ACCEPT:
+                                sh_prior = DEFAULT_PRIORITY
+                            else:
+                                sh_prior = state._max_prior_per_symbol[
+                                    t_shift.state.symbol]
                             if prod.prior == sh_prior:
                                 if prod.assoc == ASSOC_LEFT:
                                     # Override SHIFT with this REDUCE
@@ -309,7 +314,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                                     should_reduce = False
                                 else:
                                     # If priorities are the same and no
-                                    # associativity defined use prefered
+                                    # associativity defined use preferred
                                     # strategy.
                                     is_empty = len(prod.rhs) == 0
                                     prod_pse = is_empty \

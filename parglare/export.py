@@ -43,7 +43,6 @@ def grammar_pda_export(table, file_name):
         f.write(HEADER)
 
         for state in table.states:
-
             kernel_items = ""
             for item in state.kernel_items:
                 kernel_items += "{}\\l".format(dot_escape(str(item)))
@@ -82,12 +81,13 @@ def grammar_pda_export(table, file_name):
             # SHIFT and GOTOs as links
             shacc = []
             for term, actions in state.actions.items():
-                for a in [a for a in actions if a.action in [SHIFT, ACCEPT]]:
+                for a in [a for a in actions if a.action is SHIFT]:
                     shacc.append((term, a))
             for term, action in shacc:
                 f.write('{} -> {} [label="{}:{}"]'.format(
-                    state.state_id, action.state.state_id,
-                    "SHIFT" if action.action == SHIFT else "ACCEPT", term))
+                    state.state_id,
+                    action.state.state_id,
+                    "SHIFT" if action.action is SHIFT else "ACCEPT", term))
 
             for symb, goto_state in ((symb, goto) for symb, goto
                                      in state.gotos.items()):
