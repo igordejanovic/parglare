@@ -77,7 +77,10 @@ class GLRParser(Parser):
             a_print("*** PARSING STARTED\n")
             self.debug_step = 0
             if self.debug_trace:
-                self.dot_trace = ""
+                self._dot_trace = ''
+                self._dot_trace_ranks = ''
+                self._trace_shift_level_heads = []
+                self._trace_shift_level = 0
 
         self.input_str = input_str
         self.file_name = file_name
@@ -182,7 +185,8 @@ class GLRParser(Parser):
                     break
 
         if self.debug and self.debug_trace:
-            self._export_dot_trace()
+            self._trace_finish()
+            self._export__dot_trace()
 
         if self.accepted_heads:
             # Return results
@@ -281,6 +285,8 @@ class GLRParser(Parser):
         if debug:
             a_print("** SHIFTING", new_line=True)
             self._debug_active_heads(self.reduced_heads.values())
+            if self.debug_trace:
+                self._trace_frontier()
 
         while self.reduced_heads:
             head, __ = self.reduced_heads.popitem()
@@ -307,7 +313,7 @@ class GLRParser(Parser):
         debug = self.debug
 
         if debug:
-            a_print("Preparing reductions for head: ", str(head),
+            a_print("\tPreparing reductions for head: ", str(head),
                     new_line=True)
 
         symbol_actions = head.state.actions.get(head.token_ahead.symbol, [])
@@ -428,7 +434,7 @@ class GLRParser(Parser):
 
             parent.results = self._call_reduce_action(parent, results)
 
-            # Check for possible automata loops for the newly reduced head.
+            # Check for possible automaton loops for the newly reduced head.
             # Handle loops by creating GSS loops for empty reduction loops or
             # rejecting cyclic reductions for non-empty reductions.
             if self.debug:
@@ -677,43 +683,61 @@ class GLRParser(Parser):
 
     @no_colors
     def _trace_head(self, head):
-        self.dot_trace += '{} [label="{}:{}"];\n'\
+        self._dot_trace += '{} [label="{}:{}"];\n'\
             .format(head.key, head.state.state_id,
                     dot_escape(head.state.symbol.name))
+        self._trace_shift_level_heads.append(head)
 
     @no_colors
     def _trace_step(self, old_head, new_head, root_head, label=''):
         new_head_key = new_head.key if isinstance(new_head, GSSNode) \
                        else new_head
-        self.dot_trace += '{} -> {} [label="{}. {}" {}];\n'.format(
+        self._dot_trace += '{} -> {} [label="{}. {}" {}];\n'.format(
             old_head.key, new_head_key, self.debug_step, label,
             TRACE_DOT_STEP_STYLE)
-        self.dot_trace += '{} -> {};\n'.format(new_head_key, root_head.key)
+        self._dot_trace += '{} -> {};\n'.format(new_head_key, root_head.key)
 
     @no_colors
     def _trace_step_finish(self, from_head):
         self._trace_step(from_head, "success", from_head)
 
     @no_colors
+    def _trace_frontier(self):
+        self._dot_trace_ranks += \
+            '{{rank=same; {}; {}}}\n'.format(
+                self._trace_shift_level,
+                ''.join([' {};'.format(x.key)
+                         for x in self._trace_shift_level_heads]))
+        self._trace_shift_level += 1
+        self._trace_shift_level_heads = []
+
+    @no_colors
     def _trace_step_kill(self, from_head):
-        self.dot_trace += \
+        self._dot_trace += \
             '{}_killed [shape="diamond" fillcolor="red" label="killed"];\n'\
             .format(from_head.key)
-        self.dot_trace += '{} -> {}_killed [label="{}." {}];\n'\
+        self._dot_trace += '{} -> {}_killed [label="{}." {}];\n'\
             .format(from_head.key, from_head.key, self.debug_step,
                     TRACE_DOT_STEP_STYLE)
 
     @no_colors
     def _trace_step_drop(self, from_head, to_head):
-        self.dot_trace += '{} -> {} [label="drop empty" {}];\n'\
+        self._dot_trace += '{} -> {} [label="drop empty" {}];\n'\
             .format(from_head.key, to_head.key, TRACE_DOT_DROP_STYLE)
 
-    def _export_dot_trace(self):
+    @no_colors
+    def _trace_finish(self):
+        self._dot_trace += '\nnode [shape=none, style=""]\n'
+        self._dot_trace += self._dot_trace_ranks
+        self._dot_trace += '->'.join((str(i) for i in range(self._trace_shift_level)))
+        self._dot_trace += '[arrowhead=none];\n'
+
+    def _export__dot_trace(self):
         file_name = "{}_trace.dot".format(self.file_name) \
                     if self.file_name else "parglare_trace.dot"
         with codecs.open(file_name, 'w', encoding="utf-8") as f:
             f.write(DOT_HEADER)
-            f.write(self.dot_trace)
+            f.write(self._dot_trace)
             f.write("}\n")
 
         prints("Generated file {}.".format(file_name))
