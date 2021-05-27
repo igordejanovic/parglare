@@ -428,68 +428,70 @@ class GLRParser(Parser):
                                start_position, end_position,
                                production=production)
 
-        if not self.dynamic_filter or \
-                self._call_dynamic_filter(parent, head.state, state,
-                                          REDUCE, production, results):
+        if self.dynamic_filter and \
+                not self._call_dynamic_filter(parent, head.state, state,
+                                              REDUCE, production, results):
+            # Action rejected by dynamic filter
+            return
 
-            parent.results = self._call_reduce_action(parent, results)
+        parent.results = self._call_reduce_action(parent, results)
 
-            # Check for possible automaton loops for the newly reduced head.
-            # Handle loops by creating GSS loops for empty reduction loops or
-            # rejecting cyclic reductions for non-empty reductions.
-            if self.debug:
-                h_print('Check loops. Reduce stack states:',
-                        self.reducing_stack_states,
-                        level=1)
-            if new_head.state.state_id in self.reducing_stack_states:
-                if root_head.shift_level == new_head.shift_level:
-                    # Empty reduction. If we already have this on the reduce
-                    # stack we shall make a GSS loop and remove this head from
-                    # further reductions.
-                    for shead, __ in reversed(self.reducing_stack):
-                        if new_head == shead:
-                            # If found we shall make a GSS loop only if the
-                            # reduction is empty.
-                            if root_head == head:
-                                if self.debug:
-                                    h_print('Looping due to empty reduction.'
-                                            ' Making GSS loop.', level=1)
-                                shead.create_link(parent)
-                            else:
-                                if self.debug:
-                                    h_print(
-                                        'Looping with an empty tree reduction',
-                                        level=1)
-
+        # Check for possible automaton loops for the newly reduced head.
+        # Handle loops by creating GSS loops for empty reduction loops or
+        # rejecting cyclic reductions for non-empty reductions.
+        if self.debug:
+            h_print('Check loops. Reduce stack states:',
+                    self.reducing_stack_states,
+                    level=1)
+        if new_head.state.state_id in self.reducing_stack_states:
+            if root_head.shift_level == new_head.shift_level:
+                # Empty reduction. If we already have this on the reduce
+                # stack we shall make a GSS loop and remove this head from
+                # further reductions.
+                for shead, __ in reversed(self.reducing_stack):
+                    if new_head == shead:
+                        # If found we shall make a GSS loop only if the
+                        # reduction is empty.
+                        if root_head == head:
                             if self.debug:
-                                h_print('Not processing further this head.',
-                                        level=1)
-                            return
-                else:
-                    # Non-empty reduction If the same state has been reduced,
-                    # we have looping by cyclic grammar and should report and
-                    # reject invalid state.
-                    for shead, __ in reversed(self.reducing_stack):
-                        if new_head == shead \
-                                and root_head == shead.parents[0].parent:
+                                h_print('Looping due to empty reduction.'
+                                        ' Making GSS loop.', level=1)
+                            shead.create_link(parent)
+                        else:
                             if self.debug:
-                                a_print('Cyclic grammar detected. '
-                                        'Breaking loop.',
-                                        level=1)
-                                h_print('Not processing further this head.',
-                                        level=1)
-                            return
+                                h_print(
+                                    'Looping with an empty tree reduction',
+                                    level=1)
 
-            # No cycles. Do the reduction.
-            if self.debug:
-                a_print("New head: ", new_head, level=1, new_line=True)
-                if self.debug_trace:
-                    self._trace_head(new_head)
-                    self._trace_step(head, new_head, root_head,
-                                     "R:{}".format(dot_escape(production)))
+                        if self.debug:
+                            h_print('Not processing further this head.',
+                                    level=1)
+                        return
+            else:
+                # Non-empty reduction If the same state has been reduced,
+                # we have looping by cyclic grammar and should report and
+                # reject invalid state.
+                for shead, __ in reversed(self.reducing_stack):
+                    if new_head == shead \
+                            and root_head == shead.parents[0].parent:
+                        if self.debug:
+                            a_print('Cyclic grammar detected. '
+                                    'Breaking loop.',
+                                    level=1)
+                            h_print('Not processing further this head.',
+                                    level=1)
+                        return
 
-            new_head.create_link(parent)
-            return new_head
+        # No cycles. Do the reduction.
+        if self.debug:
+            a_print("New head: ", new_head, level=1, new_line=True)
+            if self.debug_trace:
+                self._trace_head(new_head)
+                self._trace_step(head, new_head, root_head,
+                                    "R:{}".format(dot_escape(production)))
+
+        new_head.create_link(parent)
+        return new_head
 
     def _shift(self, head, to_state):
         """
