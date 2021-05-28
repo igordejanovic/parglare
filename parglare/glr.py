@@ -53,7 +53,7 @@ class GLRParser(Parser):
             kwargs['prefer_shifts_over_empty'] = prefer_shifts_over_empty
 
         kwargs['lexical_disambiguation'] = lexical_disambiguation
-        self.debug_trace_frontiers = kwargs.get('debug_trace_frontiers', False)
+        self.debug_trace_frontiers = kwargs.pop('debug_trace_frontiers', False)
 
         super(GLRParser, self).__init__(*args, **kwargs)
 

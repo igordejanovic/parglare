@@ -65,8 +65,10 @@ def viz(ctx, grammar_file):
 @click.option('--input-file', '-f', type=click.Path(),
               help="Input file for tracing")
 @click.option('--input', '-i', help="Input string for tracing")
+@click.option('--frontiers', '-f', default=False, is_flag=True,
+              help="Align GSS nodes into frontiers (token levels)")
 @click.pass_context
-def trace(ctx, grammar_file, input_file, input):
+def trace(ctx, grammar_file, input_file, input, frontiers):
     if not (input_file or input):
         prints('Expected either input_file or input string.')
         sys.exit(1)
@@ -78,7 +80,8 @@ def trace(ctx, grammar_file, input_file, input):
                                                prefer_shifts_over_empty)
     parser = GLRParser(grammar, debug=True, debug_trace=True,
                        debug_colors=colors, prefer_shifts=prefer_shifts,
-                       prefer_shifts_over_empty=prefer_shifts_over_empty)
+                       prefer_shifts_over_empty=prefer_shifts_over_empty,
+                       debug_trace_frontiers=frontiers)
     if input:
         parser.parse(input)
     else:
