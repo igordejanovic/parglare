@@ -258,10 +258,9 @@ class GLRParser(Parser):
             while self.reducing_stack:
                 while self.reducing_stack[-1][1]:
                     reduction = self.reducing_stack[-1][1].pop()
-                    new_head = self._reduce(head, reduction)
+                    new_head = self._reduce(reduction)
                     if new_head is not None:
-                        head = new_head
-                        self._prepare_reductions(head)
+                        self._prepare_reductions(new_head)
 
                 # No more reduction for top of the stack head.
                 # Pop of the stack and merge to reduced heads.
@@ -338,7 +337,7 @@ class GLRParser(Parser):
             prod_len = len(production.rhs)
             if prod_len == 0:
                 # Special case, empty reduction
-                reductions.append((head, production, [],
+                reductions.append((head, head, production, [],
                                    head.position, head.position))
             else:
                 # Find roots of possible reductions by going backwards for
@@ -380,7 +379,8 @@ class GLRParser(Parser):
                             to_process.append((parent.parent, new_results,
                                                length, last_parent))
                         else:
-                            reductions.append((parent.parent,
+                            reductions.append((head,
+                                               parent.parent,
                                                production,
                                                new_results,
                                                first_parent.start_position,
@@ -399,12 +399,12 @@ class GLRParser(Parser):
         self.reducing_stack.append((head, reductions))
         self.reducing_stack_states.append(head.state.state_id)
 
-    def _reduce(self, head, reduction):
+    def _reduce(self, reduction):
         """
         Executes the given reduction.
         """
 
-        root_head, production, results, \
+        head, root_head, production, results, \
             start_position, end_position = reduction
         if start_position is None:
             start_position = end_position = root_head.position
