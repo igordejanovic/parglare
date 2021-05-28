@@ -458,6 +458,10 @@ class GLRParser(Parser):
                             if self.debug:
                                 h_print('Looping due to empty reduction.'
                                         ' Making GSS loop.', level=1)
+                                if self.debug_trace:
+                                    self._trace_step(
+                                        head, new_head, root_head,
+                                        "R:{}".format(dot_escape(production)))
                             shead.create_link(parent)
                         else:
                             if self.debug:
@@ -709,7 +713,7 @@ class GLRParser(Parser):
     def _trace_frontier(self):
         self._dot_trace_ranks += \
             '{{rank=same; {}; {}}}\n'.format(
-                self.debug_frontier,
+                self.debug_frontier - 1,
                 ''.join([' {};'.format(x.key)
                          for x in self._trace_frontier_heads]))
         self._trace_frontier_heads = []
