@@ -909,8 +909,8 @@ class GSSNode(object):
 
     @property
     def key(self):
-        """Head unique idenfier used for dot trace."""
-        return "head_{}".format(id(self))
+        """Head unique identifier used for dot trace."""
+        return "head_{}_{}".format(self.frontier, self.state.state_id)
 
     @property
     def extra(self):
