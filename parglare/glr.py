@@ -81,8 +81,7 @@ class GLRParser(Parser):
             if self.debug_trace:
                 self._dot_trace = ''
                 self._dot_trace_ranks = ''
-                self._trace_shift_level_heads = []
-                self._trace_shift_level = 0
+                self._trace_frontier_heads = []
 
         self.input_str = input_str
         self.file_name = file_name
@@ -423,7 +422,7 @@ class GLRParser(Parser):
                                                     end_position), level=1)
 
         new_head = GSSNode(self, state, head.position,
-                           head.shift_level,
+                           head.frontier,
                            number_of_trees=head.number_of_trees,
                            token_ahead=head.token_ahead)
 
@@ -447,7 +446,7 @@ class GLRParser(Parser):
                     self.reducing_stack_states,
                     level=1)
         if new_head.state.state_id in self.reducing_stack_states:
-            if root_head.shift_level == new_head.shift_level:
+            if root_head.frontier == new_head.frontier:
                 # Empty reduction. If we already have this on the reduce
                 # stack we shall make a GSS loop and remove this head from
                 # further reductions.
@@ -534,7 +533,7 @@ class GLRParser(Parser):
 
             end_position = head.position + len(head.token_ahead)
             shifted_head = GSSNode(self, to_state, end_position,
-                                   head.shift_level + 1)
+                                   head.frontier + 1)
             parent = GSSNodeParent(head, shifted_head, None,
                                    head.position, end_position,
                                    token=head.token_ahead)
@@ -691,7 +690,7 @@ class GLRParser(Parser):
         self._dot_trace += '{} [label="{}:{}"];\n'\
             .format(head.key, head.state.state_id,
                     dot_escape(head.state.symbol.name))
-        self._trace_shift_level_heads.append(head)
+        self._trace_frontier_heads.append(head)
 
     @no_colors
     def _trace_step(self, old_head, new_head, root_head, label=''):
@@ -710,11 +709,10 @@ class GLRParser(Parser):
     def _trace_frontier(self):
         self._dot_trace_ranks += \
             '{{rank=same; {}; {}}}\n'.format(
-                self._trace_shift_level,
+                self.debug_frontier,
                 ''.join([' {};'.format(x.key)
-                         for x in self._trace_shift_level_heads]))
-        self._trace_shift_level += 1
-        self._trace_shift_level_heads = []
+                         for x in self._trace_frontier_heads]))
+        self._trace_frontier_heads = []
 
     @no_colors
     def _trace_step_kill(self, from_head):
@@ -735,7 +733,7 @@ class GLRParser(Parser):
         if self.debug_trace and self.debug_trace_frontiers:
             self._dot_trace += '\nnode [shape=none, style=""]\n'
             self._dot_trace += self._dot_trace_ranks
-            self._dot_trace += '->'.join((str(i) for i in range(self._trace_shift_level)))
+            self._dot_trace += '->'.join((str(i) for i in range(self.debug_frontier)))
             self._dot_trace += '[arrowhead=none];\n'
 
     def _export__dot_trace(self):
@@ -807,7 +805,7 @@ class GSSNode(object):
         parser(GLRParser):
         state(LRState):
         position(int):
-        shift_level(int):
+        frontier(int):
         parents(list of GSSNodeParent):
              Each stack node might have multiple parents which represent
              multiple path parse took to reach the current state. Each
@@ -820,17 +818,17 @@ class GSSNode(object):
         number_of_trees(int): Total number of trees/solution defined by this
              head.
     """
-    __slots__ = ['parser', 'node_id', 'state', 'position', 'shift_level',
+    __slots__ = ['parser', 'node_id', 'state', 'position', 'frontier',
                  'parents', 'number_of_trees', 'token_ahead',
                  'layout_content_ahead', '_hash']
 
-    def __init__(self, parser, state, position, shift_level, number_of_trees=0,
+    def __init__(self, parser, state, position, frontier, number_of_trees=0,
                  token=None, token_ahead=None):
         self.parser = parser
         self.state = state
         self.position = position
-        self.shift_level = shift_level
-        self.node_id = 100000000 * state.state_id + shift_level
+        self.frontier = frontier
+        self.node_id = 100000000 * state.state_id + frontier
 
         self.token_ahead = token_ahead
         self.layout_content_ahead = ''
@@ -876,7 +874,7 @@ class GSSNode(object):
             return self
         else:
             new_head = GSSNode(self.parser, self.state, self.position,
-                               self.shift_level, self.number_of_trees,
+                               self.frontier, self.number_of_trees,
                                token_ahead=token)
             new_head.parents = list(self.parents)
             return new_head

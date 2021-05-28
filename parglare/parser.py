@@ -279,7 +279,7 @@ class Parser(object):
                 new_head = LRStackNode(
                     self,
                     state=act.state,
-                    shift_level=head.shift_level + 1,
+                    frontier=head.frontier + 1,
                     token=head.token_ahead,
                     layout_content=head.layout_content_ahead,
                     position=new_position,
@@ -312,7 +312,7 @@ class Parser(object):
                     new_head = LRStackNode(
                         self,
                         state=next_state,
-                        shift_level=head.shift_level,
+                        frontier=head.frontier,
                         position=head.position,
                         production=production,
                         start_position=start_reduction_head.start_position,
@@ -328,7 +328,7 @@ class Parser(object):
                     new_head = LRStackNode(
                         self,
                         state=next_state,
-                        shift_level=head.shift_level,
+                        frontier=head.frontier,
                         position=head.position,
                         production=production,
                         start_position=head.end_position,
@@ -844,18 +844,18 @@ class LRStackNode(object):
     An element of the LR parsing stack. Also the parsing context.
     """
 
-    __slots__ = ['parser', 'state', 'shift_level', 'position', 'results',
+    __slots__ = ['parser', 'state', 'frontier', 'position', 'results',
                  'start_position', 'end_position', 'token_ahead', 'token',
                  'production', 'layout_content', 'layout_content_ahead',
                  'node']
 
-    def __init__(self, parser, state, shift_level, position, results=None,
+    def __init__(self, parser, state, frontier, position, results=None,
                  start_position=None, end_position=None, token=None,
                  token_ahead=None, production=None, layout_content='',
                  layout_content_ahead=''):
         self.parser = parser
         self.state = state
-        self.shift_level = shift_level
+        self.frontier = frontier
         self.position = position
 
         self.results = results
