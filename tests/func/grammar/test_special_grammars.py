@@ -103,7 +103,7 @@ def test_nondeterministic_LR_raise_error():
 
 def test_cyclic_grammar_1():
     """
-    From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
+    Grammar G1 from the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
     """
     grammar = """
     S: A;
@@ -126,8 +126,9 @@ def test_cyclic_grammar_1():
                     "correctly in pytest 4.1")
 def test_cyclic_grammar_2():
     """
-    From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
-
+    Grammar G2 from the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
+    Classic Tomita's GLR algorithm doesn't terminate with this grammar.
+    Here we see that parglare finds 11 non-repeating solutions.
     """
     grammar = """
     S: S S;
@@ -230,31 +231,6 @@ def test_highly_ambiguous_grammar():
     assert len(results) == 10
 
 
-def test_indirect_left_recursive():
-    """Grammar with indirect/hidden left recursion.
-
-    parglare LR parser will handle this using implicit disambiguation by
-    preferring shifts over empty reductions. It will greadily match "b" tokens
-    and than reduce EMPTY before "a" and start to reduce by 'B="b" B'
-    production.
-
-    """
-
-    grammar = """
-    S: B "a";
-    B: "b" B | EMPTY;
-    """
-
-    g = Grammar.from_string(grammar)
-
-    p = Parser(g)
-    p.parse("bbbbbbbbbbbba")
-
-    p = GLRParser(g)
-    results = p.parse("bbbbbbbbbbbba")
-    assert len(results) == 1
-
-
 def test_reduce_enough_empty():
     """
     In this unambiguous grammar parser must reduce as many empty A productions
@@ -265,8 +241,8 @@ def test_reduce_enough_empty():
 
     References:
 
-    Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers", Generalized LR
-    parsing, Springer, 1991.
+    Grammar G3 from: Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers",
+    Generalized LR parsing, Springer, 1991.
 
     Rekers, Joan Gerard: "Parser generation for interactive environments",
     phD thesis, Universiteit van Amsterdam, 1992.
@@ -287,7 +263,7 @@ def test_reduce_enough_empty():
 
 def test_reduce_enough_many_empty():
     """
-    This is a generalization of the previous grammar where parser must reduce
+    This is an extension of the previous grammar where parser must reduce
     enough A B pairs to succeed.
 
     The language is the same: xb^n, n>=0
@@ -302,5 +278,137 @@ def test_reduce_enough_many_empty():
 
     p = GLRParser(g)
     results = p.parse("xbbb")
+
+    assert len(results) == 1
+
+
+def test_bounded_ambiguity():
+    """
+    This grammar has bounded ambiguity.
+
+    The language is the same: xb^n, n>=0 but each valid sentence will
+    always have two derivations.
+
+    Grammar G4 from: Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers"
+    """
+
+    grammar = """
+    S: M | N;
+    M: A M "b" | "x";
+    N: A N "b" | "x";
+    A: EMPTY;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = GLRParser(g)
+    results = p.parse("xbbb")
+
+    assert len(results) == 2
+
+
+def test_bounded_direct_ambiguity():
+    """
+    This grammar has bounded direct ambiguity of degree 2, in spite of being
+    unboundedly ambiguous as for every k we can find a string that will give at
+    least k solutions.
+
+    The language is t^{m}xb^{n}, n>=m>=0
+
+    Grammar G5 from: Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers"
+    """
+    grammar = """
+    S: A S "b" | "x";
+    A: "t" | EMPTY;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = GLRParser(g)
+    results = p.parse("txbbb")
+
+    assert len(results) == 5
+
+
+def test_unbounded_ambiguity():
+    """
+    This grammar has unbounded ambiguity.
+
+    Grammar G6 from: Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers"
+    """
+    grammar = """
+    S: M N;
+    M: A M "b" | "x";
+    N: "b" N A | "x";
+    A: EMPTY;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = GLRParser(g, build_tree=True, debug=True)
+    results = p.parse("xbbbbbbbbbbbx")
+    for r in results:
+        print(r.tree_str())
+
+    assert len(results) == 5
+
+
+def test_g7():
+    """
+    Grammar G7 from: Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers"
+    """
+    grammar = """
+    S: "a" S "a" | B S "b" | C S "c" | "x";
+    B: "a";
+    C: "a";
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = GLRParser(g)
+    results = p.parse("aaaaaaaaxbbcaacaa")
+
+    assert len(results) == 1
+
+
+def test_g8():
+    """
+    This is another interesting ambigous grammar.
+
+    Grammar G8 from: Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers"
+    """
+    grammar = """
+    S: "x" | B S "b" | A S "b";
+    B: A A;
+    A: EMPTY;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = GLRParser(g, build_tree=True, debug=True)
+    results = p.parse("xbbbbbbbb")
+    # for r in results:
+    #     print(r.tree_str())
+
+    assert len(results) == 5
+
+
+def test_right_nullable():
+    """
+    Grammar Γ2 (pp.17) from:
+    Scott, E. and Johnstone, A., 2006. Right nulled GLR parsers. ACM
+    Transactions on Programming Languages and Systems (TOPLAS), 28(4),
+    pp.577-618.
+
+    """
+    grammar = """
+    S: "a" S A | EMPTY;
+    A: EMPTY;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    p = GLRParser(g, build_tree=True, debug=True)
+    results = p.parse("aa")
 
     assert len(results) == 1
