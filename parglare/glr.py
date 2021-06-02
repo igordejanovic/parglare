@@ -494,7 +494,7 @@ class GLRParser(Parser):
             if self.debug_trace:
                 self._trace_head(new_head)
                 self._trace_step(head, new_head, root_head,
-                                    "R:{}".format(dot_escape(production)))
+                                 "R:{}".format(dot_escape(production)))
 
         new_head.create_link(parent)
         return new_head

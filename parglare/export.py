@@ -1,4 +1,4 @@
-from parglare.parser import REDUCE, SHIFT, ACCEPT
+from parglare.parser import REDUCE, SHIFT
 import codecs
 from parglare import termui as t
 
