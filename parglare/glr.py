@@ -3,7 +3,7 @@ import codecs
 from itertools import takewhile
 from parglare import Parser
 from parglare import termui as t
-from .parser import SHIFT, REDUCE, ACCEPT, pos_to_line_col, Token
+from .parser import SHIFT, REDUCE, pos_to_line_col, Token
 from .common import replace_newlines as _, position_context
 from .export import dot_escape
 from .termui import prints, h_print, a_print
@@ -89,109 +89,63 @@ class GLRParser(Parser):
 
         # Error reporting and recovery
         self.errors = []
-        self.in_error_reporting = False
-        self.expected = set()
-        self.tokens_ahead = []
-        self.last_shifted_heads = []
-
-        # A stack of heads being reduced. Contains tuples (head, list of
-        # pending reductions). Used to perform reductions in a depth-first
-        # manner.
-        self.reducing_stack = []
-        # For optimization, keep only state ids for quick check before
-        # searching.
-        self.reducing_stack_states = []
-
-        # Heads that are fully reduced and thus are candidates for the next
-        # shifting or accepting. Fully reduced heads (heads without any pending
-        # reduction) from reducing_stack are merged to these heads.
-        self.reduced_heads = {}
-
-        # Heads created during shift operations.
-        self.shifted_heads = []
-
-        # Accepted (finished) heads
-        self.accepted_heads = []
+        self._in_error_reporting = False
+        self._expected = set()
+        self._tokens_ahead = []
+        self._last_shifted_heads = []
 
         # We start with a single parser head in state 0.
-        start_head = GSSNode(self, self.table.states[0], 0, position,
-                             number_of_trees=1)
+        start_head = GSSNode(self, self.table.states[0], 0, position)
         self._init_dynamic_disambiguation(start_head)
-        self.shifted_heads.append(start_head)
+
+        # Accepted (finished) heads
+        self._accepted_heads = []
 
         if self.debug and self.debug_trace:
             self._trace_head(start_head)
 
         # The main loop
-        while True:
-            if not self.in_error_reporting:
-                self.last_shifted_heads = list(self.shifted_heads)
-            self._do_reductions()
-            if self.in_error_reporting:
-                # Expected symbols are only those that can cause reduced head
-                # to shift.
-                self.expected = set([
-                    h.token_ahead.symbol for h in self.reduced_heads
-                    if h.token_ahead.symbol in h.state.actions
-                    and SHIFT in [action.action
-                                  for action
-                                  in h.state.actions[h.token_ahead.symbol]]])
-                if self.debug:
-                    a_print("*** LEAVING ERROR REPORTING MODE.",
-                            new_line=True)
-                    h_print("Tokens expected:",
-                            ', '.join([t.name for t in self.expected]),
-                            level=1)
-                    h_print("Tokens found:", self.tokens_ahead, level=1)
-
-                self.reduced_heads = {}
-                self.in_error_reporting = False
-
-                # After leaving error reporting mode, register error and try
-                # recovery if enabled
-                context = self.last_shifted_heads[0]
-                self.errors.append(
-                    self._create_error(
-                        context, self.expected,
-                        tokens_ahead=self.tokens_ahead,
-                        symbols_before=list(
-                            {h.state.symbol
-                             for h in self.last_shifted_heads}),
-                        last_heads=self.last_shifted_heads))
+        self._active_heads = {0: start_head}
+        while self._active_heads or self._in_error_reporting:
+            if self.debug:
+                a_print("** REDUCING - frontier {}".format(self.debug_frontier),
+                        new_line=True)
+                self._debug__active_heads(self._active_heads.values())
+            self._for_shifter = []
+            if not self._in_error_reporting:
+                self._last_shifted_heads = list(self._active_heads.values())
+                self._find_lookaheads()
+            while self._active_heads_per_symbol:
+                _, self._active_heads = self._active_heads_per_symbol.popitem()
+                self._for_actor = list(self._active_heads.values())
+                # Used to optimize revisiting only heads that will
+                # traverse newly added paths.
+                # state_id -> set(state_id)
+                self._states_traversed = {}
+                while self._for_actor:
+                    head = self._for_actor.pop()
+                    self._actor(head)
+            if self._in_error_reporting:
+                self._finish_error_reporting()
                 if self.error_recovery:
-                    if self.debug:
-                        a_print("*** STARTING ERROR RECOVERY.",
-                                new_line=True)
-                    if self._do_recovery():
-                        # Error recovery succeeded
-                        if self.debug:
-                            a_print(
-                                "*** ERROR RECOVERY SUCCEEDED. CONTINUING.",
-                                new_line=True)
-                        continue
-                    else:
-                        break
-                else:
-                    break
-            else:
-                self._do_shifts_accepts()
-                if not self.shifted_heads and not self.accepted_heads:
-                    if self.debug:
-                        a_print("*** ENTERING ERROR REPORTING MODE.",
-                                new_line=True)
-                    self._enter_error_reporting()
+                    self._do_error_recovery()
                     continue
+                break
+            self._do_shifts()
 
-                if not self.shifted_heads:
-                    break
+            if not self._active_heads and not self._accepted_heads:
+                if self.debug:
+                    a_print("*** ENTERING ERROR REPORTING MODE.",
+                            new_line=True)
+                self._enter_error_reporting()
 
         if self.debug and self.debug_trace:
             self._trace_finish()
             self._export__dot_trace()
 
-        if self.accepted_heads:
+        if self._accepted_heads:
             # Return results
-            results = [x.results for head in self.accepted_heads
+            results = [x.results for head in self._accepted_heads
                        for x in head.parents]
             if self.debug:
                 a_print("*** {} sucessful parse(s).".format(len(results)))
@@ -203,209 +157,130 @@ class GLRParser(Parser):
             self._remove_transient_state()
             raise self.errors[-1]
 
-    def _do_reductions(self):
-        """
-        Perform all possible reductions for this shift level.
-        """
+    def _find_lookaheads(self):
         debug = self.debug
+        self._active_heads_per_symbol = {}
+        while self._active_heads:
+            state_id, head = self._active_heads.popitem()
+            if head.token_ahead is not None:
+                # May happen after error recovery
+                self._active_heads_per_symbol.setdefault(
+                    head.token_ahead.symbol, {})[head.state.state_id] = head
+                continue
+            if debug:
+                h_print("Finding lookaheads for head {}".format(head), new_line=True)
+            self._skipws(head, self.input_str)
 
-        if debug:
-            a_print("** REDUCING - frontier {}".format(self.debug_frontier),
-                    new_line=True)
-            self._debug_active_heads(self.shifted_heads)
+            tokens = self._next_tokens(head)
 
-        if not self.in_error_reporting:
-            # First we shall find lookaheads for all shifted heads and split
-            # heads on lexical ambiguity.
-            shifted_heads = []
-            while self.shifted_heads:
-                head = self.shifted_heads.pop()
-                if head.token_ahead is not None:
-                    # This might happen if this head is produced by error
-                    # recovery
-                    shifted_heads.append(head)
-                    continue
+            if debug:
+                self._debug_context(
+                    head.position,
+                    head.layout_content_ahead,
+                    lookahead_tokens=tokens,
+                    expected_symbols=head.state.actions.keys())
 
-                if debug:
-                    h_print("Finding lookaheads", new_line=True)
-                self._skipws(head, self.input_str)
-
-                tokens = self._next_tokens(head)
-
-                if debug:
-                    self._debug_context(
-                        head.position,
-                        head.layout_content_ahead,
-                        lookahead_tokens=tokens,
-                        expected_symbols=head.state.actions.keys())
-
-                if tokens:
-                    while tokens:
-                        # For lexical ambiguity create a new head for each new
-                        # token recognized ahead.
-                        shifted_heads.append(head.for_token(tokens.pop()))
-                else:
-                    # Can't find lookahead. This head can't progress
-                    if debug:
-                        h_print('No lookaheads found. Killing head.')
-
-        else:
-            shifted_heads = self.shifted_heads
-
-        while shifted_heads:
-            head = shifted_heads.pop()
-            self._prepare_reductions(head)
-            while self.reducing_stack:
-                while self.reducing_stack[-1][1]:
-                    reduction = self.reducing_stack[-1][1].pop()
-                    new_head = self._reduce(reduction)
-                    if new_head is not None:
-                        self._prepare_reductions(new_head)
-
-                # No more reduction for top of the stack head.
-                # Pop of the stack and merge to reduced heads.
-                head = self.reducing_stack.pop()[0]
-                self.reducing_stack_states.pop()
-                if self.debug:
-                    h_print('No more reductions for head:', str(head),
-                            level=1, new_line=True)
-                reduced_head = self.reduced_heads.get(head, None)
-                if reduced_head is None:
-                    if self.debug:
-                        h_print('Adding head to reduced heads.', level=1)
-                    self.reduced_heads[head] = head
-                else:
-                    reduced_head.merge_head(head)
-
-    def _do_shifts_accepts(self):
-        """
-        Do shifts and accepts of the reduced heads
-        """
-
-        debug = self.debug
-        if debug:
-            self.debug_frontier += 1
-            self.debug_step = 0
-            a_print("** SHIFTING - frontier {}".format(self.debug_frontier),
-                    new_line=True)
-            self._debug_active_heads(self.reduced_heads.values())
-            if self.debug_trace:
-                self._trace_frontier()
-
-        while self.reduced_heads:
-            head, __ = self.reduced_heads.popitem()
-            actions = head.state.actions.get(head.token_ahead.symbol)
-            action = actions[0] if actions else None
-
-            if action is None or action.action == REDUCE:
-                if debug:
-                    a_print("Can't shift head: ", str(head), new_line=True)
+            if tokens:
+                while tokens:
+                    token = tokens.pop()
+                    head = head.for_token(token)
+                    self._active_heads_per_symbol.setdefault(
+                        token.symbol, {})[head.state.state_id] = head
             else:
-                if action.action == ACCEPT:
+                # Can't find lookahead. This head can't progress
+                if debug:
+                    h_print('No lookaheads found. Killing head.')
+
+    def _actor(self, head):
+        debug = self.debug
+        for action in head.state.actions.get(head.token_ahead.symbol, []):
+            if action.action == SHIFT:
+                self._for_shifter.append((head, action.state))
+            elif action.action == REDUCE:
+                self._do_reductions(head, action.prod)
+            else:
+                if not self._in_error_reporting:
+                    self._accepted_heads.append(head)
                     if debug:
                         a_print('**ACCEPTING HEAD: ', str(head))
-                    self.accepted_heads.append(head)
 
-                else:
-                    self._shift(head, action.state)
-
-    def _prepare_reductions(self, head):
+    def _do_reductions(self, head, production, update_parent=None):
         """
-        Finds all possible reduction for the given head and make a new stack
-        entry with pending reductions.
+        Reduce the given head by the given production. If update_parent is given
+        this is update/limited reduction so just traverse the given parent instead of
+        all parents of the parent's head.
         """
         debug = self.debug
-
         if debug:
-            a_print("Preparing reductions for head: ", str(head),
-                    new_line=True)
+            h_print("Finding reduction paths for head: {}".format(head))
+            h_print("\tand production: {}".format(production))
+            if update_parent:
+                h_print("\tLimited/update reduction due to new path addition.")
 
-        symbol_actions = head.state.actions.get(head.token_ahead.symbol, [])
-        productions = [symbol_action.prod
-                       for symbol_action in symbol_actions
-                       if symbol_action.action is REDUCE]
-
-        if debug:
-            h_print("\tProductions:\n\t\t",
-                    '\n\t\t'.join([str(p) for p in productions]))
-
-        reductions = []
-        for production in productions:
+        states_traversed = self._states_traversed
+        prod_len = len(production.rhs)
+        if prod_len == 0:
+            # Special case, empty reduction
+            self._reduce(head, head, production, [],
+                         head.position, head.position)
+        else:
+            # Find roots of possible reductions by going backwards for
+            # prod_len steps following all possible paths. Collect
+            # subresults along the way to be used with semantic actions
+            to_process = [(head, [], prod_len, None, update_parent is None)]
             if debug:
-                h_print('Processing production:', str(production),
-                        level=1, new_line=True)
-            prod_len = len(production.rhs)
-            if prod_len == 0:
-                # Special case, empty reduction
-                reductions.append((head, head, production, [],
-                                   head.position, head.position))
-            else:
-                # Find roots of possible reductions by going backwards for
-                # prod_len steps following all possible paths. Collect
-                # subresults along the way to be used with semantic actions
-                to_process = [(head, [], prod_len, None)]
+                h_print("Calculate reduction paths of length {}:"
+                        .format(prod_len), level=1)
+                h_print("start node= {}".format(head), level=2)
+            while to_process:
+                (node,
+                 results,
+                 length,
+                 last_parent,
+                 traversed) = to_process.pop()
+                length = length - 1
                 if debug:
-                    h_print("Calculate reduction paths of length {}:"
-                            .format(prod_len), level=1)
-                    h_print("start node= {}".format(head), level=2)
-                while to_process:
-                    (node,
-                     results,
-                     length,
-                     last_parent) = to_process.pop()
-                    length = length - 1
+                    h_print("node = {}".format(node), level=2,
+                            new_line=True)
+                    h_print("backpath length = {}{}"
+                            .format(prod_len - length,
+                                    " - ROOT" if not length else ""),
+                            level=2)
+
+                if node.frontier == head.frontier:
+                    # Cache traversed states for revisit optimization
+                    states_traversed.setdefault(
+                        node.state.state_id, set()).add(head.state.state_id)
+
+                for parent in [update_parent] \
+                        if update_parent and update_parent.head == node else node.parents:
                     if debug:
-                        h_print("node = {}".format(node), level=2,
-                                new_line=True)
-                        h_print("backpath length = {}{}"
-                                .format(prod_len - length,
-                                        " - ROOT" if not length else ""),
-                                level=2)
+                        h_print("", str(parent.parent), level=3)
 
-                    first_parent = None
-                    for parent in node.parents:
-                        if debug:
-                            h_print("", str(parent.parent), level=3)
+                    new_results = [parent.results] + results
 
-                        new_results = [parent.results] + results
+                    if last_parent is None:
+                        last_parent = parent
 
-                        if first_parent is None:
-                            first_parent = parent
+                    traversed = traversed or (update_parent
+                                              and update_parent.head == node)
 
-                        if last_parent is None:
-                            last_parent = parent
+                    if length:
+                        to_process.append((parent.parent, new_results,
+                                           length, last_parent, traversed))
+                    elif traversed:
+                        self._reduce(head,
+                                     parent.parent,
+                                     production,
+                                     new_results,
+                                     parent.start_position,
+                                     last_parent.end_position)
 
-                        if length:
-                            to_process.append((parent.parent, new_results,
-                                               length, last_parent))
-                        else:
-                            reductions.append((head,
-                                               parent.parent,
-                                               production,
-                                               new_results,
-                                               first_parent.start_position,
-                                               last_parent.end_position))
-                        first_parent = parent
-
-            if debug:
-                h_print("Reduction paths = ", len(reductions), level=1,
-                        new_line=True)
-
-                for idx, reduction in enumerate(reductions):
-                    if debug:
-                        h_print("Reduction {}:".format(idx + 1),
-                                reduction,
-                                level=1)
-        self.reducing_stack.append((head, reductions))
-        self.reducing_stack_states.append(head.state.state_id)
-
-    def _reduce(self, reduction):
+    def _reduce(self, head, root_head, production, results,
+                start_position, end_position):
         """
         Executes the given reduction.
         """
-
-        head, root_head, production, results, \
-            start_position, end_position = reduction
         if start_position is None:
             start_position = end_position = root_head.position
         state = root_head.state.gotos[production.symbol]
@@ -422,10 +297,7 @@ class GLRParser(Parser):
                                                     end_position), level=1)
 
         new_head = GSSNode(self, state, head.position,
-                           head.frontier,
-                           number_of_trees=head.number_of_trees,
-                           token_ahead=head.token_ahead)
-
+                           head.frontier, token_ahead=head.token_ahead)
         parent = GSSNodeParent(root_head, new_head, results,
                                start_position, end_position,
                                production=production)
@@ -438,131 +310,116 @@ class GLRParser(Parser):
 
         parent.results = self._call_reduce_action(parent, results)
 
-        # Check for possible automaton loops for the newly reduced head.
-        # Handle loops by creating GSS loops for empty reduction loops or
-        # rejecting cyclic reductions for non-empty reductions.
-        if self.debug:
-            h_print('Check loops. Reduce stack states:',
-                    self.reducing_stack_states,
-                    level=1)
-        if new_head.state.state_id in self.reducing_stack_states:
-            if root_head.frontier == new_head.frontier:
-                # Empty reduction. If we already have this on the reduce
-                # stack we shall make a GSS loop and remove this head from
-                # further reductions.
-                for shead, __ in reversed(self.reducing_stack):
-                    if new_head == shead:
-                        # If found we shall make a GSS loop only if the
-                        # reduction is empty.
-                        if root_head == head:
-                            if self.debug:
-                                h_print('Looping due to empty reduction.'
-                                        ' Making GSS loop.', level=1)
-                                if self.debug_trace:
-                                    self._trace_step(
-                                        head, new_head, root_head,
-                                        "R:{}".format(dot_escape(production)))
-                            shead.create_link(parent)
-                        else:
-                            if self.debug:
-                                h_print(
-                                    'Looping with an empty tree reduction',
-                                    level=1)
+        active_head = self._active_heads.get(state.state_id, None)
+        if active_head:
+            active_head.create_link(parent)
+            if self.debug:
+                a_print('Adding parent on active head: {} to root head: {}'
+                        .format(active_head, root_head),
+                        level=1)
+                if self.debug_trace:
+                    self._trace_step(
+                        head, active_head, root_head,
+                        "R:{}".format(dot_escape(production)))
 
-                        if self.debug:
-                            h_print('Not processing further this head.',
-                                    level=1)
-                        return
-            else:
-                # Non-empty reduction If the same state has been reduced,
-                # we have looping by cyclic grammar and should report and
-                # reject invalid state.
-                for shead, __ in reversed(self.reducing_stack):
-                    if new_head == shead \
-                            and root_head == shead.parents[0].parent:
-                        if self.debug:
-                            a_print('Cyclic grammar detected. '
-                                    'Breaking loop.',
-                                    level=1)
-                            h_print('Not processing further this head.',
-                                    level=1)
-                        return
+            # Calculate heads to revisit with the new path. Only those heads that
+            # are already processed (not in _for_actor) and are traversing this
+            # new head state on the current frontier should be considered.
+            if state.state_id in self._states_traversed:
+                to_revisit = self._states_traversed[state.state_id].intersection(
+                    self._active_heads.keys()) - set(h.state.state_id
+                                                     for h in self._for_actor)
+                if to_revisit:
+                    if self.debug:
+                        h_print('Revisiting reductions for processed '
+                                'active heads in states {}'.format(to_revisit),
+                                level=1)
+                    for r_head_state in to_revisit:
+                        r_head = self._active_heads[r_head_state]
+                        for action in [a for a in r_head.state.actions.get(
+                                head.token_ahead.symbol, []) if a.action == REDUCE]:
+                            self._do_reductions(r_head, action.prod, parent)
+        else:
+            new_head.create_link(parent)
+            self._for_actor.append(new_head)
+            self._active_heads[new_head.state.state_id] = new_head
 
-        # No cycles. Do the reduction.
-        if self.debug:
-            a_print("New head: ", new_head, level=1, new_line=True)
-            if self.debug_trace:
-                self._trace_head(new_head)
-                self._trace_step(head, new_head, root_head,
-                                 "R:{}".format(dot_escape(production)))
+            # No cycles. Do the reduction.
+            if self.debug:
+                a_print("New head: ", new_head, level=1, new_line=True)
+                if self.debug_trace:
+                    self._trace_head(new_head)
+                    self._trace_step(head, new_head, root_head,
+                                     "R:{}".format(dot_escape(production)))
 
-        new_head.create_link(parent)
-        return new_head
-
-    def _shift(self, head, to_state):
-        """
-        Shifts the head and executes semantic actions.
-        """
+    def _do_shifts(self):
         debug = self.debug
         if debug:
-            self.debug_step += 1
-            a_print("{}. SHIFTING head: ".format(self._debug_step_str()), head,
+            self.debug_frontier += 1
+            self.debug_step = 0
+            a_print("** SHIFTING - frontier {}".format(self.debug_frontier),
                     new_line=True)
+            self._debug__active_heads(self._active_heads.values())
+            if self.debug_trace:
+                self._trace_frontier()
 
-        for shifted_head in self.shifted_heads:
-            if shifted_head.state is to_state:
-                break
-        else:
-            shifted_head = None
-
-        if shifted_head:
-            # If this token has already been shifted connect
-            # shifted head to this head.
-            shead_parent = shifted_head.parents[0]
-            parent = GSSNodeParent(head, shifted_head, shead_parent.results,
-                                   shead_parent.start_position,
-                                   shead_parent.end_position,
-                                   token=shead_parent.token)
-            token = head.token_ahead
-            if self.dynamic_filter and \
-                    not self._call_dynamic_filter(parent, head.state, to_state,
-                                                  SHIFT):
-                return
-        else:
-            # We need to create new shifted head
+        self._active_heads = {}
+        while self._for_shifter:
+            head, to_state = self._for_shifter.pop()
             if debug:
-                self._debug_context(head.position,
-                                    lookahead_tokens=head.token_ahead,
-                                    expected_symbols=None)
-
-            end_position = head.position + len(head.token_ahead)
-            shifted_head = GSSNode(self, to_state, end_position,
-                                   head.frontier + 1)
-            parent = GSSNodeParent(head, shifted_head, None,
-                                   head.position, end_position,
-                                   token=head.token_ahead)
-
-            if self.dynamic_filter and \
-                    not self._call_dynamic_filter(parent, head.state, to_state,
-                                                  SHIFT):
-                return
-
-            parent.results = self._call_shift_action(parent)
-
-            if self.debug:
+                self.debug_step += 1
+                a_print("{}. SHIFTING head: ".format(self._debug_step_str()), head,
+                        new_line=True)
+            shifted_head = self._active_heads.get(to_state.state_id, None)
+            if shifted_head:
+                # If this token has already been shifted connect
+                # shifted head to this head.
+                shead_parent = shifted_head.parents[0]
+                parent = GSSNodeParent(head, shifted_head, shead_parent.results,
+                                       shead_parent.start_position,
+                                       shead_parent.end_position,
+                                       token=shead_parent.token)
                 token = head.token_ahead
-                a_print("New shifted head ", shifted_head, level=1)
-                if self.debug_trace:
-                    self._trace_head(shifted_head)
+                if self.dynamic_filter and \
+                        not self._call_dynamic_filter(parent, head.state,
+                                                      to_state, SHIFT):
+                    continue
+            else:
+                # We need to create new shifted head
+                if debug:
+                    self._debug_context(head.position,
+                                        lookahead_tokens=head.token_ahead,
+                                        expected_symbols=None)
 
-            self.shifted_heads.append(shifted_head)
+                end_position = head.position + len(head.token_ahead)
+                shifted_head = GSSNode(self, to_state, end_position,
+                                       head.frontier + 1)
+                parent = GSSNodeParent(head, shifted_head, None,
+                                       head.position, end_position,
+                                       token=head.token_ahead)
 
-        if self.debug_trace:
-            self._trace_step(head, shifted_head, head,
-                             "S:{}({})".format(
-                                 dot_escape(token.symbol.name),
-                                 dot_escape(token.value)))
-        shifted_head.create_link(parent)
+                if self.dynamic_filter and \
+                        not self._call_dynamic_filter(parent, head.state,
+                                                      to_state, SHIFT):
+                    continue
+
+                parent.results = self._call_shift_action(parent)
+
+                if self.debug:
+                    token = head.token_ahead
+                    a_print("New shifted head ", shifted_head, level=1)
+                    if self.debug_trace:
+                        self._trace_head(shifted_head)
+
+                self._active_heads[to_state.state_id] = shifted_head
+
+            if self.debug_trace:
+                self._trace_step(head, shifted_head, head,
+                                 "S:{}({})".format(
+                                     dot_escape(token.symbol.name),
+                                     dot_escape(token.value)))
+
+            shifted_head.create_link(parent)
 
     def _enter_error_reporting(self):
         """
@@ -580,32 +437,64 @@ class GLRParser(Parser):
 
         """
 
-        self.in_error_reporting = True
+        self._in_error_reporting = True
 
         # Start with the last shifted heads sorted by position.
-        self.last_shifted_heads.sort(key=lambda h: h.position, reverse=True)
-        last_head = self.last_shifted_heads[0]
+        self._last_shifted_heads.sort(key=lambda h: h.position, reverse=True)
+        last_head = self._last_shifted_heads[0]
         farthest_heads = takewhile(
             lambda h: h.position == last_head.position,
-            self.last_shifted_heads)
+            self._last_shifted_heads)
 
-        self.tokens_ahead = self._get_all_possible_tokens_ahead(last_head)
+        self._tokens_ahead = self._get_all_possible_tokens_ahead(last_head)
 
+        self._active_heads_per_symbol = {}
         for head in farthest_heads:
             for possible_lookahead in head.state.actions.keys():
                 h = head.for_token(Token(possible_lookahead, []))
-                self.shifted_heads.append(h)
+                self._active_heads_per_symbol.setdefault(
+                    possible_lookahead, {})[h.state.state_id] = h
 
-    def _do_recovery(self):
+    def _finish_error_reporting(self):
+        # Expected symbols are only those that can cause active heads
+        # to shift.
+        self._expected = set(h.token_ahead.symbol for h, _ in self._for_shifter)
+        if self.debug:
+            a_print("*** LEAVING ERROR REPORTING MODE.",
+                    new_line=True)
+            h_print("Tokens expected:",
+                    ', '.join([t.name for t in self._expected]),
+                    level=1)
+            h_print("Tokens found:", self._tokens_ahead, level=1)
+
+        # After leaving error reporting mode, register error and try
+        # recovery if enabled
+        context = self._last_shifted_heads[0]
+        self.errors.append(
+            self._create_error(
+                context, self._expected,
+                tokens_ahead=self._tokens_ahead,
+                symbols_before=list(
+                    {h.state.symbol
+                     for h in self._last_shifted_heads}),
+                last_heads=self._last_shifted_heads))
+
+        self.for_shifter = []
+        self._in_error_reporting = False
+
+    def _do_error_recovery(self):
         """
         If recovery is enabled, does error recovery for the heads in
-        last_shifted_heads.
+        _last_shifted_heads.
 
         """
+        if self.debug:
+            a_print("*** STARTING ERROR RECOVERY.",
+                    new_line=True)
         error = self.errors[-1]
         debug = self.debug
-        self.shifted_heads = []
-        for head in self.last_shifted_heads:
+        self._active_heads = {}
+        for head in self._last_shifted_heads:
             if debug:
                 input_str = head.input_str
                 symbols = head.state.actions.keys()
@@ -632,29 +521,30 @@ class GLRParser(Parser):
                             level=1)
                     a_print("New lookahead token is ", head.token_ahead,
                             level=1)
-                self.shifted_heads.append(head)
+                self._active_heads[head.state.state_id] = head
+                if self.debug:
+                    a_print(
+                        "*** ERROR RECOVERY SUCCEEDED. CONTINUING.",
+                        new_line=True)
             else:
                 if debug:
                     a_print("Killing head: ", head, level=1)
                     if self.debug_trace:
                         self._trace_step_kill(head)
-        return bool(self.shifted_heads)
 
     def _remove_transient_state(self):
         """
         Delete references to transient parser objects to lower memory
         consumption.
         """
-        del self.reduced_heads
-        del self.shifted_heads
-        del self.reducing_stack
-        del self.reducing_stack_states
-        del self.last_shifted_heads
+        # del self._for_actor
+        # del self._for_shifter
+        # del self._last_shifted_heads
 
     def _debug_step_str(self):
         return '{}.{}'.format(self.debug_frontier, self.debug_step)
 
-    def _debug_active_heads(self, heads):
+    def _debug__active_heads(self, heads):
         if not heads:
             h_print('No active heads.')
         else:
@@ -662,7 +552,7 @@ class GLRParser(Parser):
             for head in heads:
                 prints("\t{}".format(head))
             h_print("Number of trees = {}".format(
-                sum([h.number_of_trees for h in heads])))
+                sum([len(h.parents) for h in heads])))
 
     def _debug_reduce_heads(self):
         heads = list(self.reduced_heads.values())
@@ -778,7 +668,8 @@ class GSSNodeParent(object):
         self.production = production
 
         # Caching extra for faster access
-        self.extra = self.head.parser.extra
+        if head:
+            self.extra = head.parser.extra
 
         # Parse tree node used if parse tree is produced
         self.node = None
@@ -816,29 +707,25 @@ class GSSNode(object):
              parent link keeps a result of semantic action executed during
              shift or reduce operation that created this node/link and the
              link to the node from which it was reduced (None if shifted).
-        node_id(int): Unique node id. Nodes with the same id and lookahead
-            token are considered the same. Calculated from shift level and
+        node_id(str): Unique node id. Nodes with the same id and lookahead
+            token are considered the same. Created from shift level and
             state id.
-        number_of_trees(int): Total number of trees/solution defined by this
-             head.
     """
     __slots__ = ['parser', 'node_id', 'state', 'position', 'frontier',
-                 'parents', 'number_of_trees', 'token_ahead',
-                 'layout_content_ahead', '_hash']
+                 'parents', 'token_ahead', 'layout_content_ahead', '_hash']
 
-    def __init__(self, parser, state, position, frontier, number_of_trees=0,
-                 token=None, token_ahead=None):
+    def __init__(self, parser, state, position, frontier, token=None,
+                 token_ahead=None):
         self.parser = parser
         self.state = state
         self.position = position
         self.frontier = frontier
-        self.node_id = 100000000 * state.state_id + frontier
+        self.node_id = '{}_{}'.format(frontier, state.state_id)
 
         self.token_ahead = token_ahead
         self.layout_content_ahead = ''
 
         self.parents = []
-        self.number_of_trees = number_of_trees
 
     def merge_head(self, other):
         """
@@ -846,7 +733,6 @@ class GSSNode(object):
         """
         if self is other:
             pass
-        self.number_of_trees += other.number_of_trees
         for p in other.parents:
             p.head = self
         self.parents.extend(other.parents)
@@ -856,8 +742,8 @@ class GSSNode(object):
             h_print("to head", self, level=1)
 
     def create_link(self, parent):
+        parent.head = self
         self.parents.append(parent)
-        self.number_of_trees = parent.parent.number_of_trees
         if self.parser.debug:
             h_print("Creating link \tfrom head:", self, level=1)
             h_print("  to head:", parent.parent, level=3)
@@ -878,8 +764,7 @@ class GSSNode(object):
             return self
         else:
             new_head = GSSNode(self.parser, self.state, self.position,
-                               self.frontier, self.number_of_trees,
-                               token_ahead=token)
+                               self.frontier, token_ahead=token)
             new_head.parents = list(self.parents)
             return new_head
 
@@ -896,14 +781,13 @@ class GSSNode(object):
 
     def __str__(self):
         return _("<state={}:{}, id={}{}, position={}, "
-                 "parents={}, trees={}>".format(
+                 "parents/trees={}>".format(
                      self.state.state_id, self.state.symbol,
                      id(self),
                      ", token ahead={}".format(self.token_ahead)
                      if self.token_ahead is not None else "",
                      self.position,
-                     len(self.parents),
-                     self.number_of_trees))
+                     len(self.parents)))
 
     def __repr__(self):
         return str(self)
@@ -914,7 +798,7 @@ class GSSNode(object):
     @property
     def key(self):
         """Head unique identifier used for dot trace."""
-        return "head_{}_{}".format(self.frontier, self.state.state_id)
+        return "head_{}".format(self.node_id)
 
     @property
     def extra(self):

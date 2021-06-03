@@ -194,21 +194,19 @@ def test_prefer_shifts_no_sr_conflicts():
     assert result == output
 
     # GLR parser can parse without prefer_shifts strategy. This grammar is
-    # ambiguous and yields 11 solutions for the given input.
+    # ambiguous and yields 8 solutions for the given input.
     parser = GLRParser(g)
     results = parser.parse(input_str)
+
     expected = [
+        [['b', ['a']], [None, ['a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a', 'a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a']], [None, ['a', 'a']], ['b', ['a']], [None, ['a']]],
+        [['b', ['a', 'a', 'a']], ['b', ['a']], [None, ['a']]],
         [['b', ['a']], [None, ['a']], [None, ['a']], ['b', ['a', 'a']]],
         [['b', ['a', 'a']], [None, ['a']], ['b', ['a', 'a']]],
-        [['b', ['a', 'a', 'a']], ['b', ['a', 'a']]],
         [['b', ['a']], [None, ['a', 'a']], ['b', ['a', 'a']]],
-        [['b', ['a']], [None, ['a', 'a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a', 'a', 'a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a', 'a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a']], [None, ['a', 'a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a', 'a', 'a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a', 'a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a']], [None, ['a']], [None, ['a']], ['b', ['a']], [None, ['a']]]  # noqa
+        [['b', ['a', 'a', 'a']], ['b', ['a', 'a']]]
     ]
     assert results == expected
 
