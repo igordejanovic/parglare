@@ -912,7 +912,6 @@ class Node(object):
     __slots__ = ['context']
 
     def __init__(self, context):
-        context.node = self
         self.context = context
 
     def __repr__(self):
@@ -931,9 +930,10 @@ class Node(object):
 class NodeNonTerm(Node):
     __slots__ = ['production', 'children']
 
-    def __init__(self, context, children):
+    def __init__(self, context, children, production=None):
         super(NodeNonTerm, self).__init__(context)
         self.children = children
+        self.production = production
 
     def tree_str(self, depth=0):
         indent = '  ' * depth
@@ -954,9 +954,9 @@ class NodeNonTerm(Node):
         return self.production.symbol
 
     def __str__(self):
-        return '<NonTerm(start={}, end={}, sym={})>'\
-            .format(self.start_position, self.end_position,
-                    self.production.symbol)
+        return '<NonTerm({}, {}-{})>'\
+            .format(self.production.symbol,
+                    self.start_position, self.end_position)
 
     def __iter__(self):
         return iter(self.children)
@@ -966,20 +966,21 @@ class NodeNonTerm(Node):
 
 
 class NodeTerm(Node):
-    def __init__(self, context):
+    def __init__(self, context, token=None):
         super(NodeTerm, self).__init__(context)
+        self.token = token
 
     @property
     def symbol(self):
-        return self.context.token.symbol
+        return self.token.symbol
 
     @property
     def value(self):
-        return self.context.token.value
+        return self.token.value
 
     @property
     def additional_data(self):
-        return self.context.token.additional_data
+        return self.token.additional_data
 
     def tree_str(self, depth=0):
         return '{}[{}->{}, "{}"]'.format(self.symbol,
@@ -988,9 +989,9 @@ class NodeTerm(Node):
                                          self.value)
 
     def __str__(self):
-        return '<Term(start={}, end={}, sym={}, val="{}")>'\
-            .format(self.start_position, self.end_position, self.symbol,
-                    self.value[:20])
+        return '<Term({} "{}", {}-{})>'\
+            .format(self.symbol, self.value[:20],
+                    self.start_position, self.end_position)
 
     def __iter__(self):
         return iter([])

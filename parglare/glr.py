@@ -3,7 +3,7 @@ import codecs
 from itertools import takewhile
 from parglare import Parser
 from parglare import termui as t
-from .parser import SHIFT, REDUCE, pos_to_line_col, Token
+from .parser import SHIFT, REDUCE, pos_to_line_col, Token, NodeNonTerm, NodeTerm
 from .common import replace_newlines as _, position_context
 from .export import dot_escape
 from .termui import prints, h_print, a_print
@@ -82,6 +82,7 @@ class GLRParser(Parser):
                 self._dot_trace = ''
                 self._dot_trace_ranks = ''
                 self._trace_frontier_heads = []
+                self._trace_frontier_steps = []
 
         self.input_str = input_str
         self.file_name = file_name
@@ -95,7 +96,7 @@ class GLRParser(Parser):
         self._last_shifted_heads = []
 
         # We start with a single parser head in state 0.
-        start_head = GSSNode(self, self.table.states[0], 0, position)
+        start_head = GSSNode(self, self.table.states[0], 0, position, ambiguity=1)
         self._init_dynamic_disambiguation(start_head)
 
         # Accepted (finished) heads
@@ -145,10 +146,13 @@ class GLRParser(Parser):
 
         if self._accepted_heads:
             # Return results
-            results = [x.results for head in self._accepted_heads
-                       for x in head.parents]
+            results = [p for r in self._accepted_heads for p in r.parents.values()]
+            print(results[0].tree_str())
+            print(sum(r.solutions for r in results))
+            import pudb; pudb.set_trace()
             if self.debug:
-                a_print("*** {} sucessful parse(s).".format(len(results)))
+                a_print("*** {} sucessful parse(s).".format(
+                    sum(r.solutions for r in results)))
 
             self._remove_transient_state()
             return results
@@ -203,6 +207,8 @@ class GLRParser(Parser):
                     self._accepted_heads.append(head)
                     if debug:
                         a_print('**ACCEPTING HEAD: ', str(head))
+                        if self.debug_trace:
+                            self._trace_step_finish(head)
 
     def _do_reductions(self, head, production, update_parent=None):
         """
@@ -212,7 +218,7 @@ class GLRParser(Parser):
         """
         debug = self.debug
         if debug:
-            h_print("Finding reduction paths for head: {}".format(head))
+            h_print("\tFinding reduction paths for head: {}".format(head))
             h_print("\tand production: {}".format(production))
             if update_parent:
                 h_print("\tLimited/update reduction due to new path addition.")
@@ -221,7 +227,8 @@ class GLRParser(Parser):
         prod_len = len(production.rhs)
         if prod_len == 0:
             # Special case, empty reduction
-            self._reduce(head, head, production, [],
+            self._reduce(head, head, production,
+                         NodeNonTerm(None, [], production=production),
                          head.position, head.position)
         else:
             # Find roots of possible reductions by going backwards for
@@ -253,11 +260,12 @@ class GLRParser(Parser):
                         node.state.state_id, set()).add(head.state.state_id)
 
                 for parent in [update_parent] \
-                        if update_parent and update_parent.head == node else node.parents:
+                        if update_parent and update_parent.head == node \
+                        else list(node.parents.values()):
                     if debug:
-                        h_print("", str(parent.parent), level=3)
+                        h_print("", str(parent.head), level=3)
 
-                    new_results = [parent.results] + results
+                    new_results = [parent] + results
 
                     if last_parent is None:
                         last_parent = parent
@@ -266,17 +274,18 @@ class GLRParser(Parser):
                                               and update_parent.head == node)
 
                     if length:
-                        to_process.append((parent.parent, new_results,
+                        to_process.append((parent.root, new_results,
                                            length, last_parent, traversed))
                     elif traversed:
                         self._reduce(head,
-                                     parent.parent,
+                                     parent.root,
                                      production,
-                                     new_results,
+                                     NodeNonTerm(None, new_results,
+                                                 production=production),
                                      parent.start_position,
                                      last_parent.end_position)
 
-    def _reduce(self, head, root_head, production, results,
+    def _reduce(self, head, root_head, production, node_nonterm,
                 start_position, end_position):
         """
         Executes the given reduction.
@@ -287,45 +296,36 @@ class GLRParser(Parser):
 
         if self.debug:
             self.debug_step += 1
-            a_print("{} REDUCING head ".format(self._debug_step_str()),
+            a_print('{} REDUCING head '.format(self._debug_step_str()),
                     str(head), new_line=True)
-            a_print("by prod ", production, level=1)
-            a_print("to state {}:{}".format(state.state_id,
+            a_print('by prod ', production, level=1)
+            a_print('to state {}:{}'.format(state.state_id,
                                             state.symbol), level=1)
-            a_print("root is ", root_head, level=1)
-            a_print("Position span: {} - {}".format(start_position,
+            a_print('root is ', root_head, level=1)
+            a_print('Position span: {} - {}'.format(start_position,
                                                     end_position), level=1)
 
         new_head = GSSNode(self, state, head.position,
                            head.frontier, token_ahead=head.token_ahead)
-        parent = GSSNodeParent(root_head, new_head, results,
-                               start_position, end_position,
-                               production=production)
+        parent = Parent(new_head, root_head,
+                        start_position, end_position,
+                        production=production,
+                        possibilities=[node_nonterm])
 
         if self.dynamic_filter and \
                 not self._call_dynamic_filter(parent, head.state, state,
-                                              REDUCE, production, results):
+                                              REDUCE, production, node_nonterm):
             # Action rejected by dynamic filter
             return
 
-        parent.results = self._call_reduce_action(parent, results)
-
         active_head = self._active_heads.get(state.state_id, None)
         if active_head:
-            active_head.create_link(parent)
-            if self.debug:
-                a_print('Adding parent on active head: {} to root head: {}'
-                        .format(active_head, root_head),
-                        level=1)
-                if self.debug_trace:
-                    self._trace_step(
-                        head, active_head, root_head,
-                        "R:{}".format(dot_escape(production)))
+            created = active_head.create_link(parent, head)
 
             # Calculate heads to revisit with the new path. Only those heads that
             # are already processed (not in _for_actor) and are traversing this
             # new head state on the current frontier should be considered.
-            if state.state_id in self._states_traversed:
+            if created and state.state_id in self._states_traversed:
                 to_revisit = self._states_traversed[state.state_id].intersection(
                     self._active_heads.keys()) - set(h.state.state_id
                                                      for h in self._for_actor)
@@ -340,7 +340,7 @@ class GLRParser(Parser):
                                 head.token_ahead.symbol, []) if a.action == REDUCE]:
                             self._do_reductions(r_head, action.prod, parent)
         else:
-            new_head.create_link(parent)
+            new_head.create_link(parent, head)
             self._for_actor.append(new_head)
             self._active_heads[new_head.state.state_id] = new_head
 
@@ -349,8 +349,6 @@ class GLRParser(Parser):
                 a_print("New head: ", new_head, level=1, new_line=True)
                 if self.debug_trace:
                     self._trace_head(new_head)
-                    self._trace_step(head, new_head, root_head,
-                                     "R:{}".format(dot_escape(production)))
 
     def _do_shifts(self):
         debug = self.debug
@@ -372,14 +370,9 @@ class GLRParser(Parser):
                         new_line=True)
             shifted_head = self._active_heads.get(to_state.state_id, None)
             if shifted_head:
-                # If this token has already been shifted connect
-                # shifted head to this head.
-                shead_parent = shifted_head.parents[0]
-                parent = GSSNodeParent(head, shifted_head, shead_parent.results,
-                                       shead_parent.start_position,
-                                       shead_parent.end_position,
-                                       token=shead_parent.token)
-                token = head.token_ahead
+                # If this token has already been shifted connect shifted head to
+                # this head.
+                parent = next(iter(shifted_head.parents.values())).clone_with_root(head)
                 if self.dynamic_filter and \
                         not self._call_dynamic_filter(parent, head.state,
                                                       to_state, SHIFT):
@@ -393,33 +386,24 @@ class GLRParser(Parser):
 
                 end_position = head.position + len(head.token_ahead)
                 shifted_head = GSSNode(self, to_state, end_position,
-                                       head.frontier + 1)
-                parent = GSSNodeParent(head, shifted_head, None,
-                                       head.position, end_position,
-                                       token=head.token_ahead)
+                                       head.frontier + 1, ambiguity=1)
+                parent = Parent(shifted_head, head,
+                                head.position, end_position,
+                                token=head.token_ahead)
 
                 if self.dynamic_filter and \
                         not self._call_dynamic_filter(parent, head.state,
                                                       to_state, SHIFT):
                     continue
 
-                parent.results = self._call_shift_action(parent)
-
                 if self.debug:
-                    token = head.token_ahead
                     a_print("New shifted head ", shifted_head, level=1)
                     if self.debug_trace:
                         self._trace_head(shifted_head)
 
                 self._active_heads[to_state.state_id] = shifted_head
 
-            if self.debug_trace:
-                self._trace_step(head, shifted_head, head,
-                                 "S:{}({})".format(
-                                     dot_escape(token.symbol.name),
-                                     dot_escape(token.value)))
-
-            shifted_head.create_link(parent)
+            shifted_head.create_link(parent, head)
 
     def _enter_error_reporting(self):
         """
@@ -581,32 +565,51 @@ class GLRParser(Parser):
 
     @no_colors
     def _trace_head(self, head):
-        self._dot_trace += '{} [label="{}:{}"];\n'\
-            .format(head.key, head.state.state_id,
-                    dot_escape(head.state.symbol.name))
         self._trace_frontier_heads.append(head)
 
     @no_colors
-    def _trace_step(self, old_head, new_head, root_head, label=''):
-        new_head_key = new_head.key if isinstance(new_head, GSSNode) \
-                       else new_head
-        self._dot_trace += '{} -> {} [label="{}. {}" {}];\n'.format(
-            old_head.key, new_head_key, self._debug_step_str(), label,
-            TRACE_DOT_STEP_STYLE)
-        self._dot_trace += '{} -> {};\n'.format(new_head_key, root_head.key)
+    def _trace_step(self, from_head, parent):
+        self._trace_frontier_steps.append((from_head, parent))
 
     @no_colors
     def _trace_step_finish(self, from_head):
-        self._trace_step(from_head, "success", from_head)
+        self._dot_trace += f'\n{from_head.key} -> ACCEPT;\n'
 
     @no_colors
     def _trace_frontier(self):
+        parents_processed = set()
+
+        for head in self._trace_frontier_heads:
+            self._dot_trace += '{} [label="{}. {}:{}"];\n'\
+                .format(head.key, head.frontier, head.state.state_id,
+                        dot_escape(head.state.symbol.name))
+
+        for step_no, step in enumerate(self._trace_frontier_steps):
+            step_no += 1
+            from_head, parent = step
+            if parent not in parents_processed:
+                self._dot_trace += '{} -> {} [label="{}"];\n' \
+                    .format(parent.head.key, parent.root.key,
+                            parent.ambiguity)
+                parents_processed.add(parent)
+            if parent.production:
+                # Reduce step
+                label = "R:{}".format(dot_escape(parent.production))
+            else:
+                # Shift step
+                label = "S:{}({})".format(dot_escape(parent.token.symbol.name),
+                                          dot_escape(parent.token.value))
+            self._dot_trace += '{} -> {} [label="{}.{} {}" {}];\n'.format(
+                from_head.key, parent.head.key, parent.head.frontier, step_no,
+                label, TRACE_DOT_STEP_STYLE)
+
         self._dot_trace_ranks += \
             '{{rank=same; {}; {}}}\n'.format(
                 self.debug_frontier - 1,
                 ''.join([' {};'.format(x.key)
                          for x in self._trace_frontier_heads]))
         self._trace_frontier_heads = []
+        self._trace_frontier_steps = []
 
     @no_colors
     def _trace_step_kill(self, from_head):
@@ -644,52 +647,87 @@ class GLRParser(Parser):
         h_print("dot -Tpdf {0} -O {0}.pdf".format(file_name))
 
 
-class GSSNodeParent(object):
+class Parent:
     """
-    A link to the parent node in GSS stack.
+    Represent a backlink in the GSS stack with all possibilities in
+    case of ambiguity.
     """
+    __slots__ = ['head', 'root', 'start_position', 'end_position',
+                 'possibilities', 'production', 'token']
 
-    __slots__ = ['parent', 'head', 'results', 'start_position', 'end_position',
-                 'token', 'production', 'node', 'extra']
-
-    def __init__(self, parent, head, results, start_position,
-                 end_position=None, token=None, production=None):
-        self.parent = parent
+    def __init__(self, head, root, start_position, end_position=None,
+                 possibilities=None, production=None,
+                 token=None):
+        self.root = root
         self.head = head
-        self.results = results
         self.start_position = start_position
         self.end_position = end_position \
             if end_position is not None else start_position
 
-        # For shift nodes
+        self.production = production
         self.token = token
 
-        # For reduced nodes
-        self.production = production
+        # A list of NoneNonTerm or NodeTerm which represent
+        # alternative interpretations of what is seen between
+        # root and head GSS nodes.
+        self.possibilities = []
+        if possibilities:
+            self.possibilities = possibilities
+            for p in possibilities:
+                p.context = self
+        elif token:
+            self.possibilities.append(NodeTerm(self, token))
 
-        # Caching extra for faster access
-        if head:
-            self.extra = head.parser.extra
+    def merge(self, other):
+        self.possibilities.extend(other.possibilities)
 
-        # Parse tree node used if parse tree is produced
-        self.node = None
+    def clone_with_root(self, root):
+        return Parent(self.head, root, self.start_position, self.end_position,
+                      list(self.possibilities), token=self.token)
 
     @property
-    def layout_content(self):
-        return self.parent.layout_content_ahead
+    def ambiguity(self):
+        return len(self.possibilities)
 
-    def __getattr__(self, name):
-        """
-        All other property access is delegated to the parsing head.
-        """
-        return getattr(self.head, name)
+    @property
+    def solutions(self):
+        solutions = 0
+        for n in self.possibilities:
+            subtree = 1
+            if isinstance(n, NodeNonTerm):
+                for c in n.children:
+                    subtree *= c.solutions
+            solutions += subtree
+        return solutions
+
+    @property
+    def id(self):
+        return f'{self.head.id}->{self.root.id}'
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
     def __str__(self):
-        return "start_position={}, end_position={}".format(
-            self.start_position, self.end_position)
+        return '{}({})<-{}({}) [{}]'.format(
+            self.root.id, self.root.symbol, self.head.id, self.head.symbol,
+            self.ambiguity)
 
     def __repr__(self):
         return str(self)
+
+    def tree_str(self, depth=0):
+        if self.ambiguity > 1:
+            indent = '  ' * depth
+            s = f'{self.head.symbol} - ambiguity[{self.ambiguity}]'
+            for idx, p in enumerate(self.possibilities):
+                s += f'\n{indent}{idx+1}:' + p.tree_str(depth+2)
+        else:
+            s = self.possibilities[0].tree_str(depth+1)
+
+        return s
 
 
 class GSSNode(object):
@@ -707,46 +745,53 @@ class GSSNode(object):
              parent link keeps a result of semantic action executed during
              shift or reduce operation that created this node/link and the
              link to the node from which it was reduced (None if shifted).
-        node_id(str): Unique node id. Nodes with the same id and lookahead
+        id(str): Unique node id. Nodes with the same id and lookahead
             token are considered the same. Created from shift level and
             state id.
     """
-    __slots__ = ['parser', 'node_id', 'state', 'position', 'frontier',
-                 'parents', 'token_ahead', 'layout_content_ahead', '_hash']
+    __slots__ = ['parser', 'id', 'state', 'position', 'frontier',
+                 'parents', '_ambiguity', 'token_ahead', 'layout_content_ahead', '_hash']
 
-    def __init__(self, parser, state, position, frontier, token=None,
+    def __init__(self, parser, state, position, frontier, ambiguity=None,
                  token_ahead=None):
         self.parser = parser
         self.state = state
         self.position = position
         self.frontier = frontier
-        self.node_id = '{}_{}'.format(frontier, state.state_id)
+        self.id = '{}_{}'.format(frontier, state.state_id)
+
+        self._ambiguity = ambiguity
 
         self.token_ahead = token_ahead
         self.layout_content_ahead = ''
 
-        self.parents = []
+        # Parents keyed by root node id
+        self.parents = {}
 
-    def merge_head(self, other):
-        """
-        Merge same top stack nodes.
-        """
-        if self is other:
-            pass
-        for p in other.parents:
-            p.head = self
-        self.parents.extend(other.parents)
-
-        if self.parser.debug:
-            h_print("Merging head ", other)
-            h_print("to head", self, level=1)
-
-    def create_link(self, parent):
+    def create_link(self, parent, from_head):
         parent.head = self
-        self.parents.append(parent)
-        if self.parser.debug:
-            h_print("Creating link \tfrom head:", self, level=1)
-            h_print("  to head:", parent.parent, level=3)
+        existing_parent = self.parents.get(parent.root.id)
+        created = False
+        if existing_parent:
+            existing_parent.merge(parent)
+            if self.parser.debug:
+                h_print("Extending possibilities \tof head:", self, level=1)
+                h_print("  parent head:", parent.root, level=3)
+        else:
+            self.parents[parent.root.id] = parent
+            created = True
+            if self.parser.debug:
+                h_print("Creating link \tfrom head:", self, level=1)
+                h_print("  to head:", parent.root, level=3)
+
+        if self.parser.debug and self.parser.debug_trace:
+            self.parser._trace_step(from_head, parent)
+
+        return created
+
+    @property
+    def ambiguity(self):
+        return self._ambiguity or sum(p.ambiguity for p in self.parents.values())
 
     def for_token(self, token):
         """
@@ -765,7 +810,7 @@ class GSSNode(object):
         else:
             new_head = GSSNode(self.parser, self.state, self.position,
                                self.frontier, token_ahead=token)
-            new_head.parents = list(self.parents)
+            new_head.parents = dict(self.parents)
             return new_head
 
     def __eq__(self, other):
@@ -773,32 +818,31 @@ class GSSNode(object):
         Stack nodes are equal if they are on the same position in the same
         state for the same lookahead token.
         """
-        return self.node_id == other.node_id \
+        return self.id == other.id \
             and self.token_ahead == other.token_ahead
 
     def __ne__(self, other):
         return not self == other
 
     def __str__(self):
-        return _("<state={}:{}, id={}{}, position={}, "
-                 "parents/trees={}>".format(
+        return _("<{}:{}, id={}{}, position={}, "
+                 "ambiguity={}>".format(
                      self.state.state_id, self.state.symbol,
-                     id(self),
+                     self.id,
                      ", token ahead={}".format(self.token_ahead)
                      if self.token_ahead is not None else "",
-                     self.position,
-                     len(self.parents)))
+                     self.position, self.ambiguity))
 
     def __repr__(self):
         return str(self)
 
     def __hash__(self):
-        return hash((self.node_id, self.token_ahead.symbol))
+        return hash((self.id, self.token_ahead.symbol))
 
     @property
     def key(self):
         """Head unique identifier used for dot trace."""
-        return "head_{}".format(self.node_id)
+        return "head_{}".format(self.id)
 
     @property
     def extra(self):
