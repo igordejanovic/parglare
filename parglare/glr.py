@@ -715,6 +715,10 @@ class Parent:
     def layout_content_ahead(self):
         return self.head.layout_content_ahead
 
+    @property
+    def token_ahead(self):
+        return self.head.token_ahead
+
     def __eq__(self, other):
         return self.id == other.id
 
