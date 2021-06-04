@@ -23,7 +23,7 @@ result = parser.parse(INPUT)
 
 def tree_str(node, depth=0):
     indent = '  ' * depth
-    if isinstance(node, NodeNonTerm):
+    if node.is_nonterm():
         s = '\n{}[.{} {}\n{}]'.format(indent,
                                       node.production.symbol,
                                       ''.join([tree_str(n, depth+1)
