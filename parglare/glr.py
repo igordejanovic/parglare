@@ -303,7 +303,9 @@ class GLRParser(Parser):
                                                     end_position), level=1)
 
         new_head = GSSNode(self, state, head.position,
-                           head.frontier, token_ahead=head.token_ahead)
+                           head.frontier, token_ahead=head.token_ahead,
+                           layout_content=root_head.layout_content,
+                           layout_content_ahead=head.layout_content_ahead)
         parent = Parent(new_head, root_head,
                         start_position, end_position,
                         production=production,
@@ -383,7 +385,8 @@ class GLRParser(Parser):
 
                 end_position = head.position + len(head.token_ahead)
                 shifted_head = GSSNode(self, to_state, end_position,
-                                       head.frontier + 1, ambiguity=1)
+                                       head.frontier + 1, ambiguity=1,
+                                       layout_content=head.layout_content_ahead)
                 parent = Parent(shifted_head, head,
                                 head.position, end_position,
                                 token=head.token_ahead)
@@ -704,6 +707,14 @@ class Parent:
     def id(self):
         return f'{self.head.id}->{self.root.id}'
 
+    @property
+    def layout_content(self):
+        return self.head.layout_content
+
+    @property
+    def layout_content_ahead(self):
+        return self.head.layout_content_ahead
+
     def __eq__(self, other):
         return self.id == other.id
 
@@ -750,10 +761,11 @@ class GSSNode(object):
             state id.
     """
     __slots__ = ['parser', 'id', 'state', 'position', 'frontier',
-                 'parents', '_ambiguity', 'token_ahead', 'layout_content_ahead', '_hash']
+                 'parents', '_ambiguity', 'token_ahead',
+                 'layout_content', 'layout_content_ahead', '_hash']
 
     def __init__(self, parser, state, position, frontier, ambiguity=None,
-                 token_ahead=None):
+                 token_ahead=None, layout_content='', layout_content_ahead=''):
         self.parser = parser
         self.state = state
         self.position = position
@@ -763,7 +775,8 @@ class GSSNode(object):
         self._ambiguity = ambiguity
 
         self.token_ahead = token_ahead
-        self.layout_content_ahead = ''
+        self.layout_content = layout_content
+        self.layout_content_ahead = layout_content_ahead
 
         # Parents keyed by root node id
         self.parents = {}
@@ -809,7 +822,8 @@ class GSSNode(object):
             return self
         else:
             new_head = GSSNode(self.parser, self.state, self.position,
-                               self.frontier, token_ahead=token)
+                               self.frontier, token_ahead=token,
+                               layout_content=self.layout_content)
             new_head.parents = dict(self.parents)
             return new_head
 

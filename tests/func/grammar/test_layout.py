@@ -133,10 +133,17 @@ def test_layout_context(parser_class):
 
     parser = parser_class(g, actions=actions)
 
-    parser.parse(in_str)
-
-    assert layout_called[0]
-    assert layout_passed[0]
+    result = parser.parse(in_str)
+    if isinstance(parser, GLRParser):
+        # For GLR parser we call actions on forest tree
+        # so we can check if there is a comment in the layout_content_ahead
+        # on some of the tree nodes
+        tree = result[0]
+        assert any('This is a comment' in node.layout_content_ahead
+                   for node in tree.df_iter())
+    else:
+        assert layout_called[0]
+        assert layout_passed[0]
 
 
 @parsers
@@ -188,7 +195,9 @@ def test_layout_actions(parser_class):
     layout_called = [False]
 
     parser = parser_class(g, actions=actions, layout_actions=actions)
-    parser.parse(in_str)
+    results = parser.parse(in_str)
+    if isinstance(parser, GLRParser):
+        parser.call_actions(results[0])
 
     assert called[0]
     assert layout_called[0]
