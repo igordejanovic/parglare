@@ -696,7 +696,7 @@ class Parent:
             solutions = 0
             for n in self.possibilities:
                 subtree = 1
-                if isinstance(n, NodeNonTerm):
+                if n.is_nonterm():
                     for c in n.children:
                         subtree *= c.solutions
                 solutions += subtree

@@ -363,7 +363,7 @@ class Parser(object):
         """
         def inner_call_actions(node):
             sem_action = node.symbol.action
-            if isinstance(node, NodeTerm):
+            if node.is_term():
                 if sem_action:
                     try:
                         result = sem_action(node.context, node.value,
@@ -651,7 +651,7 @@ class Parser(object):
             if self.call_actions_during_tree_build and sem_action:
                 sem_action(context, token.value, *token.additional_data)
 
-            return NodeTerm(context)
+            return NodeTerm(context, token)
 
         if sem_action:
             result = sem_action(context, token.value, *token.additional_data)
@@ -686,7 +686,9 @@ class Parser(object):
                 h_print("Building non-terminal node",
                         "'{}'.".format(production.symbol.name), level=2)
 
-            bt_result = NodeNonTerm(context, children=subresults)
+            bt_result = NodeNonTerm(context, children=subresults,
+                                    production=production)
+            context.node = bt_result
             if not self.call_actions_during_tree_build:
                 return bt_result
 
