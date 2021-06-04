@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import codecs
 from itertools import takewhile
+from functools import reduce
 from parglare import Parser
 from parglare import termui as t
 from .parser import SHIFT, REDUCE, pos_to_line_col, Token, NodeNonTerm, NodeTerm
@@ -146,16 +147,12 @@ class GLRParser(Parser):
 
         if self._accepted_heads:
             # Return results
-            results = [p for r in self._accepted_heads for p in r.parents.values()]
-            print(results[0].tree_str())
-            print(sum(r.solutions for r in results))
-            import pudb; pudb.set_trace()
+            forest = Forest(self)
             if self.debug:
-                a_print("*** {} sucessful parse(s).".format(
-                    sum(r.solutions for r in results)))
+                a_print(f'*** {forest.solutions} successful parse(s).')
 
             self._remove_transient_state()
-            return results
+            return forest
         else:
             # Report error
             self._remove_transient_state()
@@ -653,7 +650,7 @@ class Parent:
     case of ambiguity.
     """
     __slots__ = ['head', 'root', 'start_position', 'end_position',
-                 'possibilities', 'production', 'token']
+                 'possibilities', '_solutions', 'production', 'token']
 
     def __init__(self, head, root, start_position, end_position=None,
                  possibilities=None, production=None,
@@ -666,6 +663,7 @@ class Parent:
 
         self.production = production
         self.token = token
+        self._solutions = None
 
         # A list of NoneNonTerm or NodeTerm which represent
         # alternative interpretations of what is seen between
@@ -691,14 +689,16 @@ class Parent:
 
     @property
     def solutions(self):
-        solutions = 0
-        for n in self.possibilities:
-            subtree = 1
-            if isinstance(n, NodeNonTerm):
-                for c in n.children:
-                    subtree *= c.solutions
-            solutions += subtree
-        return solutions
+        if self._solutions is None:
+            solutions = 0
+            for n in self.possibilities:
+                subtree = 1
+                if isinstance(n, NodeNonTerm):
+                    for c in n.children:
+                        subtree *= c.solutions
+                solutions += subtree
+            self._solutions = solutions
+        return self._solutions
 
     @property
     def id(self):
@@ -864,6 +864,116 @@ class GSSNode(object):
     def symbol(self):
         return self.state.symbol
 
+
+class Tree:
+    """
+    Represents a tree from the parse forest.
+    """
+    __slots__ = ['root', 'children']
+
+    def __init__(self, root, counter):
+        possibility = 0
+        if counter > 0 and len(root.possibilities) > 1:
+            # Find the right possibility bucket
+            solutions = root.possibilities[possibility].solutions
+            while solutions <= counter:
+                counter -= solutions
+                possibility += 1
+                solutions = root.possibilities[possibility].solutions
+
+        self.root = root.possibilities[possibility]
+        self._init_children(counter)
+
+    def _init_children(self, counter):
+        if self.root.is_nonterm():
+            self.children = self._enumerate_children(counter)
+
+    def _enumerate_children(self, counter):
+        children = []
+        # Calculate counter division based on weighted numbering system.
+        # Basically, enumerating variation of children solutions.
+        weights = [c.solutions for c in self.root.children]
+        for idx, c in enumerate(self.root.children):
+            factor = reduce(lambda x, y: x*y, weights[idx+1:], 1)
+            new_counter = counter // factor
+            counter %= factor
+            children.append(self.__class__(c, new_counter))
+        return children
+
+    def tree_str(self, depth=0):
+        if self.root.is_nonterm():
+            return self.root.tree_str(depth, self.children)
+        else:
+            return self.root.tree_str(depth)
+
+    def __getattr__(self, attr):
+        # Proxy to tree node
+        return getattr(self.root, attr)
+
+
+class LazyTree(Tree):
+    """
+    Represents a lazy tree from the parse forest.
+
+    Attributes:
+    root(Parent):
+    counter(int):
+    """
+    __slots__ = ['root', 'counter', '_children']
+
+    def __init__(self, root, counter):
+        self._children = None
+        super().__init__(root, counter)
+
+    def _init_children(self, counter):
+        self.counter = counter
+
+    def __getattr__(self, attr):
+        if 'children' == attr:
+            if self._children is None:
+                if self.root.is_nonterm():
+                    self._children = self._enumerate_children(self.counter)
+            return self._children
+        # Proxy to tree node
+        return getattr(self.root, attr)
+
+
+class Forest:
+    """
+    Shared packed forest returned by the GLR parser.
+    Creates lazy tree enumerators and enables iteration over trees.
+    """
+    def __init__(self, parser):
+        self.parser = parser
+        self.results = [p for r in parser._accepted_heads for p in r.parents.values()]
+        self.solutions = sum(r.solutions for r in self.results)
+
+    def get_tree(self, idx=0):
+        return LazyTree(self.results[0], idx)
+
+    def get_nonlazy_tree(self, idx=0):
+        return Tree(self.results[0], idx)
+
+    def __str__(self):
+        return f'Forest({self.solutions})'
+
+    def tree_str(self):
+        assert len(self.results) == 1
+        return self.results[0].tree_str()
+
+    def __len__(self):
+        return self.solutions
+
+    def __iter__(self):
+        for i in range(self.solutions):
+            yield self.get_tree(i)
+
+    def __getitem__(self, idx):
+        return self.get_tree(idx)
+
+    def nonlazy_iter(self):
+        for i in range(self.solutions):
+            yield self.get_nonlazy_tree(i)
 
 DOT_HEADER = """
     digraph parglare_trace {

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import codecs
 import logging
+from functools import reduce
 from .grammar import EMPTY, STOP
 from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from .exceptions import ParseError, ParserInitError, DisambiguationError, \
@@ -926,6 +927,12 @@ class Node(object):
     def __getattr__(self, name):
         return getattr(self.context, name)
 
+    def is_nonterm(self):
+        return False
+
+    def is_term(self):
+        return False
+
 
 class NodeNonTerm(Node):
     __slots__ = ['production', 'children']
@@ -935,13 +942,14 @@ class NodeNonTerm(Node):
         self.children = children
         self.production = production
 
-    def tree_str(self, depth=0):
+    def tree_str(self, depth=0, children=None):
         indent = '  ' * depth
         s = '{}[{}->{}]'.format(self.production.symbol,
                                 self.start_position,
                                 self.end_position)
-        if self.children:
-            for n in self.children:
+        children = children or self.children
+        if children:
+            for n in children:
                 if hasattr(n, 'tree_str'):
                     s += '\n' + indent + n.tree_str(depth+1)
                 else:
@@ -950,8 +958,16 @@ class NodeNonTerm(Node):
         return s
 
     @property
+    def solutions(self):
+        "For SPPF trees"
+        return reduce(lambda x, y: x*y, (c.solutions for c in self.children))
+
+    @property
     def symbol(self):
         return self.production.symbol
+
+    def is_nonterm(self):
+        return True
 
     def __str__(self):
         return '<NonTerm({}, {}-{})>'\
@@ -982,11 +998,19 @@ class NodeTerm(Node):
     def additional_data(self):
         return self.token.additional_data
 
+    @property
+    def solutions(self):
+        "For SPPF trees"
+        return 1
+
     def tree_str(self, depth=0):
         return '{}[{}->{}, "{}"]'.format(self.symbol,
                                          self.start_position,
                                          self.end_position,
                                          self.value)
+
+    def is_term():
+        return True
 
     def __str__(self):
         return '<Term({} "{}", {}-{})>'\
