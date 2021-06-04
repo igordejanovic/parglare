@@ -906,6 +906,18 @@ class Tree:
         else:
             return self.root.tree_str(depth)
 
+    def __iter__(self):
+        return iter(self.children or [])
+
+    def df_iter(self):
+        "Depth First Iteator"
+        yield self.root
+        for c in self:
+            yield from c.df_iter()
+
+    def __reversed__(self):
+        return reversed(self.children)
+
     def __getattr__(self, attr):
         # Proxy to tree node
         return getattr(self.root, attr)

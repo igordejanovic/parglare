@@ -927,6 +927,12 @@ class Node(object):
     def __getattr__(self, name):
         return getattr(self.context, name)
 
+    def df_iter(self):
+        "Depth First Iteator"
+        yield self
+        for c in self:
+            yield from c.df_iter()
+
     def is_nonterm(self):
         return False
 
@@ -1009,7 +1015,7 @@ class NodeTerm(Node):
                                          self.end_position,
                                          self.value)
 
-    def is_term():
+    def is_term(self):
         return True
 
     def __str__(self):
