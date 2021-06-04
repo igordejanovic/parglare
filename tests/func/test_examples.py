@@ -2,7 +2,7 @@ import pytest   # noqa
 import os
 import sys
 import glob
-import imp
+import importlib
 
 
 def test_examples():
@@ -19,10 +19,7 @@ def test_examples():
         example_dir = os.path.dirname(e)
         sys.path.insert(0, example_dir)
         (module_name, _) = os.path.splitext(os.path.basename(e))
-        (module_file, module_path, desc) = \
-            imp.find_module(module_name, [example_dir])
-
-        m = imp.load_module(module_name, module_file, module_path, desc)
+        m = importlib.import_module(module_name)
 
         if hasattr(m, 'main'):
             m.main(debug=False)
