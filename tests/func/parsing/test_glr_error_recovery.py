@@ -90,7 +90,7 @@ def test_glr_recovery_custom_new_token():
 
     def custom_recovery(head, error):
         # Here we will introduce missing operation token
-        head.token_ahead = Token(g.get_terminal('-'), '-', length=0)
+        head.token_ahead = Token(g.get_terminal('-'), '-', head.position, length=0)
         return True
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)

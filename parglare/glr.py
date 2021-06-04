@@ -95,6 +95,7 @@ class GLRParser(Parser):
         self._expected = set()
         self._tokens_ahead = []
         self._last_shifted_heads = []
+        self._for_shifter = []
 
         # We start with a single parser head in state 0.
         start_head = GSSNode(self, self.table.states[0], 0, position, ambiguity=1)
@@ -113,7 +114,6 @@ class GLRParser(Parser):
                 a_print("** REDUCING - frontier {}".format(self.debug_frontier),
                         new_line=True)
                 self._debug__active_heads(self._active_heads.values())
-            self._for_shifter = []
             if not self._in_error_reporting:
                 self._last_shifted_heads = list(self._active_heads.values())
                 self._find_lookaheads()
@@ -131,6 +131,7 @@ class GLRParser(Parser):
                 self._finish_error_reporting()
                 if self.error_recovery:
                     self._do_error_recovery()
+                    self._for_shifter = []
                     continue
                 break
             self._do_shifts()
@@ -361,8 +362,20 @@ class GLRParser(Parser):
                 self._trace_frontier()
 
         self._active_heads = {}
+
+        # Due to lexical ambiguity heads might be at different positions.
+        # We must order heads by position before shift to process them in
+        # the right order. Only shift heads with minimal position during
+        # a single frontier processing.
+        self._for_shifter.sort(key=lambda x: x[0].token_ahead.end_position,
+                               reverse=True)
+        end_position = None
         while self._for_shifter:
             head, to_state = self._for_shifter.pop()
+            if end_position is not None and head.token_ahead.end_position > end_position:
+                self._for_shifter.append((head, to_state))
+                break
+            end_position = head.token_ahead.end_position
             if debug:
                 self.debug_step += 1
                 a_print("{}. SHIFTING head: ".format(self._debug_step_str()), head,
@@ -435,7 +448,7 @@ class GLRParser(Parser):
         self._active_heads_per_symbol = {}
         for head in farthest_heads:
             for possible_lookahead in head.state.actions.keys():
-                h = head.for_token(Token(possible_lookahead, []))
+                h = head.for_token(Token(possible_lookahead, [], position=head.position))
                 self._active_heads_per_symbol.setdefault(
                     possible_lookahead, {})[h.state.state_id] = h
 
@@ -681,6 +694,7 @@ class Parent:
 
     def merge(self, other):
         self.possibilities.extend(other.possibilities)
+        self._solutions = None
 
     def clone_with_root(self, root):
         return Parent(self.head, root, self.start_position, self.end_position,
@@ -975,21 +989,42 @@ class Forest:
     """
     def __init__(self, parser):
         self.parser = parser
-        self.results = [p for r in parser._accepted_heads for p in r.parents.values()]
-        self.solutions = sum(r.solutions for r in self.results)
+        results = [p for r in parser._accepted_heads for p in r.parents.values()]
+        self.result = results.pop()
+        while results:
+            result = results.pop()
+            self.result.merge(result)
 
     def get_tree(self, idx=0):
-        return LazyTree(self.results[0], idx)
+        return LazyTree(self.result, idx)
 
     def get_nonlazy_tree(self, idx=0):
-        return Tree(self.results[0], idx)
+        return Tree(self.result, idx)
+
+    @property
+    def solutions(self):
+        return self.result.solutions
+
+    @property
+    def ambiguities(self):
+        "Number of ambiguous nodes in this forest."
+        # SPPF is a DAG structure. We walk the graph and keep cached of
+        # visited nodes to prevent double counting.
+        visited = set()
+        def visit(n, count=0):
+            count += 1 if len(n.possibilities) > 1 else 0
+            for node in (i for k in n.possibilities for i in k):
+                if node not in visited:
+                    count += visit(node)
+                    visited.add(node)
+            return count
+        return visit(self.result)
 
     def __str__(self):
         return f'Forest({self.solutions})'
 
     def tree_str(self):
-        assert len(self.results) == 1
-        return self.results[0].tree_str()
+        return self.result.tree_str()
 
     def __len__(self):
         return self.solutions
@@ -1004,6 +1039,7 @@ class Forest:
     def nonlazy_iter(self):
         for i in range(self.solutions):
             yield self.get_nonlazy_tree(i)
+
 
 DOT_HEADER = """
     digraph parglare_trace {

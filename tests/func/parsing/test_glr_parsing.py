@@ -348,5 +348,68 @@ def test_lexical_ambiguity():
     assert all([p.call_actions(x) in ['xx', ['x', 'x']] for x in p.parse('xx')])
 
     disambig_p = GLRParser(g, lexical_disambiguation=True)
-
     assert p.call_actions(disambig_p.parse("xx")[0]) == 'xx'
+
+
+def test_lexical_ambiguity2():
+    g = Grammar.from_string(r'''
+    Stuff: Stuff "+" Stuff | Something;
+    Something: INT | FLOAT | Object;
+    Object: INT DOT INT;
+
+    terminals
+    INT: /\d+/;
+    FLOAT: /\d+(\.\d+)?/;
+    DOT: ".";
+    ''')
+
+    parser = GLRParser(g)
+
+    # Lexical ambiguity between FLOAT and INT . INT
+    forest = parser.parse('42.12')
+    assert len(forest) == 2
+    assert forest.ambiguities == 1
+
+    # Here also we have two ambiguities
+    forest = parser.parse('42.12 + 3.8')
+    assert len(forest) == 4
+    assert forest.ambiguities == 2
+
+    # Here we have 3 lexical ambiguities and 1 ambiguity
+    # for + operation
+    forest = parser.parse('34.78 + 8 + 3.3')
+    assert len(forest) == 16
+    assert forest.ambiguities == 4
+
+    # Here we have 4 lexical ambiguities and 3 ambiguities
+    # for + operation therefore 5 * 2 ^ 4 solutions
+    forest = parser.parse('34.78 + 8 + 3.3 + 1.2')
+    assert len(forest) == 80
+    assert forest.ambiguities == 7
+
+    # When default lexical disambiguation is activated
+    # We should have only syntactical ambiguities where
+    # default lexical disambiguation can resolve
+    parser = GLRParser(g, lexical_disambiguation=True)
+
+    # Longest match is used to choose FLOAT
+    forest = parser.parse('42.12')
+    assert len(forest) == 1
+    forest[0].symbol.name == 'FLOAT'
+    assert forest.ambiguities == 0
+
+    # Also, longest match will choose FLOAT in both cases
+    forest = parser.parse('42.12 + 3.8')
+    assert len(forest) == 1
+    assert forest.ambiguities == 0
+
+    # Here we still have lexical ambiguity on "8"
+    forest = parser.parse('34.78 + 8 + 3.3')
+    assert len(forest) == 4
+    assert forest.ambiguities == 2
+
+    # Lexical ambiguity on "8" and 3 syntactical ambiguities
+    # on + operations
+    forest = parser.parse('34.78 + 8 + 3.3 + 1.2')
+    assert len(forest) == 10
+    assert forest.ambiguities == 4

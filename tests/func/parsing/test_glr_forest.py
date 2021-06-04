@@ -31,6 +31,20 @@ def test_solutions(parser):
     assert forest.solutions == 42
 
 
+def test_ambiguities(parser):
+    """
+    Forest.ambiguities should return the number of ambiguous nodes in SPPF.
+    """
+    forest = parser.parse('2 + 3 * 5')
+    assert forest.ambiguities == 1
+
+    forest = parser.parse('2 + 3 * 5 + 4')
+    assert forest.ambiguities == 3
+
+    forest = parser.parse('2 + 3 * 5 + 4 *1')
+    assert forest.ambiguities == 6
+
+
 def test_tree_iteration(parser):
     forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7')
 

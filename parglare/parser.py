@@ -479,9 +479,7 @@ class Parser(object):
         in_len = len(input_str)
         tokens = []
 
-        # add special tokens (EMPTY and STOP) if they are applicable
-        if EMPTY in actions:
-            tokens.append(EMPTY_token)
+        # add special STOP token if they are applicable
         if STOP in actions:
             if not self.consume_input \
                or (self.consume_input and position == in_len):
@@ -533,7 +531,7 @@ class Parser(object):
             if type(tok) is tuple:
                 tok, *additional_data = tok
             if tok:
-                tokens.append(Token(symbol, tok, additional_data))
+                tokens.append(Token(symbol, tok, position, additional_data))
                 if finish_flags[idx]:
                     break
         return tokens
@@ -556,7 +554,8 @@ class Parser(object):
                 if type(tok) is tuple:
                     tok, *additional_data = tok
                 if tok:
-                    tokens.append(Token(terminal, tok, additional_data))
+                    tokens.append(Token(terminal, tok, context.position,
+                                        additional_data))
         return tokens
 
     def _init_dynamic_disambiguation(self, context):
@@ -753,10 +752,6 @@ class Parser(object):
         if len(tokens) <= 1:
             return tokens
 
-        # prefer STOP over EMPTY
-        if STOP_token in tokens:
-            tokens = [t for t in tokens if t != EMPTY_token]
-
         # Longest-match strategy.
         max_len = max((len(x.value) for x in tokens))
         tokens = [x for x in tokens if len(x.value) == max_len]
@@ -822,7 +817,7 @@ class Parser(object):
         while head.position < len(head.input_str):
             head.position += 1
             token = self._next_token(head)
-            if token and token is not EMPTY_token:
+            if token:
                 head.token_ahead = token
                 return True
         return False
@@ -1036,13 +1031,14 @@ class Token(object):
     """
     Token or lexeme matched from the input.
     """
-    __slots__ = ['symbol', 'value', 'additional_data', 'length']
+    __slots__ = ['symbol', 'value', 'additional_data', 'length', 'position']
 
-    def __init__(self, symbol=None, value='', additional_data=(), length=None):
+    def __init__(self, symbol, value, position, additional_data=(), length=None):
         self.symbol = symbol
         self.value = value
         self.additional_data = additional_data
         self.length = length if length is not None else len(value)
+        self.position = position
 
     def __repr__(self):
         return "<{}({})>".format(str(self.symbol), str(self.value))
@@ -1050,9 +1046,12 @@ class Token(object):
     def __len__(self):
         return self.length
 
+    @property
+    def end_position(self):
+        return self.position + self.length
+
     def __bool__(self):
         return True
 
 
-STOP_token = Token(STOP)
-EMPTY_token = Token(EMPTY)
+STOP_token = Token(STOP, '', None)
