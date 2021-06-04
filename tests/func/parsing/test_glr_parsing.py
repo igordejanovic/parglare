@@ -137,8 +137,9 @@ def test_expressions():
     # Even this simple expression has 2 different interpretations
     # (4 + 2) * 3 and
     # 4 + (2 * 3)
-    results = p.parse("4 + 2 * 3")
-    assert len(results) == 2
+    forest = p.parse("4 + 2 * 3")
+    assert len(forest) == 2
+    results = [p.call_actions(tree) for tree in forest]
     assert 18 in results and 10 in results
 
     # Adding one more operand rises number of interpretations to 5
@@ -185,7 +186,7 @@ def test_expressions():
 
     results = p.parse("4 + 2 * 3 + 8 * 5 * 3")
     assert len(results) == 1
-    assert results[0] == 4 + 2 * 3 + 8 * 5 * 3
+    assert p.call_actions(results[0]) == 4 + 2 * 3 + 8 * 5 * 3
 
 
 @pytest.mark.skipif(sys.version_info < (3, 6),
@@ -212,7 +213,7 @@ def test_epsilon_grammar():
     Third = Baz
     """
 
-    results = p.parse(txt)
+    forest = p.parse(txt)
 
     expected = [
         # First solution
@@ -225,7 +226,7 @@ def test_epsilon_grammar():
           ['Second', '=', ['Foo', 'Bar']]],
          ['Third', '=', 'Baz']]
     ]
-    assert results == expected
+    assert [p.call_actions(tree) for tree in forest] == expected
 
     results = p.parse("")
     assert len(results) == 1
@@ -344,8 +345,8 @@ def test_lexical_ambiguity():
 
     p = GLRParser(g)
 
-    assert all([x in ['xx', ['x', 'x']] for x in p.parse('xx')])
+    assert all([p.call_actions(x) in ['xx', ['x', 'x']] for x in p.parse('xx')])
 
     disambig_p = GLRParser(g, lexical_disambiguation=True)
 
-    assert disambig_p.parse("xx") == ['xx']
+    assert p.call_actions(disambig_p.parse("xx")[0]) == 'xx'

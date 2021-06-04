@@ -56,8 +56,9 @@ def test_glr_recovery_default():
     # There are 5 trees for '1 + 2 + 3 - 5'
     # All results are the same
     assert len(results) == 5
-    assert len(set(results)) == 1
-    assert 1 in set(results)
+    result_set = set([parser.call_actions(tree) for tree in results])
+    assert len(result_set) == 1
+    assert 1 in set(result_set)
 
 
 def test_glr_recovery_custom_new_position():
@@ -76,9 +77,10 @@ def test_glr_recovery_custom_new_position():
 
     assert len(parser.errors) == 1
     assert len(results) == 2
-    assert len(set(results)) == 1
-    # Calculate results should be '1 + 5 - 2'
-    assert results[0] == 4
+    result_set = set([parser.call_actions(tree) for tree in results])
+    assert len(result_set) == 1
+    # Calculated result should be '1 + 5 - 2'
+    assert result_set.pop() == 4
 
 
 def test_glr_recovery_custom_new_token():
@@ -97,9 +99,10 @@ def test_glr_recovery_custom_new_token():
 
     assert len(parser.errors) == 1
     assert len(results) == 5
-    assert len(set(results)) == 2
-    assert -4 in results
-    assert 0 in results
+    result_set = set([parser.call_actions(tree) for tree in results])
+    assert len(result_set) == 2
+    assert -4 in result_set
+    assert 0 in result_set
 
 
 def test_glr_recovery_custom_unsuccessful():

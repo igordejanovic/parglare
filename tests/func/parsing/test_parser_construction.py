@@ -196,7 +196,7 @@ def test_prefer_shifts_no_sr_conflicts():
     # GLR parser can parse without prefer_shifts strategy. This grammar is
     # ambiguous and yields 8 solutions for the given input.
     parser = GLRParser(g)
-    results = parser.parse(input_str)
+    results = [parser.call_actions(tree) for tree in parser.parse(input_str)]
 
     expected = [
         [['b', ['a']], [None, ['a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
@@ -214,7 +214,7 @@ def test_prefer_shifts_no_sr_conflicts():
     parser = GLRParser(g, prefer_shifts=True)
     result = parser.parse(input_str)
     assert len(result) == 1
-    assert result[0] == output
+    assert parser.call_actions(result[0]) == output
 
 
 def test_prefer_shifts_over_empty_reductions():

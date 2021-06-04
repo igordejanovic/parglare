@@ -29,7 +29,7 @@ def act_sum(is_tree):
         if is_tree:
             # If parse tree is constructed `node` is available on
             # the context.
-            assert type(context.node) is NodeNonTerm \
+            assert context.node.is_nonterm() \
                 and context.node.symbol.name == 'E'
         else:
             context.node is None

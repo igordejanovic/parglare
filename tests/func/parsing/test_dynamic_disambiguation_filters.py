@@ -111,9 +111,9 @@ def test_dynamic_disambiguation_glr():
     # * operation will be of higher priority as it appears later in the stream.
     result1 = p.parse(instr1)
     assert len(result1) == 1
-    assert result1[0] == 1 + (2 * 5) + 3
+    assert p.call_actions(result1[0]) == 1 + (2 * 5) + 3
 
     # + operation will be of higher priority here.
     result2 = p.parse(instr2)
     assert len(result2) == 1
-    assert result2[0] == 1 * (2 + 5) * 3
+    assert p.call_actions(result2[0]) == 1 * (2 + 5) * 3
