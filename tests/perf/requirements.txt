@@ -1,3 +1,2 @@
 psutil
-memory_profiler
 pyprof2calltree

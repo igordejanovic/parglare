@@ -1,0 +1,959 @@
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
+
+@article{knuth1965,
+    title = {On the translation of languages from left to right},
+    author = {Knuth, Donald E},
+    year = {1965},
+    journal = {Information and control},
+    number = {6},
+    pages = {607–639},
+    publisher = {Elsevier},
+    volume = {8},
+    x-stars = {94.89},
+    keywords = {parsing, LR, dslbook}
+}
+
+@inproceedings{tomita1984,
+    title = {LR parsers for natural languages},
+    author = {Tomita, Masaru},
+    booktitle = {10th International Conference on Computational Linguistics and 22nd Annual Meeting of the Association for Computational Linguistics},
+    pages = {354--357},
+    year = {1984}
+}
+
+@inproceedings{tomita1985,
+    title = {{An Efficient Context-Free Parsing Algorithm for Natural Languages.}},
+    author = {Tomita, Masaru},
+    year = {1985},
+    booktitle = {{IJCAI}},
+    pages = {756–764},
+    volume = {2}
+}
+
+@incollection{nozohoor1991,
+    title = {GLR Parsing for $\varepsilon$-Grammers},
+    author = {Nozohoor-Farshi, Rahman},
+    booktitle = {Generalized LR parsing},
+    file = {docs/tomita2012.pdf},
+    pages = {61--75},
+    year = {1991},
+    publisher = {Springer}
+}
+
+@article{scott2007,
+    title = {BRNGLR: a cubic Tomita-style GLR parsing algorithm},
+    author = {Scott, Elizabeth and Johnstone, Adrian and Economopoulos, Rob},
+    journal = {Acta informatica},
+    volume = {44},
+    number = {6},
+    pages = {427--461},
+    year = {2007},
+    publisher = {Springer}
+}
+
+@inproceedings{mcpeak2004,
+    title = {Elkhound: A fast, practical GLR parser generator},
+    author = {McPeak, Scott and Necula, George C},
+    booktitle = {International Conference on Compiler Construction},
+    pages = {73--88},
+    year = {2004},
+    organization = {Springer}
+}
