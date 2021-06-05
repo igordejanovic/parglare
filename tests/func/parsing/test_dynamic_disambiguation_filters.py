@@ -34,7 +34,7 @@ def custom_disambiguation_filter(context, from_state, to_state, action,
     """
     Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
-    on the input.
+    on the input or how disambiguation can be decided during parsing.
     """
     global operations
 

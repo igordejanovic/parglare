@@ -973,7 +973,7 @@ class NodeNonTerm(Node):
         return True
 
     def __str__(self):
-        return '<NonTerm({}, {}-{})>'\
+        return 'NonTerm({}, {}-{})'\
             .format(self.production.symbol,
                     self.start_position, self.end_position)
 
@@ -1016,7 +1016,7 @@ class NodeTerm(Node):
         return True
 
     def __str__(self):
-        return '<Term({} "{}", {}-{})>'\
+        return 'Term({} "{}", {}-{})'\
             .format(self.symbol, self.value[:20],
                     self.start_position, self.end_position)
 

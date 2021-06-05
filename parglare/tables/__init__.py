@@ -731,7 +731,7 @@ class LRState(object):
         return str(self)
 
     def __repr__(self):
-        return "<LRState({}:{})>".format(self.state_id, self.symbol.name)
+        return "LRState({}:{})".format(self.state_id, self.symbol.name)
 
     def print_debug(self):
         prints(str(self))

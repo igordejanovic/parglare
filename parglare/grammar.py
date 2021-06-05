@@ -324,7 +324,7 @@ class Production(object):
             return ("%s " + s_emph("=") + " %s") % (self.symbol, self.rhs)
 
     def __repr__(self):
-        return 'Production({})'.format(str(self.symbol))
+        return 'Production({})'.format(str(self))
 
     def __getattr__(self, name):
         if self.user_meta is not None:
@@ -353,7 +353,7 @@ class ProductionRHS(list):
         return " ".join([str(x) for x in self])
 
     def __repr__(self):
-        return "<ProductionRHS([{}])>".format(
+        return "ProductionRHS([{}])".format(
             ", ".join([str(x) for x in self]))
 
 
