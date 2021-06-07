@@ -241,6 +241,7 @@ class RegExRecognizer(Recognizer):
         self.ignore_case = ignore_case
         if ignore_case:
             re_flags |= re.IGNORECASE
+        re_flags |= re.VERBOSE
         self.re_flags = re_flags
         try:
             self.regex = re.compile(self._regex, re_flags)
