@@ -247,7 +247,7 @@ class RegExRecognizer(Recognizer):
         except re.error as ex:
             regex = esc_control_characters(self._regex)
             message = 'Regex compile error in /{}/ (report: "{}")'
-            raise GrammarError(message.format(regex, str(ex)))
+            raise GrammarError(None, message.format(regex, str(ex)))
 
     def __call__(self, in_str, pos):
         m = self.regex.match(in_str, pos)
