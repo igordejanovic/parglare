@@ -3,6 +3,7 @@ from os import path
 import re
 import itertools
 import copy
+from collections import Counter
 from parglare.exceptions import GrammarError, ParserInitError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.common import Location, load_python_module
@@ -1029,6 +1030,10 @@ class Grammar(PGFile):
         "Returns non-terminal with the given fully qualified name or name."
         return self.nonterminals.get(name)
 
+    def get_productions(self, name):
+        "Returns production for the given symbol"
+        return [p for p in self.productions if p.symbol.fqn == name]
+
     def get_symbol(self, name):
         "Returns grammar symbol with the given name."
         s = self.get_terminal(name)
@@ -1067,6 +1072,8 @@ class Grammar(PGFile):
         extra.debug_colors = debug_colors
         extra.classes = {}
         extra.inline_terminals = {}
+        extra.groups = []
+        extra.groups_counter = Counter()
         extra.imported_with = None
         extra.grammar = None
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
@@ -1259,6 +1266,7 @@ class GrammarContext:
  PRODUCTION_RULE_WITH_ACTION,
  PRODUCTION_RULE_RHS,
  PRODUCTION,
+ PRODUCTION_GROUP,
  TERMINAL_RULES,
  TERMINAL_RULE,
  TERMINAL_RULE_WITH_ACTION,
@@ -1298,6 +1306,7 @@ class GrammarContext:
      'ProductionRuleWithAction',
      'ProductionRuleRHS',
      'Production',
+     'ProductionGroup',
      'TerminalRules',
      'TerminalRule',
      'TerminalRuleWithAction',
@@ -1428,8 +1437,12 @@ pg_productions = [
     [PLAIN_ASSIGNMENT, [NAME, '=', GSYMBOL_REFERENCE]],
     [BOOL_ASSIGNMENT, [NAME, '?=', GSYMBOL_REFERENCE]],
 
+    # Groups
+    [PRODUCTION_GROUP, ['(', PRODUCTION_RULE_RHS, ')']],
+
     # Regex-like repeat operators
     [GSYMBOL_REFERENCE, [GSYMBOL, OPT_REP_OPERATOR]],
+    [GSYMBOL_REFERENCE, [PRODUCTION_GROUP, OPT_REP_OPERATOR]],
     [OPT_REP_OPERATOR, [REP_OPERATOR_ZERO]],
     [OPT_REP_OPERATOR, [REP_OPERATOR_ONE]],
     [OPT_REP_OPERATOR, [REP_OPERATOR_OPTIONAL]],
@@ -1545,6 +1558,22 @@ def act_production_rule(context, nodes):
         rule_meta_datas = get_production_rule_meta_datas(rule_meta_datas)
 
     check_name(context, name)
+
+    prods = []
+    if context.extra.groups:
+        counter = context.extra.groups_counter
+        while context.extra.groups:
+            ref, gprods = context.extra.groups.pop()
+            gname = f'{name}_g{counter[name] + 1}'
+            ref.name = gname
+            counter[name] += 1
+            prods.extend(_create_prods(context, gprods, gname, rule_meta_datas))
+    prods.extend(_create_prods(context, rhs_prods, name, rule_meta_datas))
+
+    return prods
+
+
+def _create_prods(context, rhs_prods, name, rule_meta_datas):
 
     symbol = NonTerminal(name, location=Location(context),
                          imported_with=context.extra.imported_with,
@@ -1673,6 +1702,15 @@ def act_production(_, nodes):
     return (assignments, meta_datas)
 
 
+def act_production_group(context, nodes):
+    # Group name will be known when the grammar rule is
+    # reduced so store these production for later.
+    productions = nodes[1]
+    reference = Reference(Location(context), None)
+    context.extra.groups.append((reference, productions))
+    return reference
+
+
 def _set_term_props(term, props):
     for t in props:
         if type(t) is int:
@@ -1757,7 +1795,6 @@ def act_gsymbol_reference(context, nodes):
 
     """
     symbol_ref, rep_op = nodes
-
     if rep_op:
 
         if len(rep_op) > 1:
@@ -1843,6 +1880,7 @@ pg_actions = {
     'ProductionRuleWithAction': act_production_rule_with_action,
     'ProductionRuleRHS': collect_sep,
     'Production': act_production,
+    'ProductionGroup': act_production_group,
 
     'TerminalRules': collect,
     'TerminalRule': [act_term_rule,
