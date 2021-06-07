@@ -606,6 +606,7 @@ S: first=a second=digit+[comma];
 terminals
 a: "a";
 digit: /\d+/;
+comma: ",";
 ```
 
 In this example root rule matches one `a` and then one or more digit separated
