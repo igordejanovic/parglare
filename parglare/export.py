@@ -1,5 +1,5 @@
 from parglare.parser import REDUCE, SHIFT
-import codecs
+import io
 from parglare import termui as t
 
 
@@ -39,7 +39,7 @@ def dot_escape(s):
 
 def grammar_pda_export(table, file_name):
 
-    with codecs.open(file_name, 'w', encoding="utf-8") as f:
+    with io.open(file_name, 'w', encoding="utf-8") as f:
         f.write(HEADER)
 
         for state in table.states:

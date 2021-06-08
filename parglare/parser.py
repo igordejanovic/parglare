@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import codecs
+import io
 import logging
 from functools import reduce
 from .grammar import EMPTY, STOP
@@ -152,7 +152,7 @@ class Parser(object):
         Args:
             file_name(str): A file name.
         """
-        with codecs.open(file_name, 'r', 'utf-8') as f:
+        with io.open(file_name, 'r', encoding='utf-8') as f:
             content = f.read()
         return self.parse(content, file_name=file_name, **kwargs)
 

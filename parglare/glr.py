@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import codecs
+import io
 from itertools import takewhile
 from functools import reduce
 from parglare import Parser
@@ -649,7 +649,7 @@ class GLRParser(Parser):
     def _export__dot_trace(self):
         file_name = "{}_trace.dot".format(self.file_name) \
                     if self.file_name else "parglare_trace.dot"
-        with codecs.open(file_name, 'w', encoding="utf-8") as f:
+        with io.open(file_name, 'w', encoding="utf-8") as f:
             f.write(DOT_HEADER)
             f.write(self._dot_trace)
             f.write("}\n")
