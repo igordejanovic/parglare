@@ -924,12 +924,6 @@ class Node(object):
     def __getattr__(self, name):
         return getattr(self.context, name)
 
-    def df_iter(self):
-        "Depth First Iteator"
-        yield self
-        for c in self:
-            yield from c.df_iter()
-
     def is_nonterm(self):
         return False
 

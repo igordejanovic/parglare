@@ -982,12 +982,6 @@ class Tree:
     def __iter__(self):
         return iter(self.children or [])
 
-    def df_iter(self):
-        "Depth First Iterator"
-        yield self.root
-        for c in self:
-            yield from c.df_iter()
-
     def __reversed__(self):
         return reversed(self.children)
 

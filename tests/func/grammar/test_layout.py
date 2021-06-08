@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest  # noqa
-from parglare import Parser, GLRParser, Grammar, ParseError
+from parglare import Parser, GLRParser, Grammar, ParseError, visitor
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
@@ -139,8 +139,12 @@ def test_layout_context(parser_class):
         # so we can check if there is a comment in the layout_content_ahead
         # on some of the tree nodes
         tree = result[0]
-        assert any('This is a comment' in node.layout_content_ahead
-                   for node in tree.df_iter())
+        content = set()
+        def collect(n, _):
+            content.add(n.layout_content_ahead)
+        visitor(tree, lambda n: iter(n.children or []), collect)
+        assert any('This is a comment' in c for c in content)
+
     else:
         assert layout_called[0]
         assert layout_passed[0]
