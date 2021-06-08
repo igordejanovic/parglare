@@ -3,23 +3,29 @@ import os
 import sys
 import glob
 import importlib
+from itertools import chain
 
 
-def test_examples():
+skip_examples = [
+    'molecular_formulas',
+    'custom_table_caching',
+    'c/'
+]
 
-    examples_pat = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                                '../../examples/*/*.py')
+examples_pat = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                            '../../examples/*/*.py')
+examples = [f for f in glob.glob(examples_pat)
+            if not any([x in f
+                        for x in chain(['__init__.py'],
+                                       (f'examples/{example}'
+                                        for example in skip_examples))])]
 
-    # Filter out __init__.py
-    examples = [f for f in glob.glob(examples_pat)
-                if not any([x in f for x in ['__init__.py',
-                                             'molecular',
-                                             'custom_table_caching']])]
-    for e in examples:
-        example_dir = os.path.dirname(e)
-        sys.path.insert(0, example_dir)
-        (module_name, _) = os.path.splitext(os.path.basename(e))
-        m = importlib.import_module(module_name)
+@pytest.mark.parametrize("example", examples)
+def test_examples(example):
+    example_dir = os.path.dirname(example)
+    sys.path.insert(0, example_dir)
+    (module_name, _) = os.path.splitext(os.path.basename(example))
+    m = importlib.import_module(module_name)
 
-        if hasattr(m, 'main'):
-            m.main(debug=False)
+    if hasattr(m, 'main'):
+        m.main(debug=False)
