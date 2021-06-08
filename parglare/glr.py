@@ -5,7 +5,7 @@ from functools import reduce
 from parglare import Parser
 from parglare import termui as t
 from .parser import SHIFT, REDUCE, pos_to_line_col, Token, NodeNonTerm, NodeTerm
-from .common import replace_newlines as _, position_context
+from .common import replace_newlines as _, position_context, visitor
 from .export import dot_escape
 from .termui import prints, h_print, a_print
 
@@ -666,7 +666,7 @@ class Parent:
     case of ambiguity.
     """
     __slots__ = ['head', 'root', 'start_position', 'end_position',
-                 'possibilities', '_solutions', 'production', 'token']
+                 'possibilities', '_solutions', '_ambiguities', 'production', 'token']
 
     def __init__(self, head, root, start_position, end_position=None,
                  possibilities=None, production=None,
@@ -680,6 +680,7 @@ class Parent:
         self.production = production
         self.token = token
         self._solutions = None
+        self._ambiguities = None
 
         # A list of NoneNonTerm or NodeTerm which represent
         # alternative interpretations of what is seen between
@@ -704,17 +705,57 @@ class Parent:
     def ambiguity(self):
         return len(self.possibilities)
 
+
+    @property
+    def ambiguities(self):
+        """
+        Total ambiguities in the sub-tree.
+        Keep cache of visited nodes to prevent double counting.
+        """
+        if self._ambiguities is None:
+            visited = set()
+            def iterator(node):
+                def iter_non_visited(n, collection):
+                    for i in collection:
+                        if id(i) not in visited:
+                            visited.add(id(i))
+                            yield i
+                if isinstance(node, Parent):
+                    return iter_non_visited(node, node.possibilities)
+                elif isinstance(node, NodeNonTerm):
+                    return iter_non_visited(node, node.children)
+                else:
+                    return iter([])
+            def calculate(node, subresults):
+                amb = 0
+                if isinstance(node, Parent) and len(node.possibilities) > 1:
+                    amb = 1
+                return sum(subresults) + amb
+
+            self._ambiguities = visitor(self, iterator, calculate, True)
+            del visited
+
+        return self._ambiguities
+
     @property
     def solutions(self):
+        "Total number of trees/solutions."
         if self._solutions is None:
-            solutions = 0
-            for n in self.possibilities:
-                subtree = 1
-                if n.is_nonterm():
-                    for c in n.children:
-                        subtree *= c.solutions
-                solutions += subtree
-            self._solutions = solutions
+            def iterator(node):
+                if isinstance(node, Parent):
+                    return iter(node.possibilities)
+                elif isinstance(node, NodeNonTerm):
+                    return iter(node.children)
+                else:
+                    return iter([])
+            def calculate(node, subresults):
+                if isinstance(node, Parent):
+                    return sum(subresults)
+                else:
+                    return reduce(lambda x, y: x*y, subresults, 1)
+
+            self._solutions = visitor(self, iterator, calculate, True)
+
         return self._solutions
 
     @property
@@ -942,7 +983,7 @@ class Tree:
         return iter(self.children or [])
 
     def df_iter(self):
-        "Depth First Iteator"
+        "Depth First Iterator"
         yield self.root
         for c in self:
             yield from c.df_iter()
@@ -1008,17 +1049,7 @@ class Forest:
     @property
     def ambiguities(self):
         "Number of ambiguous nodes in this forest."
-        # SPPF is a DAG structure. We walk the graph and keep cached of
-        # visited nodes to prevent double counting.
-        visited = set()
-        def visit(n, count=0):
-            count += 1 if len(n.possibilities) > 1 else 0
-            for node in (i for k in n.possibilities for i in k):
-                if node not in visited:
-                    count += visit(node)
-                    visited.add(node)
-            return count
-        return visit(self.result)
+        return self.result.ambiguities
 
     def __str__(self):
         return f'Forest({self.solutions})'
