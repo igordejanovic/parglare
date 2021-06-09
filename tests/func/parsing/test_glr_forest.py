@@ -132,6 +132,7 @@ def test_lazy_tree_enumeration(parser):
     with pytest.raises(IndexError):
         forest.get_tree(len(forest)).tree_str()
 
+
 def test_no_equal_trees(parser):
     """
     Test that forest returns different trees.

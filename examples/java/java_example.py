@@ -9,7 +9,7 @@ def main(debug=False):
     g = Grammar.from_file(os.path.join(this_folder, 'java16.pg'))
     parser = GLRParser(g, debug=debug, debug_colors=True)
 
-    file_name = os.path.join(this_folder, f'TomcatServletWebServerFactory.java')
+    file_name = os.path.join(this_folder, 'TomcatServletWebServerFactory.java')
     file_size = os.path.getsize(file_name)
 
     t_start = time.time()
@@ -18,10 +18,10 @@ def main(debug=False):
 
     print('Elapsed time: {:.2f}'.format(t_end - t_start), 'sec')
     print('Speed = {:.2f}'.format(file_size/1000/(t_end - t_start)),
-            'KB/sec\n')
+          'KB/sec\n')
     print('Solutions: ', forest.solutions)
     print('Ambiguities: ', forest.ambiguities)
- 
+
 
 if __name__ == "__main__":
     main(debug=False)

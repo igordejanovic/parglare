@@ -20,6 +20,7 @@ examples = [f for f in glob.glob(examples_pat)
                                        (f'examples/{example}'
                                         for example in skip_examples))])]
 
+
 @pytest.mark.parametrize("example", examples)
 def test_examples(example):
     example_dir = os.path.dirname(example)

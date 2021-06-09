@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest  # noqa
 from parglare import Grammar, Parser
-from parglare.parser import NodeNonTerm
 from parglare.actions import pass_single
 
 

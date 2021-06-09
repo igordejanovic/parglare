@@ -11,5 +11,6 @@ def main(debug=False):
         result = parser.parse_file(os.path.join(this_folder, f'example{i+1}.json'))
         print(result)
 
+
 if __name__ == "__main__":
     main(debug=True)

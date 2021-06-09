@@ -140,8 +140,10 @@ def test_layout_context(parser_class):
         # on some of the tree nodes
         tree = result[0]
         content = set()
+
         def collect(n, _):
             content.add(n.layout_content_ahead)
+
         visitor(tree, lambda n: iter(n.children or []), collect)
         assert any('This is a comment' in c for c in content)
 

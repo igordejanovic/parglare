@@ -1,5 +1,6 @@
 from os.path import join, dirname
-from parglare import Grammar, GLRParser, Parser
+from parglare import Grammar, GLRParser
+
 
 def main(debug=False):
     THIS_DIR = dirname(__file__)
@@ -11,9 +12,10 @@ def main(debug=False):
     print(f'Solutions: {len(forest)}')
     print(f'Ambiguities: {forest.ambiguities}')
     if debug:
-        with open(f'forest.txt', 'w') as f:
+        with open('forest.txt', 'w') as f:
             f.write(forest.tree_str())
         print('See forest.txt')
+
 
 if __name__ == "__main__":
     main(debug=True)

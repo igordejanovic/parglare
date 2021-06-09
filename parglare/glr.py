@@ -705,7 +705,6 @@ class Parent:
     def ambiguity(self):
         return len(self.possibilities)
 
-
     @property
     def ambiguities(self):
         """
@@ -714,6 +713,7 @@ class Parent:
         """
         if self._ambiguities is None:
             visited = set()
+
             def iterator(node):
                 def iter_non_visited(n, collection):
                     for i in collection:
@@ -726,6 +726,7 @@ class Parent:
                     return iter_non_visited(node, node.children)
                 else:
                     return iter([])
+
             def calculate(node, subresults):
                 amb = 0
                 if isinstance(node, Parent) and len(node.possibilities) > 1:
@@ -749,6 +750,7 @@ class Parent:
                     return iter(node.children)
                 else:
                     return iter([])
+
             def calculate(node, subresults):
                 if isinstance(node, Parent):
                     return sum(subresults)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Produce LaTex qtree output from the parglare parse trees.
 
-from parglare import Grammar, GLRParser, NodeNonTerm
+from parglare import Grammar, GLRParser
 
 INPUT = '1 + 2 * 3 + 4'
 
