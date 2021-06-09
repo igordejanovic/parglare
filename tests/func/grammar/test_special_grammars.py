@@ -5,7 +5,7 @@ Test non-deterministic parsing.
 import pytest  # noqa
 import sys
 from parglare import Parser, GLRParser, Grammar, SLR, LALR
-from parglare.exceptions import ParseError, SRConflicts, RRConflicts
+from parglare.exceptions import ParseError, SRConflicts, RRConflicts, LoopError
 
 
 def test_lr_1_grammar():
@@ -101,102 +101,86 @@ def test_nondeterministic_LR_raise_error():
     assert len(results) == 1
 
 
-# def test_cyclic_grammar_1():
-#     """
-#     Grammar G1 from the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
-#     """
-#     grammar = """
-#     S: A;
-#     A: S;
-#     A: 'x';
-#     """
-#     g = Grammar.from_string(grammar)
-#     with pytest.raises(SRConflicts):
-#         Parser(g, prefer_shifts=False)
+def test_cyclic_grammar_1():
+    """
+    Grammar G1 from the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
+    """
+    grammar = """
+    S: A;
+    A: S;
+    A: 'x';
+    """
+    g = Grammar.from_string(grammar)
+    with pytest.raises(SRConflicts):
+        Parser(g, prefer_shifts=False)
 
-#     p = GLRParser(g)
-#     results = p.parse('x')
+    p = GLRParser(g)
+    results = p.parse('x')
 
-#     # x -> A -> S
-#     assert len(results) == 1
-
-
-# @pytest.mark.skipif(sys.version_info < (3, 6),
-#                     reason="list comparison doesn't work "
-#                     "correctly in pytest 4.1")
-# def test_cyclic_grammar_2():
-#     """
-#     Grammar G2 from the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
-#     Classic Tomita's GLR algorithm doesn't terminate with this grammar.
-#     Here we see that parglare finds 11 non-repeating solutions.
-#     """
-#     grammar = """
-#     S: S S;
-#     S: 'x';
-#     S: EMPTY;
-#     """
-#     g = Grammar.from_string(grammar)
-
-#     with pytest.raises(SRConflicts):
-#         Parser(g, prefer_shifts=False)
-
-#     p = GLRParser(g)
-#     results = p.parse('xx')
-
-#     # We have 11 valid solutions
-#     assert len(results) == 11
-#     expected = [
-#         ['x', 'x'],
-#         [[[], 'x'], 'x'],
-#         [[[], [[], 'x']], 'x'],
-#         ['x', [[], 'x']],
-#         [[[], 'x'], [[], 'x']],
-#         [[], ['x', 'x']],
-#         [[], [[], ['x', 'x']]],
-#         ['x', [[], 'x']],
-#         [[[], 'x'], [[], 'x']],
-#         [[[], [[], 'x']], [[], 'x']],
-#         [[], [[[], 'x'], 'x']]
-#     ]
-
-#     assert expected == results
+    # This grammar builds infinite/looping tree
+    # x -> A -> S -> A -> S...
+    with pytest.raises(LoopError):
+        len(results)
 
 
-# @pytest.mark.skipif(sys.version_info < (3, 6),
-#                     reason="list comparison doesn't work "
-#                     "correctly in pytest 4.1")
-# def test_cyclic_grammar_3():
-#     """
-#     Grammar with indirect cycle.
-#     r:EMPTY->A ; r:A->S; r:EMPTY->A; r:SA->S; r:EMPTY->A; r:SA->S;...
-#     """
-#     grammar = """
-#     S: S A | A;
-#     A: "a" | EMPTY;
-#     """
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
+def test_cyclic_grammar_2():
+    """
+    Grammar G2 from the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
+    Classic Tomita's GLR algorithm doesn't terminate with this grammar.
 
-#     g = Grammar.from_string(grammar)
+    parglare will succeed parsing but will report LoopError during any tree traversal
+    as the built SPPF is circular.
+    """
+    grammar = """
+    S: S S;
+    S: 'x';
+    S: EMPTY;
+    """
+    g = Grammar.from_string(grammar)
 
-#     # In this grammar we have 3 S/R conflicts where each reduction is EMPTY.
-#     # If we turn off prefer shifts over empty strategy in LR parser
-#     # we will get S/R conflict
-#     with pytest.raises(SRConflicts):
-#         Parser(g, prefer_shifts_over_empty=False)
+    with pytest.raises(SRConflicts):
+        Parser(g, prefer_shifts=False)
 
-#     # By default there is no S/R conflict with prefer shifts over
-#     # empty strategy
-#     Parser(g)
+    p = GLRParser(g)
+    results = p.parse('xx')
 
-#     p = GLRParser(g)
-#     results = p.parse('aa')
+    with pytest.raises(LoopError):
+        len(results)
 
-#     assert len(results) == 2
-#     expected = [
-#         ['a', 'a'],
-#         [[[], 'a'], 'a']
-#     ]
 
-#     assert results == expected
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason="list comparison doesn't work "
+                    "correctly in pytest 4.1")
+def test_cyclic_grammar_3():
+    """
+    Grammar with indirect cycle.
+    r:EMPTY->A ; r:A->S; r:EMPTY->A; r:SA->S; r:EMPTY->A; r:SA->S;...
+    """
+    grammar = """
+    S: S A | A;
+    A: "a" | EMPTY;
+    """
+
+    g = Grammar.from_string(grammar)
+
+    # In this grammar we have 3 S/R conflicts where each reduction is EMPTY.
+    # If we turn off prefer shifts over empty strategy in LR parser
+    # we will get S/R conflict
+    with pytest.raises(SRConflicts):
+        Parser(g, prefer_shifts_over_empty=False)
+
+    # By default there is no S/R conflict with prefer shifts over
+    # empty strategy
+    Parser(g)
+
+    p = GLRParser(g)
+    results = p.parse('aa')
+
+    with pytest.raises(LoopError):
+        len(results)
 
 
 def test_highly_ambiguous_grammar():

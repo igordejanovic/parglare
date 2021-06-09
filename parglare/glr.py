@@ -340,11 +340,11 @@ class GLRParser(Parser):
                                 head.token_ahead.symbol, []) if a.action == REDUCE]:
                             self._do_reductions(r_head, action.prod, parent)
         else:
+            # No cycles. Do the reduction.
             new_head.create_link(parent, head)
             self._for_actor.append(new_head)
             self._active_heads[new_head.state.state_id] = new_head
 
-            # No cycles. Do the reduction.
             if self.debug:
                 a_print("New head: ", new_head, level=1, new_line=True)
                 if self.debug_trace:
@@ -732,7 +732,8 @@ class Parent:
                     amb = 1
                 return sum(subresults) + amb
 
-            self._ambiguities = visitor(self, iterator, calculate, True)
+            self._ambiguities = visitor(self, iterator, calculate, memoize=True,
+                                        check_cycle=True)
             del visited
 
         return self._ambiguities
@@ -754,7 +755,8 @@ class Parent:
                 else:
                     return reduce(lambda x, y: x*y, subresults, 1)
 
-            self._solutions = visitor(self, iterator, calculate, True)
+            self._solutions = visitor(self, iterator, calculate, memoize=True,
+                                      check_cycle=True)
 
         return self._solutions
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+from parglare.exceptions import LoopError
 from parglare.termui import s_attention as _a
 
 
@@ -215,7 +216,7 @@ class ErrorContext(object):
         self.file_name = context.file_name
 
 
-def visitor(root, iterator, calculate, memoize=True):
+def visitor(root, iterator, calculate, memoize=True, check_cycle=False):
     """Generic iterative depth-first visitor with memoization.
 
     Accepts the start of the structure to visit (root), iterator callable which
@@ -229,6 +230,8 @@ def visitor(root, iterator, calculate, memoize=True):
     if memoize:
         cache = {}
     stack = [(root, iterator(root), [])]
+    if check_cycle:
+        visiting = set([id(root)])
     while stack:
         node, it, results = stack[-1]
         try:
@@ -236,14 +239,23 @@ def visitor(root, iterator, calculate, memoize=True):
         except StopIteration:
             # No more sub-elements for this node
             stack.pop()
+            if check_cycle:
+                visiting.remove(id(node))
             result = calculate(node, results)
             if memoize:
                 cache[id(node)] = result
             if stack:
                 stack[-1][-1].append(result)
             continue
+        if check_cycle and id(next_elem) in visiting:
+            raise LoopError('Looping during traversal on "{}". '
+                            'Last elements: {}'.format(next_elem,
+                                                       [r[0] for r in stack[-10:]]))
         if memoize and id(next_elem) in cache:
             results.append(cache[id(next_elem)])
         else:
             stack.append((next_elem, iterator(next_elem), []))
+            if check_cycle:
+                visiting.add(id(next_elem))
+
     return result

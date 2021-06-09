@@ -152,3 +152,7 @@ class SRConflicts(LRConflicts):
 
 class RRConflicts(LRConflicts):
     kind = "Reduce/Reduce"
+
+
+class LoopError(Exception):
+    pass
