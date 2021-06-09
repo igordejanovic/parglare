@@ -65,7 +65,7 @@ def viz(ctx, grammar_file):
 @click.option('--input-file', '-f', type=click.Path(),
               help="Input file for tracing")
 @click.option('--input', '-i', help="Input string for tracing")
-@click.option('--frontiers', '-f', default=False, is_flag=True,
+@click.option('--frontiers', '-r', default=False, is_flag=True,
               help="Align GSS nodes into frontiers (token levels)")
 @click.pass_context
 def trace(ctx, grammar_file, input_file, input, frontiers):
