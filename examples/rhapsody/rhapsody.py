@@ -11,7 +11,7 @@ def main(debug=False):
 
     with open(os.path.join(this_folder, 'LightSwitch.rpy'), 'r') as f:
         result = parser.parse(f.read())
-        print(result.tree_str())
+        print(result.to_str())
 
 
 if __name__ == '__main__':

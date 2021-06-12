@@ -63,7 +63,7 @@ OtherSentence[0->27]
   DOT[26->27, "."]
     '''
 
-    assert '\n\n'.join([r.tree_str()
+    assert '\n\n'.join([r.to_str()
                         for r in results]).strip() == expected.strip()
 
     results = parser.parse("a car is a kind of vehicle with wheels.")
@@ -135,5 +135,5 @@ KindDefinitionSentence[0->39]
   DOT[38->39, "."]
     '''
 
-    assert '\n\n'.join([r.tree_str()
+    assert '\n\n'.join([r.to_str()
                         for r in results]).strip() == expected.strip()

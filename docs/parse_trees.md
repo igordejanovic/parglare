@@ -43,13 +43,13 @@ Additionally, each `NodeNonTerm` has:
 
 - `production` - a grammar production whose reduction created this node.
 
-Each node has a `tree_str()` method which will return a string representation of
+Each node has a `to_str()` method which will return a string representation of
 the sub-tree starting from the given node. If called on a root node it will
 return the string representation of the whole tree.
 
 For example, parsing the input `1 + 2 * 3 - 1` with the expression grammar from
 the quick start will look like this if printed
-with `tree_str()`:
+with `to_str()`:
 
     E[0]
     E[0]
@@ -69,7 +69,7 @@ with `tree_str()`:
 
 !!! tip
 
-    You can use `tree_str()` on the root of the parse tree to get the string
+    You can use `to_str()` on the root of the parse tree to get the string
     representation of the parse tree. This can be handy to compare multiple
     trees returned by GLR parser to analyze ambiguity.
     
@@ -81,7 +81,7 @@ with `tree_str()`:
         trees = parser.parse_file('some_file')
         for idx, tree in enumerate(trees):
             with open(f'tree_{idx:03d}.txt', 'w') as f:
-                f.write(tree.tree_str())
+                f.write(tree.to_str())
     
     Now you can run any diff tool on the produced outputs to see where are the ambiguities:
     

@@ -90,7 +90,7 @@ def parse(ctx, grammar_file, input_file, input, glr, recovery):
     else:
         print('Printing the parse tree:\n')
 
-    print(result.tree_str())
+    print(result.to_str())
 
 
 @pglr.command()

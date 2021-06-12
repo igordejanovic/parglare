@@ -21,12 +21,12 @@ parser = GLRParser(g, build_tree=True)
 result = parser.parse(INPUT)
 
 
-def tree_str(node, depth=0):
+def to_str(node, depth=0):
     indent = '  ' * depth
     if node.is_nonterm():
         s = '\n{}[.{} {}\n{}]'.format(indent,
                                       node.production.symbol,
-                                      ''.join([tree_str(n, depth+1)
+                                      ''.join([to_str(n, depth+1)
                                                for n in node.children]),
                                       indent)
     else:
@@ -36,5 +36,5 @@ def tree_str(node, depth=0):
 
 with open('qtree_out.txt', 'w') as f:
     f.write('\begin{{tabular}}{{{}}}\n'.format('c' * len(result)))
-    trees = '&\n'.join(['\\Tree {}'.format(tree_str(tree)) for tree in result])
+    trees = '&\n'.join(['\\Tree {}'.format(to_str(tree)) for tree in result])
     f.write(trees)

@@ -939,7 +939,7 @@ class NodeNonTerm(Node):
         self.children = children
         self.production = production
 
-    def tree_str(self, depth=0, children=None):
+    def to_str(self, depth=0, children=None):
         indent = '  ' * depth
         s = '{}[{}->{}]'.format(self.production.symbol,
                                 self.start_position,
@@ -947,8 +947,8 @@ class NodeNonTerm(Node):
         children = children or self.children
         if children:
             for n in children:
-                if hasattr(n, 'tree_str'):
-                    s += '\n' + indent + n.tree_str(depth+1)
+                if hasattr(n, 'to_str'):
+                    s += '\n' + indent + n.to_str(depth+1)
                 else:
                     s += '\n' + indent + n.__class__.__name__ \
                          + '(' + str(n) + ')'
@@ -1000,7 +1000,7 @@ class NodeTerm(Node):
         "For SPPF trees"
         return 1
 
-    def tree_str(self, depth=0):
+    def to_str(self, depth=0):
         return '{}[{}->{}, "{}"]'.format(self.symbol,
                                          self.start_position,
                                          self.end_position,

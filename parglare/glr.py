@@ -792,14 +792,14 @@ class Parent:
     def __repr__(self):
         return str(self)
 
-    def tree_str(self, depth=0):
+    def to_str(self, depth=0):
         if self.ambiguity > 1:
             indent = '  ' * depth
             s = f'{self.head.symbol} - ambiguity[{self.ambiguity}]'
             for idx, p in enumerate(self.possibilities):
-                s += f'\n{indent}{idx+1}:' + p.tree_str(depth+2)
+                s += f'\n{indent}{idx+1}:' + p.to_str(depth+2)
         else:
-            s = self.possibilities[0].tree_str(depth+1)
+            s = self.possibilities[0].to_str(depth+1)
 
         return s
 
@@ -977,11 +977,11 @@ class Tree:
             children.append(self.__class__(c, new_counter))
         return children
 
-    def tree_str(self, depth=0):
+    def to_str(self, depth=0):
         if self.root.is_nonterm():
-            return self.root.tree_str(depth, self.children)
+            return self.root.to_str(depth, self.children)
         else:
-            return self.root.tree_str(depth)
+            return self.root.to_str(depth)
 
     def __iter__(self):
         return iter(self.children or [])
@@ -1052,8 +1052,8 @@ class Forest:
     def __str__(self):
         return f'Forest({self.solutions})'
 
-    def tree_str(self):
-        return self.result.tree_str()
+    def to_str(self):
+        return self.result.to_str()
 
     def __len__(self):
         return self.solutions

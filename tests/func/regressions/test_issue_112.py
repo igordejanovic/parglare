@@ -51,7 +51,7 @@ sentenceEnd[23->28, ".:SF;"]
 '''
 
     assert len(results) == 1
-    assert results[0].tree_str().strip() == expected.strip()
+    assert results[0].to_str().strip() == expected.strip()
 
 
 def test_issue_112_wrong_error_report():

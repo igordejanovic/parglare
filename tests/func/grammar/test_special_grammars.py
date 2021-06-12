@@ -332,7 +332,7 @@ def test_unbounded_ambiguity():
     p = GLRParser(g, build_tree=True, debug=True)
     results = p.parse("xbbbbx")
     for r in results:
-        print(r.tree_str())
+        print(r.to_str())
 
     assert len(results) == 5
 
@@ -372,7 +372,7 @@ def test_g7():
 #     p = GLRParser(g, build_tree=True, debug=True)
 #     results = p.parse("xbbbbbbbb")
 #     # for r in results:
-#     #     print(r.tree_str())
+#     #     print(r.to_str())
 
 #     assert len(results) == 5
 

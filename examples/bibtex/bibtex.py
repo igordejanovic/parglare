@@ -13,7 +13,7 @@ def main(debug=False):
     print(f'Ambiguities: {forest.ambiguities}')
     if debug:
         with open('forest.txt', 'w') as f:
-            f.write(forest.tree_str())
+            f.write(forest.to_str())
         print('See forest.txt')
 
 
