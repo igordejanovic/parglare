@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 import click
-from parglare import Grammar, ParseError, GrammarError, GLRParser
+from parglare import Grammar, ParseError, GrammarError, GLRParser, Parser
 from parglare.export import grammar_pda_export
 from parglare.tables import create_load_table
 from parglare.termui import prints, a_print, h_print
@@ -10,6 +10,7 @@ import parglare.termui as t
 
 @click.group()
 @click.option('--debug', default=False, is_flag=True,
+
               help="Debug/trace output.")
 @click.option('--no-colors', default=False, is_flag=True,
               help="Disable output coloring.")
@@ -39,6 +40,57 @@ def compile(ctx, grammar_file):
     h_print('Compiling...')
     compile_get_grammar_table(grammar_file, debug, colors, prefer_shifts,
                               prefer_shifts_over_empty)
+
+
+@pglr.command()
+@click.argument('grammar_file', type=click.Path())
+@click.option('--input-file', '-f', type=click.Path(),
+              help="File to parse")
+@click.option('--input', '-i', help="Input string to parse")
+@click.option('--glr', '-g', default=False, is_flag=True, help="Parse with GLR")
+@click.option('--recovery', '-r', default=False, is_flag=True, help="Use error recovery")
+@click.pass_context
+def parse(ctx, grammar_file, input_file, input, glr, recovery):
+    if not (input_file or input):
+        prints('Expected either input_file or input string.')
+        sys.exit(1)
+    colors = ctx.obj['colors']
+    debug = ctx.obj['debug']
+    prefer_shifts = ctx.obj['prefer_shifts']
+    prefer_shifts_over_empty = ctx.obj['prefer_shifts_over_empty']
+    grammar = Grammar.from_file(grammar_file, debug=debug, debug_colors=colors)
+    if glr:
+        parser = GLRParser(grammar, debug=False, debug_colors=colors,
+                           error_recovery=recovery,
+                           prefer_shifts=prefer_shifts,
+                           prefer_shifts_over_empty=prefer_shifts_over_empty)
+    else:
+        parser = Parser(grammar, debug=False, debug_colors=colors,
+                        error_recovery=recovery,
+                        prefer_shifts=prefer_shifts,
+                        prefer_shifts_over_empty=prefer_shifts_over_empty)
+
+    if input:
+        result = parser.parse(input)
+    else:
+        result = parser.parse_file(input_file)
+
+    if glr:
+        print(f'Solutions:{result.solutions}')
+        print(f'Ambiguities:{result.ambiguities}')
+
+    if recovery:
+        print(f'Errors: {len(parser.errors)}')
+        for error in parser.errors:
+            print('\t', str(error))
+
+    if glr and result.solutions > 1:
+        print('Printing the forest:\n')
+        result = result
+    else:
+        print('Printing the parse tree:\n')
+
+    print(result.tree_str())
 
 
 @pglr.command()
