@@ -43,8 +43,8 @@ def test_error_recovery_uncomplete():
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
 
-    # '*' after '+' will be droped but when the parser reach '&'
-    # it has a complete expression and will terminate successfuly and
+    # '*' after '+' will be dropped but when the parser reach '&'
+    # it has a complete expression and will terminate successfully and
     # report only one error ('*' after '+').
     # The parser should thus calculate '1 + 2 + 3'
     assert result == 6
