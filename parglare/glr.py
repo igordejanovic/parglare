@@ -4,10 +4,10 @@ from itertools import takewhile
 from functools import reduce
 from parglare import Parser
 from parglare import termui as t
-from .parser import SHIFT, REDUCE, pos_to_line_col, Token, NodeNonTerm, NodeTerm
-from .common import replace_newlines as _, position_context, visitor
-from .export import dot_escape
-from .termui import prints, h_print, a_print
+from parglare.parser import SHIFT, REDUCE, pos_to_line_col, Token
+from parglare.common import replace_newlines as _, position_context, dot_escape
+from parglare.trees import visitor, Forest, NodeNonTerm, NodeTerm
+from parglare.termui import prints, h_print, a_print
 
 
 def no_colors(f):
@@ -940,137 +940,6 @@ class GSSNode(object):
     @property
     def symbol(self):
         return self.state.symbol
-
-
-class Tree:
-    """
-    Represents a tree from the parse forest.
-    """
-    __slots__ = ['root', 'children']
-
-    def __init__(self, root, counter):
-        possibility = 0
-        if counter > 0 and len(root.possibilities) > 1:
-            # Find the right possibility bucket
-            solutions = root.possibilities[possibility].solutions
-            while solutions <= counter:
-                counter -= solutions
-                possibility += 1
-                solutions = root.possibilities[possibility].solutions
-
-        self.root = root.possibilities[possibility]
-        self._init_children(counter)
-
-    def _init_children(self, counter):
-        if self.root.is_nonterm():
-            self.children = self._enumerate_children(counter)
-
-    def _enumerate_children(self, counter):
-        children = []
-        # Calculate counter division based on weighted numbering system.
-        # Basically, enumerating variations of children solutions.
-        weights = [c.solutions for c in self.root.children]
-        for idx, c in enumerate(self.root.children):
-            factor = reduce(lambda x, y: x*y, weights[idx+1:], 1)
-            new_counter = counter // factor
-            counter %= factor
-            children.append(self.__class__(c, new_counter))
-        return children
-
-    def to_str(self, depth=0):
-        if self.root.is_nonterm():
-            return self.root.to_str(depth, self.children)
-        else:
-            return self.root.to_str(depth)
-
-    def __iter__(self):
-        return iter(self.children or [])
-
-    def __reversed__(self):
-        return reversed(self.children)
-
-    def __getattr__(self, attr):
-        # Proxy to tree node
-        return getattr(self.root, attr)
-
-
-class LazyTree(Tree):
-    """
-    Represents a lazy tree from the parse forest.
-
-    Attributes:
-    root(Parent):
-    counter(int):
-    """
-    __slots__ = ['root', 'counter', '_children']
-
-    def __init__(self, root, counter):
-        self._children = None
-        super().__init__(root, counter)
-
-    def _init_children(self, counter):
-        self.counter = counter
-
-    def __getattr__(self, attr):
-        if 'children' == attr:
-            if self._children is None:
-                if self.root.is_nonterm():
-                    self._children = self._enumerate_children(self.counter)
-            return self._children
-        # Proxy to tree node
-        return getattr(self.root, attr)
-
-
-class Forest:
-    """
-    Shared packed forest returned by the GLR parser.
-    Creates lazy tree enumerators and enables iteration over trees.
-    """
-    def __init__(self, parser):
-        self.parser = parser
-        results = [p for r in parser._accepted_heads for p in r.parents.values()]
-        self.result = results.pop()
-        while results:
-            result = results.pop()
-            self.result.merge(result)
-
-    def get_tree(self, idx=0):
-        return LazyTree(self.result, idx)
-
-    def get_nonlazy_tree(self, idx=0):
-        return Tree(self.result, idx)
-
-    @property
-    def solutions(self):
-        return self.result.solutions
-
-    @property
-    def ambiguities(self):
-        "Number of ambiguous nodes in this forest."
-        return self.result.ambiguities
-
-    def __str__(self):
-        return f'Forest({self.solutions})'
-
-    def to_str(self):
-        return self.result.to_str()
-
-    def to_dot(self):
-        return self.result.to_dot()
-
-    def __len__(self):
-        return self.solutions
-
-    def __iter__(self):
-        for i in range(self.solutions):
-            yield self.get_tree(i)
-
-    def __getitem__(self, idx):
-        return self.get_tree(idx)
-
-    def nonlazy_iter(self):
-        for i in range(self.solutions):
-            yield self.get_nonlazy_tree(i)
 
 
 DOT_HEADER = """

@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 import io
 import logging
-from functools import reduce
 from parglare.grammar import EMPTY, STOP
 from parglare.tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
 from parglare.exceptions import (ParseError, ParserInitError,
                                  DisambiguationError,
                                  DynamicDisambiguationConflict, SRConflicts,
                                  RRConflicts, expected_symbols_str)
-from parglare.common import (Location, position_context, pos_to_line_col,
-                             ErrorContext, dot_escape, visitor)
+from parglare.common import Location, position_context, pos_to_line_col, ErrorContext
+from parglare.trees import NodeTerm, NodeNonTerm
 from parglare.actions import pass_none
 from parglare.termui import prints, h_print, a_print
 from parglare import termui
@@ -904,176 +903,6 @@ class LRStackNode(object):
     @extra.setter
     def extra(self, new_value):
         self.parser.extra = new_value
-
-
-def node_iterator(n):
-    if isinstance(n, NodeNonTerm):
-        return iter(n.children)
-    else:
-        return iter([])
-
-
-DOT_HEADER = '''
-    digraph grammar {
-    rankdir=TD
-    fontname = "Bitstream Vera Sans"
-    fontsize = 8
-    node[
-        style=filled,
-        fillcolor=aliceblue
-    ]
-    nodesep = 0.3
-    edge[dir=black,arrowtail=empty]
-
-
-'''
-
-
-class Node(object):
-    """A node of the parse tree."""
-
-    __slots__ = ['context']
-
-    def __init__(self, context):
-        self.context = context
-
-    def __repr__(self):
-        return str(self)
-
-    def __iter__(self):
-        return iter([])
-
-    def __reversed__(self):
-        return iter([])
-
-    def __getattr__(self, name):
-        return getattr(self.context, name)
-
-    def is_nonterm(self):
-        return False
-
-    def is_term(self):
-        return False
-
-    def to_str(self):
-        def calculate(n, subresults):
-            if isinstance(n, NodeNonTerm):
-                s = '{}[{}->{}]'.format(self.production.symbol,
-                                        self.start_position,
-                                        self.end_position)
-                s += '\n\t'.join(subresults)
-            else:
-                s = '{}[{}->{}, "{}"]'.format(self.symbol,
-                                              self.start_position,
-                                              self.end_position,
-                                              self.value)
-            return s
-        return visitor(self, node_iterator, calculate)
-
-    def to_dot(self):
-        def calculate(n, subresults):
-            if isinstance(n, NodeNonTerm):
-                s = '{}[label="{}"];\n'.format(
-                    id(n),
-                    dot_escape(f'{n.symbol}[{n.start_position}-{n.end_position}]'))
-                s += ''.join(s[1] for s in subresults)
-                s += ''.join(('{}->{};\n'.format(id(n), id(s[0])) for s in subresults))
-            else:
-                s = '{} [label="{}"];\n'\
-                    .format(id(n), dot_escape(f'{n.symbol}({n.value[:10]})'
-                                              f'[{n.start_position}-{n.end_position}]'))
-            return (n, s)
-        return DOT_HEADER + visitor(self, node_iterator, calculate)[1] + '\n}'
-
-
-class NodeNonTerm(Node):
-    __slots__ = ['production', 'children']
-
-    def __init__(self, context, children, production=None):
-        super(NodeNonTerm, self).__init__(context)
-        self.children = children
-        self.production = production
-
-    def to_str(self, depth=0, children=None):
-        indent = '  ' * depth
-        s = '{}[{}->{}]'.format(self.production.symbol,
-                                self.start_position,
-                                self.end_position)
-        children = children or self.children
-        if children:
-            for n in children:
-                if hasattr(n, 'to_str'):
-                    s += '\n' + indent + n.to_str(depth+1)
-                else:
-                    s += '\n' + indent + n.__class__.__name__ \
-                         + '(' + str(n) + ')'
-        return s
-
-    @property
-    def solutions(self):
-        "For SPPF trees"
-        return reduce(lambda x, y: x*y, (c.solutions for c in self.children))
-
-    @property
-    def symbol(self):
-        return self.production.symbol
-
-    def is_nonterm(self):
-        return True
-
-    def __str__(self):
-        return 'NonTerm({}, {}-{})'\
-            .format(self.production.symbol,
-                    self.start_position, self.end_position)
-
-    def __iter__(self):
-        return iter(self.children)
-
-    def __reversed__(self):
-        return reversed(self.children)
-
-
-class NodeTerm(Node):
-    def __init__(self, context, token=None):
-        super(NodeTerm, self).__init__(context)
-        self.token = token
-
-    @property
-    def symbol(self):
-        return self.token.symbol
-
-    @property
-    def value(self):
-        return self.token.value
-
-    @property
-    def additional_data(self):
-        return self.token.additional_data
-
-    @property
-    def solutions(self):
-        "For SPPF trees"
-        return 1
-
-    def to_str(self, depth=0):
-        return '{}[{}->{}, "{}"]'.format(self.symbol,
-                                         self.start_position,
-                                         self.end_position,
-                                         self.value)
-
-    def is_term(self):
-        return True
-
-    def __str__(self):
-        return 'Term({} "{}", {}-{})'\
-            .format(self.symbol, self.value[:20],
-                    self.start_position, self.end_position)
-
-    def __iter__(self):
-        return iter([])
-
-    def __reversed__(self):
-        return iter([])
 
 
 class Token(object):
