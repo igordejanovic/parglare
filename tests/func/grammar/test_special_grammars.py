@@ -2,8 +2,8 @@
 """
 Test non-deterministic parsing.
 """
-import pytest  # noqa
 import sys
+import pytest  # noqa
 from parglare import Parser, GLRParser, Grammar, SLR, LALR
 from parglare.exceptions import ParseError, SRConflicts, RRConflicts, LoopError
 
@@ -204,7 +204,7 @@ def test_highly_ambiguous_grammar():
         Parser(g, prefer_shifts=True)
 
     # GLR parser handles this fine.
-    p = GLRParser(g, build_tree=True)
+    p = GLRParser(g)
 
     # For three tokens we have 3 valid derivations/trees.
     results = p.parse("bbb")
@@ -308,7 +308,7 @@ def test_bounded_direct_ambiguity():
 
     g = Grammar.from_string(grammar)
 
-    p = GLRParser(g, build_tree=True)
+    p = GLRParser(g)
     results = p.parse("txbbbbb")
 
     assert len(results) == 5
@@ -329,10 +329,8 @@ def test_unbounded_ambiguity():
 
     g = Grammar.from_string(grammar)
 
-    p = GLRParser(g, build_tree=True, debug=True)
+    p = GLRParser(g)
     results = p.parse("xbbbbx")
-    for r in results:
-        print(r.to_str())
 
     assert len(results) == 5
 
@@ -355,26 +353,24 @@ def test_g7():
     assert len(results) == 1
 
 
-# def test_g8():
-#     """
-#     This is another interesting ambigous grammar.
+def test_g8():
+    """
+    This is another interesting ambiguous grammar.
 
-#     Grammar G8 from: Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers"
-#     """
-#     grammar = """
-#     S: "x" | B S "b" | A S "b";
-#     B: A A;
-#     A: EMPTY;
-#     """
+    Grammar G8 from: Nozohoor-Farshi, Rahman: "GLR Parsing for ε-Grammers"
+    """
+    grammar = """
+    S: "x" | B S "b" | A S "b";
+    B: A A;
+    A: EMPTY;
+    """
 
-#     g = Grammar.from_string(grammar)
+    g = Grammar.from_string(grammar)
 
-#     p = GLRParser(g, build_tree=True, debug=True)
-#     results = p.parse("xbbbbbbbb")
-#     # for r in results:
-#     #     print(r.to_str())
+    p = GLRParser(g)
+    results = p.parse("xbbb")
 
-#     assert len(results) == 5
+    assert len(results) == 15
 
 
 def test_right_nullable():
@@ -392,7 +388,7 @@ def test_right_nullable():
 
     g = Grammar.from_string(grammar)
 
-    p = GLRParser(g, build_tree=True, debug=True)
+    p = GLRParser(g)
     results = p.parse("aa")
 
     assert len(results) == 1
