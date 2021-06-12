@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 from parglare.exceptions import LoopError
+from parglare import termui as t
 from parglare.termui import s_attention as _a
 
 
@@ -198,6 +199,23 @@ def pos_to_line_col(input_str, position):
     column = position - line_start_pos - 1
 
     return line, column
+
+
+def dot_escape(s):
+    colors = t.colors
+    t.colors = False
+    s = str(s)
+    out = s.replace('\n', r'\n')\
+           .replace('\\', '\\\\')\
+           .replace('"', r'\"')\
+           .replace('|', r'\|')\
+           .replace('{', r'\{')\
+           .replace('}', r'\}')\
+           .replace('>', r'\>')\
+           .replace('<', r'\<')\
+           .replace('?', r'\?')
+    t.colors = colors
+    return out
 
 
 class ErrorContext(object):

@@ -2,14 +2,16 @@
 import io
 import logging
 from functools import reduce
-from .grammar import EMPTY, STOP
-from .tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
-from .exceptions import ParseError, ParserInitError, DisambiguationError, \
-    DynamicDisambiguationConflict, SRConflicts, RRConflicts, \
-    expected_symbols_str
-from .common import Location, position_context, pos_to_line_col, ErrorContext
-from .actions import pass_none
-from .termui import prints, h_print, a_print
+from parglare.grammar import EMPTY, STOP
+from parglare.tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
+from parglare.exceptions import (ParseError, ParserInitError,
+                                 DisambiguationError,
+                                 DynamicDisambiguationConflict, SRConflicts,
+                                 RRConflicts, expected_symbols_str)
+from parglare.common import (Location, position_context, pos_to_line_col,
+                             ErrorContext, dot_escape, visitor)
+from parglare.actions import pass_none
+from parglare.termui import prints, h_print, a_print
 from parglare import termui
 
 
@@ -904,6 +906,29 @@ class LRStackNode(object):
         self.parser.extra = new_value
 
 
+def node_iterator(n):
+    if isinstance(n, NodeNonTerm):
+        return iter(n.children)
+    else:
+        return iter([])
+
+
+DOT_HEADER = '''
+    digraph grammar {
+    rankdir=TD
+    fontname = "Bitstream Vera Sans"
+    fontsize = 8
+    node[
+        style=filled,
+        fillcolor=aliceblue
+    ]
+    nodesep = 0.3
+    edge[dir=black,arrowtail=empty]
+
+
+'''
+
+
 class Node(object):
     """A node of the parse tree."""
 
@@ -929,6 +954,36 @@ class Node(object):
 
     def is_term(self):
         return False
+
+    def to_str(self):
+        def calculate(n, subresults):
+            if isinstance(n, NodeNonTerm):
+                s = '{}[{}->{}]'.format(self.production.symbol,
+                                        self.start_position,
+                                        self.end_position)
+                s += '\n\t'.join(subresults)
+            else:
+                s = '{}[{}->{}, "{}"]'.format(self.symbol,
+                                              self.start_position,
+                                              self.end_position,
+                                              self.value)
+            return s
+        return visitor(self, node_iterator, calculate)
+
+    def to_dot(self):
+        def calculate(n, subresults):
+            if isinstance(n, NodeNonTerm):
+                s = '{}[label="{}"];\n'.format(
+                    id(n),
+                    dot_escape(f'{n.symbol}[{n.start_position}-{n.end_position}]'))
+                s += ''.join(s[1] for s in subresults)
+                s += ''.join(('{}->{};\n'.format(id(n), id(s[0])) for s in subresults))
+            else:
+                s = '{} [label="{}"];\n'\
+                    .format(id(n), dot_escape(f'{n.symbol}({n.value[:10]})'
+                                              f'[{n.start_position}-{n.end_position}]'))
+            return (n, s)
+        return DOT_HEADER + visitor(self, node_iterator, calculate)[1] + '\n}'
 
 
 class NodeNonTerm(Node):

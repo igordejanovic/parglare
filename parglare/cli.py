@@ -49,8 +49,9 @@ def compile(ctx, grammar_file):
 @click.option('--input', '-i', help="Input string to parse")
 @click.option('--glr', '-g', default=False, is_flag=True, help="Parse with GLR")
 @click.option('--recovery', '-r', default=False, is_flag=True, help="Use error recovery")
+@click.option('--dot', default=False, is_flag=True, help="Export tree/forest to dot file")
 @click.pass_context
-def parse(ctx, grammar_file, input_file, input, glr, recovery):
+def parse(ctx, grammar_file, input_file, input, glr, recovery, dot):
     if not (input_file or input):
         prints('Expected either input_file or input string.')
         sys.exit(1)
@@ -65,7 +66,7 @@ def parse(ctx, grammar_file, input_file, input, glr, recovery):
                            prefer_shifts=prefer_shifts,
                            prefer_shifts_over_empty=prefer_shifts_over_empty)
     else:
-        parser = Parser(grammar, debug=False, debug_colors=colors,
+        parser = Parser(grammar, build_tree=True, debug=False, debug_colors=colors,
                         error_recovery=recovery,
                         prefer_shifts=prefer_shifts,
                         prefer_shifts_over_empty=prefer_shifts_over_empty)
@@ -91,6 +92,12 @@ def parse(ctx, grammar_file, input_file, input, glr, recovery):
         print('Printing the parse tree:\n')
 
     print(result.to_str())
+
+    if dot:
+        f_name = 'forest.dot' if glr and result.solutions > 1 else 'tree.dot'
+        with open(f_name, 'w') as f:
+            f.write(result.to_dot())
+        print('Created dot file ', f_name)
 
 
 @pglr.command()

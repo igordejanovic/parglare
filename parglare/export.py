@@ -1,6 +1,6 @@
 from parglare.parser import REDUCE, SHIFT
 import io
-from parglare import termui as t
+from parglare.common import dot_escape
 
 
 HEADER = '''
@@ -18,23 +18,6 @@ HEADER = '''
 
 
 '''
-
-
-def dot_escape(s):
-    colors = t.colors
-    t.colors = False
-    s = str(s)
-    out = s.replace('\n', r'\n')\
-           .replace('\\', '\\\\')\
-           .replace('"', r'\"')\
-           .replace('|', r'\|')\
-           .replace('{', r'\{')\
-           .replace('}', r'\}')\
-           .replace('>', r'\>')\
-           .replace('<', r'\<')\
-           .replace('?', r'\?')
-    t.colors = colors
-    return out
 
 
 def grammar_pda_export(table, file_name):

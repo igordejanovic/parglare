@@ -968,7 +968,7 @@ class Tree:
     def _enumerate_children(self, counter):
         children = []
         # Calculate counter division based on weighted numbering system.
-        # Basically, enumerating variation of children solutions.
+        # Basically, enumerating variations of children solutions.
         weights = [c.solutions for c in self.root.children]
         for idx, c in enumerate(self.root.children):
             factor = reduce(lambda x, y: x*y, weights[idx+1:], 1)
@@ -1054,6 +1054,9 @@ class Forest:
 
     def to_str(self):
         return self.result.to_str()
+
+    def to_dot(self):
+        return self.result.to_dot()
 
     def __len__(self):
         return self.solutions
