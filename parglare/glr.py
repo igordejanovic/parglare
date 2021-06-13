@@ -6,7 +6,7 @@ from parglare import Parser
 from parglare import termui as t
 from parglare.parser import SHIFT, REDUCE, pos_to_line_col, Token
 from parglare.common import replace_newlines as _, position_context, dot_escape
-from parglare.trees import visitor, Forest, NodeNonTerm, NodeTerm
+from parglare.trees import visitor, to_str, to_dot, Forest, NodeNonTerm, NodeTerm
 from parglare.termui import prints, h_print, a_print
 
 
@@ -792,16 +792,17 @@ class Parent:
     def __repr__(self):
         return str(self)
 
-    def to_str(self, depth=0):
-        if self.ambiguity > 1:
-            indent = '  ' * depth
-            s = f'{self.head.symbol} - ambiguity[{self.ambiguity}]'
-            for idx, p in enumerate(self.possibilities):
-                s += f'\n{indent}{idx+1}:' + p.to_str(depth+2)
+    def to_str(self):
+        if len(self.possibilities) == 1:
+            return to_str(self.possibilities[0])
         else:
-            s = self.possibilities[0].to_str(depth+1)
+            return to_str(self)
 
-        return s
+    def to_dot(self, positions=True):
+        if len(self.possibilities) == 1:
+            return to_dot(self.possibilities[0], positions)
+        else:
+            return to_dot(self, positions)
 
 
 class GSSNode(object):

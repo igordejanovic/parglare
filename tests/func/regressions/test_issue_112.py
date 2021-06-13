@@ -34,20 +34,19 @@ def test_issue_112_fail_on_empty():
 
     expected = r'''
 sentence1[0->28]
-subordinateClause_0[0->0]
-clause[0->22]
-  singleNounPhrase_0[0->8]
-    singleNounPhrase_1[0->8]
-      singleNounPhrase[0->8]
-        determiner_opt[0->0]
-        simpleNoun[0->8, "자전거:NNG;"]
-  verbPhrase[9->22]
-    simpleVerb[9->14, "있:VV;"]
-    verbSuffix_0[15->15]
-    predicateEndingSuffix_opt[15->22]
-      predicateEndingSuffix[15->22, "어요:SEF;"]
-sentenceEnd[23->28, ".:SF;"]
-
+  subordinateClause_0[0->0]
+  clause[0->22]
+    singleNounPhrase_0[0->8]
+      singleNounPhrase_1[0->8]
+        singleNounPhrase[0->8]
+          determiner_opt[0->0]
+          simpleNoun[0->8, "자전거:NNG;"]
+    verbPhrase[9->22]
+      simpleVerb[9->14, "있:VV;"]
+      verbSuffix_0[15->15]
+      predicateEndingSuffix_opt[15->22]
+        predicateEndingSuffix[15->22, "어요:SEF;"]
+  sentenceEnd[23->28, ".:SF;"]
 '''
 
     assert len(results) == 1

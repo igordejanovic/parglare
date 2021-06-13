@@ -9,22 +9,88 @@ DOT_HEADER = '''
     rankdir=TD
     fontname = "Bitstream Vera Sans"
     fontsize = 8
-    node[
-        style=filled,
-        fillcolor=aliceblue
-    ]
-    nodesep = 0.3
-    edge[dir=black,arrowtail=empty]
-
+    nodesep = 0.2
+    edge[dir=black,arrowtail=empty, fontsize=6 arrowsize=.5 penwidth=0.7]
+    node[shape=plain height=0.1 width=0.1]
 
 '''
 
 
-def node_iterator(n):
-    if isinstance(n, NodeNonTerm):
-        return iter(n.children)
-    else:
+def tree_node_iterator(n):
+    """
+    Iterator for forests and trees nodes. Used in visitors.
+    """
+    from parglare.glr import Parent
+    if isinstance(n, Parent):
+        return iter(n.possibilities)
+    elif n.is_term():
         return iter([])
+    else:
+        def _iter():
+            for i in n.children:
+                if isinstance(i, Parent) and len(i.possibilities) == 1:
+                    yield i.possibilities[0]
+                else:
+                    yield i
+        return _iter()
+
+
+def to_str(root):
+    from parglare.glr import Parent
+
+    def visit(n, subresults):
+        if isinstance(n, Parent):
+            s = f'{n.head.symbol} - ambiguity[{n.ambiguity}]'
+            for idx, p in enumerate(subresults):
+                s += f'\n{idx+1}:' + p
+        elif n.is_nonterm():
+            s = '{}[{}->{}]'.format(n.production.symbol,
+                                    n.start_position,
+                                    n.end_position)
+            if subresults:
+                s += '\n  ' + '\n'.join(subresults).replace('\n', '\n  ')
+        else:
+            s = '{}[{}->{}, "{}"]'.format(n.symbol,
+                                          n.start_position,
+                                          n.end_position,
+                                          n.value)
+        return s
+    return visitor(root, tree_node_iterator, visit)
+
+
+def to_dot(self, positions=True):
+    from parglare.glr import Parent
+    rendered = set()
+    terminals = []
+
+    def visit(n, subresults):
+        sub_str = ''.join(s[1] for s in subresults if id(s[1]) not in rendered)
+        rendered.update((id(s[1]) for s in subresults))
+        pos = f'[{n.start_position}-{n.end_position}]' if positions else ''
+        if isinstance(n, Parent):
+            s = '{}[label="Amb({},{})" shape=box];\n'.format(
+                id(n),
+                dot_escape(f'{n.head.symbol}{pos}'), n.ambiguity)
+            s += sub_str
+            s += ''.join(('{}->{};\n'.format(id(n), id(s[0])) for s in subresults))
+        elif n.is_nonterm():
+            s = '{}[label="{}"];\n'.format(
+                id(n),
+                dot_escape(f'{n.symbol}{pos}'))
+            s += sub_str
+            s += ''.join(('{}->{}[label="{}"];\n'.format(id(n), id(s[0]), idx+1)
+                          for idx, s in enumerate(subresults)))
+        else:
+            terminals.append(n)
+            label = f'{n.symbol}({n.value[:10]})' \
+                if n.symbol.name != n.value else n.symbol.name
+            s = '{} [label="{}"];\n'\
+                .format(id(n), dot_escape(f'{label}{pos}'))
+        return (n, s)
+    return '{}\n{}\n{}\n}}\n'.format(
+        DOT_HEADER,
+        visitor(self, tree_node_iterator, visit)[1],
+        '{{rank=same {} [style=invis]}}'.format('->'.join(str(id(t)) for t in terminals)))
 
 
 class Node(object):
@@ -54,34 +120,10 @@ class Node(object):
         return False
 
     def to_str(self):
-        def calculate(n, subresults):
-            if isinstance(n, NodeNonTerm):
-                s = '{}[{}->{}]'.format(self.production.symbol,
-                                        self.start_position,
-                                        self.end_position)
-                s += '\n\t'.join(subresults)
-            else:
-                s = '{}[{}->{}, "{}"]'.format(self.symbol,
-                                              self.start_position,
-                                              self.end_position,
-                                              self.value)
-            return s
-        return visitor(self, node_iterator, calculate)
+        return to_str(self)
 
-    def to_dot(self):
-        def calculate(n, subresults):
-            if isinstance(n, NodeNonTerm):
-                s = '{}[label="{}"];\n'.format(
-                    id(n),
-                    dot_escape(f'{n.symbol}[{n.start_position}-{n.end_position}]'))
-                s += ''.join(s[1] for s in subresults)
-                s += ''.join(('{}->{};\n'.format(id(n), id(s[0])) for s in subresults))
-            else:
-                s = '{} [label="{}"];\n'\
-                    .format(id(n), dot_escape(f'{n.symbol}({n.value[:10]})'
-                                              f'[{n.start_position}-{n.end_position}]'))
-            return (n, s)
-        return DOT_HEADER + visitor(self, node_iterator, calculate)[1] + '\n}'
+    def to_dot(self, positions=True):
+        return to_dot(self, positions)
 
 
 class NodeNonTerm(Node):
@@ -91,21 +133,6 @@ class NodeNonTerm(Node):
         super(NodeNonTerm, self).__init__(context)
         self.children = children
         self.production = production
-
-    def to_str(self, depth=0, children=None):
-        indent = '  ' * depth
-        s = '{}[{}->{}]'.format(self.production.symbol,
-                                self.start_position,
-                                self.end_position)
-        children = children or self.children
-        if children:
-            for n in children:
-                if hasattr(n, 'to_str'):
-                    s += '\n' + indent + n.to_str(depth+1)
-                else:
-                    s += '\n' + indent + n.__class__.__name__ \
-                         + '(' + str(n) + ')'
-        return s
 
     @property
     def solutions(self):
@@ -152,12 +179,6 @@ class NodeTerm(Node):
     def solutions(self):
         "For SPPF trees"
         return 1
-
-    def to_str(self, depth=0):
-        return '{}[{}->{}, "{}"]'.format(self.symbol,
-                                         self.start_position,
-                                         self.end_position,
-                                         self.value)
 
     def is_term(self):
         return True
@@ -209,11 +230,11 @@ class Tree:
             children.append(self.__class__(c, new_counter))
         return children
 
-    def to_str(self, depth=0):
-        if self.root.is_nonterm():
-            return self.root.to_str(depth, self.children)
-        else:
-            return self.root.to_str(depth)
+    def to_str(self):
+        return to_str(self)
+
+    def to_dot(self, positions=True):
+        return to_dot(self, positions)
 
     def __iter__(self):
         return iter(self.children or [])
@@ -287,8 +308,8 @@ class Forest:
     def to_str(self):
         return self.result.to_str()
 
-    def to_dot(self):
-        return self.result.to_dot()
+    def to_dot(self, positions=True):
+        return self.result.to_dot(positions)
 
     def __len__(self):
         return self.solutions

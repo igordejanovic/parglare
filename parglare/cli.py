@@ -50,8 +50,10 @@ def compile(ctx, grammar_file):
 @click.option('--glr', '-g', default=False, is_flag=True, help="Parse with GLR")
 @click.option('--recovery', '-r', default=False, is_flag=True, help="Use error recovery")
 @click.option('--dot', default=False, is_flag=True, help="Export tree/forest to dot file")
+@click.option('--positions', default=False, is_flag=True,
+              help="Render node positions in dot export")
 @click.pass_context
-def parse(ctx, grammar_file, input_file, input, glr, recovery, dot):
+def parse(ctx, grammar_file, input_file, input, glr, recovery, dot, positions):
     if not (input_file or input):
         prints('Expected either input_file or input string.')
         sys.exit(1)
@@ -96,7 +98,7 @@ def parse(ctx, grammar_file, input_file, input, glr, recovery, dot):
     if dot:
         f_name = 'forest.dot' if glr and result.solutions > 1 else 'tree.dot'
         with open(f_name, 'w') as f:
-            f.write(result.to_dot())
+            f.write(result.to_dot(positions))
         print('Created dot file ', f_name)
 
 

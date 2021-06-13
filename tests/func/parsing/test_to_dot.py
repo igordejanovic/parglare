@@ -4,7 +4,7 @@ from parglare import Parser, GLRParser, Grammar
 from ..grammar.expression_grammar import get_grammar
 
 
-def test_to_str():
+def test_to_dot():
 
     grammar = get_grammar()
     p = Parser(grammar, build_tree=True)
@@ -13,14 +13,13 @@ def test_to_str():
     +id  )
     """)
 
-    ts = res.to_str()
+    ts = res.to_dot()
 
-    assert '+[18->19, "+"]' in ts
-    assert ')[23->24, ")"]' in ts
-    assert 'F[10->24]' in ts
+    assert '[label="T[11-13]"];' in ts
+    assert '[label="+[2-3]"];' in ts
 
 
-def test_forest_to_str():
+def test_forest_to_dot():
 
     grammar = Grammar.from_string(r'''
     E: E "+" E | E "-" E | "(" E ")" | "id";
@@ -31,9 +30,8 @@ def test_forest_to_str():
     +id  )
     """)
 
-    ts = forest.to_str()
+    ts = forest.to_dot()
 
-    assert 'E - ambiguity[2]' in ts
-    assert 'E[10->24]' in ts
-    assert '      E[11->21]' in ts
-    assert '        +[18->19, "+"]' in ts
+    assert '[label="+[18-19]"];' in ts
+    assert '[label="E[5-7]"];' in ts
+    assert '[label="Amb(E[0-24],2)" shape=box];' in ts
