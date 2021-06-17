@@ -19,9 +19,28 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+This release brings multiple new features and improvements. Read the [Release
+Notes](http://www.igordejanovic.net/parglare/latest/release_notes/release_0_14/)
+for more info.
+
+### Added
+  - `pglr parse` for parsing files and displaying parse trees and forests.
+  - `pglr trace --frontier` for organizing GSS nodes for GLR trace into
+    frontiers (a.k.a. shift levels)
+  - `to_dot` on trees and forests for rendering GraphViz dot string. Used in
+    `pglr parse` if `--dot` switch is provided to create dot file of a parse
+    forest/tree.
+  - Parenthesized groups in grammar rules.
+  - New examples: JSON, BibTeX, Java (based on Jave SE 16).
+  - New performance tests based on the new example grammars.
+
 ### Changed
 
-  - Dropping support for deprecated Python 3.4 and 3.5 versions.
+  - Changed `tree_str` on parse trees to `to_str`. (**BIC**)
+  - Improved GLR implementation. Improved performance.
+  - GLR parsing now returns `Forest` object which can be indexed and iterated
+    yielding lazy trees. See Release Notes for more info. (**BIC**)
+  - Dropping support for deprecated Python 3.4 and 3.5 versions. (**BIC**)
 
 
 ## [0.13.0] (released: 2021-02-04)
