@@ -124,6 +124,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
     follow_sets = follow(grammar, first_sets)
 
+    _old_start_production_rhs = grammar.productions[0].rhs
     start_prod_symbol = grammar.productions[start_production].symbol
     grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
 
@@ -348,6 +349,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                                          if x.action is not REDUCE]
                                     actions[terminal].append(new_reduce)
 
+    grammar.productions[0].rhs = _old_start_production_rhs
     table = LRTable(states, **kwargs)
     return table
 

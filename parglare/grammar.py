@@ -1537,15 +1537,14 @@ def act_production_rules(_, nodes):
 
 
 def act_production_rule_with_action(_, nodes):
+    productions, group_productions = nodes[-1]
     if len(nodes) > 1:
-        action_name, productions = nodes
+        action_name = nodes[0]
         # Strip @ char
         action_name = action_name[1:]
         for p in productions:
             p.symbol.action_name = action_name
-    else:
-        productions = nodes[0]
-
+    productions.extend(group_productions)
     return productions
 
 
@@ -1560,7 +1559,8 @@ def act_production_rule(context, nodes):
 
     check_name(context, name)
 
-    prods = []
+    prods = _create_prods(context, rhs_prods, name, rule_meta_datas)
+    group_prods = []
     if context.extra.groups:
         counter = context.extra.groups_counter
         while context.extra.groups:
@@ -1568,10 +1568,9 @@ def act_production_rule(context, nodes):
             gname = f'{name}_g{counter[name] + 1}'
             ref.name = gname
             counter[name] += 1
-            prods.extend(_create_prods(context, gprods, gname, rule_meta_datas))
-    prods.extend(_create_prods(context, rhs_prods, name, rule_meta_datas))
+            group_prods.extend(_create_prods(context, gprods, gname, rule_meta_datas))
 
-    return prods
+    return prods, group_prods
 
 
 def _create_prods(context, rhs_prods, name, rule_meta_datas):
@@ -1707,7 +1706,7 @@ def act_production_group(context, nodes):
     # Group name will be known when the grammar rule is
     # reduced so store these production for later.
     productions = nodes[1]
-    reference = Reference(Location(context), None)
+    reference = Reference(Location(context), 'resolving')
     context.extra.groups.append((reference, productions))
     return reference
 

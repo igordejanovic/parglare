@@ -792,6 +792,9 @@ class Parent:
     def __repr__(self):
         return str(self)
 
+    def __getattr__(self, attr):
+        return getattr(self.head, attr)
+
     def to_str(self):
         if len(self.possibilities) == 1:
             return to_str(self.possibilities[0])
