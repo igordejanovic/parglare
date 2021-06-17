@@ -21,6 +21,7 @@ Options:
 
 Commands:
   compile
+  parse
   trace
   viz
 ```
@@ -151,17 +152,16 @@ Generating 'calc.pg.dot' file for the grammar PDA.
 Use dot viewer (e.g. xdot) or convert to pdf by running 'dot -Tpdf -O calc.pg.dot'
 ```
 
-As given in the output you will get a `dot` file which represents LR automata
+As given in the output you will get a `dot` file which represents LR automaton
 visualization. You can see this diagram using dot viewers (e.g.
 [xdot](https://github.com/jrfonseca/xdot.py)) or you can transform it to other
 file formats using the `dot` tool (you'll have to install Graphviz software for
 that).
 
-This is an example of LR automata visualization for the `calc` grammar from the
+This is an example of LR automaton visualization for the `calc` grammar from the
 quick intro (click on the image to enlarge):
 
 [![Calc LR automata](./images/calc.pg.dot.png)](./images/calc.pg.dot.png)
-
 
 
 ## Tracing GLR parsing
@@ -179,6 +179,7 @@ Usage: pglr trace [OPTIONS] GRAMMAR_FILE
 Options:
   -f, --input-file PATH  Input file for tracing
   -i, --input TEXT       Input string for tracing
+  -r, --frontiers        Align GSS nodes into frontiers (token levels)
   --help                 Show this message and exit.
 ```
 
@@ -188,7 +189,7 @@ command (`-i`), but not both.
 To run the GLR trace for the calc grammar and some input:
 
 ```bash
-$ pglr trace calc.pg -i "2 + 3 * 5"
+$ pglr trace calc.pg --frontiers -i "2 + 3 * 5"
 ```
 
 The `-i` switch tells the command to treat the last parameter as the input
@@ -198,7 +199,7 @@ string to parse.
 !!! tip
 
     Since the GSS can be quite large and complex for larger inputs the advice is
-    to use a minimal input that will exibit the intended behaviour for a
+    to use a minimal input that will exhibit the intended behavior for a
     visualization to be usable.
 
 
@@ -211,8 +212,18 @@ if input is given on command line or `<input_file_name>_trace.dot` if input is
 given as a file. The `dot` file can be visualized using dot viewers or
 transformed to other file formats using the `dot` tool.
 
-For the command above, GLR trace visualization will be (click on the image to
-enlarge):
+If `--frontiers` flag is given the GSS nodes will be organized in frontiers from
+left to right.
+
+For the command above and grammar (file `calc.pg`)
+
+```nohiglight
+E: E "+" E | E "*" E | number;
+terminals
+number: /\d+/;
+```
+
+GLR trace visualization will be (click on the image to enlarge):
 
 [![Calc GLR trace](./images/calc_trace.dot.png)](./images/calc_trace.dot.png)
 
@@ -222,11 +233,10 @@ consecutively. After the ordinal number is the action (either **S**-Shift or
 For reduction a production is given and the resulting head will have a parent
 node closer to the beginning.
 
-Black solid arrows are the links to the parent node in the GSS.
-
-There are also dotted orange arrows (not shown in this example) that shows dropped
-empty reductions. Dropping happens when parser has found a better solution (i.e. a
-solution with fewer empty reductions).
+Black solid arrows are the links to the parent node in the GSS. The number at
+these links represents the ambiguity i.e. the number of different derivation. We
+can see that in this example we have two solutions as we haven't provided the
+priority of operations.
 
 
 !!! tip
@@ -234,3 +244,54 @@ solution with fewer empty reductions).
     To produce GLR parser visual trace from code your must [put the parser in
     debug mode](./debugging.md) by setting `debug` to `True` and enable visual
     tracing by setting `debug_trace` to `True`.
+
+
+## Parsing inputs
+
+You can use `pglr` command to parse input strings and file and produce parse
+forests/trees.
+
+For example:
+
+```nohiglight
+$ pglr parse calc.pg -i "1 + 2 * 3" --glr --dot 
+Solutions:2
+Ambiguities:1
+Printing the forest:
+
+E - ambiguity[2]
+1:E[0->9]
+  E[0->5]
+    E[0->1]
+      number[0->1, "1"]
+    +[2->3, "+"]
+    E[4->5]
+      number[4->5, "2"]
+  *[6->7, "*"]
+  E[8->9]
+    number[8->9, "3"]
+2:E[0->9]
+  E[0->1]
+    number[0->1, "1"]
+  +[2->3, "+"]
+  E[4->9]
+    E[4->5]
+      number[4->5, "2"]
+    *[6->7, "*"]
+    E[8->9]
+      number[8->9, "3"]
+Created dot file  forest.dot
+
+```
+
+We provided `--glr` switch to put he parser in GLR mode and `--dot` switch to produce graphical visualization of the parse forest.
+
+We see that this input has 2 solutions and 1 ambiguity. The ambiguity is
+indicated in the parse tree as `E - ambiguity[2]` telling us that the `E` symbol
+is ambiguous at this level with 2 different interpretations (`1:` and `2:` bellow).
+
+
+We can see also that `forest.dot` is provided which looks like this:
+
+
+[![Calc GLR forest](./images/calc_forest.dot.png)](./images/calc_forest.dot.png)

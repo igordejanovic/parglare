@@ -472,6 +472,58 @@ Same as `one or more` this operator may use separator modifiers.
     matched `a` and empty list if no match is found.
 
 
+### Parenthesized groups
+
+You can use parenthesized groups at any place you can use a rule reference. For example:
+
+```nohighlight
+S: a (b* a {left} | b);
+terminals
+a: "a";
+b: "b";
+```
+
+Here, you can see that `S` will match `a` and then either `b* a` or `b`. You can
+also see that [meta-data](#user-meta-data) can be applied at a per-sequence
+level (in this case `{left}` applies to sequence `b* a`).
+
+Here is a more complex example which uses repetitions, separators, assignments
+and nested groups.
+
+```nohighlight
+S: (b c)*[comma];
+S: (b c)*[comma] a=(a+ (b | c)*)+[comma];
+terminals
+a: "a";
+b: "b";
+c: "c";
+comma: ",";
+```
+
+!!! note
+
+    Syntax equivalence `parenthesized groups`:
+
+        S: c (b* c {left} | b);
+        terminals
+        c: "c";
+        b: "b";
+
+    is equivalent to:
+
+        S: c S_g1;
+        S_g1: b_0 c {left} | b;
+        b_0: b_1 | EMPTY;
+        b_1: b_1 b | b;
+        terminals
+        c: "c";
+        b: "b";
+
+    So using parenthesized groups creates additional `_g<n>` rules (`S_g1` in the
+    example), where `n` is a unique number per rule starting from `1`. All other
+    syntactic sugar elements applied to groups behave as expected.
+
+
 ## `EMPTY` built-in rule
 
 There is a special `EMPTY` rule you can reference in your grammars. `EMPTY` rule

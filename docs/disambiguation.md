@@ -444,5 +444,5 @@ with pytest.raises(ParseError):
 
 !!! tip
 
-    See the end of [the parse trees section](parse_trees.md) for a tip on how to
+    See the end of [the parse trees section](parse_forest_trees.md) for a tip on how to
     investigate ambiguities in GLR parsing.

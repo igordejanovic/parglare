@@ -5,10 +5,17 @@ Actions (a.k.a. _semantic actions_ or _reductions actions_) are Python callables
 to some higher concept. E.g. in the calc example actions are called to calculate
 sub-expressions.
 
+!!! note
+
+    LR parser can call the actions during parsing. GLR parser always build the parse
+    forest and the actions can be called afterwards on a chosen tree with
+    `parser.call_actions`.
+
 There are two consideration to think of:
 
 - Which actions are called?
 - When actions are called?
+
 
 ## Custom actions and built-in actions
 
@@ -16,7 +23,7 @@ If you don't provide actions of your own the parser will return nested list
 corresponding to your grammar. Each non-terminal result in a list of evaluated
 sub-expression while each terminal result in the matched string. If the parser
 parameter `build_tree` is set to `True` the parser will build [a parse
-tree](./parse_trees.md).
+tree](./parse_forest_trees.md#parse-trees).
 
 Custom actions are provided to the parser during parser instantiation as
 `actions` parameter which must be a Python dict where the keys are the names of
@@ -94,9 +101,9 @@ element of the `nodes` parameter in calling actions higher in the hierarchy.
 If we don't provide `actions`, by default parglare will return a matched string
 for each terminal and a list of sub-expressions for each non-terminal
 effectively producing nested lists. If we set `build_tree` parameter of the
-parser to `True` the parser will produce a [parse tree](./parse_trees.md) whose
-elements are instances of `NodeNonTerm` and `NodeTerm` classes representing a
-non-terminals and terminals respectively.
+parser to `True` the parser will produce a [parse tree](./parse_forest_trees.md)
+whose elements are instances of `NodeNonTerm` and `NodeTerm` classes
+representing a non-terminals and terminals respectively.
 
 
 ## `action` decorator
@@ -151,18 +158,15 @@ definition. Dictionary holding all actions for the created action decorator is
 
 ## Time of actions call
 
+!!! note
+
+    This applies for LR parsing only. GLR parser always build a forest and actions
+    are called afterwards with `parser.call_actions`.
+
 In parglare actions can be called during parsing (i.e. on the fly) which you
 could use if you want to transform input immediately without building the parse
 tree. But there are times when you would like to build a tree first and call
-actions afterwards. For example, a very good reason is if you are using GLR and
-you want to be sure that actions are called only on the final tree.
-
-!!! warning
-
-    If you are using GLR be sure that your actions has no side-effects, as the
-    dying parsers will left those side-effects behind leading to unpredictable
-    behaviour. In case of doubt create trees first, choose the right one and
-    call actions afterwards with the `call_actions` parser method.
+actions afterwards.
 
 To get the tree and call actions afterwards you supply `actions` parameter to
 the parser as usual and set `build_tree` to `True`. When the parser finishes

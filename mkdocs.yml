@@ -22,10 +22,12 @@ nav:
   - Modularization: grammar_modularization.md
   - LR parsing and conflicts: lr_parsing.md
   - Disambiguation: disambiguation.md
-  - Parse trees: parse_trees.md
+  - Parse forest/trees: parse_forest_trees.md
   - Handling errors: handling_errors.md
   - pglr command: pglr.md
   - Debugging: debugging.md
+- Release Notes:
+  - 0.14: release_notes/release_0_14.md
 - About:
   - Contributing: about/CONTRIBUTING.md
   - License: about/LICENSE.md

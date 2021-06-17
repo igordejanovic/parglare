@@ -108,9 +108,10 @@ You can return more than one additional element. Essentially if a tuple is
 returned by the recognizer, the first element has to be matched input while the
 rest is additional data.
 
-If you are building [parse tree](./parse_trees.md), additional information
-returned by recognizers is kept on `NodeTerm` (and `Token`) as `additional_data`
-attribute which is a list of all additional info returned by the recognizer.
+If you are building [parse tree](./parse_forest_trees.md#parse-trees), additional
+information returned by recognizers is kept on `NodeTerm` (and `Token`) as
+`additional_data` attribute which is a list of all additional info returned by
+the recognizer.
 
 
 !!! tip
