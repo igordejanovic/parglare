@@ -1,6 +1,6 @@
 # Release notes for 0.14
 
-## Parenthesed groups
+## Parenthesized groups
 
 RHS in grammar rules now can used parentheses to group element. These groups
 behave similar to any other rule reference. E.g. repetitions and assignments can
