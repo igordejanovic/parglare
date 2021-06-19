@@ -9,7 +9,7 @@
   <meta name="author" content="Igor Dejanović">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Parse trees - parglare</title>
+  <title>Parse forest/trees - parglare</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -20,8 +20,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Parse trees";
-    var mkdocs_page_input_path = "parse_trees.md";
+    var mkdocs_page_name = "Parse forest/trees";
+    var mkdocs_page_input_path = "parse_forest_trees.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -85,7 +85,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Parse trees</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Parse forest/trees</a>
     <ul class="current">
     </ul>
                     </li>
@@ -94,6 +94,11 @@
                     <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Release Notes</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -128,10 +133,10 @@
         
       
     
-    <li>Parse trees</li>
+    <li>Parse forest/trees</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/parse_trees.md"
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/parse_forest_trees.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -142,11 +147,61 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="parse-trees">Parse trees<a class="headerlink" href="#parse-trees" title="Permanent link">&para;</a></h1>
-<p>During shift/reduce operations parser will call <a href="../actions/">actions</a>. If
-<code>build_tree</code> parser constructor parameter is set to <code>True</code> the default actions
-for building parse tree nodes will be called. In the case of GLR parser multiple
-trees can be built simultaneously (the parse forest).</p>
+                <h1 id="glr-forest">GLR forest<a class="headerlink" href="#glr-forest" title="Permanent link">&para;</a></h1>
+<p>The GLR parser returns the parse forest (<code>Forest</code> object). The forest is created
+in an efficient way to store all the possible solutions without exponential
+explosion. This structure is called <em>Shared Packed Parse Forest</em> (SPPF).</p>
+<p>The forest is iterable and indexable structure.</p>
+<p>For example:</p>
+<pre><code class="language-python">forest = GLRParser(grammar).parse(some_input)
+
+for tree in forest:
+  ... do something
+
+tree = forest[3]
+
+# To get the number of trees/solutions
+print(len(forest))
+
+# or
+print(forest.solutions)
+
+# To get the total number of ambiguities in the forest.
+print(forest.ambiguities)
+
+</code></pre>
+<p>Forest trees are lazily constructed during iteration and accessing of tree
+nodes.</p>
+<p>Both forest and parse trees have <code>to_str</code> and <code>to_dot</code> methods to render as
+string/dot.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can use <code>to_str()</code> on the forest get the string representation with all
+ambiguities indicated. This can be used to analyze ambiguity. For example:</p>
+<pre><code>parser = GLRParser(g)
+forest = parser.parse_file('some_file')
+with open('forest.txt', 'w') as f:
+  f.write(forest.to_str())
+</code></pre>
+<p>This can also be done with <code>pglr parse</code> command.</p>
+<p>Another option is to use <code>to_str()</code> on individual trees and then use diffing
+tool to compare.</p>
+<p>For example:</p>
+<pre><code>parser = GLRParser(g)
+forest = parser.parse_file('some_file')
+for idx, tree in enumerate(forest):
+    with open(f'tree_{idx:03d}.txt', 'w') as f:
+        f.write(tree.to_str())
+</code></pre>
+<p>Now you can run any diff tool on the produced outputs to see where are the ambiguities:</p>
+<pre><code>$ meld tree_000.txt tree_001.txt
+</code></pre>
+<p>For smaller inputs you can also use <code>to_dot</code> to display a forest/tree as a graph.</p>
+</div>
+<h1 id="parse-trees">Parse trees<a class="headerlink" href="#parse-trees" title="Permanent link">&para;</a></h1>
+<p>Parse trees are produced by GLR parse forest.</p>
+<p>Parse trees are also returned by the LR parser if <code>build_tree</code> parser
+constructor parameter is set to <code>True</code>.</p>
 <p>The nodes of parse trees are instances of either <code>NodeTerm</code> for terminal nodes
 (leafs of the tree) or <code>NodeNonTerm</code> for non-terminal nodes (intermediate
 nodes).</p>
@@ -192,12 +247,12 @@ nodes).</p>
 <p><code>production</code> - a grammar production whose reduction created this node.</p>
 </li>
 </ul>
-<p>Each node has a <code>tree_str()</code> method which will return a string representation of
+<p>Each node has a <code>to_str()</code> method which will return a string representation of
 the sub-tree starting from the given node. If called on a root node it will
 return the string representation of the whole tree.</p>
 <p>For example, parsing the input <code>1 + 2 * 3 - 1</code> with the expression grammar from
 the quick start will look like this if printed
-with <code>tree_str()</code>:</p>
+with <code>to_str()</code>:</p>
 <pre><code>E[0]
 E[0]
   E[0]
@@ -213,24 +268,31 @@ E[0]
 E[11]
   number[11, 1]
 </code></pre>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>You can use <code>tree_str()</code> on the root of the parse tree to get the string
-representation of the parse tree. This can be handy to compare multiple
-trees returned by GLR parser to analyze ambiguity.</p>
-<p>For example:</p>
-<pre><code># Here we have GLR parser which returns multiple parse trees due to ambiguity.
-# It is important to turn on tree building.
-parser = GLRParser(g, build_tree=True)
-trees = parser.parse_file('some_file')
-for idx, tree in enumerate(trees):
-    with open(f'tree_{idx:03d}.txt', 'w') as f:
-        f.write(tree.tree_str())
+<h1 id="visitor">Visitor<a class="headerlink" href="#visitor" title="Permanent link">&para;</a></h1>
+<p>A <code>visitor</code> function is provided for depth-first processing of a tree-like
+structures (actually can be applied to graphs also).</p>
+<p>The signature of <code>visitor</code> is:</p>
+<pre><code class="language-python">def visitor(root, iterator, visit, memoize=True, check_cycle=False):
+
 </code></pre>
-<p>Now you can run any diff tool on the produced outputs to see where are the ambiguities:</p>
-<pre><code>$ meld tree_000.txt tree_001.txt
-</code></pre>
-</div>
+<p>Where:</p>
+<ul>
+<li><code>root</code> is the root element of the structure to process</li>
+<li><code>iterator</code> iterator is a callable that should return an iterator for the given
+  element yielding the next elements to process. E.g. for a tree node iterator
+  callable should return an iterator yielding children nodes.</li>
+<li><code>visit</code> is a function called when the node is visited. It results will be
+  passed into visitors higher in the hierarchy (thus enabling bottom-up
+  processing). <code>visit</code> function should accept a node and sub-results from
+  lower-level visitors.</li>
+<li><code>memoize</code> - Should results be cached. Handy for direct acyclic graphs if we
+  want to prevent multiple calculation of the same sub-graph.</li>
+<li><code>check_cycle</code> - If set to <code>True</code> will prevent traversing of cyclic structure
+  by keeping cache of already visited nodes and throwing <code>LoopError</code> if cycle is
+  detected.</li>
+</ul>
+<p><code>visitor</code> is used internally by parglare so the best place to see how it is used
+is the parglare code itself.</p>
               
             </div>
           </div>

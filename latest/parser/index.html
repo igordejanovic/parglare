@@ -115,13 +115,18 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../parse_trees/">Parse trees</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Release Notes</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -194,12 +199,12 @@ sub-grammar</a>
 it is used instead and this parameter is ignored.</p>
 <h2 id="build_tree">build_tree<a class="headerlink" href="#build_tree" title="Permanent link">&para;</a></h2>
 <p>A boolean whose default value is <code>False</code>. If set to <code>True</code> parser will call
-implicit actions that will build the <a href="../parse_trees/">parse tree</a>.</p>
+implicit actions that will build the <a href="../parse_forest_trees/">parse tree</a>.</p>
 <h2 id="call_actions_during_tree_build">call_actions_during_tree_build<a class="headerlink" href="#call_actions_during_tree_build" title="Permanent link">&para;</a></h2>
 <p>By default, this parameter is set to <code>False</code>. If set to <code>True</code>, parser will call
-actions during the parse tree <a href="../parse_trees/">parse tree</a> building process.
-The return value of each action will be discarded, since they directly affect
-the parse tree building process.</p>
+actions during the parse tree <a href="../parse_forest_trees/">parse tree</a> building
+process. The return value of each action will be discarded, since they directly
+affect the parse tree building process.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Use this parameter with a special care when GLR is used, since actions will

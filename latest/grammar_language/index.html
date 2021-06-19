@@ -97,6 +97,8 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#zero-or-more_1">Zero or more</a>
     </li>
+    <li class="toctree-l3"><a class="reference internal" href="#parenthesized-groups">Parenthesized groups</a>
+    </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#empty-built-in-rule">EMPTY built-in rule</a>
@@ -131,13 +133,18 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../parse_trees/">Parse trees</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Release Notes</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -543,6 +550,47 @@ a: "a";
 <p>where action is attached to <code>a_0_comma</code> to provide returning a list of
 matched <code>a</code> and empty list if no match is found.</p>
 </div>
+<h3 id="parenthesized-groups">Parenthesized groups<a class="headerlink" href="#parenthesized-groups" title="Permanent link">&para;</a></h3>
+<p>You can use parenthesized groups at any place you can use a rule reference. For example:</p>
+<pre><code class="language-nohighlight">S: a (b* a {left} | b);
+terminals
+a: &quot;a&quot;;
+b: &quot;b&quot;;
+</code></pre>
+<p>Here, you can see that <code>S</code> will match <code>a</code> and then either <code>b* a</code> or <code>b</code>. You can
+also see that <a href="#user-meta-data">meta-data</a> can be applied at a per-sequence
+level (in this case <code>{left}</code> applies to sequence <code>b* a</code>).</p>
+<p>Here is a more complex example which uses repetitions, separators, assignments
+and nested groups.</p>
+<pre><code class="language-nohighlight">S: (b c)*[comma];
+S: (b c)*[comma] a=(a+ (b | c)*)+[comma];
+terminals
+a: &quot;a&quot;;
+b: &quot;b&quot;;
+c: &quot;c&quot;;
+comma: &quot;,&quot;;
+</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Syntax equivalence <code>parenthesized groups</code>:</p>
+<pre><code>S: c (b* c {left} | b);
+terminals
+c: "c";
+b: "b";
+</code></pre>
+<p>is equivalent to:</p>
+<pre><code>S: c S_g1;
+S_g1: b_0 c {left} | b;
+b_0: b_1 | EMPTY;
+b_1: b_1 b | b;
+terminals
+c: "c";
+b: "b";
+</code></pre>
+<p>So using parenthesized groups creates additional <code>_g&lt;n&gt;</code> rules (<code>S_g1</code> in the
+example), where <code>n</code> is a unique number per rule starting from <code>1</code>. All other
+syntactic sugar elements applied to groups behave as expected.</p>
+</div>
 <h2 id="empty-built-in-rule"><code>EMPTY</code> built-in rule<a class="headerlink" href="#empty-built-in-rule" title="Permanent link">&para;</a></h2>
 <p>There is a special <code>EMPTY</code> rule you can reference in your grammars. <code>EMPTY</code> rule
 will reduce without consuming any input and will always succeed, i.e. it is
@@ -714,8 +762,8 @@ by <a href="../parser/#ws"><code>ws</code> parameter to the parser</a> which is 
 <code>'\n\t '</code>.</p>
 <p>If you need more control of the layout, i.e. handling of not only whitespaces
 but comments also, you can use a special rule <code>LAYOUT</code>:</p>
-<pre><code class="language-nohighlight">LAYOUT: LayoutItem | LAYOUT LayoutItem;
-LayoutItem: WS | Comment | EMPTY;
+<pre><code class="language-nohighlight">LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+LayoutItem: WS | Comment;
 
 terminals
 WS: /\s+/;
@@ -727,8 +775,8 @@ layout parser.</p>
 <p>If this special rule is found in the grammar <code>ws</code> parser parameter is ignored.</p>
 <p>Here is another example that gives support for both line comments and block
 comments like the one used in the grammar language itself:</p>
-<pre><code class="language-nohighlight">LAYOUT: LayoutItem | LAYOUT LayoutItem;
-LayoutItem: WS | Comment | EMPTY;
+<pre><code class="language-nohighlight">LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
+LayoutItem: WS | Comment;
 Comment: '/*' CorNCs '*/' | LineComment;
 CorNCs: CorNC | CorNCs CorNC | EMPTY;
 CorNC: Comment | NotComment | WS;

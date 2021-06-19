@@ -1,10 +1,3 @@
-E: E '+' E  {left, 1}
-| E '-' E  {left, 1}
-| E '*' E  {left, 2}
-| E '/' E  {left, 2}
-| E '^' E  {right, 3}
-| '(' E ')'
-| number;
-
+E: E "+" E | E "*" E | number;
 terminals
-number: /\d+(\.\d+)?/;
+number: /\d+/;

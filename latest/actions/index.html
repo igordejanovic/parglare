@@ -97,13 +97,18 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../parse_trees/">Parse trees</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Release Notes</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -157,6 +162,12 @@
 (functions or lambdas mostly) that get called to reduce the recognized pattern
 to some higher concept. E.g. in the calc example actions are called to calculate
 sub-expressions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>LR parser can call the actions during parsing. GLR parser always build the parse
+forest and the actions can be called afterwards on a chosen tree with
+<code>parser.call_actions</code>.</p>
+</div>
 <p>There are two consideration to think of:</p>
 <ul>
 <li>Which actions are called?</li>
@@ -166,7 +177,7 @@ sub-expressions.</p>
 <p>If you don't provide actions of your own the parser will return nested list
 corresponding to your grammar. Each non-terminal result in a list of evaluated
 sub-expression while each terminal result in the matched string. If the parser
-parameter <code>build_tree</code> is set to <code>True</code> the parser will build <a href="../parse_trees/">a parse
+parameter <code>build_tree</code> is set to <code>True</code> the parser will build <a href="../parse_forest_trees/#parse-trees">a parse
 tree</a>.</p>
 <p>Custom actions are provided to the parser during parser instantiation as
 <code>actions</code> parameter which must be a Python dict where the keys are the names of
@@ -231,9 +242,9 @@ element of the <code>nodes</code> parameter in calling actions higher in the hie
 <p>If we don't provide <code>actions</code>, by default parglare will return a matched string
 for each terminal and a list of sub-expressions for each non-terminal
 effectively producing nested lists. If we set <code>build_tree</code> parameter of the
-parser to <code>True</code> the parser will produce a <a href="../parse_trees/">parse tree</a> whose
-elements are instances of <code>NodeNonTerm</code> and <code>NodeTerm</code> classes representing a
-non-terminals and terminals respectively.</p>
+parser to <code>True</code> the parser will produce a <a href="../parse_forest_trees/">parse tree</a>
+whose elements are instances of <code>NodeNonTerm</code> and <code>NodeTerm</code> classes
+representing a non-terminals and terminals respectively.</p>
 <h2 id="action-decorator"><code>action</code> decorator<a class="headerlink" href="#action-decorator" title="Permanent link">&para;</a></h2>
 <p>You can use a special decorator/collector factory <code>parglare.get_collector</code> to
 create decorator that can be used to collect all actions.</p>
@@ -279,18 +290,15 @@ times all action functions will be collected as a list in the order of
 definition. Dictionary holding all actions for the created action decorator is
 <code>action.all</code>.</p>
 <h2 id="time-of-actions-call">Time of actions call<a class="headerlink" href="#time-of-actions-call" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This applies for LR parsing only. GLR parser always build a forest and actions
+are called afterwards with <code>parser.call_actions</code>.</p>
+</div>
 <p>In parglare actions can be called during parsing (i.e. on the fly) which you
 could use if you want to transform input immediately without building the parse
 tree. But there are times when you would like to build a tree first and call
-actions afterwards. For example, a very good reason is if you are using GLR and
-you want to be sure that actions are called only on the final tree.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>If you are using GLR be sure that your actions has no side-effects, as the
-dying parsers will left those side-effects behind leading to unpredictable
-behaviour. In case of doubt create trees first, choose the right one and
-call actions afterwards with the <code>call_actions</code> parser method.</p>
-</div>
+actions afterwards.</p>
 <p>To get the tree and call actions afterwards you supply <code>actions</code> parameter to
 the parser as usual and set <code>build_tree</code> to <code>True</code>. When the parser finishes
 successfully it will return the parse tree which you pass to the <code>call_actions</code>

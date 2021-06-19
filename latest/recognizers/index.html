@@ -87,13 +87,18 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../parse_trees/">Parse trees</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Release Notes</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -224,9 +229,10 @@ repeating the match:</p>
 <p>You can return more than one additional element. Essentially if a tuple is
 returned by the recognizer, the first element has to be matched input while the
 rest is additional data.</p>
-<p>If you are building <a href="../parse_trees/">parse tree</a>, additional information
-returned by recognizers is kept on <code>NodeTerm</code> (and <code>Token</code>) as <code>additional_data</code>
-attribute which is a list of all additional info returned by the recognizer.</p>
+<p>If you are building <a href="../parse_forest_trees/#parse-trees">parse tree</a>, additional
+information returned by recognizers is kept on <code>NodeTerm</code> (and <code>Token</code>) as
+<code>additional_data</code> attribute which is a list of all additional info returned by
+the recognizer.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>If you want more information you can investigate
