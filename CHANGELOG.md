@@ -16,8 +16,10 @@ Note: Since parglare is still in pre-1.x version major version increase on
 backward incompatible changes will start to apply when the projects goes 1.0
 (i.e. is considered production/stable).
 
-
 ## [Unreleased]
+
+
+## [0.14.0] (released: 2021-06-19)
 
 This release brings multiple new features and improvements. Read the [Release
 Notes](http://www.igordejanovic.net/parglare/latest/release_notes/release_0_14/)
@@ -392,7 +394,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.13.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.14.0...HEAD
+[0.14.0]: https://github.com/igordejanovic/parglare/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/igordejanovic/parglare/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/igordejanovic/parglare/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/igordejanovic/parglare/compare/0.10.0...0.11.0
