@@ -95,8 +95,8 @@ Initial layout/content of this package was created with `Cookiecutter
 `audreyr/cookiecutter-pypackage <https://github.com/audreyr/cookiecutter-pypackage>`_ project template.
 
 
-.. |build-status| image:: https://travis-ci.org/igordejanovic/parglare.svg?branch=master
-   :target: https://travis-ci.org/igordejanovic/parglare
+.. |build-status| image:: https://github.com/igordejanovic/parglare/actions/workflows/ci-linux-ubuntu.yml/badge.svg
+   :target: https://github.com/igordejanovic/parglare/actions
 
 .. |coverage| image:: https://coveralls.io/repos/github/igordejanovic/parglare/badge.svg?branch=master
    :target: https://coveralls.io/github/igordejanovic/parglare?branch=master
