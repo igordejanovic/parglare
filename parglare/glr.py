@@ -796,6 +796,9 @@ class Parent:
     def __getattr__(self, attr):
         return getattr(self.head, attr)
 
+    def __iter__(self):
+        return iter(self.possibilities)
+
     def to_str(self):
         if len(self.possibilities) == 1:
             return to_str(self.possibilities[0])
