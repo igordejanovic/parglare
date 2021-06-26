@@ -314,7 +314,8 @@ class GLRParser(Parser):
 
         if self.dynamic_filter and \
                 not self._call_dynamic_filter(parent, head.state, state,
-                                              REDUCE, production, node_nonterm):
+                                              REDUCE, production,
+                                              list(node_nonterm)):
             # Action rejected by dynamic filter
             return
 
