@@ -188,12 +188,6 @@ class NodeTerm(Node):
             .format(self.symbol, self.value[:20],
                     self.start_position, self.end_position)
 
-    def __iter__(self):
-        return iter([])
-
-    def __reversed__(self):
-        return iter([])
-
 
 class Tree:
     """
@@ -217,6 +211,8 @@ class Tree:
     def _init_children(self, counter):
         if self.root.is_nonterm():
             self.children = self._enumerate_children(counter)
+        else:
+            self.children = None
 
     def _enumerate_children(self, counter):
         children = []
@@ -240,7 +236,10 @@ class Tree:
         return iter(self.children or [])
 
     def __reversed__(self):
-        return reversed(self.children)
+        return reversed(self.children or [])
+
+    def __getitem__(self, idx):
+        return self.children[idx]
 
     def __getattr__(self, attr):
         # Proxy to tree node

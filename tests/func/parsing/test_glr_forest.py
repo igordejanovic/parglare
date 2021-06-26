@@ -12,6 +12,11 @@ def parser():
     return GLRParser(Grammar.from_string(grammar))
 
 
+@pytest.fixture
+def forest(parser):
+    return parser.parse('2 + 3 * 5 + 4 * 1 * 7')
+
+
 def test_solutions(parser):
     """
     Test that the number of solution for expression grammar reported by the
@@ -45,9 +50,7 @@ def test_ambiguities(parser):
     assert forest.ambiguities == 6
 
 
-def test_tree_iteration(parser):
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7')
-
+def test_forest_iteration(forest):
     assert len(forest) == 42
 
     tree_iterated = 0
@@ -60,12 +63,10 @@ def test_tree_iteration(parser):
     assert len(list(enumerate(forest))) == 42
 
 
-def test_forest_index(parser):
+def test_forest_index(forest):
     """
     Test that forest enables index access returning lazy tree.
     """
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7')
-
     assert len(forest) == 42
 
     assert forest[0].to_str() == forest.get_tree().to_str()
@@ -75,10 +76,12 @@ def test_forest_index(parser):
         forest[42]
 
 
-def test_non_lazy_tree_enumeration(parser):
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7')
-
-    tree = forest.get_nonlazy_tree()
+@pytest.mark.parametrize("lazy", [True, False])
+def test_tree_enumeration(forest, lazy):
+    if lazy:
+        tree = forest.get_tree()
+    else:
+        tree = forest.get_nonlazy_tree()
 
     assert tree.is_nonterm()
     assert tree.symbol.name == 'E'
@@ -104,33 +107,40 @@ def test_non_lazy_tree_enumeration(parser):
         forest.get_nonlazy_tree(len(forest)).to_str()
 
 
-def test_lazy_tree_enumeration(parser):
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7')
 
-    tree = forest.get_tree()
+@pytest.mark.parametrize("lazy", [True, False])
+def test_tree_index_iteration(forest, lazy):
+    """
+    Test that non-lazy tree nodes can be iterated and indexed yielding
+    sub-nodes.
+    """
+    if lazy:
+        tree = forest.get_tree()
+    else:
+        tree = forest.get_nonlazy_tree()
 
     assert tree.is_nonterm()
     assert tree.symbol.name == 'E'
     assert len(tree.children) == 3
-    assert 'Ambiguity' not in tree.to_str()
 
-    tree = forest.get_tree(5)
-    assert tree.is_nonterm()
-    assert tree.symbol.name == 'E'
-    assert len(tree.children) == 3
-    assert 'Ambiguity' not in tree.to_str()
+    # Iteration
+    iterated_subnode = False
+    for node in tree:
+        assert node.is_term() or node.is_nonterm()
+        for subnode in node:
+            assert subnode.is_term() or subnode.is_nonterm()
+            iterated_subnode = True
+    assert iterated_subnode
 
-    # Last tree
-    tree = forest.get_tree(len(forest)-1)
-    assert tree.is_nonterm()
-    assert tree.symbol.name == 'E'
-    assert len(tree.children) == 3
-    assert 'Ambiguity' not in tree.to_str()
-
-    # If idx is greater than the number of solutions
-    # exception is raised
-    with pytest.raises(IndexError):
-        forest.get_tree(len(forest)).to_str()
+    # Index access
+    left = tree[0]
+    middle = tree[1]
+    right = tree[2]
+    assert left.is_nonterm()
+    assert middle.is_term()
+    assert right.is_nonterm()
+    assert left[0].is_nonterm()
+    assert left[0][0][0].is_nonterm()
 
 
 def test_no_equal_trees(parser):
