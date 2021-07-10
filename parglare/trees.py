@@ -292,6 +292,32 @@ class Forest:
     def get_nonlazy_tree(self, idx=0):
         return Tree(self.result, idx)
 
+    def get_first_tree(self):
+        """
+        Gets tree 0 fully unpacked. May be used for optimization purposes where
+        it doesn't matter which tree we get. The unpacked tree is faster to iterate.
+        """
+        from parglare.glr import Parent
+
+        def tree_iterator(n):
+            if isinstance(n, Parent):
+                return iter([n.possibilities[0]])
+            elif n.is_nonterm():
+                return iter(n.children)
+            else:
+                return iter([])
+
+        def visit(n, subresults):
+            if isinstance(n, Parent):
+                return subresults[0]
+            elif n.is_nonterm():
+                # Clone NodeNonTerm to preserve the forest
+                return NodeNonTerm(n.context, subresults, n.production)
+            else:
+                return n
+
+        return visitor(self.result.possibilities[0], tree_iterator, visit)
+
     @property
     def solutions(self):
         return self.result.solutions

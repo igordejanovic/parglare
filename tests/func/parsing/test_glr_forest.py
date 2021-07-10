@@ -185,3 +185,11 @@ def test_multiple_iteration(parser):
 
     for tree in forest.nonlazy_iter():
         assert tree.to_str() == tree.to_str()
+
+
+def test_get_first_tree(parser):
+    """
+    Test that unpacked tree is the same as lazy tree 0.
+    """
+    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7 + 9 + 10')
+    assert forest.get_first_tree().to_str() == forest[0].to_str()

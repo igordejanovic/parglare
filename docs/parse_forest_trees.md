@@ -63,6 +63,12 @@ string/dot.
         
     For smaller inputs you can also use `to_dot` to display a forest/tree as a graph.
 
+There is also `forest.get_tree(idx)` which is the same as `forest[idx]`, i.e. it
+returns lazy tree. To get non-lazy tree, i.e. tree whose proxies are
+pre-initialized, call `forest.get_nonlazy_tree(idx)`. If you just need the first
+tree, call `forest.get_first_tree()` to get an unpacked tree which consists only
+of `NodeTerm` and `NodeNonTerm`. This tree is the fastest to navigate but only
+tree 0 is supported in this form.
 
 # Parse trees
 
