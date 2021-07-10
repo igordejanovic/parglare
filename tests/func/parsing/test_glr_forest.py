@@ -107,7 +107,6 @@ def test_tree_enumeration(forest, lazy):
         forest.get_nonlazy_tree(len(forest)).to_str()
 
 
-
 @pytest.mark.parametrize("lazy", [True, False])
 def test_tree_index_iteration(forest, lazy):
     """
