@@ -821,7 +821,7 @@ class GSSNode(object):
         state(LRState):
         position(int):
         frontier(int):
-        parents(list of GSSNodeParent):
+        parents(list of Parent):
              Each stack node might have multiple parents which represent
              multiple path parse took to reach the current state. Each
              parent link keeps a result of semantic action executed during
