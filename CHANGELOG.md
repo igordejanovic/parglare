@@ -20,6 +20,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ### Added
 - `forest.get_first_tree()` for unpacking tree 0 [7cb006c20198b5c43af9442d645e39986fbc4471].
+- `forest.disambiguate(callable)` for removing ambiguities from the forest [f4664afed0d9af368102a935d5b2eaee1af08334].
 
 ### Changed
 - Make Parent iterable over possibilities [57606c9518a3cdc30119b3e0a6732e3038bb41cb].
