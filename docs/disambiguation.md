@@ -268,6 +268,22 @@ Parameters are:
 For details see [test_dynamic_disambiguation_filters.py](https://github.com/igordejanovic/parglare/blob/master/tests/func/parsing/test_dynamic_disambiguation_filters.py).
 
 
+## Disambiguation of a GLR Forest
+
+For GLR forests there is an additional option for a disambiguation. The GLR
+forest has a `disambiguate` method that accepts a callable of the following
+signature:
+
+        def disam_callable(parent):
+
+It accepts the GLR GSS `Parent` object which has a list of possibilities and the
+callable should remove all invalid possibilities from the list. The callable is
+called bottom-up for all `Parent` object which have more than one possibility.
+
+For a full example with comments see [this
+test](https://github.com/igordejanovic/parglare/blob/master/tests/func/parsing/test_glr_forest_disambiguation.py).
+
+
 ## Lexical ambiguities
 
 There is another source of ambiguities.

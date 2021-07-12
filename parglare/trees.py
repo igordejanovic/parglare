@@ -327,6 +327,24 @@ class Forest:
         "Number of ambiguous nodes in this forest."
         return self.result.ambiguities
 
+    def disambiguate(self, disamfun):
+        """
+        Visit all Parent nodes with len(possibilities) > 1 with a given
+        `disamfun` which accepts the Parent and should modify it to remove
+        all invalid possibilities.
+        """
+        from parglare.glr import Parent
+
+        def tree_iterator(n):
+            return iter(n)
+
+        def visit(n, _):
+            if isinstance(n, Parent) and len(n.possibilities) > 1:
+                disamfun(n)
+
+        self.result._solutions = None
+        return visitor(self.result, tree_iterator, visit)
+
     def __str__(self):
         return f'Forest({self.solutions})'
 
