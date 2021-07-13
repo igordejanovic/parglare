@@ -165,6 +165,7 @@ class Reference(object):
         multiplicty(str): Multiplicity of the RHS reference (used for regex
             operators ?, *, +). See MULT_* constants above. By default
             multiplicity is MULT_ONE.
+        greedy(bool): If the multiplicity was greedy (e.g. ?!, *! or +!).
         separator (symbol or Reference): A reference to the separator symbol or
             the separator symbol itself if resolved.
     """
@@ -172,6 +173,7 @@ class Reference(object):
         self.name = name
         self.location = location
         self.multiplicity = MULT_ONE
+        self.greedy = False
         self.separator = None
 
     @property
@@ -695,6 +697,7 @@ class PGFile(object):
         separators.
         """
         mult = symbol_ref.multiplicity
+        assoc = ASSOC_RIGHT if symbol_ref.greedy else ASSOC_NONE
         if mult in [MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE]:
             symbol_name = make_multiplicity_name(
                 symbol_ref.name, MULT_ONE_OR_MORE,
@@ -738,9 +741,11 @@ class PGFile(object):
 
                 productions.extend([Production(symbol,
                                                ProductionRHS([symbol_one]),
+                                               assoc=assoc,
                                                nops=True),
                                     Production(symbol,
-                                               ProductionRHS([EMPTY]))])
+                                               ProductionRHS([EMPTY]),
+                                               assoc=assoc)])
 
                 def action(_, nodes):
                     if nodes:
@@ -751,6 +756,19 @@ class PGFile(object):
                 symbol.grammar_action = action
 
                 self.register_symbol(symbol)
+
+            else:
+                if symbol_ref.greedy:
+                    productions = []
+                    symbol_one = symbol
+                    symbol = NonTerminal('{}_g'.format(symbol_name), productions,
+                                         base_symbol.location,
+                                         imported_with=imported_with)
+                    productions.extend([Production(symbol,
+                                                   ProductionRHS([symbol_one]),
+                                                   assoc=ASSOC_RIGHT)])
+                    symbol.action_name = 'pass_single'
+                    self.register_symbol(symbol)
 
         else:
             # MULT_OPTIONAL
@@ -768,7 +786,8 @@ class PGFile(object):
             productions.extend([Production(symbol,
                                            ProductionRHS([base_symbol])),
                                 Production(symbol,
-                                           ProductionRHS([EMPTY]))])
+                                           ProductionRHS([EMPTY]),
+                                           assoc=assoc)])
 
             symbol.action_name = 'optional'
 
@@ -1285,9 +1304,7 @@ class GrammarContext:
 
  GSYMBOL_REFERENCE,
  OPT_REP_OPERATOR,
- REP_OPERATOR_ZERO,
- REP_OPERATOR_ONE,
- REP_OPERATOR_OPTIONAL,
+ REP_OPERATOR,
  OPT_REP_MODIFIERS_EXP,
  OPT_REP_MODIFIERS,
  OPT_REP_MODIFIER,
@@ -1325,9 +1342,7 @@ class GrammarContext:
 
      'GrammarSymbolReference',
      'OptRepeatOperator',
-     'RepeatOperatorZero',
-     'RepeatOperatorOne',
-     'RepeatOperatorOptional',
+     'RepeatOperator',
      'OptionalRepeatModifiersExpression',
      'OptionalRepeatModifiers',
      'OptionalRepeatModifier',
@@ -1444,13 +1459,14 @@ pg_productions = [
     # Regex-like repeat operators
     [GSYMBOL_REFERENCE, [GSYMBOL, OPT_REP_OPERATOR]],
     [GSYMBOL_REFERENCE, [PRODUCTION_GROUP, OPT_REP_OPERATOR]],
-    [OPT_REP_OPERATOR, [REP_OPERATOR_ZERO]],
-    [OPT_REP_OPERATOR, [REP_OPERATOR_ONE]],
-    [OPT_REP_OPERATOR, [REP_OPERATOR_OPTIONAL]],
+    [OPT_REP_OPERATOR, [REP_OPERATOR]],
     [OPT_REP_OPERATOR, [EMPTY]],
-    [REP_OPERATOR_ZERO, ['*', OPT_REP_MODIFIERS_EXP]],
-    [REP_OPERATOR_ONE, ['+', OPT_REP_MODIFIERS_EXP]],
-    [REP_OPERATOR_OPTIONAL, ['?', OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ['*', OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ['*!', OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ['+', OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ['+!', OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ['?', OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ['?!', OPT_REP_MODIFIERS_EXP]],
     [OPT_REP_MODIFIERS_EXP, ['[', OPT_REP_MODIFIERS, ']']],
     [OPT_REP_MODIFIERS_EXP, [EMPTY]],
     [OPT_REP_MODIFIERS, [OPT_REP_MODIFIERS, ',', OPT_REP_MODIFIER]],
@@ -1809,12 +1825,15 @@ def act_gsymbol_reference(context, nodes):
             sep_ref = Reference(Location(context), sep_ref)
             symbol_ref.separator = sep_ref
 
-        if rep_op == '*':
+        if rep_op.startswith('*'):
             symbol_ref.multiplicity = MULT_ZERO_OR_MORE
-        elif rep_op == '+':
+        elif rep_op.startswith('+'):
             symbol_ref.multiplicity = MULT_ONE_OR_MORE
         else:
             symbol_ref.multiplicity = MULT_OPTIONAL
+
+        if rep_op.endswith('!'):
+            symbol_ref.greedy = True
 
     return symbol_ref
 

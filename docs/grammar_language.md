@@ -472,6 +472,63 @@ Same as `one or more` this operator may use separator modifiers.
     matched `a` and empty list if no match is found.
 
 
+### Greedy repetitions
+
+`*`, `+`, and `?` operators have their greedy counterparts. To make an
+repetition operator greedy add `!` (e.g. `*!`, `+!`, and `?!`). These versions
+will consume as much as possible before proceeding. You can think of the greedy
+repetitions as a way to disambiguate a class of ambiguities which arises due to
+a sequence of rules where earlier constituent can match an input of various
+length leaving the rest to the next rule to consume.
+
+Consider this example:
+
+    S: "a"* "a"*;
+
+It is easy to see that this grammar is ambiguous, as for the input:
+
+    a a
+
+We have 3 solutions:
+
+    1:S[0->3]
+    a_0[0->1]
+        a_1[0->1]
+        a[0->1, "a"]
+    a_0[2->3]
+        a_1[2->3]
+        a[2->3, "a"]
+    2:S[0->3]
+    a_0[0->0]
+    a_0[0->3]
+        a_1[0->3]
+        a_1[0->1]
+            a[0->1, "a"]
+        a[2->3, "a"]
+    3:S[0->3]
+    a_0[0->3]
+        a_1[0->3]
+        a_1[0->1]
+            a[0->1, "a"]
+        a[2->3, "a"]
+    a_0[3->3]
+
+If we apply greedy zero-or-more to the first element of the sequence:
+
+    S: "a"*! "a"*;
+
+We have only one solution where all `a` tokens are consumed by the first part of
+the rule:
+
+    S[0->3]
+    a_0[0->3]
+        a_1[0->3]
+        a_1[0->1]
+            a[0->1, "a"]
+        a[2->3, "a"]
+    a_0[3->3]
+
+
 ### Parenthesized groups
 
 You can use parenthesized groups at any place you can use a rule reference. For example:
