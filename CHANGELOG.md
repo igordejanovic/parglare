@@ -18,6 +18,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.15.0] (released: 2021-07-14)
+
 ### Added
 - `forest.get_first_tree()` for efficiently unpacking tree 0 [7cb006c].
 - `forest.disambiguate(callable)` for removing ambiguities from the forest [f4664af].
@@ -36,6 +39,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 [57606c9]: https://github.com/igordejanovic/parglare/commit/57606c9
 [6947942]: https://github.com/igordejanovic/parglare/commit/6947942
 [65a1cbf]: https://github.com/igordejanovic/parglare/commit/65a1cbf
+
 
 ## [0.14.0] (released: 2021-06-19)
 
@@ -412,7 +416,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.14.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.15.0...HEAD
+[0.15.0]: https://github.com/igordejanovic/parglare/compare/0.14.0...0.15.0
 [0.14.0]: https://github.com/igordejanovic/parglare/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/igordejanovic/parglare/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/igordejanovic/parglare/compare/0.11.0...0.12.0

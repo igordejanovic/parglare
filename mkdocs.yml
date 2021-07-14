@@ -27,6 +27,7 @@ nav:
   - pglr command: pglr.md
   - Debugging: debugging.md
 - Release Notes:
+  - 0.15: release_notes/release_0_15.md
   - 0.14: release_notes/release_0_14.md
 - About:
   - Contributing: about/CONTRIBUTING.md
