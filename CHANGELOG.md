@@ -19,8 +19,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ## [Unreleased]
 
 ### Added
-- `forest.get_first_tree()` for unpacking tree 0 [7cb006c20198b5c43af9442d645e39986fbc4471].
+- `forest.get_first_tree()` for efficiently unpacking tree 0 [7cb006c20198b5c43af9442d645e39986fbc4471].
 - `forest.disambiguate(callable)` for removing ambiguities from the forest [f4664afed0d9af368102a935d5b2eaee1af08334].
+- Greedy repetitions (`*!`, `+!`, and `?!`) [517d33eb06abc9cc36528d47b0081b1c1ef5b406].
 
 ### Changed
 - Make Parent iterable over possibilities [57606c9518a3cdc30119b3e0a6732e3038bb41cb].
