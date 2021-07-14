@@ -99,6 +99,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#dynamic-disambiguation-filter">Dynamic disambiguation filter</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#disambiguation-of-a-glr-forest">Disambiguation of a GLR Forest</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#lexical-ambiguities">Lexical ambiguities</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#custom-token-recognition-and-lexical-disambiguation">Custom token recognition and lexical disambiguation</a>
@@ -116,6 +118,8 @@
                 </ul>
                 <p class="caption"><span class="caption-text">Release Notes</span></p>
                 <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_15/">0.15</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
                     </li>
                 </ul>
@@ -370,6 +374,17 @@ operation.</p>
 </li>
 </ul>
 <p>For details see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/parsing/test_dynamic_disambiguation_filters.py">test_dynamic_disambiguation_filters.py</a>.</p>
+<h2 id="disambiguation-of-a-glr-forest">Disambiguation of a GLR Forest<a class="headerlink" href="#disambiguation-of-a-glr-forest" title="Permanent link">&para;</a></h2>
+<p>For GLR forests there is an additional option for a disambiguation. The GLR
+forest has a <code>disambiguate</code> method that accepts a callable of the following
+signature:</p>
+<pre><code>    def disam_callable(parent):
+</code></pre>
+<p>It accepts the GLR GSS <code>Parent</code> object which has a list of possibilities and the
+callable should remove all invalid possibilities from the list. The callable is
+called bottom-up for all <code>Parent</code> object which have more than one possibility.</p>
+<p>For a full example with comments see <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/parsing/test_glr_forest_disambiguation.py">this
+test</a>.</p>
 <h2 id="lexical-ambiguities">Lexical ambiguities<a class="headerlink" href="#lexical-ambiguities" title="Permanent link">&para;</a></h2>
 <p>There is another source of ambiguities.</p>
 <p>Parglare uses integrated scanner, thus tokens are determined on the fly. This

@@ -97,6 +97,8 @@
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#zero-or-more_1">Zero or more</a>
     </li>
+    <li class="toctree-l3"><a class="reference internal" href="#greedy-repetitions">Greedy repetitions</a>
+    </li>
     <li class="toctree-l3"><a class="reference internal" href="#parenthesized-groups">Parenthesized groups</a>
     </li>
         </ul>
@@ -144,6 +146,8 @@
                 </ul>
                 <p class="caption"><span class="caption-text">Release Notes</span></p>
                 <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_15/">0.15</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
                     </li>
                 </ul>
@@ -550,6 +554,55 @@ a: "a";
 <p>where action is attached to <code>a_0_comma</code> to provide returning a list of
 matched <code>a</code> and empty list if no match is found.</p>
 </div>
+<h3 id="greedy-repetitions">Greedy repetitions<a class="headerlink" href="#greedy-repetitions" title="Permanent link">&para;</a></h3>
+<p><code>*</code>, <code>+</code>, and <code>?</code> operators have their greedy counterparts. To make an
+repetition operator greedy add <code>!</code> (e.g. <code>*!</code>, <code>+!</code>, and <code>?!</code>). These versions
+will consume as much as possible before proceeding. You can think of the greedy
+repetitions as a way to disambiguate a class of ambiguities which arises due to
+a sequence of rules where earlier constituent can match an input of various
+length leaving the rest to the next rule to consume.</p>
+<p>Consider this example:</p>
+<pre><code>S: "a"* "a"*;
+</code></pre>
+<p>It is easy to see that this grammar is ambiguous, as for the input:</p>
+<pre><code>a a
+</code></pre>
+<p>We have 3 solutions:</p>
+<pre><code>1:S[0-&gt;3]
+a_0[0-&gt;1]
+    a_1[0-&gt;1]
+    a[0-&gt;1, "a"]
+a_0[2-&gt;3]
+    a_1[2-&gt;3]
+    a[2-&gt;3, "a"]
+2:S[0-&gt;3]
+a_0[0-&gt;0]
+a_0[0-&gt;3]
+    a_1[0-&gt;3]
+    a_1[0-&gt;1]
+        a[0-&gt;1, "a"]
+    a[2-&gt;3, "a"]
+3:S[0-&gt;3]
+a_0[0-&gt;3]
+    a_1[0-&gt;3]
+    a_1[0-&gt;1]
+        a[0-&gt;1, "a"]
+    a[2-&gt;3, "a"]
+a_0[3-&gt;3]
+</code></pre>
+<p>If we apply greedy zero-or-more to the first element of the sequence:</p>
+<pre><code>S: "a"*! "a"*;
+</code></pre>
+<p>We have only one solution where all <code>a</code> tokens are consumed by the first part of
+the rule:</p>
+<pre><code>S[0-&gt;3]
+a_0[0-&gt;3]
+    a_1[0-&gt;3]
+    a_1[0-&gt;1]
+        a[0-&gt;1, "a"]
+    a[2-&gt;3, "a"]
+a_0[3-&gt;3]
+</code></pre>
 <h3 id="parenthesized-groups">Parenthesized groups<a class="headerlink" href="#parenthesized-groups" title="Permanent link">&para;</a></h3>
 <p>You can use parenthesized groups at any place you can use a rule reference. For example:</p>
 <pre><code class="language-nohighlight">S: a (b* a {left} | b);
