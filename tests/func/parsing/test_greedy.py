@@ -1,4 +1,3 @@
-import pytest
 from parglare import GLRParser, Grammar
 
 
