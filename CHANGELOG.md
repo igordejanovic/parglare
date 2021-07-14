@@ -19,17 +19,23 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ## [Unreleased]
 
 ### Added
-- `forest.get_first_tree()` for efficiently unpacking tree 0 [7cb006c20198b5c43af9442d645e39986fbc4471].
-- `forest.disambiguate(callable)` for removing ambiguities from the forest [f4664afed0d9af368102a935d5b2eaee1af08334].
-- Greedy repetitions (`*!`, `+!`, and `?!`) [517d33eb06abc9cc36528d47b0081b1c1ef5b406].
+- `forest.get_first_tree()` for efficiently unpacking tree 0 [7cb006c].
+- `forest.disambiguate(callable)` for removing ambiguities from the forest [f4664af].
+- Greedy repetitions (`*!`, `+!`, and `?!`) [517d33e].
 
 ### Changed
-- Make Parent iterable over possibilities [57606c9518a3cdc30119b3e0a6732e3038bb41cb].
+- Make Parent iterable over possibilities [57606c9].
 
 ### Fixed
-- Fix parse tree iteration and indexing [69479422c09f4cdaa497f53840ff65b0c4966ac0].
-- Fix passing sub-results in dynamic filter [65a1cbface669580d61024c19bf984ffc33f8c76].
+- Fix parse tree iteration and indexing [6947942].
+- Fix passing sub-results in dynamic filter [65a1cbf].
 
+[7cb006c]: https://github.com/igordejanovic/parglare/commit/7cb006c
+[f4664af]: https://github.com/igordejanovic/parglare/commit/f4664af
+[517d33e]: https://github.com/igordejanovic/parglare/commit/517d33e
+[57606c9]: https://github.com/igordejanovic/parglare/commit/57606c9
+[6947942]: https://github.com/igordejanovic/parglare/commit/6947942
+[65a1cbf]: https://github.com/igordejanovic/parglare/commit/65a1cbf
 
 ## [0.14.0] (released: 2021-06-19)
 
