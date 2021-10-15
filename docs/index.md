@@ -9,7 +9,7 @@ A pure Python LR/GLR parser.
 * **Integrated scanner**
 
     There is no lexing as a separate phase. There is no separate lexer grammar.
-    The parser will try to reconize token during parsing at the given location.
+    The parser will try to recognize token during parsing at the given location.
     This brings more parsing power as there are no lexical ambiguities
     introduced by a separate lexing stage. You want variables in your language
     to be named like some of the keywords? No problem.
@@ -24,9 +24,9 @@ A pure Python LR/GLR parser.
     you can resort to the GLR algorithm by a simple change of the parser class.
     The grammar stays the same.
 
-    In the case of non-determinism (unability for a parser to deterministically
+    In the case of non-determinism (inability for a parser to deterministically
     decide what to do) the parser will fork and investigate each possibility.
-    Eventualy, parsers that decided wrong will die leaving only the right one.
+    Eventually, parsers that decided wrong will die leaving only the right one.
     In case there are multiple interpretation of your input you will get all the
     trees (a.k.a. "the parse forest").
 
@@ -191,8 +191,8 @@ print("Result = ", result)
     LALR is modified to avoid REDUCE/REDUCE conflicts on state merging. Although
     not proven, this should enable handling of all LR(1) grammars with reduced set
     of states and without conflicts. For grammars that are not LR(1) a GLR parsing
-    is provided. If a grammar is loaded from file, its table will be peristed
-    between runs in `.pgt` file. To generate `.pgt` file explicitelly use [pglr
+    is provided. If a grammar is loaded from file, its table will be persisted
+    between runs in `.pgt` file. To generate `.pgt` file explicitly use [pglr
     compile](./pglr.md#compiling-the-grammar) command.
 
 

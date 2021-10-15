@@ -63,7 +63,7 @@ position use `context.position`, to get the parser state use `context.state`, to
 get expected symbols in this state use `context.state.actions.keys()`.
 
 To get information about the error use `error` object. E.g. to get expected
-symbols at this position for which parser can succesfully continue use
+symbols at this position for which parser can successfully continue use
 `error.symbols_expected`.
 
 The recovery function should modify the head (e.g. its position and/or

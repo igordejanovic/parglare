@@ -150,8 +150,8 @@ Example flow for custom caching is shown in
 
 !!! warning
 
-    Be careful to provide parse tables compatibile with parser type. Passing
-    tables containing conflicts to `Parser` class will propably result in an
+    Be careful to provide parse tables compatible with parser type. Passing
+    tables containing conflicts to `Parser` class will probably result in an
     error, but passing tables with automatically resolved conflicts
     (`prefer_shifts=True`) to `GLRParser` will result in parser which may skip
     proper parses.

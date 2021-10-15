@@ -37,7 +37,7 @@ class, but all context objects have the following properties:
   this state.
 
 - **node** - this is available only if the actions are called over the parse tree
-  using `call_actions`. It represens the instance of `NodeNonTerm` or `NodeTerm`
+  using `call_actions`. It represents the instance of `NodeNonTerm` or `NodeTerm`
   classes from the parse tree where the actions is executed.
 
 - **parser** - is the reference to the parser instance. You should use this only
@@ -65,9 +65,9 @@ Used at various places in parglare to define location and span in the files
 - **start_position/end_position** - an absolute position in the input where the
   span starts/ends,
 
-- **line**/**column** (properites) - line and column where the span starts.
+- **line**/**column** (properties) - line and column where the span starts.
 
-- **line_end**/**column_end** (properites) - line and column where the span
+- **line_end**/**column_end** (properties) - line and column where the span
   ends.
 
 

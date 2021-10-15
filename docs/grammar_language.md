@@ -646,7 +646,7 @@ Effectively, using named matches enables automatic creation of a nice AST.
 ## Referencing semantic actions from a grammar
 
 By default [action](./actions.md) with the name same as the rule name will be
-searched in the acommpanying `<grammar>_actions.py` file or [`actions`
+searched in the accompanying `<grammar>_actions.py` file or [`actions`
 dict](./parser.md#actions). You can override this by specifying action name for
 the rule directly in the grammar using `@` syntax. In that case a name given
 after `@` will be used instead of a rule name.
@@ -728,7 +728,7 @@ assert prod.dynamic
 assert prod.label == 'My Label'
 ```
 
-Meta-data defined on the rule level can be overriden on the production level.
+Meta-data defined on the rule level can be overridden on the production level.
 Also, rule can be specified multiple times. Propagation of each rule meta-data
 is done only to the productions specified in the rule.
 
@@ -845,7 +845,7 @@ NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
 
 By default parser will match given string recognizer even if it is part of some
 larger word, i.e. it will not require matching on the word boundary. This is not
-the desired behaviour for language keywords.
+the desired behavior for language keywords.
 
 For example, lets examine this little grammar:
 

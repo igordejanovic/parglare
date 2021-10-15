@@ -114,7 +114,7 @@ def comma_recognizer(input, pos):
 ```
 
 In this case there is an imported grammar `base` whose terminal `COMMA`
-recognizer has been overriden by `comma_recognizer` recognizer function.
+recognizer has been overridden by `comma_recognizer` recognizer function.
 
 !!! warning
 
@@ -124,7 +124,7 @@ recognizer has been overriden by `comma_recognizer` recognizer function.
 
 ### Recognizer search order
 
-Recognizers are loaded from a grammar module but can be overriden from importing
+Recognizers are loaded from a grammar module but can be overridden from importing
 grammars, using FQN of the terminal, or by using `recognizers` parameter of the
 grammar.
 

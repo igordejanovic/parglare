@@ -46,7 +46,7 @@ Now the parser sees `+` token ahead and the tables will tell him to reduce the
 number he just saw to `E` (a number is an expression according to the grammar).
 Thus, on the stack the parser will have an expression `E` (actually, LR states
 are kept on the stack but that's not important for this little analysis). This
-reduction will advace PDA to some other state again. Each shift/reduce operation
+reduction will advance PDA to some other state again. Each shift/reduce operation
 change state so I'll not repeat that anymore.
 
 

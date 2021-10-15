@@ -100,10 +100,10 @@ no associativity, i.e. associativity is not used for disambiguation decision.
 
 ### `nops` and `nopse`
 
-These two are not actual filters but markers used to
-disable [`prefer_shifts`](./parser.md#prefer_shifts) (`nops`)
-and [`prefer_shifts_over_empty`](./parser.md#prefer_shifts_over_empty) (`nopse`)
-set globally during parser construction on a production level. Productions using
+These two are not actual filters but markers used to disable
+[`prefer_shifts`](./parser.md#prefer_shifts) (`nops`) and
+[`prefer_shifts_over_empty`](./parser.md#prefer_shifts_over_empty) (`nopse`) set
+globally during parser construction on a production level. Productions using
 these markers are not influenced by global parser setting meaning that table
 construction will not eliminate possible reductions on these productions. Using
 these markers have sense only for GLR parsing as the LR deterministic parser
@@ -129,7 +129,7 @@ FLOAT: /[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?\b/;
 ```
 
 If in the grammar we have a possibility that both recognizers are tried, both
-will succeed for input `23`, but we want `INT` to be choosen in this case.
+will succeed for input `23`, but we want `INT` to be chosen in this case.
 
 
 ## Dynamic disambiguation filter

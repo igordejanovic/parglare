@@ -93,7 +93,7 @@ Each node of the tree has following attributes:
 
 - `layout_content` - the
   [layout](./grammar_language.md#handling-whitespaces-and-comments-in-your-language)
-  that preceeds the given tree node. The layout consists of
+  that precedes the given tree node. The layout consists of
   whitespaces/comments.
 
 - `symbol` (property) - a grammar symbol this node is created for.
