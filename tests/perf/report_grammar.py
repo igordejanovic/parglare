@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import io
 from os.path import dirname, join
 from parglare import Grammar, GLRParser
 from tests import TESTS
@@ -26,9 +25,10 @@ def grammar_sizes():
         results.append(Result(test.name, productions, nonterminals, states))
 
     with open(join(dirname(__file__), 'reports', 'grammar-sizes.txt'), 'w') as f:
-        f.write(f'|  Grammar  | productions | non-terminals | LALR automaton size |\n')
+        f.write('|  Grammar  | productions | non-terminals | LALR automaton size |\n')
         for result in results:
-            sizes_str = f'{result.productions:^13,d}|{result.nonterminals:^15,d}|{result.lr_states:^21,d}'
+            sizes_str = f'{result.productions:^13,d}|'\
+                        f'{result.nonterminals:^15,d}|{result.lr_states:^21,d}'
             title = f'{result.name:^11s}'
             f.write(f'|{title}|{sizes_str}|\n')
 
