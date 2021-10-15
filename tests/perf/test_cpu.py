@@ -27,6 +27,11 @@ class TestResult:
         self.time = None
         self.speed = None
 
+        # Grammar/Table sizes
+        self.nonterminals = None
+        self.productions = None
+        self.states = None
+
 
 def cpu_tests():
     results = []
@@ -46,6 +51,9 @@ def cpu_tests():
 
                 g = Grammar.from_file(join(test_root, 'g.pg'))
                 parser = parser_class(g)
+                result.nonterminals = len(g.nonterminals)
+                result.productions = len(g.productions)
+                result.states = len(parser.table.states)
 
                 with io.open(file_name, 'r', encoding='utf-8') as f:
                     content = f.read()

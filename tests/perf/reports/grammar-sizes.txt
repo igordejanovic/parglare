@@ -1,0 +1,4 @@
+|  Grammar  | productions | non-terminals | LALR automaton size |
+|   JSON    |     19      |       9       |         26          |
+|  BibTeX   |     29      |      17       |         51          |
+|   Java    |     795     |      405      |        1,190        |
