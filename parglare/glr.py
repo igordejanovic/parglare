@@ -658,7 +658,7 @@ class GLRParser(Parser):
         prints("Generated file {}.".format(file_name))
         prints("You can use dot viewer or generate pdf with the "
                "following command:")
-        h_print("dot -Tpdf {0} -O {0}.pdf".format(file_name))
+        h_print("dot -Tpdf -O {}".format(file_name))
 
 
 class Parent:
