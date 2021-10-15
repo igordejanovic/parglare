@@ -76,6 +76,28 @@ Installation
     $ git clone git@github.com:igordejanovic/parglare.git
     $ pip install -e parglare
 
+Citing parglare
+---------------
+
+If you use parglare in your research please cite this paper:
+
+.. code:: text
+
+    Igor Dejanović, Parglare: A LR/GLR parser for Python,
+    Science of Computer Programming, issn:0167-6423, p.102734,
+    DOI:10.1016/j.scico.2021.102734, 2021.
+
+    @article{dejanovic2021b,
+        author = {Igor Dejanović},
+        title = {Parglare: A LR/GLR parser for Python},
+        doi = {10.1016/j.scico.2021.102734},
+        issn = {0167-6423},
+        journal = {Science of Computer Programming},
+        keywords = {parsing, LR, GLR, Python, visualization},
+        pages = {102734},
+        url = {https://www.sciencedirect.com/science/article/pii/S0167642321001271},
+        year = {2021}
+    }
 
 License
 -------
