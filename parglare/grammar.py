@@ -1654,12 +1654,15 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
             Attributes:
                 _pg_attrs(dict): A dict of meta-attributes keyed by name.
                     Used by common rules.
-                _pg_position(int): A position in the input string where
+                _pg_start_position(int): A position in the input string where
                     this class is defined.
-                _pg_position_end(int): A position in the input string where
+                _pg_end_position(int): A position in the input string where
                     this class ends.
 
             """
+
+            __slots__ = list(attrs) + ['_pg_start_position',
+                                       '_pg_end_position']
 
             _pg_attrs = attrs
 
