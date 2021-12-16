@@ -18,6 +18,12 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Added
+- `_pg_children` on dynamically created Python objects for named assignments
+  [a67d722].
+
+[a67d722]: https://github.com/igordejanovic/parglare/commit/a67d722
+
 
 ## [0.15.0] (released: 2021-07-14)
 
