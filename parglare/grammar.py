@@ -1658,15 +1658,18 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
                     this class is defined.
                 _pg_end_position(int): A position in the input string where
                     this class ends.
+                _pg_children(list): A list of child nodes.
 
             """
 
             __slots__ = list(attrs) + ['_pg_start_position',
-                                       '_pg_end_position']
+                                       '_pg_end_position',
+                                       '_pg_children']
 
             _pg_attrs = attrs
 
             def __init__(self, **attrs):
+                self._pg_children = list(attrs.values())
                 for attr_name, attr_value in attrs.items():
                     setattr(self, attr_name, attr_value)
 

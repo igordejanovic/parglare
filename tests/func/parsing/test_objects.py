@@ -104,6 +104,38 @@ def test_default_object_create():
     assert a.obj.b == ['b']
 
 
+def test_object_children_order():
+    """Children may depend on the concrete production that matched. Test that order
+    given in `_pg_children` is the same as the order provided in the grammar
+    (this may be important for tree traversal order).
+
+    """
+    grammar = r'''
+    S: a=A b=B
+     | b=B a=A
+     | b=B;
+    A: val="a";
+    B: val="b";
+    '''
+    g = Grammar.from_string(grammar)
+    p = Parser(g)
+
+    ast = p.parse('a b')
+    res = ['a', 'b']
+    assert len(res) == len(ast._pg_children)
+    assert all((x.val == y for x, y in zip(ast._pg_children, res)))
+
+    ast = p.parse('b a')
+    res = ['b', 'a']
+    assert len(res) == len(ast._pg_children)
+    assert all((x.val == y for x, y in zip(ast._pg_children, res)))
+
+    ast = p.parse('b')
+    res = ['b']
+    assert len(res) == len(ast._pg_children)
+    assert all((x.val == y for x, y in zip(ast._pg_children, res)))
+
+
 def test_obj_action_override():
     """
     Test that default common action for object can be overriden in grammar.

@@ -249,6 +249,13 @@ built-in action `obj` is called and will produce instance of dynamically created
 Python class corresponding to the grammar rule. See more in the section
 on [named matches](./grammar_language.md#named-matches-assignments).
 
+Dynamically created Python objects will have attributes created from assignments
+in the grammar rules. Also, a special `_pg_children` attribute is provided with
+child nodes in the order as they are matched in the input. This may be useful
+for tree iteration order. Please see [this
+test](https://github.com/igordejanovic/parglare/blob/master/tests/func/actions/test_actions.py#L107)
+for an example.
+
 If for some reason you want to override default behavior that create Python
 object you can create action like this:
 
