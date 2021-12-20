@@ -20,8 +20,13 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ### Added
 - `_pg_children` on dynamically created Python objects for named assignments
-  [a67d722].
+  [0771ca5].
 
+### Changed
+- `visit` function of the visitor pattern now has a third parameter which is the
+  depth of the current tree node [63e6e42]. **(BIC)**
+
+[0771ca5]: https://github.com/igordejanovic/parglare/commit/0771ca5
 [a67d722]: https://github.com/igordejanovic/parglare/commit/a67d722
 
 
