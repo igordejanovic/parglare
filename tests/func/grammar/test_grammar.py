@@ -320,6 +320,26 @@ def test_assignment_plain():
     assert called[0]
 
 
+def test_assignment_create_python_class():
+    """
+    Rules with assignments will have its dynamically created Python class
+    which is instantiated during parsing if no other action is provided.
+    """
+    grammar = """
+    S: "1" second=some_match third=Third;
+    Third: val="3";
+
+    terminals
+    some_match: "2";
+    """
+
+    g = Grammar.from_string(grammar)
+    assert repr(g.classes['S']).startswith('<parglare:S class at')
+    assert g.classes['S'].__name__ == 'S'
+    assert repr(g.classes['Third']).startswith('<parglare:Third class at')
+    assert g.classes['Third'].__name__ == 'Third'
+
+
 def test_assignment_bool():
     """
     Test bool assignment.
