@@ -38,22 +38,23 @@ def tree_node_iterator(n):
 def to_str(root):
     from parglare.glr import Parent
 
-    def visit(n, subresults):
+    def visit(n, subresults, depth):
+        indent = '  ' * depth
         if isinstance(n, Parent):
-            s = f'{n.head.symbol} - ambiguity[{n.ambiguity}]'
+            s = f'{indent}{n.head.symbol} - ambiguity[{n.ambiguity}]'
             for idx, p in enumerate(subresults):
-                s += f'\n{idx+1}:' + p
+                s += f'\n{indent}{idx+1}:{p}'
         elif n.is_nonterm():
-            s = '{}[{}->{}]'.format(n.production.symbol,
-                                    n.start_position,
-                                    n.end_position)
+            s = '{}{}[{}->{}]'.format(indent, n.production.symbol,
+                                      n.start_position,
+                                      n.end_position)
             if subresults:
-                s += '\n  ' + '\n'.join(subresults).replace('\n', '\n  ')
+                s = '{}\n{}'.format(s, '\n'.join(subresults))
         else:
-            s = '{}[{}->{}, "{}"]'.format(n.symbol,
-                                          n.start_position,
-                                          n.end_position,
-                                          n.value)
+            s = '{}{}[{}->{}, "{}"]'.format(indent, n.symbol,
+                                            n.start_position,
+                                            n.end_position,
+                                            n.value)
         return s
     return visitor(root, tree_node_iterator, visit)
 
@@ -63,7 +64,7 @@ def to_dot(self, positions=True):
     rendered = set()
     terminals = []
 
-    def visit(n, subresults):
+    def visit(n, subresults, _):
         sub_str = ''.join(s[1] for s in subresults if id(s[1]) not in rendered)
         rendered.update((id(s[1]) for s in subresults))
         pos = f'[{n.start_position}-{n.end_position}]' if positions else ''
@@ -307,7 +308,7 @@ class Forest:
             else:
                 return iter([])
 
-        def visit(n, subresults):
+        def visit(n, subresults, _):
             if isinstance(n, Parent):
                 return subresults[0]
             elif n.is_nonterm():
@@ -338,7 +339,7 @@ class Forest:
         def tree_iterator(n):
             return iter(n)
 
-        def visit(n, _):
+        def visit(n, _, __):
             if isinstance(n, Parent) and len(n.possibilities) > 1:
                 disamfun(n)
 
@@ -394,7 +395,7 @@ def visitor(root, iterator, visit, memoize=True, check_cycle=False):
             stack.pop()
             if check_cycle:
                 visiting.remove(id(node))
-            result = visit(node, results)
+            result = visit(node, results, len(stack))
             if memoize:
                 cache[id(node)] = result
             if stack:

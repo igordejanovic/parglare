@@ -158,8 +158,9 @@ Where:
   callable should return an iterator yielding children nodes.
 - `visit` is a function called when the node is visited. It results will be
   passed into visitors higher in the hierarchy (thus enabling bottom-up
-  processing). `visit` function should accept a node and sub-results from
-  lower-level visitors.
+  processing). `visit` function should accept three parameters: current tree
+  node, sub-results from lower-level visitors and the depth of the current tree
+  node.
 - `memoize` - Should results be cached. Handy for direct acyclic graphs if we
   want to prevent multiple calculation of the same sub-graph.
 - `check_cycle` - If set to `True` will prevent traversing of cyclic structure

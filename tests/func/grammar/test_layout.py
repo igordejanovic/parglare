@@ -141,7 +141,7 @@ def test_layout_context(parser_class):
         tree = result[0]
         content = set()
 
-        def collect(n, _):
+        def collect(n, _, __):
             content.add(n.layout_content_ahead)
 
         visitor(tree, lambda n: iter(n.children or []), collect)

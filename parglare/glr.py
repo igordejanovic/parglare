@@ -728,7 +728,7 @@ class Parent:
                 else:
                     return iter([])
 
-            def calculate(node, subresults):
+            def calculate(node, subresults, _):
                 amb = 0
                 if isinstance(node, Parent) and len(node.possibilities) > 1:
                     amb = 1
@@ -752,7 +752,7 @@ class Parent:
                 else:
                     return iter([])
 
-            def calculate(node, subresults):
+            def calculate(node, subresults, _):
                 if isinstance(node, Parent):
                     return sum(subresults)
                 else:
