@@ -280,3 +280,27 @@ def test_unexisting_builtin_action_raises_exception():
         Parser(g, actions=my_actions)
 
     assert 'a_action_unexisting' in str(e.value)
+
+
+def test_obj_action_for_assignments():
+    """
+    Test that rules with assignments will use @obj action
+    which create AST-like classes/objects.
+    """
+    grammar = r"""
+    S: a="foo" b?="bar" c=C+;
+    C: val="baz";
+    """
+
+    g = Grammar.from_string(grammar)
+    p = Parser(g)
+
+    result = p.parse("foo bar baz baz baz")
+
+    assert isinstance(result, g.classes['S'])
+    assert isinstance(result.c[0], g.classes['C'])
+
+    assert result.a == "foo"
+    assert result.b is True
+    assert len(result.c) == 3
+    assert all((c.val == "baz" for c in result.c))
