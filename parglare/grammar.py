@@ -7,6 +7,7 @@ from collections import Counter
 from parglare.exceptions import GrammarError, ParserInitError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.common import Location, load_python_module
+from parglare.trees import visitor
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 from parglare import termui
 
@@ -1641,11 +1642,6 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
     # If named matches are used create Python class that will be used
     # for object instantiation.
     if attrs:
-        class ParglareMetaClass(type):
-
-            def __repr__(cls):
-                return '<parglare:{} class at {}>'.format(name, id(cls))
-
         class ParglareClass(object, metaclass=ParglareMetaClass):
             """Dynamically created class. Each parglare rule that uses named
             matches by default uses this action that will create Python object
@@ -1659,17 +1655,21 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
                 _pg_end_position(int): A position in the input string where
                     this class ends.
                 _pg_children(list): A list of child nodes.
+                _pg_children_names(list): A list of child node names
+                    (i.e. LHS of assignments)
 
             """
 
             __slots__ = list(attrs) + ['_pg_start_position',
                                        '_pg_end_position',
-                                       '_pg_children']
+                                       '_pg_children',
+                                       '_pg_children_names']
 
             _pg_attrs = attrs
 
             def __init__(self, **attrs):
                 self._pg_children = list(attrs.values())
+                self._pg_children_names = list(attrs.keys())
                 for attr_name, attr_value in attrs.items():
                     setattr(self, attr_name, attr_value)
 
@@ -1679,6 +1679,24 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
                 else:
                     return "<parglare:{} instance at {}>"\
                         .format(name, hex(id(self)))
+
+            def to_str(self):
+                def visit(n, subresults, depth):
+                    indent = '  ' * (depth + 1)
+                    if hasattr(n, '_pg_children'):
+                        s = '{} [{}->{}]\n{}'.format(
+                            n.__class__.__name__,
+                            n._pg_start_position,
+                            n._pg_end_position,
+                            '\n'.join(['{}{}={}'.format(indent,
+                                                        n._pg_children_names[i],
+                                                        subresult)
+                                       for (i, subresult) in enumerate(subresults)]))
+                    else:
+                        s = str(n)
+                    return s
+
+                return visitor(self, ast_tree_iterator, visit)
 
         ParglareClass.__name__ = str(symbol.fqn)
         if symbol.fqn in context.extra.classes:
@@ -1937,3 +1955,13 @@ pg_actions = {
     'BoolConst': lambda _, value: value and value.lower() == 'true',
 
 }
+
+
+class ParglareMetaClass(type):
+
+    def __repr__(cls):
+        return '<parglare:{} class at {}>'.format(cls.__name__, id(cls))
+
+
+def ast_tree_iterator(root):
+    return iter(root._pg_children) if hasattr(root, '_pg_children') else iter([])

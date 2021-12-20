@@ -254,7 +254,9 @@ in the grammar rules. Also, a special `_pg_children` attribute is provided with
 child nodes in the order as they are matched in the input. This may be useful
 for tree iteration order. Please see [this
 test](https://github.com/igordejanovic/parglare/blob/master/tests/func/actions/test_actions.py#L107)
-for an example.
+for an example. In addition, `_pg_children_names` is a list of attribute names
+(i.e. a LHS of the assignments in the grammar.). Each created object has a
+`to_str()` method which produce a nice textual tree representation.
 
 If for some reason you want to override default behavior that create Python
 object you can create action like this:
