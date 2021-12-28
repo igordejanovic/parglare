@@ -397,7 +397,9 @@ def visitor(root, iterator, visit, memoize=True, check_cycle=False):
                 visiting.remove(id(node))
             result = visit(node, results, len(stack))
             if memoize:
-                cache[id(node)] = result
+                # Store node to preserve the reference to it.
+                # Otherwise node may be freed by garbage collector.
+                cache[id(node)] = result, node
             if stack:
                 stack[-1][-1].append(result)
             continue
@@ -406,7 +408,7 @@ def visitor(root, iterator, visit, memoize=True, check_cycle=False):
                             'Last elements: {}'.format(next_elem,
                                                        [r[0] for r in stack[-10:]]))
         if memoize and id(next_elem) in cache:
-            results.append(cache[id(next_elem)])
+            results.append(cache[id(next_elem)][0])
         else:
             stack.append((next_elem, iterator(next_elem), []))
             if check_cycle:
