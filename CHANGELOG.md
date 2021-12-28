@@ -27,6 +27,10 @@ backward incompatible changes will start to apply when the projects goes 1.0
 - `visit` function of the visitor pattern now has a third parameter which is the
   depth of the current tree node [63e6e42]. **(BIC)**
 
+### Fixed
+- Fix visitor memoization caching [#138]. Thanks vladaindjic@GitHub.
+
+[#138]: https://github.com/igordejanovic/parglare/pull/138
 [204b5a0]: https://github.com/igordejanovic/parglare/commit/204b5a0
 [0771ca5]: https://github.com/igordejanovic/parglare/commit/0771ca5
 [a67d722]: https://github.com/igordejanovic/parglare/commit/a67d722
