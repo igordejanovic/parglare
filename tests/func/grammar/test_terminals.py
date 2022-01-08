@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest  # noqa
+import re
 from parglare import Parser, Grammar
 
 
@@ -33,3 +34,6 @@ def test_regex_terminals():
     p = Parser(grammar)
     tree = p.parse(r''' a/ a'bc c aaaa 4.56 b ''')
     assert tree
+
+    # Test that re.VEROSE flag is the default for regex matches
+    assert grammar.get_terminal('Aterm').recognizer.regex.flags & re.VERBOSE == re.VERBOSE

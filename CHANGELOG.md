@@ -82,6 +82,12 @@ for more info.
   - GLR parsing now returns `Forest` object which can be indexed and iterated
     yielding lazy trees. See Release Notes for more info. (**BIC**)
   - Dropping support for deprecated Python 3.4 and 3.5 versions. (**BIC**)
+  - [`re.VERBOSE` flag](https://docs.python.org/3/library/re.html#re.VERBOSE) is
+    now used by default on regex matches. You need to escape whitespaces and `#`
+    char for upgrade ([#139, [f8469fb]]). (**BIC**)
+
+[f8469fb]: https://github.com/igordejanovic/parglare/commit/f8469fb
+[#139]: https://github.com/igordejanovic/parglare/issues/139
 
 
 ## [0.13.0] (released: 2021-02-04)
