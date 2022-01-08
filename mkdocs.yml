@@ -4,9 +4,11 @@ site_description: A pure Python (G)LR parser with integrated scanner
 site_author: Igor Dejanović
 
 repo_url: https://github.com/igordejanovic/parglare
-google_analytics: [UA-68681917-1, igordejanovic.net]
-theme: readthedocs
-extra_css: [style.css, css/version-select.css]
+theme:
+  name: readthedocs
+  analytics:
+    gtag: UA-68681917-1
+extra_css: [style.css]
 strict: true
 
 nav:
@@ -38,7 +40,8 @@ markdown_extensions:
 - toc:
     permalink: true
 
-copyright: Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.
+plugins:
+  - mike
+  - search
 
-extra_javascript:
-- js/version-select.js
+copyright: Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.
