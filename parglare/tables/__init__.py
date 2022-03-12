@@ -142,27 +142,27 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
     while state_queue:
         state = state_queue.pop(0)
 
-        # For each state calculate its closure first, i.e. starting from a
-        # so called "kernel items" expand collection with non-kernel items.
-        # We will also calculate GOTO and ACTIONS dicts for each state. These
-        # dicts will be keyed by a grammar symbol.
+        # For each state calculate its closure first, i.e. starting from a so
+        # called "kernel items" expand collection with non-kernel items. We will
+        # also calculate GOTO and ACTIONS dicts for each state. These dicts will
+        # be keyed by a grammar symbol.
         closure(state, itemset_type, first_sets)
         states.append(state)
 
-        # To find out other states we examine following grammar symbols
-        # in the current state (symbols following current position/"dot")
-        # and group all items by a grammar symbol.
-        state._per_next_symbol = OrderedDict()
+        # To find out other states we examine following grammar symbols in the
+        # current state (symbols following current position/"dot") and group all
+        # items by a grammar symbol.
+        per_next_symbol = OrderedDict()
 
-        # Each production has a priority. But since productions are grouped
-        # by grammar symbol that is ahead we take the maximal
-        # priority given for all productions for the given grammar symbol.
+        # Each production has a priority. But since productions are grouped by
+        # grammar symbol that is ahead we take the maximal priority given for
+        # all productions for the given grammar symbol.
         state._max_prior_per_symbol = {}
 
         for item in state.items:
             symbol = item.symbol_at_position
             if symbol:
-                state._per_next_symbol.setdefault(symbol, []).append(item)
+                per_next_symbol.setdefault(symbol, []).append(item)
 
                 # Here we calculate max priorities for each grammar symbol to
                 # use it for SHIFT/REDUCE conflict resolution
@@ -174,7 +174,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
         # For each group symbol we create new state and form its kernel
         # items from the group items with positions moved one step ahead.
-        for symbol, items in state._per_next_symbol.items():
+        for symbol, items in per_next_symbol.items():
             if symbol is STOP:
                 state.actions[symbol] = [Action(ACCEPT)]
                 continue
@@ -191,12 +191,12 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                 except ValueError:
                     pass
 
-            # We've found a new state. Register it for later processing.
             if target_state is maybe_new_state:
+                # We've found a new state. Register it for later processing.
                 state_queue.append(target_state)
                 state_id += 1
             else:
-                # State with this kernel items already exists.
+                # A state with this kernel items already exists.
                 if itemset_type is LR_1:
                     # LALR: Try to merge states, i.e. update items follow sets.
                     if not merge_states(target_state, maybe_new_state):
@@ -355,15 +355,16 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
 
 def merge_states(old_state, new_state):
-    """Try to merge new_state to old_state if possible. If not possible return
-    False.
+    """Try to merge new_state to old_state if possible (LALR). If not possible
+    return False.
 
     If old state has no R/R conflicts additional check is made and merging is
     not done if it would add R/R conflict.
+
     """
 
-    # If states are not equal (i.e. have the same kernel items)
-    # no merge is possible
+    # If states are not equal (i.e. have the same kernel items) no merge is
+    # possible
     if old_state != new_state:
         return False
 
@@ -372,7 +373,9 @@ def merge_states(old_state, new_state):
         new_item = new_state.get_item(old_item)
         item_pairs.append((old_item, new_item))
 
-    # Check if merging would result in additional R/R conflict
+    # Check if merging would result in additional R/R conflict by investigating
+    # if after merging there could be a lookahead token that would call for
+    # different reductions. If that is the case we shall not merge states.
     for old, new in item_pairs:
         for s in (s for s in old_state.kernel_items
                   if s.is_at_end and s is not old):
@@ -380,7 +383,7 @@ def merge_states(old_state, new_state):
                     new.follow.difference(old.follow)):
                 return False
 
-    # Do the merge
+    # Do the merge by updating old items follow sets.
     for old, new in item_pairs:
         old.follow.update(new.follow)
     return True
@@ -677,7 +680,7 @@ class LRState(object):
     """
     __slots__ = ['grammar', 'state_id', 'symbol', 'items',
                  'actions', 'gotos', 'dynamic', 'finish_flags',
-                 '_per_next_symbol', '_max_prior_per_symbol']
+                 '_max_prior_per_symbol']
 
     def __init__(self, grammar, state_id, symbol, items=None):
         self.grammar = grammar
