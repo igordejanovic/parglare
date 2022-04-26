@@ -186,3 +186,21 @@ def test_obj_position():
     n = result.seconds[3]
     assert n._pg_start_position == 24
     assert n._pg_end_position == 31
+
+
+def test_obj_extras():
+    """
+    Test that extra information can be stored on tree nodes.
+    """
+    grammar = """
+    A: b=B;
+    B: "b";
+    """
+    g = Grammar.from_string(grammar)
+    tree = Parser(g).parse('b')
+
+    tree._pg_extras = 1
+    assert tree._pg_extras == 1
+
+    with pytest.raises(AttributeError):
+        tree._pg_unexisting = 1

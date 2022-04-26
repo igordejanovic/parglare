@@ -258,8 +258,13 @@ for an example. In addition, `_pg_children_names` is a list of attribute names
 (i.e. a LHS of the assignments in the grammar.). Each created object has a
 `to_str()` method which produce a nice textual tree representation.
 
-If for some reason you want to override default behavior that create Python
-object you can create action like this:
+For performance reasons, AST nodes created with the default `obj` action uses
+slots so no dynamic attribute creation is possible. However, there is
+uninitialized `_pg_extras` attribute which can be used to add additional
+user-defined information on AST nodes.
+
+If for some reason you want to override the default behavior which creates
+Python object you can create an action like this:
 
 ```nohighlight
 S: first=a second=digit+[comma];
@@ -269,8 +274,7 @@ a: "a";
 digit: /\d+/;
 ```
 
-
-now create action function that accepts additional params:
+now create an action function that accepts additional params:
 
 ```python
 def s_action(context, nodes, first, second):
