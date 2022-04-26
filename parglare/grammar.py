@@ -1657,13 +1657,15 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
                 _pg_children(list): A list of child nodes.
                 _pg_children_names(list): A list of child node names
                     (i.e. LHS of assignments)
+                _pg_extras(object): An arbitrary user-defined object.
 
             """
 
             __slots__ = list(attrs) + ['_pg_start_position',
                                        '_pg_end_position',
                                        '_pg_children',
-                                       '_pg_children_names']
+                                       '_pg_children_names',
+                                       '_pg_extras']
 
             _pg_attrs = attrs
 
