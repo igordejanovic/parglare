@@ -107,7 +107,7 @@ MIT
 Python versions
 ---------------
 
-Tested with 3.6-3.9
+Tested with 3.6-3.10
 
 Credits
 -------
