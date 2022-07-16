@@ -18,6 +18,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+## [0.16.0] (released: 2022-07-16)
+
 ### Added
 - `_pg_extras` slot on dynamically created Python objects for additional
   user-defined information (e.g. info used during semantic analysis) ([#140])
@@ -444,7 +446,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.15.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.16.0...HEAD
+[0.16.0]: https://github.com/igordejanovic/parglare/compare/0.15.0...0.16.0
 [0.15.0]: https://github.com/igordejanovic/parglare/compare/0.14.0...0.15.0
 [0.14.0]: https://github.com/igordejanovic/parglare/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/igordejanovic/parglare/compare/0.12.0...0.13.0
