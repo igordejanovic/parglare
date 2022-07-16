@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Igor Dejanović" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Debugging - parglare</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../style.css" rel="stylesheet" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Debugging";
+        var mkdocs_page_input_path = "debugging.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-68681917-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-68681917-1');
+      </script>
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> parglare
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../getting_started/">Getting started</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar/">Grammar class</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../actions/">Actions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_modularization/">Modularization</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr_parsing/">LR parsing and conflicts</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Debugging</a>
+    <ul class="current">
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_15/">0.15</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">About</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">parglare</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>User Guide &raquo;</li><li>Debugging</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/debugging.md"
+          class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="tracing-and-debugging">Tracing and debugging<a class="headerlink" href="#tracing-and-debugging" title="Permanent link">&para;</a></h1>
+<p>When the parser doesn't work as expected there are several options. First, you
+can use <a href="../pglr/">pglr command</a> to visualize LR PDA automata and GLR trace.
+The same command can also be used to print detailed information on the grammar,
+LR states and conflicts.</p>
+<p>Printing detailed debug information on grammar can be also achieved by putting
+the grammar in the debug mode:</p>
+<pre><code class="language-python">grammar = Grammar.from_file(file_name, debug=True)
+</code></pre>
+<p>For example, <code>calc</code> grammar from the quick intro would give the following
+output:</p>
+<pre><code class="language-nohighlight">*** GRAMMAR ***
+Terminals:
+EMPTY - * ^ + STOP ( \d+(\.\d+)? number / )
+NonTerminals:
+E S'
+Productions:
+0: S' = E STOP
+1: E = E + E
+2: E = E - E
+3: E = E * E
+4: E = E / E
+5: E = E ^ E
+6: E = ( E )
+7: E = number
+</code></pre>
+<p>During grammar object construction, grammar file is parsed using the parglare
+itself and the grammar object for the new language is constructed. If you want
+to see the debug output of this process set the <code>parse_debug</code> parameter to
+<code>True</code>:</p>
+<pre><code class="language-python">grammar = Grammar.from_file(file_name, parse_debug=True)
+</code></pre>
+<p>If you are using <a href="../recognizers/">custom recognizers</a> or would like to see the
+result of each <a href="../actions/">action</a> in debug output then you should put the
+parser in the debug mode from the code.</p>
+<p>To put the parser in the debug mode do:</p>
+<pre><code class="language-python">parser = Parser(grammar, debug=True)
+</code></pre>
+<p>To debug <a href="../grammar_language/#handling-whitespaces-and-comments-in-your-language">layout
+grammar</a> do:</p>
+<pre><code class="language-python">parser = Parser(grammar, debug_layout=True)
+</code></pre>
+<p><code>GLRParser</code> can <a href="../pglr/#tracing-glr-parsing">produce visual trace</a>. To enable
+visual tracing set <code>debug</code> and <code>debug_trace</code> to <code>True</code>:</p>
+<pre><code class="language-python">parser = GLRParser(grammar, debug=True, debug_trace=True)
+</code></pre>
+<p>Debug output and visual trace can be generated using <a href="../pglr/">pglr command</a>.
+For example, parsing expression <code>1 + 2 * 3</code> with <code>GLRParser</code> in debug mode will
+produce the following output (this output is generated by <code>pglr -i trace calc.pg
+"1 + 2 * 3"</code>):</p>
+<pre><code class="language-nohighlight">Grammar OK.
+
+
+*** STATES ***
+
+State 0
+        0: S' = . E STOP   {}
+        1: E = . E + E   {STOP, ^, ), /, *, -, +}
+        2: E = . E - E   {STOP, ^, ), /, *, -, +}
+        3: E = . E * E   {STOP, ^, ), /, *, -, +}
+        4: E = . E / E   {STOP, ^, ), /, *, -, +}
+        5: E = . E ^ E   {STOP, ^, ), /, *, -, +}
+        6: E = . ( E )   {STOP, ^, ), /, *, -, +}
+        7: E = . number   {STOP, ^, ), /, *, -, +}
+
+
+
+        GOTO:
+        E-&gt;1
+
+        ACTIONS:
+        (-&gt;SHIFT:2, number-&gt;SHIFT:3
+
+....
+....
+
+*** PARSING STARTED
+
+        Skipping whitespaces: ''
+        New position: (1, 0)
+
+**REDUCING HEADS
+Active heads 1: [state=0:S', pos=0, endpos=0, empty=[False,True], parents=0, trees=1]
+Number of trees = 1
+
+Reducing head: state=0:S', pos=0, endpos=0, empty=[False,True], parents=0, trees=1
+        Skipping whitespaces: ''
+        New position: (1, 0)
+        Position: (1, 0)
+        Context: *1 + 2 * 3
+        Symbols expected: ['(', 'number']
+        Token(s) ahead: [&lt;number(1)&gt;]
+
+        New head for shifting: state=0:S', pos=0, endpos=0, token
+              ahead=&lt;number(1)&gt;, empty=[False,True], parents=0, trees=1.
+
+        No more reductions for this head and lookahead token &lt;number(1)&gt;.
+
+**SHIFTING HEADS
+Active heads 1: [state=0:S', pos=0, endpos=0, token ahead=&lt;number(1)&gt;,
+    empty=[False,True], parents=0, trees=1]
+Number of trees = 1
+
+Shifting head: state=0:S', pos=0, endpos=0, token ahead=&lt;number(1)&gt;,
+    empty=[False,True], parents=0, trees=1
+        Position: (1, 0)
+        Context: *1 + 2 * 3
+        Token(s) ahead: &lt;number(1)&gt;
+
+        Shift:3 &quot;1&quot; at position (1, 0)
+        Action result = type:&lt;class 'parglare.parser.NodeTerm'&gt;
+            value:&lt;Term(start=0, end=1, sym=number, val=&quot;1&quot;)&gt;
+        New shifted head state=3:number, pos=0, endpos=1, empty=[False,True],
+            parents=0, trees=0.
+        Creating link   from head state=3:number, pos=0, endpos=1,
+                            empty=[False,False], parents=1, trees=1
+                  to head   state=0:S', pos=0, endpos=0, token
+                            ahead=&lt;number(1)&gt;, empty=[False,True],
+                            parents=0, trees=1
+....
+....
+
+Reducing head: state=1:E, pos=0, endpos=9, token ahead=&lt;STOP()&gt;,
+      empty=[False,False], parents=1, trees=1
+    Position: (1, 9)
+    Context: 1 + 2 * 3*
+    Symbols expected: ['STOP']
+    Token(s) ahead: &lt;STOP()&gt;
+
+    *** SUCCESS!!!!
+  *** 1 sucessful parse(s).
+  Generated file parglare_trace.dot.
+</code></pre>
+<p>In addition, a <a href="../pglr/#tracing-glr-parsing">visualization of GLR trace</a> is
+produced as a Graphviz dot file.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../pglr/" class="btn btn-neutral float-left" title="pglr command"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../release_notes/release_0_15/" class="btn btn-neutral float-right" title="0.15">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/igordejanovic/parglare" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../pglr/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../release_notes/release_0_15/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+      <script src="../js/version-select.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

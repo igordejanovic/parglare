@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Igor Dejanović" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Modularization - parglare</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="../style.css" rel="stylesheet" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Modularization";
+        var mkdocs_page_input_path = "grammar_modularization.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-68681917-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-68681917-1');
+      </script>
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> parglare
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../getting_started/">Getting started</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar/">Grammar class</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../actions/">Actions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Modularization</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#grammar-file-recognizers">Grammar file recognizers</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#recognizer-search-order">Recognizer search order</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#grammar-file-actions">Grammar file actions</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#action-search-order">Action search order</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr_parsing/">LR parsing and conflicts</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_15/">0.15</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">About</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">parglare</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>User Guide &raquo;</li><li>Modularization</li>
+    <li class="wy-breadcrumbs-aside">
+        <a href="https://github.com/igordejanovic/parglare/edit/master/docs/grammar_modularization.md"
+          class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="grammar-modularization">Grammar modularization<a class="headerlink" href="#grammar-modularization" title="Permanent link">&para;</a></h1>
+<p>Grammar can be split across multiple files and imported using the <code>import</code>
+statement. This statement accepts a path to the target grammar file relative to
+the source grammar file and optional name of the target grammar after the <code>as</code>
+keyword.</p>
+<p>For example,</p>
+<pre><code>import '../../othergrammar.pg';
+</code></pre>
+<p>or</p>
+<pre><code>import '../../othergrammar.pg' as og;
+</code></pre>
+<p>Rules from imported grammar can be referenced by fully qualified name consisting
+of dot-separated target grammar name and the rule name. By default the name of
+the target grammar is the base name of the grammar file. In the first example we
+can reference rules by using <code>othergrammar.</code> prefix as for example:</p>
+<pre><code>SomeRule: INT othergrammar.SomeTargetRule+;
+</code></pre>
+<p>Or in the second example we are using name <code>og</code> as the target grammar name so
+the previous example will be written as:</p>
+<pre><code>SomeRule: INT og.SomeTargetRule+;
+</code></pre>
+<p><code>import</code> statement supports diamond imports as well as recursive imports.</p>
+<p>Each rule in the overall grammar has a fully qualified name (FQN). This name is
+constructed by the dot-separated chain of target grammar names ending with the
+rule name, using the first chain of imports that lead to the rule.
+This naming scheme enables the import of grammar files from arbitrary locations
+while still preserving a deterministic FQN for each rule of the grammar.</p>
+<p>For example, if there is a grammar file <code>A.pg</code> importing <code>B.pg</code> and <code>C.pg</code>,
+where <code>B.pg</code> also imports <code>C.pg</code> than, if the <code>A.pg</code> is the root of the grammar,
+all the rules in <code>C.pg</code> have FQN in the form of <code>B.C.some_rule</code>. Notice that the
+first path to <code>C.pg</code> was from <code>B.pg</code> as the <code>B.pg</code> grammar is imported first in
+<code>A.pg.</code>. See <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/import/fqn/test_fqn.py">fqn
+tests</a>
+for an example.</p>
+<h2 id="grammar-file-recognizers">Grammar file recognizers<a class="headerlink" href="#grammar-file-recognizers" title="Permanent link">&para;</a></h2>
+<p>Grammar file can optionally provide its <a href="../recognizers/">recognizers</a>. These
+should be given in a Python file named <code>&lt;base grammar name&gt;_recognizers.py</code> and
+should be found in the same folder where the grammar file is found.</p>
+<p>For example, if grammar file is named <code>mygrammar.pg</code> than recognizers module
+should be named <code>mygrammar_recognizers.py</code>.</p>
+<p>For a parglare to be able to collect all recognizers defined in a module a
+<code>collector</code> is used. It is a decorator constructed in the Python recognizer
+module and used to decorate each recognizer function.</p>
+<p>For example, <code>mygrammar_recognizers.py</code> might be given as:</p>
+<pre><code class="language-python">from parglare import get_collector
+
+recognizer = get_collector()
+
+@recognizer
+def term_a(input, position):
+  ... some recognition
+
+@recognizer
+def term_b(input, position):
+  ...
+</code></pre>
+<p><code>recognizer</code> object is <code>collector</code> in this case. It will construct a dictionary
+of all recognizers decorated by it and that dictionary will be provided as
+<code>recognizer.all</code>. parglare recognizer loader will implicitly search for
+<code>recognizer.all</code>.</p>
+<p>By default, a name of a decorated function will serve as a terminal name this
+recognizer is defined for. But, you can provide different name using a string
+parameter to <code>recognizer</code> decorator, like:</p>
+<pre><code class="language-python">@recognizer('NUMERIC_ID')
+def number(input, pos):
+    ...
+</code></pre>
+<p>In this case grammar terminal is named <code>NUMERIC_ID</code> while the recognition
+function is named <code>number</code>. This can be used, for example, to create a library
+of common recognizer function and use them in grammar for terminals with
+different names, like:</p>
+<pre><code class="language-python">from somemodule import myrecognizer
+from parglare import get_collector
+
+recognizer = get_collector()
+
+recognizer('NUMERIC_ID')(myrecognizer)
+</code></pre>
+<p>You can use a fully qualified terminal name to override recognizer for imported
+terminal:</p>
+<pre><code class="language-python">@recognizer('base.COMMA')
+def comma_recognizer(input, pos):
+    if input[pos] == ',':
+        return input[pos:pos + 1]
+</code></pre>
+<p>In this case there is an imported grammar <code>base</code> whose terminal <code>COMMA</code>
+recognizer has been overridden by <code>comma_recognizer</code> recognizer function.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Since the way a recognizer module is imported in Python you <strong>must</strong> use
+only Python absolute module imports inside the recognizer module.</p>
+</div>
+<h3 id="recognizer-search-order">Recognizer search order<a class="headerlink" href="#recognizer-search-order" title="Permanent link">&para;</a></h3>
+<p>Recognizers are loaded from a grammar module but can be overridden from importing
+grammars, using FQN of the terminal, or by using <code>recognizers</code> parameter of the
+grammar.</p>
+<h2 id="grammar-file-actions">Grammar file actions<a class="headerlink" href="#grammar-file-actions" title="Permanent link">&para;</a></h2>
+<p>Similarly to recognizers, actions can be provided in a Python file named <code>&lt;base
+grammar name&gt;_actions.py</code> that should be found in the same folder where the
+grammar file is found.</p>
+<p>For example, if grammar file is named <code>mygrammar.pg</code> than actions module should
+be named <code>mygrammar_actions.py</code>.</p>
+<p>For a parglare to be able to collect all actions defined in a module a
+<code>collector</code> is used in very much the same way as it is used for recognizers. It
+is a decorator constructed in the Python actions module and used to decorate
+each action function.</p>
+<p>For example, <code>mygrammar_actions.py</code> might be given as:</p>
+<pre><code class="language-python">from parglare import get_collector
+
+action = get_collector()
+
+@action
+def first_rule(context, nodes):
+  ...
+
+@action
+def second_rule(context, nodes):
+  ...
+</code></pre>
+<p><code>action</code> object is <code>collector</code> in this case. It will construct a dictionary of
+all actions decorated by it and that dictionary will be provided as
+<code>action.all</code>. parglare action loader will implicitly search for <code>action.all</code>.</p>
+<p>By default, a name of a decorated function will serve as a grammar symbol name
+or in-grammar defined action name (using <code>@</code>, see <a href="../grammar_language/#referencing-semantic-actions-from-a-grammar">syntax for action
+specification</a>)
+this action is defined for. But, you can provide different name using a string
+parameter to <code>action</code> decorator:</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Since the way an action module is imported in Python you <strong>must</strong> use
+only Python absolute module imports inside of it.</p>
+</div>
+<h3 id="action-search-order">Action search order<a class="headerlink" href="#action-search-order" title="Permanent link">&para;</a></h3>
+<p>Actions are searched in the order of specificity by searching the following (in
+the given order):</p>
+<ol>
+<li>Actions given using <code>actions</code> parameter by FQN of the symbol,</li>
+<li>Actions loaded from actions module using FQN of the symbol,</li>
+<li>Actions given using <code>actions</code> parameter by FQN of the action,</li>
+<li>Actions loaded from actions module using FQN of the action,</li>
+<li>Actions given using <code>actions</code> parameter by symbol name,</li>
+<li>Actions loaded from actions module using symbol name,</li>
+<li>Actions given using <code>actions</code> parameter by action name,</li>
+<li>Actions loaded from actions module using action name,</li>
+<li><a href="../actions/#built-in-actions">parglare built-in actions</a> using action name.</li>
+</ol>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../recognizers/" class="btn btn-neutral float-left" title="Recognizers"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../lr_parsing/" class="btn btn-neutral float-right" title="LR parsing and conflicts">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/igordejanovic/parglare" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../recognizers/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../lr_parsing/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+      <script src="../js/version-select.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
