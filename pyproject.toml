@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools >= 61.2.0", "wheel", "setuptools_scm[toml] >= 3.4.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "parglare"
+authors = [{name = "Igor R. Dejanovic", email = "igorREPLACEWITHDOTdejanovic@gmail.com"}]
+license = {text = "MIT"}
+description = "A pure Python Scannerless LR/GLR parser"
+keywords = ["parglare"]
+readme = "README.rst"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Topic :: Software Development :: Interpreters",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+dependencies = ["click >=7.0, <8.0"]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/igordejanovic/parglare"
+
+[project.optional-dependencies]
+dev = [
+    "wheel",
+    "mkdocs",
+    "mike",
+    "twine",
+]
+test = [
+    "flake8",
+    "coverage",
+    "coveralls",
+    "pytest",
+]
+
+[project.scripts]
+pglr = "parglare.cli:pglr"
+
+[tool.setuptools]
+packages = ["parglare", "parglare.tables"]
+zip-safe = false
+include-package-data = true
+package-dir = {parglare = "parglare"}
+
+[tool.setuptools_scm]
+write_to_template = "__version__ = \"{version}\"\n"
+write_to = "parglare/version.py"
+
+[tool.distutils.bdist_wheel]
+universal = 1
+
+[tool.flake8]
+max-line-length = "90"
+exclude = """
+.git/*,.eggs/*,
+parglare/six.py,
+build/*,venv/*"""
