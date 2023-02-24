@@ -1694,8 +1694,14 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
                                                         n._pg_children_names[i],
                                                         subresult)
                                        for (i, subresult) in enumerate(subresults)]))
+                    elif isinstance(n, list):
+                        s = '{}[\n{}\n{}]'.format(
+                            indent,
+                            '\n'.join(['{}{}'.format(indent, el)
+                                       for el in subresults]),
+                            indent)
                     else:
-                        s = str(n)
+                        s = repr(n)
                     return s
 
                 return visitor(self, ast_tree_iterator, visit)
@@ -1966,4 +1972,8 @@ class ParglareMetaClass(type):
 
 
 def ast_tree_iterator(root):
-    return iter(root._pg_children) if hasattr(root, '_pg_children') else iter([])
+    if hasattr(root, '_pg_children'):
+        return iter(root._pg_children)
+    if isinstance(root, list):
+        return iter(root)
+    return iter([])

@@ -55,11 +55,48 @@ def test_ast_to_str():
 
     result = parser.parse('1 2 3 3 3 4 2')
     print(result.to_str())
-    assert result.to_str().strip() == '''
+    assert result.to_str().strip() == """
 S [0->13]
   second=Second [2->3]
-    val=2
-  third=['3', '3', '3']
+    val='2'
+  third=    [
+    '3'
+    '3'
+    '3'
+    ]
   fourth=Fourth [10->13]
     val=Second [12->13]
-      val=2'''.strip()
+      val='2'""".strip()
+
+
+def test_ast_to_str_with_bnf_extensions():
+    """
+    Tests `to_str` with lists returned by BNF extensions.
+    """
+    grammar = r"""
+    S: "1" second=Second third=Third+ fourth=Fourth;
+    Second: val="2";
+    Third: val="3";
+    Fourth: "4" val=Second;
+    """
+
+    g = Grammar.from_string(grammar)
+    parser = Parser(g)
+
+    result = parser.parse('1 2 3 3 3 4 2')
+    print(result.to_str())
+    assert result.to_str().strip() == """
+S [0->13]
+  second=Second [2->3]
+    val='2'
+  third=    [
+    Third [4->5]
+      val='3'
+    Third [6->7]
+      val='3'
+    Third [8->9]
+      val='3'
+    ]
+  fourth=Fourth [10->13]
+    val=Second [12->13]
+      val='2'""".strip()

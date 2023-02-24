@@ -18,6 +18,10 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix AST `to_str` in the context of syntactic sugar (BNF extensions).
+
+
 ## [0.16.0] (released: 2022-07-16)
 
 ### Added
