@@ -18,9 +18,13 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
-### Fixed
-- Fix AST `to_str` in the context of syntactic sugar (BNF extensions).
 
+## [0.16.1] (released: 2023-02-27)
+
+### Fixed
+- Fix AST `to_str` in the context of syntactic sugar (BNF extensions) [6a99f96].
+
+[6a99f96]: https://github.com/igordejanovic/parglare/commit/6a99f96
 
 ## [0.16.0] (released: 2022-07-16)
 
@@ -450,7 +454,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.16.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.16.1...HEAD
+[0.16.1]: https://github.com/igordejanovic/parglare/compare/0.16.0...0.16.1
 [0.16.0]: https://github.com/igordejanovic/parglare/compare/0.15.0...0.16.0
 [0.15.0]: https://github.com/igordejanovic/parglare/compare/0.14.0...0.15.0
 [0.14.0]: https://github.com/igordejanovic/parglare/compare/0.13.0...0.14.0
