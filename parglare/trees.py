@@ -138,7 +138,7 @@ class NodeNonTerm(Node):
     @property
     def solutions(self):
         "For SPPF trees"
-        return reduce(lambda x, y: x*y, (c.solutions for c in self.children))
+        return reduce(lambda x, y: x*y, (c.solutions for c in self.children), 1)
 
     @property
     def symbol(self):

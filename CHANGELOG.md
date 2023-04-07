@@ -18,6 +18,12 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix `to_str` failure when calculating the number of solutions in the context
+  of optional match ([#147]). Thanks @LVrecar for the report and fix.
+
+[#147]: https://github.com/igordejanovic/parglare/issues/147
+
 
 ## [0.16.1] (released: 2023-02-27)
 
