@@ -161,6 +161,8 @@ class GLRParser(Parser):
 
     def _find_lookaheads(self):
         debug = self.debug
+        # Make sub-frontiers per symbol of the token ahead thus handling lexical
+        # ambiguity by the same GLR mechanics
         self._active_heads_per_symbol = {}
         while self._active_heads:
             state_id, head = self._active_heads.popitem()
@@ -824,9 +826,8 @@ class GSSNode(object):
         parents(list of Parent):
              Each stack node might have multiple parents which represent
              multiple path parse took to reach the current state. Each
-             parent link keeps a result of semantic action executed during
-             shift or reduce operation that created this node/link and the
-             link to the node from which it was reduced (None if shifted).
+             parent link keeps results of semantic actions executed during
+             shift or reduce operation.
         id(str): Unique node id. Nodes with the same id and lookahead
             token are considered the same. Created from shift level and
             state id.
