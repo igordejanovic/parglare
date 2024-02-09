@@ -1,5 +1,6 @@
-from os.path import join, dirname
-from parglare import Grammar, GLRParser
+from os.path import dirname, join
+
+from parglare import GLRParser, Grammar
 
 
 def main(debug=False):

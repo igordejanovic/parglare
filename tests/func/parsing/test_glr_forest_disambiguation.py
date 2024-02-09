@@ -1,7 +1,7 @@
 """
 Forest can be disambiguated by eliminating possibilities in Parent objects.
 """
-from parglare import Grammar, GLRParser, Node
+from parglare import GLRParser, Grammar, Node
 
 # Here, we have a grammar that defines a structure of a document with different
 # parts. The grammar is ambiguous. We will disambiguate the resulting forest by

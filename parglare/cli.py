@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import sys
+
 import click
-from parglare import Grammar, ParseError, GrammarError, GLRParser, Parser
+
+import parglare.termui as t
+from parglare import GLRParser, Grammar, GrammarError, ParseError, Parser
 from parglare.export import grammar_pda_export
 from parglare.tables import create_load_table
-from parglare.termui import prints, a_print, h_print
-import parglare.termui as t
+from parglare.termui import a_print, h_print, prints
 
 
 @click.group()
@@ -73,10 +75,7 @@ def parse(ctx, grammar_file, input_file, input, glr, recovery, dot, positions):
                         prefer_shifts=prefer_shifts,
                         prefer_shifts_over_empty=prefer_shifts_over_empty)
 
-    if input:
-        result = parser.parse(input)
-    else:
-        result = parser.parse_file(input_file)
+    result = parser.parse(input) if input else parser.parse_file(input_file)
 
     if glr:
         print(f'Solutions:{result.solutions}')
@@ -170,8 +169,7 @@ def compile_get_grammar_table(grammar_file, debug, colors, prefer_shifts,
             if len(table.sr_conflicts) == 1:
                 message = 'There is 1 Shift/Reduce conflict.'
             else:
-                message = 'There are {} Shift/Reduce conflicts.'\
-                          .format(len(table.sr_conflicts))
+                message = f'There are {len(table.sr_conflicts)} Shift/Reduce conflicts.'
             a_print(message)
             prints("Either use 'prefer_shifts' parser mode, try to resolve "
                    "manually, or use GLR parsing.")
@@ -179,8 +177,7 @@ def compile_get_grammar_table(grammar_file, debug, colors, prefer_shifts,
             if len(table.rr_conflicts) == 1:
                 message = 'There is 1 Reduce/Reduce conflict.'
             else:
-                message = 'There are {} Reduce/Reduce conflicts.'\
-                          .format(len(table.rr_conflicts))
+                message = f'There are {len(table.rr_conflicts)} Reduce/Reduce conflicts.'
             a_print(message)
             prints("Try to resolve manually or use GLR parsing.")
 

@@ -1,7 +1,9 @@
-import pytest
 import os
 import re
-from parglare import get_collector, Parser, Grammar, GrammarError
+
+import pytest
+
+from parglare import Grammar, GrammarError, Parser, get_collector
 
 THIS_FOLDER = os.path.abspath(os.path.dirname(__file__))
 

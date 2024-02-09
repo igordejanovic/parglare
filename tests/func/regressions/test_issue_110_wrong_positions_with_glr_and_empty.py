@@ -1,4 +1,4 @@
-from parglare import Grammar, Parser, GLRParser
+from parglare import GLRParser, Grammar, Parser
 
 grammar = r"""
 S: A A B;

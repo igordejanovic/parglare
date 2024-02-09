@@ -4,9 +4,9 @@ Parse the formula using PLY.
 """
 # ply_mw.py
 
+import ply.yacc as yacc
 from ply import lex
 from ply.lex import TOKEN
-import ply.yacc as yacc
 
 
 class ParseError(Exception):
@@ -15,10 +15,10 @@ class ParseError(Exception):
         self.offset = offset
 
     def __repr__(self):
-        return "ParseError(%r, %r)" % (self.msg, self.offset)
+        return f"ParseError({self.msg!r}, {self.offset!r})"
 
     def __str__(self):
-        return "%s at position %s" % (self.msg, self.offset + 1)
+        return f"{self.msg} at position {self.offset + 1}"
 
 
 # Define the lexer

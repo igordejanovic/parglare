@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Test lexical disambiguation strategy.
 
 Longest-match strategy is first used. If more tokens has the same length

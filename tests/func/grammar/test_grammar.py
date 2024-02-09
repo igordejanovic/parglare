@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 import pytest
-from parglare import Parser, Grammar
-from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
+
+from parglare import Grammar, Parser
 from parglare.exceptions import GrammarError, ParseError
+from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
 
 
 def test_single_terminal():

@@ -1,4 +1,5 @@
 import re
+
 from parglare import get_collector
 
 recognizer = get_collector()

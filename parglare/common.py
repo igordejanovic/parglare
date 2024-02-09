@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
-import sys
+
 from parglare import termui as t
 from parglare.termui import s_attention as _a
 
 
-class Location(object):
+class Location:
     """
     Represents a location (point or span) of the object in the source code.
 
@@ -89,7 +88,7 @@ class Location(object):
         context = self.context
         if line is not None:
             return ('{}{}:{}:"{}"'
-                    .format("{}:".format(self.file_name)
+                    .format(f"{self.file_name}:"
                             if self.file_name else "",
                             line, column,
                             position_context(context.input_str,
@@ -125,19 +124,11 @@ def load_python_module(mod_name, mod_path):
     Loads Python module from an arbitrary location.
     See https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
     """
-    if sys.version_info >= (3, 5):
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            mod_name, mod_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-    elif sys.version_info >= (3, 3):
-        from importlib.machinery import SourceFileLoader
-        module = SourceFileLoader(
-            mod_name, mod_path).load_module()
-    else:
-        import imp
-        module = imp.load_source(mod_name, mod_path)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        mod_name, mod_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
     return module
 
@@ -149,7 +140,7 @@ def get_collector():
     """
     all = {}
 
-    class Collector(object):
+    class Collector:
         def __call__(self, name_or_f):
             """
             If called with action/recognizer name return decorator.
@@ -158,11 +149,8 @@ def get_collector():
             is_name = type(name_or_f) is str
 
             def decorator(f):
-                if is_name:
-                    name = name_or_f
-                else:
-                    name = f.__name__
-                objects = all.get(name, None)
+                name = name_or_f if is_name else f.__name__
+                objects = all.get(name)
                 if objects:
                     if type(objects) is list:
                         objects.append(f)
@@ -217,7 +205,7 @@ def dot_escape(s):
     return out
 
 
-class ErrorContext(object):
+class ErrorContext:
     """
     Context for errors.  Errors are constructed from parsing heads and are
     represented as location span.  Initially, the start and end of the span are

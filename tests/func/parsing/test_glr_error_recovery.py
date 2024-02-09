@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest  # noqa
 from parglare import GLRParser, Grammar, ParseError
 from parglare.parser import Token

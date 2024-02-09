@@ -1,6 +1,8 @@
-import pytest
 import sys
-from parglare import Grammar, GLRParser
+
+import pytest
+
+from parglare import GLRParser, Grammar
 
 grammar = r"""
 Sentence: KindDefinitionSentence | OtherSentence;

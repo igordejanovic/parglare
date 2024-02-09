@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 import pytest
-from parglare import Parser, Grammar
+
+from parglare import Grammar, Parser
 from parglare.exceptions import GrammarError, ParseError, RRConflicts
 
 

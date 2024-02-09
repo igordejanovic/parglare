@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
+from os.path import dirname, join
+
 import pytest
-from os.path import join, dirname
-from parglare import Parser, Grammar
-from ..grammar.expression_grammar import get_grammar
+
+from parglare import Grammar, Parser
 from parglare.exceptions import ParseError
+
+from ..grammar.expression_grammar import get_grammar
 
 
 def test_parsing():

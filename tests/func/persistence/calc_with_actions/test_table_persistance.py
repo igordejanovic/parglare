@@ -1,5 +1,7 @@
+import contextlib
 import os
 import time
+
 from parglare import Grammar, Parser
 
 this_folder = os.path.dirname(__file__)
@@ -17,10 +19,8 @@ def test_save_load_table():
 
     table_file = os.path.join(this_folder, 'calc.pgt')
     # remove table file if exists
-    try:
+    with contextlib.suppress(OSError):
         os.remove(table_file)
-    except OSError:
-        pass
 
     parser = Parser(grammar)
     assert parser.parse(input_str) == input_str_result

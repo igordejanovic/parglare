@@ -1,4 +1,5 @@
 import os
+
 from parglare import Grammar, Parser
 
 this_folder = os.path.dirname(__file__)

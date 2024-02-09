@@ -1,4 +1,5 @@
 import sys
+
 import click
 
 if sys.version < '3':
@@ -13,7 +14,9 @@ S_HEADER = {'fg': 'green'}
 S_EMPH = {'fg': 'yellow'}
 
 
-def prints(message, s={}):
+def prints(message, s=None):
+    if s is None:
+        s = {}
     click.echo(style(message, s), color=colors)
 
 

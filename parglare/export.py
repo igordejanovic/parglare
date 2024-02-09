@@ -1,7 +1,6 @@
-from parglare.parser import REDUCE, SHIFT
-import io
-from parglare.common import dot_escape
 
+from parglare.common import dot_escape
+from parglare.parser import REDUCE, SHIFT
 
 HEADER = '''
     digraph grammar {
@@ -22,17 +21,17 @@ HEADER = '''
 
 def grammar_pda_export(table, file_name):
 
-    with io.open(file_name, 'w', encoding="utf-8") as f:
+    with open(file_name, 'w', encoding="utf-8") as f:
         f.write(HEADER)
 
         for state in table.states:
             kernel_items = ""
             for item in state.kernel_items:
-                kernel_items += "{}\\l".format(dot_escape(str(item)))
+                kernel_items += f"{dot_escape(str(item))}\\l"
 
             nonkernel_items = "|" if state.nonkernel_items else ""
             for item in state.nonkernel_items:
-                nonkernel_items += "{}\\l".format(dot_escape(str(item)))
+                nonkernel_items += f"{dot_escape(str(item))}\\l"
 
             # SHIFT actions and GOTOs will be encoded in links.
             # REDUCE actions will be presented inside each node.
@@ -55,8 +54,7 @@ def grammar_pda_export(table, file_name):
             f.write('{}[label="{}|{}{}{}"]\n'
                     .format(
                         state.state_id,
-                        dot_escape("{}:{}"
-                                   .format(state.state_id, state.symbol)),
+                        dot_escape(f"{state.state_id}:{state.symbol}"),
                         kernel_items, nonkernel_items, reductions))
 
             f.write("\n")
@@ -74,7 +72,6 @@ def grammar_pda_export(table, file_name):
 
             for symb, goto_state in ((symb, goto) for symb, goto
                                      in state.gotos.items()):
-                f.write('{} -> {} [label="GOTO:{}"]'.format(
-                    state.state_id, goto_state.state_id, symb))
+                f.write(f'{state.state_id} -> {goto_state.state_id} [label="GOTO:{symb}"]')
 
         f.write("\n}\n")

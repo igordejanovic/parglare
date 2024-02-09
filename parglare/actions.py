@@ -1,6 +1,7 @@
 """
 Common parsing actions.
 """
+import contextlib
 import sys
 
 if sys.version < '3':
@@ -37,10 +38,8 @@ def pass_inner(_, nodes):
     `( <some expression> )`.
     """
     n = nodes[1:-1]
-    try:
+    with contextlib.suppress(ValueError):
         n, = n
-    except ValueError:
-        pass
     return n
 
 

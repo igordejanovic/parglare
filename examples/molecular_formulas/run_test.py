@@ -1,12 +1,14 @@
 """Run tests to validate the MW parsers and compare timing results."""
 # compare_mw.py
 
-import parglare_mw
-import ply_mw
+import sys
 
 # time.clock is more accurate under Windows
 import time
-import sys
+
+import parglare_mw
+import ply_mw
+
 if sys.platform == "win32":
     timer = time.clock
 else:
@@ -30,11 +32,11 @@ def _generate_random_formulas():
     _possible_lengths = (1, 2, 3, 4, 5, 10, 53, 104)
     # Repeat count for each formula
     _possible_counts = tuple(range(12)) + (88, 91, 106, 107, 200, 1234)
-    for i in range(2500):
+    for _i in range(2500):
         terms = []
         total_mw = 0.0
         # Use a variety of lengths
-        for j in range(random.choice(_possible_lengths)):
+        for _j in range(random.choice(_possible_lengths)):
             symbol = random.choice(_element_names)
             terms.append(symbol)
             count = random.choice(_possible_counts)
@@ -64,8 +66,7 @@ def do_tests(calculate_mw):
     for expected_mw, formula in good_test_data:
         got_mw = calculate_mw(formula)
         if expected_mw != got_mw:
-            raise AssertionError("%r expected %r got %r" %
-                                 (formula, expected_mw, got_mw))
+            raise AssertionError(f"{formula!r} expected {expected_mw!r} got {got_mw!r}")
     return timer() - start_time
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Tests for issue #73 (see https://github.com/igordejanovic/parglare/issues/73)
 from parglare import Grammar, Parser
 

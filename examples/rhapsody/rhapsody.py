@@ -1,4 +1,5 @@
 import os
+
 from parglare import Grammar, Parser
 
 
@@ -9,7 +10,7 @@ def main(debug=False):
     g = Grammar.from_file(grammar_file, debug=debug, debug_colors=True)
     parser = Parser(g, build_tree=True, debug=debug, debug_colors=True)
 
-    with open(os.path.join(this_folder, 'LightSwitch.rpy'), 'r') as f:
+    with open(os.path.join(this_folder, 'LightSwitch.rpy')) as f:
         result = parser.parse(f.read())
         print(result.to_str())
 

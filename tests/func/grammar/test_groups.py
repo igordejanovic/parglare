@@ -3,7 +3,7 @@ Grammar rules can use groups in parentheses.
 The group should be treated the same as any other rule reference,
 it can be used in assignments, repetitions etc.
 """
-from parglare import Grammar, GLRParser
+from parglare import GLRParser, Grammar
 from parglare.grammar import ASSOC_LEFT, MULT_ONE
 
 

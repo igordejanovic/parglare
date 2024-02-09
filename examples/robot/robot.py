@@ -14,8 +14,8 @@ An example of the robot program:
 
 """
 import os
-from parglare import Grammar, Parser
-from parglare import get_collector
+
+from parglare import Grammar, Parser, get_collector
 
 action = get_collector()
 
@@ -27,7 +27,7 @@ def INT(_, value):
 
 @action
 def initial(context, nodes, x, y):
-    print("Robot initial position set to: {}, {}".format(x, y))
+    print(f"Robot initial position set to: {x}, {y}")
     # We use context.extra to keep robot position state.
     context.extra = (x, y)
 
@@ -40,7 +40,7 @@ def program(context, nodes, commands):
 @action
 def move(context, nodes, direction, steps):
     steps = 1 if steps is None else steps
-    print("Moving robot {} for {} steps.".format(direction, steps))
+    print(f"Moving robot {direction} for {steps} steps.")
 
     move = {
         "up": (0, 1),
@@ -63,7 +63,7 @@ def main(debug=False):
 
     end_position = parser.parse_file(os.path.join(this_folder, 'program.rbt'))
 
-    print("Robot stops at position: {}".format(end_position))
+    print(f"Robot stops at position: {end_position}")
 
 
 if __name__ == "__main__":

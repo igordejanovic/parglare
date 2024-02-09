@@ -1,5 +1,7 @@
-import os
+import contextlib
 import filecmp
+import os
+
 from parglare import Grammar, Parser
 
 this_folder = os.path.dirname(__file__)
@@ -33,10 +35,8 @@ def test_diamond_import_resolving_and_model_creation():
     table_cmp_file = os.path.join(this_folder, 'model_compare.pgt')
 
     g = Grammar.from_file(grammar_file)
-    try:
+    with contextlib.suppress(Exception):
         os.remove(table_file)
-    except Exception:
-        pass
 
     parser = Parser(g)
 

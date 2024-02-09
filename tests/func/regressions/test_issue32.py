@@ -1,4 +1,5 @@
 import pytest
+
 from parglare import Grammar, GrammarError
 
 

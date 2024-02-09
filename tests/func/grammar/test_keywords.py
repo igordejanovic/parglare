@@ -3,7 +3,8 @@ Test special KEYWORD rule.
 """
 # -*- coding: utf-8 -*-
 import pytest
-from parglare import Parser, Grammar, RegExRecognizer, StringRecognizer
+
+from parglare import Grammar, Parser, RegExRecognizer, StringRecognizer
 from parglare.exceptions import GrammarError, ParseError
 
 

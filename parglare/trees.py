@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 from functools import reduce
+
 from parglare.common import dot_escape
 from parglare.exceptions import LoopError
-
 
 DOT_HEADER = '''
     digraph grammar {
@@ -45,16 +44,11 @@ def to_str(root):
             for idx, p in enumerate(subresults):
                 s += f'\n{indent}{idx+1}:{p}'
         elif n.is_nonterm():
-            s = '{}{}[{}->{}]'.format(indent, n.production.symbol,
-                                      n.start_position,
-                                      n.end_position)
+            s = f'{indent}{n.production.symbol}[{n.start_position}->{n.end_position}]'
             if subresults:
                 s = '{}\n{}'.format(s, '\n'.join(subresults))
         else:
-            s = '{}{}[{}->{}, "{}"]'.format(indent, n.symbol,
-                                            n.start_position,
-                                            n.end_position,
-                                            n.value)
+            s = f'{indent}{n.symbol}[{n.start_position}->{n.end_position}, "{n.value}"]'
         return s
     return visitor(root, tree_node_iterator, visit)
 
@@ -66,20 +60,20 @@ def to_dot(self, positions=True):
 
     def visit(n, subresults, _):
         sub_str = ''.join(s[1] for s in subresults if id(s[1]) not in rendered)
-        rendered.update((id(s[1]) for s in subresults))
+        rendered.update(id(s[1]) for s in subresults)
         pos = f'[{n.start_position}-{n.end_position}]' if positions else ''
         if isinstance(n, Parent):
             s = '{}[label="Amb({},{})" shape=box];\n'.format(
                 id(n),
                 dot_escape(f'{n.head.symbol}{pos}'), n.ambiguity)
             s += sub_str
-            s += ''.join(('{}->{};\n'.format(id(n), id(s[0])) for s in subresults))
+            s += ''.join(f'{id(n)}->{id(s[0])};\n' for s in subresults)
         elif n.is_nonterm():
             s = '{}[label="{}"];\n'.format(
                 id(n),
                 dot_escape(f'{n.symbol}{pos}'))
             s += sub_str
-            s += ''.join(('{}->{}[label="{}"];\n'.format(id(n), id(s[0]), idx+1)
+            s += ''.join((f'{id(n)}->{id(s[0])}[label="{idx+1}"];\n'
                           for idx, s in enumerate(subresults)))
         else:
             terminals.append(n)
@@ -94,7 +88,7 @@ def to_dot(self, positions=True):
         '{{rank=same {} [style=invis]}}'.format('->'.join(str(id(t)) for t in terminals)))
 
 
-class Node(object):
+class Node:
     """A node of the parse tree."""
 
     __slots__ = ['context']
@@ -131,7 +125,7 @@ class NodeNonTerm(Node):
     __slots__ = ['production', 'children']
 
     def __init__(self, context, children, production=None):
-        super(NodeNonTerm, self).__init__(context)
+        super().__init__(context)
         self.children = children
         self.production = production
 
@@ -161,7 +155,7 @@ class NodeNonTerm(Node):
 
 class NodeTerm(Node):
     def __init__(self, context, token=None):
-        super(NodeTerm, self).__init__(context)
+        super().__init__(context)
         self.token = token
 
     @property
@@ -265,10 +259,9 @@ class LazyTree(Tree):
         self.counter = counter
 
     def __getattr__(self, attr):
-        if 'children' == attr:
-            if self._children is None:
-                if self.root.is_nonterm():
-                    self._children = self._enumerate_children(self.counter)
+        if attr == 'children':
+            if self._children is None and self.root.is_nonterm():
+                self._children = self._enumerate_children(self.counter)
             return self._children
         # Proxy to tree node
         return getattr(self.root, attr)
@@ -404,9 +397,8 @@ def visitor(root, iterator, visit, memoize=True, check_cycle=False):
                 stack[-1][-1].append(result)
             continue
         if check_cycle and id(next_elem) in visiting:
-            raise LoopError('Looping during traversal on "{}". '
-                            'Last elements: {}'.format(next_elem,
-                                                       [r[0] for r in stack[-10:]]))
+            raise LoopError(f'Looping during traversal on "{next_elem}". '
+                            f'Last elements: {[r[0] for r in stack[-10:]]}')
         if memoize and id(next_elem) in cache:
             results.append(cache[id(next_elem)][0])
         else:

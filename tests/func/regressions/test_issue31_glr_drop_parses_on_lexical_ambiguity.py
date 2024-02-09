@@ -1,4 +1,4 @@
-from parglare import Grammar, GLRParser
+from parglare import GLRParser, Grammar
 
 
 def test_issue31_glr_drop_parses_on_lexical_ambiguity():

@@ -3,7 +3,8 @@ This is work in progress
 """
 import os
 import re
-from parglare import Grammar, GLRParser
+
+from parglare import GLRParser, Grammar
 
 
 def main(debug=False):

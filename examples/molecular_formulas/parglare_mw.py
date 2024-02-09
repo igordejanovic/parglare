@@ -32,7 +32,7 @@ atom_names = sorted(
 atom_pattern = "|".join(atom_names)
 
 # Extend grammar definition with the ATOM rule
-grammar += '\nATOM: /{}/;'.format(atom_pattern)
+grammar += f'\nATOM: /{atom_pattern}/;'
 
 actions = {
     'mw': [lambda _, __: 0.0,

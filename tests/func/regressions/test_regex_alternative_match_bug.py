@@ -1,4 +1,4 @@
-from parglare import Grammar, GLRParser
+from parglare import GLRParser, Grammar
 
 
 def test_regex_alternative_match_bug():

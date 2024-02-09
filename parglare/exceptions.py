@@ -4,13 +4,13 @@ from parglare.termui import s_header as _
 class LocationError(Exception):
     def __init__(self, location, message):
         self.location = location
-        super(LocationError, self).__init__(
-            "Error at {} => {}".format(location, message))
+        super().__init__(
+            f"Error at {location} => {message}")
 
 
 class GrammarError(LocationError):
     def __init__(self, location, message):
-        super(GrammarError, self).__init__(location, message)
+        super().__init__(location, message)
 
 
 class ParseError(LocationError):
@@ -36,7 +36,7 @@ class ParseError(LocationError):
         self.last_heads = last_heads
         self.grammar = grammar
         message = expected_message(symbols_expected, tokens_ahead)
-        super(ParseError, self).__init__(location, message)
+        super().__init__(location, message)
 
 
 def expected_message(symbols_expected, tokens_ahead=None):
@@ -64,7 +64,7 @@ class DisambiguationError(LocationError):
     def __init__(self, location, tokens):
         self.tokens = tokens
         message = disambiguation_error(tokens)
-        super(DisambiguationError, self).__init__(location, message)
+        super().__init__(location, message)
 
 
 class DynamicDisambiguationConflict(Exception):
@@ -78,14 +78,14 @@ class DynamicDisambiguationConflict(Exception):
                   " dynamic disambiguation still can't decide "\
                   .format(str(state), state.state_id, state.symbol, token)
         if actions[0].action == SHIFT:
-            prod_str = " or ".join(["'{}'".format(str(a.prod))
+            prod_str = " or ".join([f"'{str(a.prod)}'"
                                     for a in actions[1:]])
             message += "whether to shift or reduce by "\
-                       "production(s) {}.".format(prod_str)
+                       f"production(s) {prod_str}."
         else:
-            prod_str = " or ".join(["'{}'".format(str(a.prod))
+            prod_str = " or ".join([f"'{str(a.prod)}'"
                                     for a in actions])
-            message += "which reduction to perform: {}".format(prod_str)
+            message += f"which reduction to perform: {prod_str}"
 
         self.message = message
 
@@ -93,7 +93,7 @@ class DynamicDisambiguationConflict(Exception):
         return self.message
 
 
-class LRConflict(object):
+class LRConflict:
     def __init__(self, state, term, productions):
         self.state = state
         self.term = term
@@ -106,10 +106,10 @@ class LRConflict(object):
 
 class SRConflict(LRConflict):
     def __init__(self, state, term, productions):
-        super(SRConflict, self).__init__(state, term, productions)
+        super().__init__(state, term, productions)
 
     def __str__(self):
-        prod_str = " or ".join(["'{}'".format(str(p))
+        prod_str = " or ".join([f"'{str(p)}'"
                                 for p in self.productions])
         message = "{}\nIn state {}:{} and input symbol '{}' can't " \
                   "decide whether to shift or reduce by production(s) {}.{}" \
@@ -123,10 +123,10 @@ class SRConflict(LRConflict):
 
 class RRConflict(LRConflict):
     def __init__(self, state, term, productions):
-        super(RRConflict, self).__init__(state, term, productions)
+        super().__init__(state, term, productions)
 
     def __str__(self):
-        prod_str = " or ".join(["'{}'".format(str(p))
+        prod_str = " or ".join([f"'{str(p)}'"
                                 for p in self.productions])
         message = "{}\nIn state {}:{} and input symbol '{}' can't " \
                   "decide which reduction to perform: {}.{}" \
@@ -143,7 +143,7 @@ class LRConflicts(Exception):
         message = "\n{} conflicts in following states: {}"\
                   .format(self.kind,
                           set([c.state.state_id for c in conflicts]))
-        super(LRConflicts, self).__init__(message)
+        super().__init__(message)
 
 
 class SRConflicts(LRConflicts):

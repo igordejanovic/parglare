@@ -1,6 +1,7 @@
 import os
 import time
-from parglare import Grammar, GLRParser
+
+from parglare import GLRParser, Grammar
 
 
 def main(debug=False):
@@ -16,8 +17,8 @@ def main(debug=False):
     forest = parser.parse_file(file_name)
     t_end = time.time()
 
-    print('Elapsed time: {:.2f}'.format(t_end - t_start), 'sec')
-    print('Speed = {:.2f}'.format(file_size/1000/(t_end - t_start)),
+    print(f'Elapsed time: {t_end - t_start:.2f}', 'sec')
+    print(f'Speed = {file_size/1000/(t_end - t_start):.2f}',
           'KB/sec\n')
     print('Solutions: ', forest.solutions)
     print('Ambiguities: ', forest.ambiguities)

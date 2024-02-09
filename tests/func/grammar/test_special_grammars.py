@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 Test non-deterministic parsing.
 """
 import sys
+
 import pytest  # noqa
-from parglare import Parser, GLRParser, Grammar, SLR, LALR
-from parglare.exceptions import ParseError, SRConflicts, RRConflicts, LoopError
+
+from parglare import LALR, SLR, GLRParser, Grammar, Parser
+from parglare.exceptions import LoopError, ParseError, RRConflicts, SRConflicts
 
 
 def test_lr_1_grammar():

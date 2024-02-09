@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest  # noqa
 from parglare import Grammar, Parser, ParseError, ParserInitError, \
     GrammarError, DisambiguationError

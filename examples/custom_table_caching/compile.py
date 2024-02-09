@@ -1,8 +1,7 @@
-from parglare.tables import create_table, LALR
-from parglare.tables.persist import table_to_serializable
-
 from grammar import grammar, start_symbol
 
+from parglare.tables import LALR, create_table
+from parglare.tables.persist import table_to_serializable
 
 table = create_table(
     grammar,

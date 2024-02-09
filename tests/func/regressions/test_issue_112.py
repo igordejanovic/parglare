@@ -1,5 +1,6 @@
 import pytest
-from parglare import Grammar, GLRParser, ParseError
+
+from parglare import GLRParser, Grammar, ParseError
 
 
 def test_issue_112_fail_on_empty():

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest  # noqa
 from parglare import Parser, GLRParser, Grammar
 from ..grammar.expression_grammar import get_grammar

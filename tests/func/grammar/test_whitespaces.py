@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
 import pytest
-from parglare import Parser, Grammar
+
+from parglare import Grammar, Parser
 from parglare.exceptions import ParseError
+
 from .expression_grammar import get_grammar
 
 

@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
-import pytest
 import sys
-from parglare import GLRParser, Grammar, Parser, ParseError
+
+import pytest
+
+from parglare import GLRParser, Grammar, ParseError, Parser
 from parglare.exceptions import SRConflicts
 
 

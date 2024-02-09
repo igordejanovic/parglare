@@ -46,10 +46,7 @@ def custom_disambiguation_filter(context, from_state, to_state, action,
 
     assert subresults is None or isinstance(subresults, list)
 
-    if action is SHIFT:
-        operation = context.token.symbol
-    else:
-        operation = context.token_ahead.symbol
+    operation = context.token.symbol if action is SHIFT else context.token_ahead.symbol
 
     actions = from_state.actions[operation]
     if operation not in operations and operation.name != 'STOP':

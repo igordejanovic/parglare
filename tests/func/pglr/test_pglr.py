@@ -1,6 +1,7 @@
 import pytest  # noqa
 import subprocess
 import os
+import contextlib
 
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 GRAMMAR_FILE = os.path.join(CURRENT_DIR, 'grammar.pg')
@@ -24,13 +25,11 @@ def test_pglr_viz():
     """
     Test pglr command for PDA visualization.
     """
-    DOT_FILE = os.path.join(CURRENT_DIR, '{}.dot'.format(GRAMMAR_FILE))
-    try:
+    DOT_FILE = os.path.join(CURRENT_DIR, f'{GRAMMAR_FILE}.dot')
+    with contextlib.suppress(Exception):
         os.remove(DOT_FILE)
-    except Exception:
-        pass
     assert not os.path.exists(DOT_FILE)
     result = subprocess.call(['pglr', '--no-colors', 'viz', GRAMMAR_FILE])
     assert result == 0
     assert os.path.exists(DOT_FILE)
-    assert 'digraph grammar' in open(DOT_FILE, 'r').read()
+    assert 'digraph grammar' in open(DOT_FILE).read()

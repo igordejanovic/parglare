@@ -303,4 +303,4 @@ def test_obj_action_for_assignments():
     assert result.a == "foo"
     assert result.b is True
     assert len(result.c) == 3
-    assert all((c.val == "baz" for c in result.c))
+    assert all(c.val == "baz" for c in result.c)

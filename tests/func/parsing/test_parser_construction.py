@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 import sys
+
 import pytest  # noqa
-from parglare import Grammar, Parser, GLRParser, EMPTY
+
+from parglare import EMPTY, GLRParser, Grammar, Parser
 from parglare.grammar import STOP
-from parglare.tables import first, follow, create_table, SHIFT, REDUCE
-from ..grammar.expression_grammar import (OPEN, ID, T, E,
-                                          MULT, CLOSE, PLUS, get_grammar)
+from parglare.tables import REDUCE, SHIFT, create_table, first, follow
+
+from ..grammar.expression_grammar import CLOSE, ID, MULT, OPEN, PLUS, E, T, get_grammar
 
 HAS_MOCK = sys.version_info[0] >= 3
 if HAS_MOCK:

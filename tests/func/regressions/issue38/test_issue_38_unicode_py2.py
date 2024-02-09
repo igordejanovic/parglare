@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import os
+
 from parglare import Grammar, Parser
 
 

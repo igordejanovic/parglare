@@ -1,15 +1,26 @@
+import contextlib
 import logging
 import os
 from collections import OrderedDict
 from itertools import chain
-from parglare.grammar import ProductionRHS, AUGSYMBOL, \
-    ASSOC_LEFT, ASSOC_RIGHT, STOP, StringRecognizer, RegExRecognizer, \
-    Grammar, EMPTY, NonTerminal, DEFAULT_PRIORITY
-from parglare.exceptions import GrammarError, SRConflict, RRConflict
-from parglare.closure import closure, LR_1
-from parglare.termui import prints, s_header, h_print, a_print, s_emph
-from parglare.tables.persist import load_table, save_table
 
+from parglare.closure import LR_1, closure
+from parglare.exceptions import GrammarError, RRConflict, SRConflict
+from parglare.grammar import (
+    ASSOC_LEFT,
+    ASSOC_RIGHT,
+    AUGSYMBOL,
+    DEFAULT_PRIORITY,
+    EMPTY,
+    STOP,
+    Grammar,
+    NonTerminal,
+    ProductionRHS,
+    RegExRecognizer,
+    StringRecognizer,
+)
+from parglare.tables.persist import load_table, save_table
+from parglare.termui import a_print, h_print, prints, s_emph, s_header
 
 logger = logging.getLogger(__name__)
 
@@ -59,36 +70,33 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
     table_file_name = None
     if grammar.file_path:
         file_basename, _ = os.path.splitext(grammar.file_path)
-        table_file_name = "{}.pgt".format(file_basename)
+        table_file_name = f"{file_basename}.pgt"
 
     create_table_file = True
 
-    if not force_create and not force_load:
-        if grammar.file_path:
-            file_basename, _ = os.path.splitext(grammar.file_path)
-            table_file_name = "{}.pgt".format(file_basename)
+    if not force_create and not force_load and grammar.file_path:
+        file_basename, _ = os.path.splitext(grammar.file_path)
+        table_file_name = f"{file_basename}.pgt"
 
-            if os.path.exists(table_file_name):
-                create_table_file = False
-                table_mtime = os.path.getmtime(table_file_name)
-                # Check if older than any of the grammar files
-                for g_file_name in grammar.imported_files.keys():
-                    if os.path.getmtime(g_file_name) > table_mtime:
-                        create_table_file = True
-                        break
+        if os.path.exists(table_file_name):
+            create_table_file = False
+            table_mtime = os.path.getmtime(table_file_name)
+            # Check if older than any of the grammar files
+            for g_file_name in grammar.imported_files:
+                if os.path.getmtime(g_file_name) > table_mtime:
+                    create_table_file = True
+                    break
 
     if (create_table_file or force_create) and not force_load:
         table = create_table(grammar, itemset_type, start_production,
                              prefer_shifts, prefer_shifts_over_empty,
                              debug=debug, **kwargs)
         if table_file_name:
-            try:
+            with contextlib.suppress(PermissionError):
                 save_table(table_file_name, table)
-            except PermissionError:
-                pass
     else:
         if debug:
-            h_print("Loading LR table from '{}'".format(table_file_name))
+            h_print(f"Loading LR table from '{table_file_name}'")
         table = load_table(table_file_name, grammar)
 
     return table
@@ -118,9 +126,9 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
         if nt.name != 'S\'' and not firsts:
             raise GrammarError(
                 location=nt.location,
-                message='First set empty for grammar symbol "{}". '
+                message=f'First set empty for grammar symbol "{nt}". '
                         'An infinite recursion on the '
-                        'grammar symbol.'.format(nt))
+                        'grammar symbol.')
 
     follow_sets = follow(grammar, first_sets)
 
@@ -216,7 +224,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                 state.actions[symbol] = [Action(SHIFT, state=target_state)]
 
     if debug:
-        h_print("{} LR automata states constructed".format(len(states)))
+        h_print(f"{len(states)} LR automata states constructed")
         h_print("Finishing LALR calculation...")
 
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
@@ -389,7 +397,7 @@ def merge_states(old_state, new_state):
     return True
 
 
-class LRTable(object):
+class LRTable:
     def __init__(
         self, states, calc_finish_flags=True,
         # lexical_disambiguation defaults to True, when
@@ -449,7 +457,7 @@ class LRTable(object):
         for state in self.states:
             finish_flags = []
             prior = None
-            for symbol, act in reversed(list(state.actions.items())):
+            for symbol, _act in reversed(list(state.actions.items())):
                 if symbol.finish is not None:
                     finish_flags.append(symbol.finish)
                 else:
@@ -552,7 +560,7 @@ class LRTable(object):
                 print(rrc)
 
 
-class Action(object):
+class Action:
     __slots__ = ['action', 'state', 'prod']
 
     def __init__(self, action, state=None, prod=None):
@@ -570,7 +578,7 @@ class Action(object):
             p = self.prod.prod_id
         else:
             p = ''
-        return '%s%s' % (ac, ':%d' % p if p else '')
+        return '{}{}'.format(ac, ':%d' % p if p else '')
 
     def __repr__(self):
         return str(self)
@@ -585,7 +593,7 @@ class Action(object):
             return False
 
 
-class LRItem(object):
+class LRItem:
     """
     Represents an item in the items set. Item is defined by a production and a
     position inside production (the dot). If the item is of LR_1 type follow
@@ -597,7 +605,7 @@ class LRItem(object):
     def __init__(self, production, position, follow=None):
         self.production = production
         self.position = position
-        self.follow = set() if not follow else follow
+        self.follow = follow if follow else set()
 
     def __eq__(self, other):
         return other and self.production == other.production and \
@@ -659,7 +667,7 @@ class LRItem(object):
         return self.position == len(self.production.rhs)
 
 
-class LRState(object):
+class LRState:
     """LR State is a set of LR items and a dict of LR automata actions and
     gotos.
 
@@ -698,10 +706,7 @@ class LRState(object):
         other_kernel = [x for x in other.items if x.is_kernel]
         if len(this_kernel) != len(other_kernel):
             return False
-        for item in this_kernel:
-            if item not in other_kernel:
-                return False
-        return True
+        return all(item in other_kernel for item in this_kernel)
 
     def __ne__(self, other):
         return not self == other
@@ -729,14 +734,14 @@ class LRState(object):
     def __str__(self):
         s = "\n\n" + s_header("State %d:%s\n" % (self.state_id, self.symbol))
         for i in self.items:
-            s += "\t{}\n".format(i)
+            s += f"\t{i}\n"
         return s
 
     def __unicode__(self):
         return str(self)
 
     def __repr__(self):
-        return "LRState({}:{})".format(self.state_id, self.symbol.name)
+        return f"LRState({self.state_id}:{self.symbol.name})"
 
     def print_debug(self):
         prints(str(self))

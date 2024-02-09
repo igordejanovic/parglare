@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest  # noqa
 from os.path import join, dirname
 from parglare import Grammar, GrammarError

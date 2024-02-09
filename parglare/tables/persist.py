@@ -21,7 +21,7 @@ def save_table(file_name, table):
 def table_from_serializable(serialized_states, grammar):
     """Convert serializable representation of a parsing table into
     LRTable object."""
-    from parglare.tables import LRState, LRTable, Action
+    from parglare.tables import Action, LRState, LRTable
 
     states = []
     states_dict = {}

@@ -78,10 +78,7 @@ def test_forest_index(forest):
 
 @pytest.mark.parametrize("lazy", [True, False])
 def test_tree_enumeration(forest, lazy):
-    if lazy:
-        tree = forest.get_tree()
-    else:
-        tree = forest.get_nonlazy_tree()
+    tree = forest.get_tree() if lazy else forest.get_nonlazy_tree()
 
     assert tree.is_nonterm()
     assert tree.symbol.name == 'E'
@@ -113,10 +110,7 @@ def test_tree_index_iteration(forest, lazy):
     Test that non-lazy tree nodes can be iterated and indexed yielding
     sub-nodes.
     """
-    if lazy:
-        tree = forest.get_tree()
-    else:
-        tree = forest.get_nonlazy_tree()
+    tree = forest.get_tree() if lazy else forest.get_nonlazy_tree()
 
     assert tree.is_nonterm()
     assert tree.symbol.name == 'E'

@@ -1,4 +1,4 @@
-from parglare import Parser, Grammar
+from parglare import Grammar, Parser
 
 grammar = r"""
 E: E '+' E  {left, 1}

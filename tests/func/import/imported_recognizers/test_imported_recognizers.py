@@ -1,7 +1,10 @@
-import pytest
 import os
 from types import FunctionType
-from parglare import Grammar, Parser, GrammarError, ParseError
+
+import pytest
+
+from parglare import Grammar, GrammarError, ParseError, Parser
+
 from .base_recognizers import number
 
 this_folder = os.path.dirname(__file__)

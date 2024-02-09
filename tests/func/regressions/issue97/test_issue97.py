@@ -1,5 +1,6 @@
 from os.path import dirname, join
-from parglare import Grammar, GLRParser
+
+from parglare import GLRParser, Grammar
 
 
 def test_import_plus_raises_keyerror():

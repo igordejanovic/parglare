@@ -1,5 +1,6 @@
 import os
-from parglare import get_collector, Parser, Grammar
+
+from parglare import Grammar, Parser, get_collector
 
 THIS_FOLDER = os.path.abspath(os.path.dirname(__file__))
 
@@ -18,7 +19,7 @@ def test_action_explicit_get_collector():
 
     @action
     def STRING(context, value):
-        return "#{}#".format(value)
+        return f"#{value}#"
 
     grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'))
     Parser(grammar, actions=action.all)
@@ -54,11 +55,11 @@ def test_actions_explicit_get_collector_action_for_unexisting_terminal():
 
     @action
     def STRING(context, value):
-        return "#{}#".format(value)
+        return f"#{value}#"
 
     @action
     def STRING2(context, value):
-        return "#{}#".format(value)
+        return f"#{value}#"
 
     grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'))
     Parser(grammar, actions=action.all)
