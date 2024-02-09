@@ -10,4 +10,9 @@ from parglare.trees import Node, NodeTerm, NodeNonTerm, visitor
 from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
     DisambiguationError, LoopError
 
-from .version import __version__
+try:
+    from importlib.metadata import version
+except ModuleNotFoundError:
+    from importlib_metadata import version
+
+__version__ = version("parglare")
