@@ -396,7 +396,6 @@ def test_lexical_ambiguity2():
     # Longest match is used to choose FLOAT
     forest = parser.parse('42.12')
     assert len(forest) == 1
-    forest[0].symbol.name == 'FLOAT'
     assert forest.ambiguities == 0
 
     # Also, longest match will choose FLOAT in both cases

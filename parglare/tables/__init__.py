@@ -205,9 +205,9 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                 state_id += 1
             else:
                 # A state with this kernel items already exists.
-                if itemset_type is LR_1:
-                    # LALR: Try to merge states, i.e. update items follow sets.
-                    if not merge_states(target_state, maybe_new_state):
+                # LALR: Try to merge states, i.e. update items follow sets.
+                if itemset_type is LR_1 and \
+                   not merge_states(target_state, maybe_new_state):
                         target_state = maybe_new_state
                         state_queue.append(target_state)
                         state_id += 1
@@ -261,7 +261,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
     # Calculate REDUCTION entries in ACTION tables and resolve possible
     # conflicts.
-    for idx, state in enumerate(states):
+    for state in states:
         actions = state.actions
 
         for item in state.items:

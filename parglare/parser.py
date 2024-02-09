@@ -394,7 +394,7 @@ class Parser:
                             else:
                                 assgn_results[a.name] = \
                                     bool(subresults[a.index])
-                    if type(sem_action) is list:
+                    if isinstance(sem_action, list):
                         if assignments:
                             result = \
                                 sem_action[
@@ -412,11 +412,8 @@ class Parser:
                         else:
                             result = sem_action(node.context, subresults)
                 else:
-                    if len(subresults) == 1:
-                        # Unpack if single subresult
-                        result = subresults[0]
-                    else:
-                        result = subresults
+                    result = subresults[0] \
+                        if len(subresults) == 1 else subresults
 
             return result
 
@@ -438,15 +435,15 @@ class Parser:
                 while head.position < in_len \
                       and input_str[head.position] in self.ws:
                     head.position += 1
-            except TypeError:
+            except TypeError as ex:
                 raise ParserInitError(
                     "For parsing non-textual content please "
-                    "set `ws` to `None`.")
+                    "set `ws` to `None`.") from ex
             layout_content_ahead = input_str[old_pos:head.position]
 
         if self.debug:
             content = layout_content_ahead
-            if type(layout_content_ahead) is str:
+            if isinstance(layout_content_ahead, str):
                 content = content.replace("\n", "\\n")
             h_print("Skipping whitespaces:",
                     f"'{content}'")
@@ -693,7 +690,7 @@ class Parser:
                     else:
                         assgn_results[a.name] = bool(subresults[a.index])
 
-            if type(sem_action) is list:
+            if isinstance(sem_action, list):
                 if assignments:
                     result = sem_action[production.prod_symbol_id](
                         context, subresults, **assgn_results)
@@ -770,7 +767,7 @@ class Parser:
         head = self.parse_stack[-1]
         error = self.errors[-1]
 
-        if type(self.error_recovery) is bool:
+        if isinstance(self.error_recovery, bool):
             # Default recovery
             if debug:
                 prints("\tDoing default error recovery.")

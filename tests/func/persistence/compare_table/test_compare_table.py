@@ -49,10 +49,10 @@ def test_diamond_import_resolving_and_model_creation():
     model = parser.parse(input_str)
     assert model
     assert model.__class__.__name__ == 'Model'
-    assert type(model.packages) is list
+    assert isinstance(model.packages, list)
     assert len(model.packages) == 2
     assert model.packages[0].name == 'First'
-    assert type(model.modules) is list
+    assert isinstance(model.modules, list)
     assert len(model.modules) == 1
 
     packageComponent = model.packages[1].body.components[0]

@@ -1,3 +1,4 @@
+# ruff: noqa: B023
 """
 Forest can be disambiguated by eliminating possibilities in Parent objects.
 """

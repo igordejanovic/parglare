@@ -2,12 +2,6 @@
 Common parsing actions.
 """
 import contextlib
-import sys
-
-if sys.version < '3':
-    text = unicode  # NOQA
-else:
-    text = str
 
 
 def pass_none(_, value, *args):

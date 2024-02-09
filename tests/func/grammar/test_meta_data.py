@@ -31,7 +31,7 @@ def test_production_meta_data():
     assert prod.some_float == 4.5
 
     with pytest.raises(AttributeError):
-        prod.non_existing
+        prod.non_existing  # noqa: B018
 
 
 def test_production_meta_data_must_be_key_value():
@@ -60,7 +60,7 @@ def test_terminal_meta_data():
     assert term_a.label == 'My Label'
 
     with pytest.raises(AttributeError):
-        term_a.non_existing
+        term_a.non_existing  # noqa: B018
 
 
 def test_terminal_meta_data_must_be_key_value():

@@ -499,7 +499,7 @@ class GLRParser(Parser):
                         level=1, new_line=True)
                 h_print("Symbols expected: ",
                         [s.name for s in symbols], level=1)
-            if type(self.error_recovery) is bool:
+            if isinstance(self.error_recovery, bool):
                 # Default recovery
                 if debug:
                     prints("\tDoing default error recovery.")

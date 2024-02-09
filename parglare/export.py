@@ -72,6 +72,7 @@ def grammar_pda_export(table, file_name):
 
             for symb, goto_state in ((symb, goto) for symb, goto
                                      in state.gotos.items()):
-                f.write(f'{state.state_id} -> {goto_state.state_id} [label="GOTO:{symb}"]')
+                f.write(f'{state.state_id} -> {goto_state.state_id}'
+                        f' [label="GOTO:{symb}"]')
 
         f.write("\n}\n")

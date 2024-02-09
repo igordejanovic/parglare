@@ -30,7 +30,7 @@ def act_sum(is_tree):
             assert context.node.is_nonterm() \
                 and context.node.symbol.name == 'E'
         else:
-            context.node is None
+            assert context.node is None
 
     return act_sum
 

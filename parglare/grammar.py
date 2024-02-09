@@ -251,7 +251,7 @@ class RegExRecognizer(Recognizer):
         except re.error as ex:
             regex = esc_control_characters(self._regex)
             message = 'Regex compile error in /{}/ (report: "{}")'
-            raise GrammarError(None, message.format(regex, str(ex)))
+            raise GrammarError(None, message.format(regex, str(ex))) from ex
 
     def __call__(self, in_str, pos):
         m = self.regex.match(in_str, pos)
@@ -466,10 +466,10 @@ class PGFile:
                 i.grammar = self.grammar
                 try:
                     i.load_pgfile()
-                except OSError:
+                except OSError as ex:
                     raise GrammarError(
                         location=Location(file_name=self.file_path),
-                        message=f'Can\'t import file "{i.file_path}".')
+                        message=f'Can\'t import file "{i.file_path}".') from ex
         else:
             self.imports = {}
 
@@ -529,8 +529,8 @@ class PGFile:
             new_symbol.productions.append(production)
 
             # Check grammar actions for rules/symbols.
-            if new_symbol.action_name:
-                if new_symbol.action_name != old_symbol.action_name:
+            if new_symbol.action_name and \
+               new_symbol.action_name != old_symbol.action_name:
                     raise GrammarError(
                         location=new_symbol.location,
                         message='Multiple different grammar actions '
@@ -670,11 +670,11 @@ class PGFile:
             import_module_name, name = symbol_name.split('.', 1)
             try:
                 imported_pg_file = self.imports[import_module_name]
-            except KeyError:
+            except KeyError as ex:
                 raise GrammarError(
                     location=location,
                     message='Unexisting module "{}" in reference "{}"'
-                    .format(import_module_name, symbol_name))
+                    .format(import_module_name, symbol_name)) from ex
             return imported_pg_file.resolve_symbol_by_name(name, location)
         else:
             return self.symbols_by_name.get(symbol_name, None)
@@ -895,7 +895,8 @@ class Grammar(PGFile):
                             add_productions(rhs_elem.productions)
                     else:
                         # This should never happen
-                        raise AssertionError(f"Invalid RHS element type '{type(rhs_elem)}'.")
+                        raise AssertionError(
+                            f"Invalid RHS element type '{type(rhs_elem)}'.")
         add_productions(list(self.productions))
 
     def _enumerate_productions(self):
@@ -1004,8 +1005,8 @@ class Grammar(PGFile):
                 symbol.action = action
 
                 # Some sanity checks for actions
-                if type(symbol.action) is list:
-                    if type(symbol) is Terminal:
+                if isinstance(symbol.action, list):
+                    if isinstance(symbol, Terminal):
                         raise ParserInitError(
                             'Cannot use a list of actions for '
                             f'terminal "{symbol.name}".')
@@ -1509,12 +1510,12 @@ def act_pgfile(context, nodes):
     imports, productions, terminals = [], [], []
     while nodes:
         first = nodes.pop(0)
-        if first and type(first) is list:
-            if type(first[0]) is PGFileImport:
+        if first and isinstance(first, list):
+            if isinstance(first[0], PGFileImport):
                 imports = first
-            elif type(first[0]) is Production:
+            elif isinstance(first[0], Production):
                 productions = first
-            elif type(first[0]) is Terminal:
+            elif isinstance(first[0], Terminal):
                 terminals = first
 
     for terminal in context.extra.inline_terminals.values():
@@ -1722,11 +1723,11 @@ def get_production_rule_meta_datas(raw_meta_datas):
             meta_datas['nops'] = True
         elif meta_data == 'nopse':
             meta_datas['nopse'] = True
-        elif type(meta_data) is int:
+        elif isinstance(meta_data, int):
             meta_datas['priority'] = meta_data
         else:
             # User meta-data
-            assert type(meta_data) is list
+            assert isinstance(meta_data, list)
             name, _, value = meta_data
             meta_datas.setdefault('user_meta', {})[name] = value
     return meta_datas
@@ -1752,9 +1753,9 @@ def act_production_group(context, nodes):
 
 def _set_term_props(term, props):
     for t in props:
-        if type(t) is int:
+        if isinstance(t, int):
             term.prior = t
-        elif type(t) is list:
+        elif isinstance(t, list):
             # User meta-data
             name, _, value = t
             term.add_user_meta_data(name, value)
@@ -1876,7 +1877,7 @@ def act_gsymbol_string_recognizer(context, nodes):
 
 def act_assignment(_, nodes):
     gsymbol_reference = nodes[0]
-    if type(gsymbol_reference) is list:
+    if isinstance(gsymbol_reference, list):
         # Named match
         name, op, gsymbol_reference = gsymbol_reference
     else:

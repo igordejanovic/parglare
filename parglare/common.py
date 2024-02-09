@@ -122,8 +122,8 @@ def replace_newlines(in_str):
 def load_python_module(mod_name, mod_path):
     """
     Loads Python module from an arbitrary location.
-    See https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
-    """
+    See https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+    """  # noqa: E501
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         mod_name, mod_path)
@@ -146,13 +146,13 @@ def get_collector():
             If called with action/recognizer name return decorator.
             If called over function apply decorator.
             """
-            is_name = type(name_or_f) is str
+            is_name = isinstance(name_or_f, str)
 
             def decorator(f):
                 name = name_or_f if is_name else f.__name__
                 objects = all.get(name)
                 if objects:
-                    if type(objects) is list:
+                    if isinstance(objects, list):
                         objects.append(f)
                     else:
                         all[name] = [objects, f]
@@ -177,7 +177,7 @@ def pos_to_line_col(input_str, position):
     if position is None:
         return None, None
 
-    if type(input_str) is not str:
+    if not isinstance(input_str, str):
         # If we are not parsing string
         return 1, position
 
