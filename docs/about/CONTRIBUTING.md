@@ -105,7 +105,7 @@ Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests.
 2. If the pull request adds/changes functionality, the docs should be updated.
-3. The pull request should work for Python 3.6-3.10. Check
+3. The pull request should work for Python 3.8-3.12. Check
    https://travis-ci.org/igordejanovic/parglare/pull_requests and make sure that
    the tests pass for all supported Python versions.
 
