@@ -5,4 +5,4 @@ coverage run --omit parglare/cli.py --source parglare -m pytest tests/func || ex
 coverage report --fail-under 90 || exit 1
 # Run this to generate html report
 # coverage html --directory=coverage
-flake8 || exit 1
+ruff check parglare/ tests/func examples/ || exit 1
