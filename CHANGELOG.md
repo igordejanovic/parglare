@@ -21,6 +21,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ### Fixed
 - Fix `to_str` failure when calculating the number of solutions in the context
   of optional match ([#147]). Thanks @LVrecar for the report and fix.
+- Fix lookahead calculation in closure
 
 ### Changed
 - Drop support for Python 3.6/3.7

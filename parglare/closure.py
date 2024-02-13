@@ -30,7 +30,7 @@ def closure(state, itemset_type, first_sets=None):
         for prod in [p for p in state.grammar.productions
                      if p.symbol == symbol]:
             new_item = LRItem(prod, 0,
-                              follow if itemset_type is LR_1 else None)
+                              set(follow) if itemset_type is LR_1 else None)
             if new_item not in state.items:
                 # If the item doesn't exists yet add it and reprocess it.
                 state.items.append(new_item)

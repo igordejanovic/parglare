@@ -238,10 +238,10 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
             update = False
 
             for state in states:
-
-                # First refresh current state's follows
+                # First refresh state's follows
                 closure(state, LR_1, first_sets)
 
+            for state in states:
                 # Propagate follows to next states. GOTOs/ACTIONs keep
                 # information about states created from this state
                 inc_items = [i.get_pos_inc() for i in state.items]
