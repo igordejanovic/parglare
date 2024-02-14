@@ -1,0 +1,5 @@
+import 'first.pg' as f;
+
+S: f.S;
+
+f.NonExisting: f.s.B;

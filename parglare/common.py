@@ -21,14 +21,14 @@ class Location:
         end and input_str.
     """
 
-    __slots__ = ['context', 'file_name',
-                 '_line', '_column',
-                 '_line_end', '_column_end']
+    __slots__ = ['start_position', 'end_position', 'input_str', 'file_name',
+                 '_line', '_column', '_line_end', '_column_end']
 
     def __init__(self, context=None, file_name=None):
-
-        self.context = context
-        self.file_name = file_name or context.file_name
+        self.start_position = context.start_position if context else None
+        self.end_position = context.end_position if context else None
+        self.input_str = context.input_str if context else None
+        self.file_name = file_name or context.file_name if context else None
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting
@@ -63,40 +63,26 @@ class Location:
         return self._column_end
 
     def evaluate_line_col(self):
-        context = self.context
         self._line, self._column = pos_to_line_col(
-            context.input_str, context.start_position)
+            self.input_str, self.start_position)
 
     def evaluate_line_col_end(self):
-        context = self.context
-        if hasattr(context, 'end_position') \
-                and context.end_position:
+        if self.end_position:
             self._line_end, self._column_end = \
-                pos_to_line_col(context.input_str, context.end_position)
-
-    def __getattr__(self, name):
-        if self.context is not None:
-            return getattr(self.context, name)
-        else:
-            raise AttributeError(name)
+                pos_to_line_col(self.input_str, self.end_position)
 
     def __str__(self):
-        if self.context is None:
-            line, column = None, None
-        else:
-            line, column = self.line, self.column
-        context = self.context
+        line, column = self.line, self.column
         if line is not None:
             return ('{}{}:{}:"{}"'
                     .format(f"{self.file_name}:"
                             if self.file_name else "",
                             line, column,
-                            position_context(context.input_str,
-                                             context.start_position)))
-        elif self.file_name:
+                            position_context(self.input_str,
+                                             self.start_position)))
+        if self.file_name:
             return _a(self.file_name)
-        else:
-            return "<Unknown location>"
+        return "<Unknown location>"
 
     def __repr__(self):
         return str(self)

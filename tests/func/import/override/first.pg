@@ -1,0 +1,6 @@
+import 'second.pg' as s;
+S: s.A s.C;
+
+terminals
+// This grammar override terminal match;
+s.B: 'bf';

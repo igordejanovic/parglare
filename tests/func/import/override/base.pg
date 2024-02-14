@@ -1,0 +1,11 @@
+import 'first.pg' as f;
+
+S: f.s.A;
+
+// This rule overrides imported rule C from the second grammar
+// Each rule that reference old rule C should now
+// reference overriden rule.
+f.s.C: 'k' f.s.B;
+
+terminals
+f.s.B: 'bb';  // also all rules referencing terminal B now use overriden version

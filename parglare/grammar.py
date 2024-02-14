@@ -2,9 +2,9 @@ import copy
 import itertools
 import re
 from collections import Counter
-from os import path
-from typing import List, Dict, Optional, Callable
 from dataclasses import dataclass, field
+from os import path
+from typing import Callable, Dict, List, Optional
 
 from parglare import termui
 from parglare.actions import collect, collect_sep, pass_none, pass_single
@@ -168,25 +168,33 @@ class Reference:
         separator (symbol or Reference): A reference to the separator symbol or
             the separator symbol itself if resolved.
     """
-    def __init__(self, location, name):
+    def __init__(self, location: Location, name: str,
+                 imported_with: 'PGFileImport'):
         self.name = name
         self.location = location
+        self.imported_with = imported_with
         self.multiplicity = MULT_ONE
         self.greedy = False
         self.separator = None
 
     @property
-    def multiplicity_name(self):
+    def multiplicity_fqn(self):
         """
         Returns the name of the symbol that should be used if
         multiplicity/separator is used.
         """
-        return make_multiplicity_name(
-            self.name, self.multiplicity,
+        return make_multiplicity_fqn(
+            self.fqn, self.multiplicity,
             self.separator.name if self.separator else None)
 
+    @property
+    def fqn(self):
+        if self.imported_with:
+            return f"{self.imported_with.fqn}.{self.name}"
+        return self.name
+
     def clone(self):
-        new_ref = Reference(self.location, self.name)
+        new_ref = Reference(self.location, self.name, self.imported_with)
         new_ref.multiplicity = self.multiplicity
         new_ref.separator = self.separator
         return new_ref
@@ -441,7 +449,7 @@ class PGFile:
     Actions are by default loaded from the file named `<grammar>_actions.py`
     where `grammar` is basename of grammar file. Recognizers are loaded from
     `<grammar>_recognizers.py`. Actions and recognizers given this way are both
-    optional. Furthermore, both actions and recognizers can be overriden by
+    optional. Furthermore, both actions and recognizers can be overridden by
     supplying actions and/or recognizers dict during grammar/parser
     instantiation.
 
@@ -471,7 +479,7 @@ class PGFile:
         self.recognizers = recognizers
         self.actions: Dict[str, Callable] = {}
 
-        self.collect_and_unify_symbols()
+        self._make_symbols_resolution_map()
 
         if self.file_path:
             self.grammar.imported_files[self.file_path] = self
@@ -489,15 +497,14 @@ class PGFile:
         else:
             self.imports = {}
 
-        self.resolve_references()
-        self.load_actions()
-        self.load_recognizers()
+        self._check_overrides()
+        self._load_actions()
+        self._load_recognizers()
 
-    def collect_and_unify_symbols(self):
-        """Collect non-terminals and terminals (both explicit and implicit/inline)
-        defined in this file and make sure there is only one instance for each
-        of them.
-
+    def _make_symbols_resolution_map(self):
+        """
+        Collect non-terminals and terminals and make dicts for resolving
+        by name.
         """
         nonterminals_by_name = {}
         terminals_by_name = {}
@@ -509,7 +516,8 @@ class PGFile:
             if terminal.name in terminals_by_name:
                 raise GrammarError(
                     location=terminal.location,
-                    message=f'Multiple definitions of terminal rule "{terminal.name}"')
+                    message=f'Multiple definitions of terminal '
+                            f'rule "{terminal.name}"')
             if isinstance(terminal.recognizer, StringRecognizer):
                 rec = terminal.recognizer
                 if rec.value in terminals_by_str_rec:
@@ -523,7 +531,6 @@ class PGFile:
             terminals_by_name[terminal.name] = terminal
 
         self.terminals = terminals_by_name
-        self.terminals_by_str_rec = terminals_by_str_rec
 
         # Collect non-terminals
         for production in self.productions:
@@ -560,19 +567,31 @@ class PGFile:
         self.symbols_by_name['EMPTY'] = EMPTY
         self.symbols_by_name['STOP'] = STOP
 
-    def resolve_references(self):
-        # Two pass resolving to enable referring symbols created during
-        # resolving (e.g. multiplicity symbols).
-        for pazz in [True, False]:
-            for production in self.productions:
-                for idx, ref in enumerate(production.rhs):
-                    if isinstance(ref, Reference):
-                        production.rhs[idx] = self.resolve_ref(ref, pazz)
+    def _check_overrides(self):
+        """
+        Check that all overrides defined in the current file are
+        valid FQNs. Just to be sure that typos don't go unnoticed.
+        """
+        for symbol_fqn, symbol in self.symbols_by_name.items():
+            # Must resolve first level without resolve_symbol_by_name
+            # as otherwise the override rule itself would be found.
+            if '.' in symbol_fqn:
+                import_module_name, name = symbol_fqn.split('.', 1)
+                try:
+                    imported_pg_file = self.imports[import_module_name]
+                    if not imported_pg_file.resolve_symbol_by_name(name):
+                        raise GrammarError(
+                            location=symbol.location,
+                            message=f"Unexisting name for symbol "
+                                    f"override {symbol_fqn}."
+                        )
+                except KeyError as ex_inner:
+                    raise GrammarError(
+                        location=symbol.location,
+                        message=f'Unexisting module "{import_module_name}"'
+                                f' in reference "{symbol_fqn}"') from ex_inner
 
-    def register_symbol(self, symbol):
-        self.symbols_by_name[symbol.name] = symbol
-
-    def load_actions(self):
+    def _load_actions(self):
         """
         Loads actions from <grammar_name>_actions.py if the file exists.
         Actions must be collected with action decorator and the decorator must
@@ -596,10 +615,10 @@ class PGFile:
                         'decorator defined.')
                 self.actions = actions_module.action.all
 
-    def load_recognizers(self):
-        """Load recognizers from <grammar_name>_recognizers.py. Override
+    def _load_recognizers(self):
+        """
+        Load recognizers from <grammar_name>_recognizers.py. Override
         with provided recognizers.
-
         """
         if self.file_path:
             recognizers_file = path.join(
@@ -632,180 +651,41 @@ class PGFile:
                             .format(recognizer_name))
                     symbol.recognizer = recognizer
 
-    def resolve_ref(self, symbol_ref, first_pass=False):
-        """Resolves given symbol reference.
-
-        For local name search this file, for FQN use imports and delegate to
-        imported file.
-
-        On each resolved symbol productions in the root file are updated.
-
-        If this is first pass do not fail on unexisting reference as there
-        might be new symbols created during resolving (e.g. multiplicity
-        symbols).
-
+    def resolve_symbol_by_name(
+            self, symbol_fqn: str,
+            location: Optional[Location] = None) -> Optional[GrammarSymbol]:
         """
-        if isinstance(symbol_ref.separator, Reference):
-            symbol_ref.separator = self.resolve_ref(symbol_ref.separator)
-
-        symbol_name = symbol_ref.name
-        symbol = self.resolve_symbol_by_name(symbol_name, symbol_ref.location)
-        if not symbol:
-            if first_pass:
-                return symbol_ref
-            else:
-                raise GrammarError(
-                    location=symbol_ref.location,
-                    message=f'Unknown symbol "{symbol_name}"')
-
-        mult = symbol_ref.multiplicity
-        if mult != MULT_ONE:
-            # If multiplicity is used than we are referring to
-            # sugared symbol
-            separator = symbol_ref.separator \
-                if symbol_ref.separator else None
-
-            base_symbol = symbol
-            symbol_name = symbol_ref.multiplicity_name
-            symbol = self.resolve_symbol_by_name(symbol_name,
-                                                 symbol_ref.location)
-            if not symbol:
-                # If there is no multiplicity version of the symbol we
-                # will create one at this place
-                symbol = self.make_multiplicity_symbol(
-                    symbol_ref, base_symbol, separator, self.imported_with)
-
-        return symbol
-
-    def resolve_symbol_by_name(self, symbol_name, location=None):
+        Resolve symbol by FQN. Respect overrides.
         """
-        Resolves symbol by fqn.
-        """
-        if '.' in symbol_name:
-            import_module_name, name = symbol_name.split('.', 1)
-            try:
-                imported_pg_file = self.imports[import_module_name]
-            except KeyError as ex:
-                raise GrammarError(
-                    location=location,
-                    message='Unexisting module "{}" in reference "{}"'
-                    .format(import_module_name, symbol_name)) from ex
-            return imported_pg_file.resolve_symbol_by_name(name, location)
-        else:
-            return self.symbols_by_name.get(symbol_name, None)
+        try:
+            # Try to get local symbol by FQN in order to override symbols from
+            # imported grammars.
+            return self.symbols_by_name[symbol_fqn]
+        except KeyError:
+            if '.' in symbol_fqn:
+                import_module_name, name = symbol_fqn.split('.', 1)
+                try:
+                    imported_pg_file = self.imports[import_module_name]
+                except KeyError as ex_inner:
+                    raise GrammarError(
+                        location=location,
+                        message=f'Unexisting module "{import_module_name}"'
+                                f' in reference "{symbol_fqn}"') from ex_inner
+                return imported_pg_file.resolve_symbol_by_name(name, location)
+        return None
 
-    def resolve_action_by_name(self, action_name):
+    def resolve_action_by_name(self, action_name: str) -> Optional[Callable]:
+        """
+        Return registered action for the given action's FQN.
+        """
         if action_name in self.actions:
             return self.actions[action_name]
-        elif '.' in action_name:
+        if '.' in action_name:
             import_module_name, name = action_name.split('.', 1)
             if import_module_name in self.imports:
                 imported_pg_file = self.imports[import_module_name]
                 return imported_pg_file.resolve_action_by_name(name)
-
-    def make_multiplicity_symbol(self, symbol_ref, base_symbol, separator,
-                                 imported_with):
-        """
-        Creates new NonTerminal for symbol refs using multiplicity and
-        separators.
-        """
-        mult = symbol_ref.multiplicity
-        assoc = ASSOC_RIGHT if symbol_ref.greedy else ASSOC_NONE
-        if mult in [MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE]:
-            symbol_name = make_multiplicity_name(
-                symbol_ref.name, MULT_ONE_OR_MORE,
-                separator.name if separator else None)
-            symbol = self.resolve_symbol_by_name(symbol_name)
-            if not symbol:
-                # noqa See: http://www.igordejanovic.net/parglare/grammar_language/#one-or-more_1
-                productions = []
-                symbol = NonTerminal(symbol_name, productions,
-                                     base_symbol.location,
-                                     imported_with=imported_with)
-
-                if separator:
-                    productions.append(
-                        Production(symbol,
-                                   ProductionRHS([symbol,
-                                                  separator,
-                                                  base_symbol])))
-                    symbol.action_name = 'collect_sep'
-                else:
-                    productions.append(
-                        Production(symbol,
-                                   ProductionRHS([symbol,
-                                                  base_symbol])))
-                    symbol.action_name = 'collect'
-
-                productions.append(
-                    Production(symbol, ProductionRHS([base_symbol])))
-
-                self.register_symbol(symbol)
-
-            if mult == MULT_ZERO_OR_MORE:
-                productions = []
-                symbol_one = symbol
-                symbol_name = make_multiplicity_name(
-                    symbol_ref.name, mult,
-                    separator.name if separator else None)
-                symbol = NonTerminal(symbol_name, productions,
-                                     base_symbol.location,
-                                     imported_with=imported_with)
-
-                productions.extend([Production(symbol,
-                                               ProductionRHS([symbol_one]),
-                                               assoc=assoc,
-                                               nops=True),
-                                    Production(symbol,
-                                               ProductionRHS([EMPTY]),
-                                               assoc=assoc)])
-
-                def action(_, nodes):
-                    if nodes:
-                        return nodes[0]
-                    else:
-                        return []
-
-                symbol.grammar_action = action
-
-                self.register_symbol(symbol)
-
-            else:
-                if symbol_ref.greedy:
-                    productions = []
-                    symbol_one = symbol
-                    symbol = NonTerminal(f'{symbol_name}_g', productions,
-                                         base_symbol.location,
-                                         imported_with=imported_with)
-                    productions.extend([Production(symbol,
-                                                   ProductionRHS([symbol_one]),
-                                                   assoc=ASSOC_RIGHT)])
-                    symbol.action_name = 'pass_single'
-                    self.register_symbol(symbol)
-
-        else:
-            # MULT_OPTIONAL
-            if separator:
-                raise GrammarError(
-                    location=symbol_ref.location,
-                    message='Repetition modifier not allowed for '
-                    f'optional (?) for symbol "{symbol_ref.name}".')
-            productions = []
-            symbol_name = make_multiplicity_name(symbol_ref.name, mult)
-            symbol = NonTerminal(symbol_name, productions,
-                                 base_symbol.location,
-                                 imported_with=imported_with)
-            productions.extend([Production(symbol,
-                                           ProductionRHS([base_symbol])),
-                                Production(symbol,
-                                           ProductionRHS([EMPTY]),
-                                           assoc=assoc)])
-
-            symbol.action_name = 'optional'
-
-            self.register_symbol(symbol)
-
-        return symbol
+        return None
 
 
 class Grammar(PGFile):
@@ -874,7 +754,7 @@ class Grammar(PGFile):
             0,
             Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
 
-        self._add_all_production_symbols()
+        self._add_resolve_all_production_symbols()
         self._enumerate_productions()
         self._fix_keyword_terminals()
         self._resolve_actions()
@@ -883,7 +763,10 @@ class Grammar(PGFile):
         if not self._no_check_recognizers:
             self._connect_override_recognizers()
 
-    def _add_all_production_symbols(self):
+    def _add_resolve_all_production_symbols(self):
+        """
+        Registers all grammar symbols and resolve RHS of each production.
+        """
 
         self.nonterminals = {}
         for prod in self.productions:
@@ -896,6 +779,9 @@ class Grammar(PGFile):
                 if symbol.fqn not in self.nonterminals:
                     self.nonterminals[symbol.fqn] = symbol
                 for idx, rhs_elem in enumerate(production.rhs):
+                    if isinstance(rhs_elem, Reference):
+                        rhs_elem = production.rhs[idx] = \
+                            self._resolve_ref(rhs_elem)
                     if isinstance(rhs_elem, Terminal):
                         if rhs_elem.fqn not in self.terminals:
                             self.terminals[rhs_elem.fqn] = rhs_elem
@@ -914,6 +800,152 @@ class Grammar(PGFile):
                         raise AssertionError(
                             f"Invalid RHS element type '{type(rhs_elem)}'.")
         add_productions(list(self.productions))
+
+    def register_symbol(self, symbol):
+        self.symbols_by_name[symbol.name] = symbol
+
+    def _resolve_ref(self, symbol_ref):
+        """Resolves given symbol reference.
+
+        For local name search this file, for FQN use imports and delegate to
+        imported file.
+
+        If this is first pass do not fail on unexisting reference as there
+        might be new symbols created during resolving (e.g. multiplicity
+        symbols).
+
+        """
+        if isinstance(symbol_ref.separator, Reference):
+            symbol_ref.separator = self._resolve_ref(symbol_ref.separator)
+
+        symbol_fqn = symbol_ref.fqn
+        symbol = self.resolve_symbol_by_name(symbol_fqn, symbol_ref.location)
+        if not symbol:
+            raise GrammarError(
+                location=symbol_ref.location,
+                message=f'Unknown symbol "{symbol_fqn}"')
+
+        mult = symbol_ref.multiplicity
+        if mult != MULT_ONE:
+            # If multiplicity is used than we are referring to
+            # sugared symbol
+            separator = symbol_ref.separator \
+                if symbol_ref.separator else None
+
+            base_symbol = symbol
+            symbol_name = symbol_ref.multiplicity_fqn
+            symbol = self.resolve_symbol_by_name(symbol_name,
+                                                 symbol_ref.location)
+            if not symbol:
+                # If there is no multiplicity version of the symbol we
+                # will create one at this place
+                symbol = self._make_multiplicity_symbol(
+                    symbol_ref, base_symbol, separator, self.imported_with)
+
+        return symbol
+
+    def _make_multiplicity_symbol(self, symbol_ref, base_symbol, separator,
+                                  imported_with):
+        """
+        Creates new NonTerminal for symbol refs using multiplicity and
+        separators.
+        """
+        mult = symbol_ref.multiplicity
+        assoc = ASSOC_RIGHT if symbol_ref.greedy else ASSOC_NONE
+        if mult in [MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE]:
+            symbol_name = make_multiplicity_fqn(
+                symbol_ref.fqn, MULT_ONE_OR_MORE,
+                separator.name if separator else None)
+            symbol = self.resolve_symbol_by_name(symbol_name)
+            if not symbol:
+                # noqa See: http://www.igordejanovic.net/parglare/grammar_language/#one-or-more_1
+                productions = []
+                symbol = NonTerminal(symbol_name, productions,
+                                     base_symbol.location,
+                                     imported_with=imported_with)
+
+                if separator:
+                    productions.append(
+                        Production(symbol,
+                                   ProductionRHS([symbol,
+                                                  separator,
+                                                  base_symbol])))
+                    symbol.action_name = 'collect_sep'
+                else:
+                    productions.append(
+                        Production(symbol,
+                                   ProductionRHS([symbol,
+                                                  base_symbol])))
+                    symbol.action_name = 'collect'
+
+                productions.append(
+                    Production(symbol, ProductionRHS([base_symbol])))
+
+                self.register_symbol(symbol)
+
+            if mult == MULT_ZERO_OR_MORE:
+                productions = []
+                symbol_one = symbol
+                symbol_name = make_multiplicity_fqn(
+                    symbol_ref.fqn, mult,
+                    separator.name if separator else None)
+                symbol = NonTerminal(symbol_name, productions,
+                                     base_symbol.location,
+                                     imported_with=imported_with)
+
+                productions.extend([Production(symbol,
+                                               ProductionRHS([symbol_one]),
+                                               assoc=assoc,
+                                               nops=True),
+                                    Production(symbol,
+                                               ProductionRHS([EMPTY]),
+                                               assoc=assoc)])
+
+                def action(_, nodes):
+                    if nodes:
+                        return nodes[0]
+                    return []
+
+                symbol.grammar_action = action
+
+                self.register_symbol(symbol)
+
+            else:
+                if symbol_ref.greedy:
+                    productions = []
+                    symbol_one = symbol
+                    symbol = NonTerminal(f'{symbol_name}_g', productions,
+                                         base_symbol.location,
+                                         imported_with=imported_with)
+                    productions.extend([Production(symbol,
+                                                   ProductionRHS([symbol_one]),
+                                                   assoc=ASSOC_RIGHT)])
+                    symbol.action_name = 'pass_single'
+                    self.register_symbol(symbol)
+
+        else:
+            # MULT_OPTIONAL
+            if separator:
+                raise GrammarError(
+                    location=symbol_ref.location,
+                    message='Repetition modifier not allowed for '
+                    f'optional (?) for symbol "{symbol_ref.name}".')
+            productions = []
+            symbol_name = make_multiplicity_fqn(symbol_ref.fqn, mult)
+            symbol = NonTerminal(symbol_name, productions,
+                                 base_symbol.location,
+                                 imported_with=imported_with)
+            productions.extend([Production(symbol,
+                                           ProductionRHS([base_symbol])),
+                                Production(symbol,
+                                           ProductionRHS([EMPTY]),
+                                           assoc=assoc)])
+
+            symbol.action_name = 'optional'
+
+            self.register_symbol(symbol)
+
+        return symbol
 
     def _enumerate_productions(self):
         """
@@ -1234,19 +1266,21 @@ def create_productions_terminals(productions):
                 if t not in inline_terminals:
                     inline_terminals[t] = \
                         Terminal(recognizer=StringRecognizer(t), name=t)
-                rhs[idx] = Reference(location=None, name=t)
+                rhs[idx] = Reference(location=None, name=t,
+                                     imported_with=symbol.imported_with)
             elif isinstance(t, Terminal):
                 if t.name not in inline_terminals:
                     inline_terminals[t.name] = t
-                rhs[idx] = Reference(location=None, name=t.name)
+                rhs[idx] = Reference(location=None, name=t.name,
+                                     imported_with=symbol.imported_with)
 
         gp.append(Production(symbol, rhs, assoc=assoc, prior=prior))
 
     return gp, list(inline_terminals.values())
 
 
-def make_multiplicity_name(symbol_name, multiplicity=None,
-                           separator_name=None):
+def make_multiplicity_fqn(symbol_name, multiplicity=None,
+                          separator_name=None):
     if multiplicity is None or multiplicity == MULT_ONE:
         return symbol_name
     name_by_mult = {
@@ -1269,10 +1303,6 @@ def check_name(context, name):
         raise GrammarError(
             location=Location(context),
             message=f'Rule name "{name}" is reserved.')
-    if '.' in name:
-        raise GrammarError(
-            location=Location(context),
-            message=f'Using dot in names is not allowed ("{name}").')
 
 
 # Grammar for grammars
@@ -1749,7 +1779,7 @@ def act_production_group(context, nodes):
     # Group name will be known when the grammar rule is
     # reduced so store these production for later.
     productions = nodes[1]
-    reference = Reference(Location(context), 'resolving')
+    reference = Reference(Location(context), 'resolving', context.extra.imported_with)
     context.extra.groups.append((reference, productions))
     return reference
 
@@ -1849,7 +1879,8 @@ def act_gsymbol_reference(context, nodes):
         sep_ref = None
         if modifiers:
             sep_ref = modifiers[1]
-            sep_ref = Reference(Location(context), sep_ref)
+            sep_ref = Reference(Location(context), sep_ref,
+                                context.extra.imported_with)
             symbol_ref.separator = sep_ref
 
         if rep_op.startswith('*'):
@@ -1868,7 +1899,8 @@ def act_gsymbol_reference(context, nodes):
 def act_gsymbol_string_recognizer(context, nodes):
     recognizer = act_recognizer_str(context, nodes)
 
-    terminal_ref = Reference(Location(context), recognizer.name)
+    terminal_ref = Reference(Location(context), recognizer.name,
+                             context.extra.imported_with)
 
     if terminal_ref.name not in context.extra.inline_terminals:
         check_name(context, terminal_ref.name)
@@ -1944,7 +1976,8 @@ pg_actions = {
     'GrammarSymbolReference': act_gsymbol_reference,
 
     'GrammarSymbol': [lambda context, nodes: Reference(Location(context),
-                                                       nodes[0]),
+                                                       nodes[0],
+                                                       context.extra.imported_with),
                       act_gsymbol_string_recognizer],
 
     'Recognizer': [act_recognizer_str, act_recognizer_regex],
