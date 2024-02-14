@@ -18,6 +18,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.17.0] (released: 2024-02-14)
+
 ### Fixed
 - Fix `to_str` failure when calculating the number of solutions in the context
   of optional match ([#147]). Thanks @LVrecar for the report and fix.
@@ -465,7 +468,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.16.1...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.17.0...HEAD
+[0.17.0]: https://github.com/igordejanovic/parglare/compare/0.16.1...0.17.0
 [0.16.1]: https://github.com/igordejanovic/parglare/compare/0.16.0...0.16.1
 [0.16.0]: https://github.com/igordejanovic/parglare/compare/0.15.0...0.16.0
 [0.15.0]: https://github.com/igordejanovic/parglare/compare/0.14.0...0.15.0
