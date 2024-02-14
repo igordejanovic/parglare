@@ -38,7 +38,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/igordejanovic/parglare"
 Repository = "https://github.com/igordejanovic/parglare"
-Changelog = "https://github.com/igordejanovic/parglare/master/CHANGELOG.md"
+Changelog = "https://github.com/igordejanovic/parglare/blob/master/CHANGELOG.md"
 
 [build-system]
 build-backend = "flit_core.buildapi"
