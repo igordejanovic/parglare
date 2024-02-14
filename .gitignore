@@ -68,3 +68,6 @@ site
 issues-temp
 tests/perf/*.pstats
 *.pgt
+/.tool-versions
+/venv/
+/issues/
