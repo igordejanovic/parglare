@@ -3,6 +3,8 @@ import itertools
 import re
 from collections import Counter
 from os import path
+from typing import List, Dict, Optional, Callable
+from dataclasses import dataclass, field
 
 from parglare import termui
 from parglare.actions import collect, collect_sep, pass_none, pass_single
@@ -64,16 +66,14 @@ class GrammarSymbol:
     def fqn(self):
         if self.imported_with:
             return f"{self.imported_with.fqn}.{self.name}"
-        else:
-            return self.name
+        return self.name
 
     @property
     def action_fqn(self):
         if self.action_name:
             if self.imported_with:
                 return f"{self.imported_with.fqn}.{self.action_name}"
-            else:
-                return self.action_name
+            return self.action_name
 
     def add_user_meta_data(self, name, value):
         if self.user_meta is None:
@@ -109,8 +109,7 @@ class NonTerminal(GrammarSymbol):
     """
     def __init__(self, name, productions=None, location=None,
                  imported_with=None, user_meta=None):
-        super().__init__(name, location, imported_with,
-                                          user_meta)
+        super().__init__(name, location, imported_with, user_meta)
         self.productions = productions if productions is not None else []
 
 
@@ -142,8 +141,7 @@ class Terminal(GrammarSymbol):
         self.prefer = False
         self.dynamic = False
         self.keyword = False
-        super().__init__(name, location, imported_with,
-                                       user_meta=None)
+        super().__init__(name, location, imported_with, user_meta=None)
 
     @property
     def recognizer(self):
@@ -324,8 +322,7 @@ class Production:
         if hasattr(self, 'prod_id'):
             return (s_header("%d:") + " %s " + s_emph("=") +
                     " %s") % (self.prod_id, self.symbol, self.rhs)
-        else:
-            return ("%s " + s_emph("=") + " %s") % (self.symbol, self.rhs)
+        return ("%s " + s_emph("=") + " %s") % (self.symbol, self.rhs)
 
     def __repr__(self):
         return f'Production({str(self)})'
@@ -404,6 +401,24 @@ class PGAttribute:
         self.type_name = type_name
 
 
+@dataclass
+class GrammarContext:
+    """
+    Context used to collect grammar information and provide info to actions
+    during grammar parsing.
+
+    """
+    classes: Dict = field(default_factory=dict)
+    debug: bool = False
+    debug_colors: bool = False
+    re_flags: re.RegexFlag = re.MULTILINE
+    groups: List = field(default_factory=list)
+    groups_counter: Counter = field(default_factory=Counter)
+    ignore_case: bool = False
+    imported_with: Optional['PGFileImport'] = None
+    inline_terminals: Dict = field(default_factory=dict)
+
+
 class PGFile:
     """Objects of this class represent parglare grammar files.
 
@@ -442,8 +457,9 @@ class PGFile:
     recognizers (dict of callables): A dict of Python callables used as a
         terminal recognizers.
     """
-    def __init__(self, productions, terminals=None, classes=None, imports=None,
-                 file_path=None, grammar=None, recognizers=None,
+    def __init__(self, productions: List[Production],
+                 terminals: Optional[List[Terminal]] = None, classes=None,
+                 imports=None, file_path=None, grammar=None, recognizers=None,
                  imported_with=None):
         self.productions = productions
         self.terminals = terminals
@@ -453,7 +469,7 @@ class PGFile:
         self.file_path = path.realpath(file_path) if file_path else None
         self.imported_with = imported_with
         self.recognizers = recognizers
-        self.actions = {}
+        self.actions: Dict[str, Callable] = {}
 
         self.collect_and_unify_symbols()
 
@@ -530,11 +546,11 @@ class PGFile:
 
             # Check grammar actions for rules/symbols.
             if new_symbol.action_name and \
-               new_symbol.action_name != old_symbol.action_name:
-                    raise GrammarError(
-                        location=new_symbol.location,
-                        message='Multiple different grammar actions '
-                        f'for rule "{new_symbol.name}".')
+                    new_symbol.action_name != old_symbol.action_name:
+                raise GrammarError(
+                    location=new_symbol.location,
+                    message='Multiple different grammar actions '
+                    f'for rule "{new_symbol.name}".')
 
         self.nonterminals = nonterminals_by_name
         self.symbols_by_name = dict(nonterminals_by_name)
@@ -545,7 +561,7 @@ class PGFile:
         self.symbols_by_name['STOP'] = STOP
 
     def resolve_references(self):
-        # Two pass resolving to enable referening symbols created during
+        # Two pass resolving to enable referring symbols created during
         # resolving (e.g. multiplicity symbols).
         for pazz in [True, False]:
             for production in self.productions:
@@ -645,8 +661,7 @@ class PGFile:
         mult = symbol_ref.multiplicity
         if mult != MULT_ONE:
             # If multiplicity is used than we are referring to
-            # suggared symbol
-
+            # sugared symbol
             separator = symbol_ref.separator \
                 if symbol_ref.separator else None
 
@@ -809,9 +824,7 @@ class Grammar(PGFile):
 
     def __init__(self, productions=None, terminals=None,
                  classes=None, imports=None, file_path=None, recognizers=None,
-                 start_symbol=None, _no_check_recognizers=False,
-                 re_flags=re.MULTILINE, ignore_case=False, debug=False,
-                 debug_parse=False, debug_colors=False):
+                 start_symbol=None, _no_check_recognizers=False):
         """
         Grammar constructor is not meant to be called directly by the user.
         See `from_str` and `from_file` static methods instead.
@@ -825,12 +838,12 @@ class Grammar(PGFile):
         self.imported_files = {}
 
         super().__init__(productions=productions,
-                                      terminals=terminals,
-                                      classes=classes,
-                                      imports=imports,
-                                      file_path=file_path,
-                                      grammar=self,
-                                      recognizers=recognizers)
+                         terminals=terminals,
+                         classes=classes,
+                         imports=imports,
+                         file_path=file_path,
+                         grammar=self,
+                         recognizers=recognizers)
 
         self._no_check_recognizers = _no_check_recognizers
 
@@ -861,7 +874,7 @@ class Grammar(PGFile):
             0,
             Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
 
-        self._add_all_symbols_productions()
+        self._add_all_production_symbols()
         self._enumerate_productions()
         self._fix_keyword_terminals()
         self._resolve_actions()
@@ -870,7 +883,7 @@ class Grammar(PGFile):
         if not self._no_check_recognizers:
             self._connect_override_recognizers()
 
-    def _add_all_symbols_productions(self):
+    def _add_all_production_symbols(self):
 
         self.nonterminals = {}
         for prod in self.productions:
@@ -891,6 +904,9 @@ class Grammar(PGFile):
                             production.rhs[idx] = self.terminals[rhs_elem.fqn]
                     elif isinstance(rhs_elem, NonTerminal):
                         if rhs_elem.fqn not in self.nonterminals:
+                            # This may happen for RHS refs that create new
+                            # productions (e.g. syntactic sugar extensions - *,
+                            # +...)
                             self.productions.extend(rhs_elem.productions)
                             add_productions(rhs_elem.productions)
                     else:
@@ -1081,17 +1097,8 @@ class Grammar(PGFile):
                ignore_case=False, re_flags=re.MULTILINE, debug=False,
                debug_parse=False, debug_colors=False,
                _no_check_recognizers=False):
-        extra = GrammarContext()
-        extra.re_flags = re_flags
-        extra.ignore_case = ignore_case
-        extra.debug = debug
-        extra.debug_colors = debug_colors
-        extra.classes = {}
-        extra.inline_terminals = {}
-        extra.groups = []
-        extra.groups_counter = Counter()
-        extra.imported_with = None
-        extra.grammar = None
+        extra = GrammarContext(debug=debug, debug_colors=debug_colors,
+                               ignore_case=ignore_case, re_flags=re_flags)
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
         imports, productions, terminals, classes = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
@@ -1139,28 +1146,28 @@ class PGFileImport:
     module_name (str): Name of this import. By default is the name of grammar
         file without .pg extension.
     file_path (str): A canonical full path of the imported .pg file.
-    extra: grammar parsing extra state.
-    imported_with (PGFileImport): First import this import is imported from.
-        Used for FQN calculation.
-    grammar (Grammar): Grammar object under construction.
+    context: grammar parsing context state.
+    imported_with (PGFileImport | None): First import this import is
+        imported from. Used for FQN calculation.
+    grammar (Grammar | None): Grammar object under construction.
     pgfile (PGFile instance or None):
 
     """
-    def __init__(self, module_name, file_path, extra):
+    def __init__(self, module_name: str, file_path: str,
+                 context: GrammarContext):
         self.module_name = module_name
-        self.file_path = file_path
-        self.extra = extra
-        self.imported_with = extra.imported_with
-        self.grammar = None
-        self.pgfile = None
+        self.file_path: str = file_path
+        self.context = context
+        self.imported_with: Optional[PGFileImport] = context.imported_with
+        self.grammar: Optional[Grammar] = None
+        self.pgfile: Optional[PGFile] = None
 
     @property
     def fqn(self):
         "A fully qualified name of the import following the first import path."
         if self.imported_with:
             return f"{self.imported_with.fqn}.{self.module_name}"
-        else:
-            return self.module_name
+        return self.module_name
 
     def load_pgfile(self):
         if self.pgfile is None:
@@ -1169,15 +1176,15 @@ class PGFileImport:
                 self.pgfile = self.grammar.imported_files[self.file_path]
             else:
                 # If not found construct new PGFile
-                extra = copy.copy(self.extra)
-                extra.file_name = self.file_path
-                extra.inline_terminals = {}
-                extra.imported_with = self
+                context = copy.copy(self.context)
+                context.file_name = self.file_path
+                context.inline_terminals = {}
+                context.imported_with = self
                 imports, productions, terminals, classes = \
                     get_grammar_parser(
-                        self.extra.debug,
-                        self.extra.debug_colors).parse_file(
-                            self.file_path, extra=extra)
+                        self.context.debug,
+                        self.context.debug_colors).parse_file(
+                            self.file_path, extra=context)
                 self.pgfile = PGFile(productions=productions,
                                      terminals=terminals,
                                      classes=classes,
@@ -1266,10 +1273,6 @@ def check_name(context, name):
         raise GrammarError(
             location=Location(context),
             message=f'Using dot in names is not allowed ("{name}").')
-
-
-class GrammarContext:
-    pass
 
 
 # Grammar for grammars
