@@ -71,6 +71,8 @@
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Modularization</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#imported-rules-override">Imported rules override</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#grammar-file-recognizers">Grammar file recognizers</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#recognizer-search-order">Recognizer search order</a>
@@ -171,6 +173,31 @@ first path to <code>C.pg</code> was from <code>B.pg</code> as the <code>B.pg</co
 <code>A.pg.</code>. See <a href="https://github.com/igordejanovic/parglare/blob/master/tests/func/import/fqn/test_fqn.py">fqn
 tests</a>
 for an example.</p>
+<h2 id="imported-rules-override">Imported rules override<a class="headerlink" href="#imported-rules-override" title="Permanent link">&para;</a></h2>
+<p>Grammar rules defined in imported grammar can be overridden by using appropriate
+FQN rule name. For example, if we have following grammars:</p>
+<p>file: <code>first.pg</code></p>
+<pre><code>import 'second.pg' as s;
+...
+
+</code></pre>
+<p>file: <code>second.pg</code></p>
+<pre><code>import 'third.pg' as t;
+...
+</code></pre>
+<p>file <code>third.pg</code></p>
+<pre><code>S: A B+;
+B: 'foo' C;
+</code></pre>
+<p>In <code>first.pg</code> we could then write:</p>
+<pre><code>S: s.t.S;
+s.t.B: 'bar' C+;
+</code></pre>
+<p>Which will effectively override rule <code>B</code> from <code>third.pg</code> (note FQN <code>s.t.B</code>).</p>
+<p>All grammar rules that used old <code>B</code> from <code>third.pg</code> will now use <code>s.t.B</code> rule
+from <code>first.pg</code>. This enables a flexible modification of existing grammars from
+importing grammars just in places where it is needed without having to rewrite
+all the rules that use the rule that needs to be modified.</p>
 <h2 id="grammar-file-recognizers">Grammar file recognizers<a class="headerlink" href="#grammar-file-recognizers" title="Permanent link">&para;</a></h2>
 <p>Grammar file can optionally provide its <a href="../recognizers/">recognizers</a>. These
 should be given in a Python file named <code>&lt;base grammar name&gt;_recognizers.py</code> and
