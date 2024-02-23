@@ -511,7 +511,7 @@ class GLRParser(Parser):
                 successful = self.error_recovery(head, error)
 
             if successful:
-                error.location.context.end_position = head.position
+                error.location.end_position = head.position
                 if debug:
                     a_print("New position is ",
                             pos_to_line_col(input_str, head.position),

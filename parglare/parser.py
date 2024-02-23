@@ -784,7 +784,7 @@ class Parser:
         if successful:
             if debug:
                 h_print("Recovery ")
-            error.location.context.end_position = head.position
+            error.location.end_position = head.position
             if debug:
                 a_print("New position is ",
                         pos_to_line_col(head.input_str, head.position),

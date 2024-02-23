@@ -44,6 +44,42 @@ tests](https://github.com/igordejanovic/parglare/blob/master/tests/func/import/f
 for an example.
 
 
+## Imported rules override
+
+Grammar rules defined in imported grammar can be overridden by using appropriate
+FQN rule name. For example, if we have following grammars:
+
+file: `first.pg`
+```
+import 'second.pg' as s;
+...
+
+```
+
+file: `second.pg`
+```
+import 'third.pg' as t;
+...
+```
+
+file `third.pg`
+```
+S: A B+;
+B: 'foo' C;
+```
+
+In `first.pg` we could then write:
+```
+S: s.t.S;
+s.t.B: 'bar' C+;
+```
+Which will effectively override rule `B` from `third.pg` (note FQN `s.t.B`).
+
+All grammar rules that used old `B` from `third.pg` will now use `s.t.B` rule
+from `first.pg`. This enables a flexible modification of existing grammars from
+importing grammars just in places where it is needed without having to rewrite
+all the rules that use the rule that needs to be modified.
+
 
 ## Grammar file recognizers
 
