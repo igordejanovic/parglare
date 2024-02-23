@@ -1,6 +1,6 @@
 [project]
 name = "parglare"
-version = "0.17.0"
+version = "0.18.0"
 description = "A pure Python LR/GLR parser"
 authors = [
     {name = "Igor R. Dejanović", email = "igor.dejanovic@gmail.com"},

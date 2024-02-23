@@ -19,6 +19,14 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ## [Unreleased]
 
 
+## [0.18.0] (released: 2024-02-23)
+
+### Added
+- Imported grammar rules override. See
+  [32930ad59ce8e3b2c133192fed03a4cd6dd7e7e6] and [the
+  docs](http://www.igordejanovic.net/parglare/latest/grammar_modularization/#imported-rules-override)
+
+
 ## [0.17.0] (released: 2024-02-14)
 
 ### Fixed
@@ -469,6 +477,7 @@ for more info.
 
 
 [Unreleased]: https://github.com/igordejanovic/parglare/compare/0.17.0...HEAD
+[0.18.0]: https://github.com/igordejanovic/parglare/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/igordejanovic/parglare/compare/0.16.1...0.17.0
 [0.16.1]: https://github.com/igordejanovic/parglare/compare/0.16.0...0.16.1
 [0.16.0]: https://github.com/igordejanovic/parglare/compare/0.15.0...0.16.0
