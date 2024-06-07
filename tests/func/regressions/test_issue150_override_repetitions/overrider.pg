@@ -1,0 +1,4 @@
+import './base.pg' ;
+main: base.main ;
+terminals
+base.sub.SEP: ',' ;

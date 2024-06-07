@@ -1,0 +1,2 @@
+import './sub.pg' ;
+main: sub.Rule+ ;
