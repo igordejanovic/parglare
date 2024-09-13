@@ -63,17 +63,13 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Actions</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Actions</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#custom-actions-and-built-in-actions">Custom actions and built-in actions</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#action-decorator">action decorator</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#time-of-actions-call">Time of actions call</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#built-in-actions">Built-in actions</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#actions-for-rules-using-named-matches">Actions for rules using named matches</a>
     </li>
     </ul>
                   </li>
@@ -271,7 +267,7 @@ definition. Dictionary holding all actions for the created action decorator is
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This applies for LR parsing only. GLR parser always build a forest and actions
-are called afterwards with <code>parser.call_actions</code>.</p>
+are called afterwards with <code>parser.call_actions</code>. See bellow.</p>
 </div>
 <p>In parglare actions can be called during parsing (i.e. on the fly) which you
 could use if you want to transform input immediately without building the parse
@@ -281,9 +277,20 @@ actions afterwards.</p>
 the parser as usual and set <code>build_tree</code> to <code>True</code>. When the parser finishes
 successfully it will return the parse tree which you pass to the <code>call_actions</code>
 method of the parser object to execute actions. For example:</p>
-<pre><code>parser = Parser(g, actions=actions)
+<pre><code>parser = Parser(g, actions=actions, build_tree=True)
 tree = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
 result = parser.call_actions(tree)
+</code></pre>
+<h1 id="calling-actions-in-glr">Calling actions in GLR<a class="headerlink" href="#calling-actions-in-glr" title="Permanent link">&para;</a></h1>
+<p>In GLR parsing, actions are not invoked on-the-fly due to the potentially large
+number of parse trees or interpretations. However, actions can be applied
+afterward on a selected tree using <code>parser.call_actions</code>. When constructing the
+<code>GLRParser</code>, you provide the actions as usual, perform the parsing, and then
+select a single tree from the resulting forest. This tree is passed to
+<code>call_actions</code>, which produces the final result.</p>
+<pre><code class="language-python">parser = GLRParser(grammar, actions=actions)
+forest = parser.parse(&quot;....&quot;)
+result = parser.call_actions(forest.get_first_tree())
 </code></pre>
 <h2 id="built-in-actions">Built-in actions<a class="headerlink" href="#built-in-actions" title="Permanent link">&para;</a></h2>
 <p>parglare provides some common actions in the module <code>parglare.actions</code>. You can
