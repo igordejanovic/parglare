@@ -64,7 +64,7 @@ def test_diamond_import_resolving_and_model_creation():
     assert len(module.components) == 1
 
     component = module.components[0]
-    assert type(component) == type(packageComponent)
+    assert type(component) is type(packageComponent)
     assert component.name == 'myComponent'
     assert len(component.slots) == 2
 
