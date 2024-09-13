@@ -523,10 +523,9 @@ class PGFile:
                 if rec.value in terminals_by_str_rec:
                     raise GrammarError(
                         location=terminal.location,
-                        message='Terminals "{}" and "{}" match '
-                        'the same string.'
-                        .format(terminal.name,
-                                terminals_by_str_rec[rec.value].name))
+                        message=f'Terminals "{terminal.name}" and '
+                        f'"{terminals_by_str_rec[rec.value].name}" match '
+                        'the same string.')
                 terminals_by_str_rec[rec.value] = terminal
             terminals_by_name[terminal.name] = terminal
 
@@ -647,8 +646,8 @@ class PGFile:
                     if not isinstance(symbol, Terminal):
                         raise GrammarError(
                             location=Location(file_name=recognizers_file),
-                            message='Recognizer given for non-terminal "{}".'
-                            .format(recognizer_name))
+                            message='Recognizer given for non-terminal '
+                                    f'"{recognizer_name}".')
                     symbol.recognizer = recognizer
 
     def resolve_symbol_by_name(

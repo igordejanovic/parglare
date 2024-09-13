@@ -113,11 +113,11 @@ def viz(ctx, grammar_file):
     grammar, table = compile_get_grammar_table(grammar_file, debug, colors,
                                                prefer_shifts,
                                                prefer_shifts_over_empty)
-    prints("Generating '%s.dot' file for the grammar PDA." % grammar_file)
+    prints(f"Generating '{grammar_file}.dot' file for the grammar PDA.")
     prints("Use dot viewer (e.g. xdot) "
-           "or convert to pdf by running 'dot -Tpdf -O %s.dot'" % grammar_file)
+           f"or convert to pdf by running 'dot -Tpdf -O {grammar_file}.dot'")
     t.colors = False
-    grammar_pda_export(table, "%s.dot" % grammar_file)
+    grammar_pda_export(table, f"{grammar_file}.dot")
 
 
 @pglr.command()

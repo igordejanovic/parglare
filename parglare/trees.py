@@ -142,9 +142,8 @@ class NodeNonTerm(Node):
         return True
 
     def __str__(self):
-        return 'NonTerm({}, {}-{})'\
-            .format(self.production.symbol,
-                    self.start_position, self.end_position)
+        return f'NonTerm({self.production.symbol}, '\
+               f'{self.start_position}-{self.end_position})'
 
     def __iter__(self):
         return iter(self.children)
@@ -179,9 +178,8 @@ class NodeTerm(Node):
         return True
 
     def __str__(self):
-        return 'Term({} "{}", {}-{})'\
-            .format(self.symbol, self.value[:20],
-                    self.start_position, self.end_position)
+        return f'Term({self.symbol} "{self.value[:20]}", '\
+               f'{self.start_position}-{self.end_position})'
 
 
 class Tree:

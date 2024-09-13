@@ -74,9 +74,9 @@ class DynamicDisambiguationConflict(Exception):
         self.actions = actions
 
         from parglare.parser import SHIFT
-        message = "{}\nIn state {}:{} and input symbol '{}' after calling"\
-                  " dynamic disambiguation still can't decide "\
-                  .format(str(state), state.state_id, state.symbol, token)
+        message = f"{str(state)}\nIn state {state.state_id}:{state.symbol} "\
+                  f"and input symbol '{token}' after calling"\
+                  " dynamic disambiguation still can't decide "
         if actions[0].action == SHIFT:
             prod_str = " or ".join([f"'{str(a.prod)}'"
                                     for a in actions[1:]])
@@ -140,9 +140,8 @@ class RRConflict(LRConflict):
 class LRConflicts(Exception):
     def __init__(self, conflicts):
         self.conflicts = conflicts
-        message = "\n{} conflicts in following states: {}"\
-                  .format(self.kind,
-                          set([c.state.state_id for c in conflicts]))
+        message = f"\n{self.kind} conflicts in following states: "\
+                  f"{set([c.state.state_id for c in conflicts])}"
         super().__init__(message)
 
 

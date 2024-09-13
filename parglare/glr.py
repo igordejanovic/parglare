@@ -592,28 +592,26 @@ class GLRParser(Parser):
         parents_processed = set()
 
         for head in self._trace_frontier_heads:
-            self._dot_trace += '{} [label="{}. {}:{}"];\n'\
-                .format(head.key, head.frontier, head.state.state_id,
-                        dot_escape(head.state.symbol.name))
+            self._dot_trace += f'{head.key} [label="{head.frontier}. '\
+                               f'{head.state.state_id}:{dot_escape(head.state.symbol.name)}"];\n'
 
         for step_no, step in enumerate(self._trace_frontier_steps):
             step_no += 1
             from_head, parent = step
             if parent not in parents_processed:
-                self._dot_trace += '{} -> {} [label="{}"];\n' \
-                    .format(parent.head.key, parent.root.key,
-                            parent.ambiguity)
+                self._dot_trace += f'{parent.head.key} -> {parent.root.key} '\
+                                   f'[label="{parent.ambiguity}"];\n'
                 parents_processed.add(parent)
             if parent.production:
                 # Reduce step
                 label = f"R:{dot_escape(parent.production)}"
             else:
                 # Shift step
-                label = "S:{}({})".format(dot_escape(parent.token.symbol.name),
-                                          dot_escape(parent.token.value))
-            self._dot_trace += '{} -> {} [label="{}.{} {}" {}];\n'.format(
-                from_head.key, parent.head.key, parent.head.frontier, step_no,
-                label, TRACE_DOT_STEP_STYLE)
+                label = f"S:{dot_escape(parent.token.symbol.name)}"\
+                        f"({dot_escape(parent.token.value)})"
+            self._dot_trace += f'{from_head.key} -> {parent.head.key} '\
+                               f'[label="{parent.head.frontier}.{step_no} '\
+                               f'{label}" {TRACE_DOT_STEP_STYLE}];\n'
 
         self._dot_trace_ranks += \
             '{{rank=same; {}; {}}}\n'.format(
@@ -627,14 +625,14 @@ class GLRParser(Parser):
     def _trace_step_kill(self, from_head):
         self._dot_trace += \
             f'{from_head.key}_killed [shape="diamond" fillcolor="red" label="killed"];\n'
-        self._dot_trace += '{} -> {}_killed [label="{}." {}];\n'\
-            .format(from_head.key, from_head.key, self._debug_step_str(),
-                    TRACE_DOT_STEP_STYLE)
+        self._dot_trace += \
+            f'{from_head.key} -> {from_head.key}_killed '\
+            f'[label="{self._debug_step_str()}." {TRACE_DOT_STEP_STYLE}];\n'
 
     @no_colors
     def _trace_step_drop(self, from_head, to_head):
-        self._dot_trace += '{} -> {} [label="drop empty" {}];\n'\
-            .format(from_head.key, to_head.key, TRACE_DOT_DROP_STYLE)
+        self._dot_trace += f'{from_head.key} -> {to_head.key} '\
+                           f'[label="drop empty" {TRACE_DOT_DROP_STYLE}];\n'
 
     @no_colors
     def _trace_finish(self):
@@ -783,9 +781,8 @@ class Parent:
         return hash(self.id)
 
     def __str__(self):
-        return '{}({})<-{}({}) [{}]'.format(
-            self.root.id, self.root.symbol, self.head.id, self.head.symbol,
-            self.ambiguity)
+        return f'{self.root.id}({self.root.symbol})<-{self.head.id}'\
+               f'({self.head.symbol}) [{self.ambiguity}]'
 
     def __repr__(self):
         return str(self)
