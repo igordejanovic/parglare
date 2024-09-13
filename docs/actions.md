@@ -161,7 +161,7 @@ definition. Dictionary holding all actions for the created action decorator is
 !!! note
 
     This applies for LR parsing only. GLR parser always build a forest and actions
-    are called afterwards with `parser.call_actions`.
+    are called afterwards with `parser.call_actions`. See bellow.
 
 In parglare actions can be called during parsing (i.e. on the fly) which you
 could use if you want to transform input immediately without building the parse
@@ -173,9 +173,24 @@ the parser as usual and set `build_tree` to `True`. When the parser finishes
 successfully it will return the parse tree which you pass to the `call_actions`
 method of the parser object to execute actions. For example:
 
-    parser = Parser(g, actions=actions)
+    parser = Parser(g, actions=actions, build_tree=True)
     tree = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
     result = parser.call_actions(tree)
+
+
+# Calling actions in GLR
+In GLR parsing, actions are not invoked on-the-fly due to the potentially large
+number of parse trees or interpretations. However, actions can be applied
+afterward on a selected tree using `parser.call_actions`. When constructing the
+`GLRParser`, you provide the actions as usual, perform the parsing, and then
+select a single tree from the resulting forest. This tree is passed to
+`call_actions`, which produces the final result.
+
+```python
+parser = GLRParser(grammar, actions=actions)
+forest = parser.parse("....")
+result = parser.call_actions(forest.get_first_tree())
+```
 
 
 ## Built-in actions
