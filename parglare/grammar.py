@@ -425,6 +425,7 @@ class GrammarContext:
     ignore_case: bool = False
     imported_with: Optional['PGFileImport'] = None
     inline_terminals: Dict = field(default_factory=dict)
+    imports: dict[str, 'PGFileImport'] = field(default_factory=dict)
 
 
 class PGFile:
@@ -1184,14 +1185,18 @@ class PGFileImport:
     pgfile (PGFile instance or None):
 
     """
-    def __init__(self, module_name: str, file_path: str,
-                 context: GrammarContext):
+    def __new__(cls, module_name: str, file_path: str,
+                context: GrammarContext):
+        if file_path in context.imports:
+            return context.imports[file_path]
+        context.imports[file_path] = self = super().__new__(cls)
         self.module_name = module_name
         self.file_path: str = file_path
         self.context = context
         self.imported_with: Optional[PGFileImport] = context.imported_with
         self.grammar: Optional[Grammar] = None
         self.pgfile: Optional[PGFile] = None
+        return self
 
     @property
     def fqn(self):
