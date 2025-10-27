@@ -678,9 +678,8 @@ class Parent:
         self._solutions = None
         self._ambiguities = None
 
-        # A list of NoneNonTerm or NodeTerm which represent
-        # alternative interpretations of what is seen between
-        # root and head GSS nodes.
+        # A list of NodeNonTerm or NodeTerm objects representing alternative
+        # interpretations of what is seen between root and head GSS nodes.
         self.possibilities = []
         if possibilities:
             self.possibilities = possibilities
