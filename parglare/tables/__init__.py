@@ -578,7 +578,7 @@ class Action:
             p = self.prod.prod_id
         else:
             p = ''
-        return '{}{}'.format(ac, ':%d' % p if p else '')
+        return '{}{}'.format(ac, f':{p}' if p else '')
 
     def __repr__(self):
         return str(self)
@@ -732,10 +732,8 @@ class LRState:
         return self.items[self.items.index(other_item)]
 
     def __str__(self):
-        s = "\n\n" + s_header("State %d:%s\n" % (self.state_id, self.symbol))
-        for i in self.items:
-            s += f"\t{i}\n"
-        return s
+        s = s_header(f'\n\nState {self.state_id}:{self.symbol}\n')
+        return s + "\n".join([f"\t{i}" for i in self.items])
 
     def __unicode__(self):
         return str(self)

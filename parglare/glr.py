@@ -30,17 +30,16 @@ class GLRParser(Parser):
     """
     def __init__(self, *args, **kwargs):
 
-        table = kwargs.get('table', None)
-        lexical_disambiguation = kwargs.get('lexical_disambiguation', None)
+        table = kwargs.get('table')
+        lexical_disambiguation = kwargs.get('lexical_disambiguation')
         if table is None:
             # The default for GLR is not to use any strategy preferring shifts
             # over reduce thus investigating all possibilities.
             # These settings are only applicable if parse table is not computed
             # yet. If it is, then leave None values to avoid
             # "parameter overriden" warnings.
-            prefer_shifts = kwargs.get('prefer_shifts', None)
-            prefer_shifts_over_empty = kwargs.get('prefer_shifts_over_empty',
-                                                  None)
+            prefer_shifts = kwargs.get('prefer_shifts')
+            prefer_shifts_over_empty = kwargs.get('prefer_shifts_over_empty')
 
             prefer_shifts = False \
                 if prefer_shifts is None else prefer_shifts

@@ -211,7 +211,7 @@ def test_builtin_grammar_action():
     p = Parser(g)
     result = p.parse('1 1 1 1 1')
 
-    assert result == "1 1 1 1 1".split()
+    assert result == ["1", "1", "1", "1", "1"]
 
 
 def test_multiple_grammar_action_raises_error():
