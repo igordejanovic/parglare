@@ -18,6 +18,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Added
+- Support for Python 3.13 and 3.14.
+
 
 ## [0.18.0] (released: 2024-02-23)
 
