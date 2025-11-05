@@ -52,16 +52,12 @@ name = "parglare"
 [tool.flit.sdist]
 exclude = ["**/.*"]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "ruff",
     "flit",
     "mkdocs",
     "mike",
-]
-
-test = [
-    "ruff",
     "coverage",
     "coveralls",
     "pytest",

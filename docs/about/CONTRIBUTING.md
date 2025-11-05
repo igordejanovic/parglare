@@ -28,7 +28,8 @@ wanted" is open to whoever wants to implement it.
 ### Implement Features
 
 Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.
+and "help wanted" is open to whoever wants to implement it. Please, discuss
+about your plans before implementation.
 
 
 ### Write Documentation
@@ -55,38 +56,43 @@ If you are proposing a feature:
 
 Ready to contribute? Here's how to set up `parglare` for local development.
 
-1. Fork the `parglare` repo on GitHub.
-2. Clone your fork locally:
+1. [Install uv](https://docs.astral.sh/uv/getting-started/installation/) Python
+   package/project manager.
+
+2. Fork the `parglare` repo on GitHub.
+
+3. Clone your fork locally:
 
         $ git clone git@github.com:your_name_here/parglare.git
+        
 
-3. Install your local copy into a virtual environment. This is how you set up
+4. Install your local copy into a virtual environment. This is how you set up
    your fork for local development:
 
         $ cd parglare/
-        $ python -m venv venv
-        $ source venv/bin/activate
-        $ ./install-dev.sh
+        $ uv venv 
+        $ source .venv/bin/activate
+        $ uv sync
 
    This is needed just the first time. To work on parglare later you just need
    to activate the virtual environment for each new terminal session:
 
         $ cd parglare/
-        $ source venv/bin/activate
+        $ source .venv/bin/activate
 
-4. Create a branch for local development::
+5. Create a branch for local development::
 
         $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, run tests:
+6. When you're done making changes, run tests:
 
         $ ./runtests.sh
 
    and verify that all tests pass.
 
-6. Commit your changes and push your branch to GitHub:
+7. Commit your changes and push your branch to GitHub:
 
         $ git add .
         $ git commit -m "Your detailed description of your changes."
@@ -95,7 +101,7 @@ Ready to contribute? Here's how to set up `parglare` for local development.
    Check [this](https://chris.beams.io/posts/git-commit/) on how to write nice
    git log messages.
 
-7. Submit a pull request through the GitHub website. CI will run the tests for
+8. Submit a pull request through the GitHub website. CI will run the tests for
    all supported Python versions. Check in the GitHub UI that all pipelines pass.
 
 
@@ -115,11 +121,11 @@ Before you submit a pull request, check that it meets these guidelines:
 To run a subset of tests:
 
 ```
-$ py.test tests/func/mytest.py
+$ pytest tests/func/mytest.py
 ```
 
 or a single test:
 
 ```
-$ py.test tests/func/mytest.py::some_test
+$ pytest tests/func/mytest.py::some_test
 ```

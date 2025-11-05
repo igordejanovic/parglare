@@ -22,9 +22,13 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install test dependencies
       run: |
-        ./install-test.sh
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        uv venv
+        source .venv/bin/activate
+        uv sync
     - name: Run unit tests
       run: |
+        source .venv/bin/activate
         ./runtests.sh
     - name: Coveralls
       if: github.ref == 'refs/heads/master'
