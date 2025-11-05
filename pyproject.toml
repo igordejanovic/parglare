@@ -34,7 +34,7 @@ classifiers = [
 
 requires-python = ">=3.8, <=3.14"
 dependencies = [
-    "click >=7.0, <9.0"
+    "click >=7.0, <9.0",
 ]
 
 [project.urls]
@@ -52,15 +52,25 @@ name = "parglare"
 [tool.flit.sdist]
 exclude = ["**/.*"]
 
+[tool.uv]
+default-groups = ["dev", "doc", "dbg"]
+
 [dependency-groups]
 dev = [
     "ruff",
     "flit",
-    "mkdocs",
-    "mike",
     "coverage",
     "coveralls",
     "pytest",
+]
+
+doc = [
+    "mkdocs",
+    "mike",
+]
+
+dbg = [
+    "pudb>=2025.1.3",
 ]
 
 [project.scripts]

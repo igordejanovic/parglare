@@ -24,7 +24,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install test dependencies
       run: |
-        uv sync
+        uv sync --no-default-groups --group dev
     - name: Run unit tests
       run: |
         source .venv/bin/activate
