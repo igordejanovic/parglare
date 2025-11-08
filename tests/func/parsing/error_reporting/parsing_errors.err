@@ -1,0 +1,1 @@
+Error at /parsing/error_reporting/parsing_errors.input:1:10:"id + id *  **> + id\n" => Expected: ( or id but found <+(+)>

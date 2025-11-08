@@ -1,7 +1,9 @@
 import pytest  # noqa
 import os
+from pathlib import Path
 from parglare import Grammar, Parser, GLRParser, ParseError
 from ...grammar.expression_grammar import get_grammar
+from ...utils import output_cmp
 
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
@@ -129,16 +131,30 @@ id + id * id + id + error * id
 
 
 @parsers
+def test_parser_output(parser_class):
+    "Test full parser error report."
+    grammar = get_grammar()
+    p = parser_class(grammar)
+
+    input_file = Path(os.path.dirname(__file__), 'parsing_errors.input')
+    err_file = Path(os.path.dirname(__file__), 'parsing_errors.err')
+
+    with pytest.raises(ParseError) as e:
+        p.parse_file(input_file)
+
+    output_cmp(err_file, str(e.value))
+
+
+@parsers
 def test_file_name(parser_class):
     "Test that file name is given in the error string when parsing file."
     grammar = get_grammar()
     p = parser_class(grammar)
 
-    input_file = os.path.join(os.path.dirname(__file__),
-                              'parsing_errors.txt')
+    input_file = Path(os.path.dirname(__file__), 'parsing_errors.input')
 
     with pytest.raises(ParseError) as e:
-        p.parse_file(input_file)
+        p.parse_file(str(input_file))
 
-    assert 'parsing_errors.txt' in str(e.value)
-    assert 'parsing_errors.txt' in e.value.location.file_name
+    assert 'parsing_errors.input' in str(e.value)
+    assert 'parsing_errors.input' in e.value.location.file_name
