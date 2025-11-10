@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import pytest
 
 from parglare import GLRParser, Grammar, ParseError
+
+from ..utils import output_cmp
 
 
 def test_issue_112_fail_on_empty():
@@ -223,6 +227,4 @@ def test_issue_112_wrong_error_report():
     with pytest.raises(ParseError) as e:
         parser.parse('공부하:VHV; 는:ETM; 것:NNB; 은:TOP; 아니:VCN; ㅂ니다:SEF; .:SF;')
 
-    assert 'Expected: adnominalSuffix or nominalizingSuffix or '\
-        'verbToNounModifyingForm but found <sentenceEnd(.:SF;)>'\
-        in str(e.value)
+    output_cmp(Path(Path(__file__).parent, 'test_issue_112.err'), str(e.value))

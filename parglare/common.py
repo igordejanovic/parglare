@@ -1,3 +1,4 @@
+from typing import Union
 
 from parglare import termui as t
 from parglare.termui import s_attention as _a
@@ -25,10 +26,12 @@ class Location:
                  '_line', '_column', '_line_end', '_column_end']
 
     def __init__(self, context=None, file_name=None):
-        self.start_position = context.start_position if context else None
-        self.end_position = context.end_position if context else None
-        self.input_str = context.input_str if context else None
-        self.file_name = file_name or context.file_name if context else None
+        self.start_position: Union[int, None] = context.start_position \
+            if context else None
+        self.end_position: Union[int, None] = context.end_position if context else None
+        self.input_str: Union[str, None] = context.input_str if context else None
+        self.file_name: Union[str, None] = file_name or context.file_name \
+            if context else None
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting
@@ -62,6 +65,9 @@ class Location:
             self.evaluate_line_col_end()
         return self._column_end
 
+    def is_eof(self):
+        return self.input_str is not None and self.start_position == len(self.input_str)
+
     def evaluate_line_col(self):
         self._line, self._column = pos_to_line_col(
             self.input_str, self.start_position)
@@ -74,12 +80,10 @@ class Location:
     def __str__(self):
         line, column = self.line, self.column
         if line is not None:
-            return ('{}{}:{}:"{}"'
+            return ('{}{}:{}'
                     .format(f"{self.file_name}:"
                             if self.file_name else "",
-                            line, column,
-                            position_context(self.input_str,
-                                             self.start_position)))
+                            line, column))
         if self.file_name:
             return _a(self.file_name)
         return "<Unknown location>"

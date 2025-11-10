@@ -1,20 +1,100 @@
+from typing import Optional, Tuple
+
+from parglare.common import Location
+from parglare.termui import s_attention as err
 from parglare.termui import s_header as _
 
 
-class LocationError(Exception):
-    def __init__(self, location, message):
+class ParglareError(Exception):
+    def __init__(self, location: Location,
+                 message: str,
+                 context_message: Optional[str] = None,
+                 error_type: str = err("error"),
+                 input: Optional[str] = None,
+                 hint: Optional[str] = None):
+
         self.location = location
-        super().__init__(
-            f"Error at {location} => {message}")
+
+        context = get_context(input, location, context_message) \
+            if context_message else None
+        hint = _(f"  hint: {hint}") if hint else None
+
+        self.message = "\n".join(
+            filter(None, [f"{error_type}: {message}", context, hint]))
+
+    def __str__(self):
+        return f"{self.location}: {self.message}"
 
 
-class GrammarError(LocationError):
+def get_line_col_at_position(text: str, pos: int) -> Tuple[Optional[int],
+                                                           Optional[int],
+                                                           Optional[str],
+                                                           Optional[str]]:
+    lines = text.splitlines(keepends=True)
+
+    if pos > len(text):
+        # Position out of range
+        return None, None, None, None
+
+    # Special handling of EOF
+    if pos == len(text):
+        prev_line = lines[-2].rstrip('\n\r') if len(lines) > 1 else None
+        return len(lines) - 1, len(lines[-1]), lines[-1].rstrip('\n\r'), prev_line
+
+    current_pos = 0
+    for lineidx, line in enumerate(lines):
+        if current_pos <= pos < current_pos + len(line):
+            prev_line = lines[lineidx-1].rstrip('\n\r') if lineidx > 0 else None
+            return lineidx, pos - current_pos, line.rstrip('\n\r'), prev_line
+        current_pos += len(line)
+    return None, None, None, None
+
+def get_indented_message(message: str, indent: int,
+                         prefix: Optional[str] = None,
+                         marker: Optional[str] = None) -> str:
+    """
+    Returns message where all lines are indented by `indent`.
+
+    If optional `prefix` is given it is prepended to every line.
+    """
+    indent_str = (_(prefix) if prefix is not None else "") + " " * indent
+    first_indent_str = (indent_str[:-len(marker) + 1] + err(marker)) \
+        if marker is not None else None
+    return "\n".join([f"{first_indent_str}{line}" if marker is not None and lineidx == 0
+                      else f"{indent_str}{line}"
+                      for lineidx, line in enumerate(message.splitlines())])
+
+
+def get_context(input, location: Location, message: str) -> Optional[str]:
+    context = None
+    if input is not None and location.start_position is not None:
+        if type(input) is str:
+            lineidx, colidx, line, prev_line = get_line_col_at_position(input,
+                                                                        location.start_position)
+        else:
+            start = max(location.start_position-10, 0)
+            lineidx = 0
+            colidx = len(str(input[start:location.start_position])) + 1
+            line = str(input[start:location.start_position+10])
+            prev_line = None
+
+        if lineidx is not None and colidx is not None:
+            prev_line_context = _(f"{lineidx:>5} | ") + f"{prev_line}\n" \
+                if prev_line else ""
+            context = prev_line_context + \
+                _(f"{lineidx+1:>5} | ") + f"{line}\n" \
+                + get_indented_message(message, colidx + 4, "      |", "^^^ ") \
+
+    return context
+
+
+class GrammarError(ParglareError):
     def __init__(self, location, message):
-        super().__init__(location, message)
+        super().__init__(location, message, error_type=err("grammar error"))
 
 
-class ParseError(LocationError):
-    def __init__(self, location, symbols_expected, tokens_ahead=None,
+class ParseError(ParglareError):
+    def __init__(self, location: Location, input,  symbols_expected, tokens_ahead=None,
                  symbols_before=None, last_heads=None, grammar=None):
         """
         Args:
@@ -35,16 +115,16 @@ class ParseError(LocationError):
         self.symbols_before = symbols_before if symbols_before else []
         self.last_heads = last_heads
         self.grammar = grammar
-        message = expected_message(symbols_expected, tokens_ahead)
-        super().__init__(location, message)
-
-
-def expected_message(symbols_expected, tokens_ahead=None):
-    return _('Expected: ') \
-        + _(' or ').join(sorted([s.name for s in symbols_expected])) \
-        + ((_(' but found ') +
-            _(' or ').join(sorted([str(t) for t in tokens_ahead])))
-           if tokens_ahead else '')
+        token_str = "tokens" if len(self.tokens_ahead) > 1 else "token"
+        if not location.is_eof():
+            message = f'unexpected {token_str} ' + \
+                ', '.join(sorted([str(t) for t in self.tokens_ahead]))
+        else:
+            message = 'unexpected end of file'
+        context_message = _('expected: ') + \
+            ', '.join(sorted([s.name for s in symbols_expected]))
+        super().__init__(location, message, context_message=context_message,
+                         input=input, error_type=err("syntax error"))
 
 
 def expected_symbols_str(symbols):
@@ -60,7 +140,7 @@ class ParserInitError(Exception):
     pass
 
 
-class DisambiguationError(LocationError):
+class DisambiguationError(ParglareError):
     def __init__(self, location, tokens):
         self.tokens = tokens
         message = disambiguation_error(tokens)

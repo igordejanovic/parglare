@@ -1,7 +1,9 @@
 import pytest  # noqa
+from pathlib import Path
 from parglare import Grammar, Parser, ParseError, ParserInitError, \
     GrammarError, DisambiguationError
 from parglare.actions import pass_single, pass_nochange, collect
+from ..utils import output_cmp
 
 
 def test_parse_list_of_integers():
@@ -48,8 +50,9 @@ def test_parse_list_of_integers():
     # Test that error is correctly reported.
     with pytest.raises(ParseError) as e:
         parser.parse([4, 2, 1, 6, 3])
-    assert '1:3:"[4, 2, 1] **> [6, 3]"' in str(e.value)
-    assert 'int_less_than_five' in str(e.value)
+
+    output_cmp(Path(Path(__file__).parent, 'test_recognizers_parse_list_of_integers.err'),
+               str(e.value))
 
 
 def test_parse_list_of_integers_lexical_disambiguation():

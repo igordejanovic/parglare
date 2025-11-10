@@ -1,0 +1,4 @@
+4:20: syntax error: unexpected tokens NotComment(};), }
+    3 |     terminals
+    4 |     A: 'a' {15, left};
+      |                     ^^^ expected: :

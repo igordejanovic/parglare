@@ -1,0 +1,3 @@
+2:70: syntax error: unexpected tokens NotComment(};), }
+    2 |     MyRule: 'a' {left, 1, dynamic, nops, label:'My Label', not_allowed};
+      |                                                                       ^^^ expected: :

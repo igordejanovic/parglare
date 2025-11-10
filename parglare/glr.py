@@ -468,6 +468,7 @@ class GLRParser(Parser):
         context = self._last_shifted_heads[0]
         self.errors.append(
             self._create_error(
+                self.input_str,
                 context, self._expected,
                 tokens_ahead=self._tokens_ahead,
                 symbols_before=list(

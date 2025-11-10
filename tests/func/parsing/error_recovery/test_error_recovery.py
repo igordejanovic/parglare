@@ -1,6 +1,8 @@
 import pytest  # noqa
+from pathlib import Path
 from parglare import Parser, ParseError, Grammar
 from parglare.actions import pass_single
+from ...utils import output_cmp
 
 grammar = r"""
 E: E '+' E  {left, 1}
@@ -55,8 +57,8 @@ def test_error_recovery_uncomplete():
 
     assert e.location.start_position == 8
     assert e.location.end_position == 10
-    assert 'Error at 1:8:"1 + 2 +  **> * 3 & 89 -" => '\
-        'Expected: ( or number but found <*(*)>' in str(e)
+
+    output_cmp(Path(Path(__file__).parent, 'test_error_recovery_uncomplete.err'), str(e))
 
 
 def test_error_recovery_complete():
@@ -82,8 +84,8 @@ def test_error_recovery_complete():
     # spanning the whole erroneous region. Whitespaces should be included too.
     assert e2.location.start_position == 12
     assert e2.location.end_position == 17
-    assert 'Error at 1:12:"+ 2 + * 3  **> & 89 - 5" => '\
-        'Expected: ) or * or + or - or / or STOP or ^' in str(e2)
+
+    output_cmp(Path(Path(__file__).parent, 'test_error_recovery_complete.err'), str(e2))
 
 
 def test_error_recovery_parse_error():

@@ -1,8 +1,12 @@
+from pathlib import Path
+
 import pytest
 
 from parglare import Grammar, Parser
 from parglare.exceptions import GrammarError, ParseError
 from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
+
+from ..utils import output_cmp
 
 
 def test_single_terminal():
@@ -152,8 +156,8 @@ def test_no_terminal_associavitity():
     with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Expected: : but found <NotComment(};)> or <}(})>' \
-        in str(e.value)
+    output_cmp(Path(Path(__file__).parent,
+                    'test_grammar_no_terminal_associavitity.err'), str(e.value))
 
 
 def test_terminal_empty_body():

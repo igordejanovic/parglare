@@ -82,7 +82,7 @@ def test_repeatable_one_or_more():
     input_str = '2 3'
     with pytest.raises(ParseError) as e:
         result = p.parse(input_str)
-    assert 'Expected: b' in str(e.value)
+    assert 'expected: b' in str(e.value)
 
 
 def test_repeatable_one_or_more_with_separator():
@@ -110,7 +110,7 @@ def test_repeatable_one_or_more_with_separator():
     input_str = '2 3'
     with pytest.raises(ParseError) as e:
         p.parse(input_str)
-    assert 'Expected: b' in str(e.value)
+    assert 'expected: b' in str(e.value)
 
 
 def test_optional():
@@ -145,7 +145,7 @@ def test_optional():
     input_str = ' 1 3'
     with pytest.raises(ParseError) as e:
         p.parse(input_str)
-    assert 'Expected: 2' in str(e.value)
+    assert 'expected: 2' in str(e.value)
 
 
 def test_optional_no_modifiers():

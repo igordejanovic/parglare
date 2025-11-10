@@ -1,0 +1,4 @@
+4:54: syntax error: unexpected tokens NotComment(};), }
+    3 |     terminals
+    4 |     a: 'a' {dynamic, 1, label: 'My Label', not_allowed};
+      |                                                       ^^^ expected: :

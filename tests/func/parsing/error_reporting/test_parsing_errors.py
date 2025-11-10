@@ -42,13 +42,14 @@ def test_invalid_input(parser_class):
         p.parse("id+id*+id")
 
     assert e.value.location.start_position == 6
-    assert "(" in str(e.value)
-    assert "id" in str(e.value)
     assert '*' in [s.name for s in e.value.symbols_before]
     assert '+' in [t.value for t in e.value.tokens_ahead]
     expected_names = [s.name for s in e.value.symbols_expected]
     assert 'id' in expected_names
     assert '(' in expected_names
+
+    output_cmp(Path(Path(__file__).parent, 'test_parsing_errors_invalid_input.err'),
+               str(e.value))
 
 
 @parsers
@@ -66,6 +67,9 @@ def test_premature_end(parser_class):
     assert '(' in expected_names
     assert '*' in [s.name for s in e.value.symbols_before]
     assert e.value.tokens_ahead == []
+
+    output_cmp(Path(Path(__file__).parent, 'test_parsing_errors_premature_end.err'),
+               str(e.value))
 
 
 def test_ambiguous_glr():
@@ -86,6 +90,8 @@ def test_ambiguous_glr():
     assert e.value.location.start_position == 10
     assert 'number' in [s.name for s in e.value.symbols_before]
 
+    output_cmp(Path(Path(__file__).parent, 'test_parsing_errors_ambiguous_glr.err'),
+               str(e.value))
 
 @parsers
 def test_line_column(parser_class):

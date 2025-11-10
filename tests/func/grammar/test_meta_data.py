@@ -2,10 +2,14 @@
 Allow arbitrary user meta-data on both production and rule-level.
 See issue: https://github.com/igordejanovic/parglare/issues/57
 """
+from pathlib import Path
+
 import pytest
 
 from parglare import Grammar, ParseError
 from parglare.grammar import ASSOC_LEFT, ASSOC_NONE, ASSOC_RIGHT
+
+from ..utils import output_cmp
 
 
 def test_production_meta_data():
@@ -40,8 +44,12 @@ def test_production_meta_data_must_be_key_value():
     MyRule: 'a' {left, 1, dynamic, nops, label:'My Label', not_allowed};
     '''
 
-    with pytest.raises(ParseError, match=r'ot_allowed \*\*> }'):
+    with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar_str)
+
+    output_cmp(Path(Path(__file__).parent,
+                    'test_meta_data_production_meta_data_must_be_key_value.err'),
+               str(e.value))
 
 
 def test_terminal_meta_data():
@@ -71,8 +79,12 @@ def test_terminal_meta_data_must_be_key_value():
     a: 'a' {dynamic, 1, label: 'My Label', not_allowed};
     '''
 
-    with pytest.raises(ParseError, match=r'ot_allowed \*\*> }'):
+    with pytest.raises(ParseError) as e:
         Grammar.from_string(grammar_str)
+
+    output_cmp(Path(Path(__file__).parent,
+                    'test_meta_data_terminal_meta_data_must_be_key_value.err'),
+               str(e.value))
 
 
 def test_rule_meta():

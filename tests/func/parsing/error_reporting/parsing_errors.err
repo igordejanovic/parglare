@@ -1,1 +1,3 @@
-Error at /parsing/error_reporting/parsing_errors.input:1:10:"id + id *  **> + id\n" => Expected: ( or id but found <+(+)>
+/parsing/error_reporting/parsing_errors.input:1:10: syntax error: unexpected token +
+    1 | id + id * + id
+      |           ^^^ expected: (, id

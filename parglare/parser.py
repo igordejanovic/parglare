@@ -225,6 +225,7 @@ class Parser:
                 symbols_expected = list(cur_state.actions.keys())
                 tokens_ahead = self._get_all_possible_tokens_ahead(head)
                 self.errors.append(self._create_error(
+                    input_str,
                     head, symbols_expected,
                     tokens_ahead,
                     symbols_before=[cur_state.symbol]))
@@ -809,14 +810,24 @@ class Parser:
                 return True
         return False
 
-    def _create_error(self, context, symbols_expected, tokens_ahead=None,
-                      symbols_before=None, last_heads=None):
-        error = ParseError(Location(context=ErrorContext(context)),
-                           symbols_expected,
-                           tokens_ahead,
-                           symbols_before=symbols_before,
-                           last_heads=last_heads,
-                           grammar=self.grammar)
+    def _create_error(
+        self,
+        input,
+        context,
+        symbols_expected,
+        tokens_ahead=None,
+        symbols_before=None,
+        last_heads=None,
+    ):
+        error = ParseError(
+            Location(context=ErrorContext(context)),
+            input,
+            symbols_expected,
+            tokens_ahead,
+            symbols_before=symbols_before,
+            last_heads=last_heads,
+            grammar=self.grammar,
+        )
 
         if self.debug:
             a_print("Error: ", error, level=1)
@@ -903,7 +914,10 @@ class Token:
         self.position = position
 
     def __repr__(self):
-        return f"<{str(self.symbol)}({str(self.value)})>"
+        if str(self.symbol) != self.value:
+            return f"{str(self.symbol)}({str(self.value)})"
+        else:
+            return self.value
 
     def __len__(self):
         return self.length
