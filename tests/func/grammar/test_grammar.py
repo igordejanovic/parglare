@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from parglare import Grammar, Parser
-from parglare.exceptions import GrammarError, ParseError
+from parglare.exceptions import GrammarError, SyntaxError
 from parglare.grammar import ASSOC_LEFT, ASSOC_RIGHT, DEFAULT_PRIORITY
 
 from ..utils import output_cmp
@@ -152,8 +152,7 @@ def test_no_terminal_associavitity():
     A: 'a' {15, left};
     B: 'b';
     """
-
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         Grammar.from_string(grammar)
 
     output_cmp(Path(Path(__file__).parent,
@@ -505,10 +504,9 @@ def test_case_insensitive_parsing():
 
     # By default parsing is case sensitive for both string and regex matches.
     parser = Parser(g)
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse('One Two Aaa')
-
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse('one Two AAa')
 
     g = Grammar.from_string(grammar, ignore_case=True)

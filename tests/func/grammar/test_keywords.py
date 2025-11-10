@@ -5,7 +5,7 @@ Test special KEYWORD rule.
 import pytest
 
 from parglare import Grammar, Parser, RegExRecognizer, StringRecognizer
-from parglare.exceptions import GrammarError, ParseError
+from parglare.exceptions import GrammarError, SyntaxError
 
 
 def test_keyword_must_be_regex():
@@ -67,10 +67,10 @@ def test_keyword_matches_on_word_boundary():
 
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    with pytest.raises(ParseError, match='expected: for'):
+    with pytest.raises(SyntaxError, match='expected: for'):
         # This *will* raise an error
         parser.parse('forid=10 to20')
-    with pytest.raises(ParseError, match='expected: to'):
+    with pytest.raises(SyntaxError, match='expected: to'):
         # This *will* also raise an error
         parser.parse('for id=10 to20')
 

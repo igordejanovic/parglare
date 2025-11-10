@@ -7,7 +7,7 @@ from parglare.grammar import Grammar, NonTerminal, Terminal, \
     RegExRecognizer, StringRecognizer, EMPTY, STOP
 from parglare.common import get_collector
 from parglare.trees import Node, NodeTerm, NodeNonTerm, visitor
-from parglare.exceptions import ParserInitError, ParseError, GrammarError, \
+from parglare.exceptions import ParserInitError, SyntaxError, GrammarError, \
     DisambiguationError, LoopError
 
 try:

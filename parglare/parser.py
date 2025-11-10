@@ -6,10 +6,10 @@ from parglare.common import ErrorContext, Location, pos_to_line_col, position_co
 from parglare.exceptions import (
     DisambiguationError,
     DynamicDisambiguationConflict,
-    ParseError,
     ParserInitError,
     RRConflicts,
     SRConflicts,
+    SyntaxError,
     expected_symbols_str,
 )
 from parglare.grammar import EMPTY, STOP
@@ -821,7 +821,7 @@ class Parser:
         symbols_before=None,
         last_heads=None,
     ):
-        error = ParseError(
+        error = SyntaxError(
             Location(context=ErrorContext(context)),
             input,
             symbols_expected,

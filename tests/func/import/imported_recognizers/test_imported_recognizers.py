@@ -3,7 +3,7 @@ from types import FunctionType
 
 import pytest
 
-from parglare import Grammar, GrammarError, ParseError, Parser
+from parglare import Grammar, GrammarError, Parser, SyntaxError
 
 from .base_recognizers import number
 
@@ -75,7 +75,7 @@ def test_imported_recognizers_override():
     g = Grammar.from_file(os.path.join(this_folder, 'model.pg'),
                           recognizers=recognizers)
     assert g
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         Parser(g).parse(model_str)
     assert any(called)
 

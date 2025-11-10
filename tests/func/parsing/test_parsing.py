@@ -3,7 +3,7 @@ from os.path import dirname, join
 import pytest
 
 from parglare import Grammar, Parser
-from parglare.exceptions import ParseError
+from parglare.exceptions import SyntaxError
 
 from ..grammar.expression_grammar import get_grammar
 
@@ -43,5 +43,5 @@ def test_partial_parse():
     g = Grammar.from_string(grammar)
     parser = Parser(g)
     parser.parse('a b')
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse('a b c')

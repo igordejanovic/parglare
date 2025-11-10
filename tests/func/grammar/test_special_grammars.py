@@ -6,7 +6,7 @@ import sys
 import pytest  # noqa
 
 from parglare import LALR, SLR, GLRParser, Grammar, Parser
-from parglare.exceptions import LoopError, ParseError, RRConflicts, SRConflicts
+from parglare.exceptions import LoopError, RRConflicts, SRConflicts, SyntaxError
 
 
 def test_lr_1_grammar():
@@ -92,7 +92,7 @@ def test_nondeterministic_LR_raise_error():
     """
 
     g = Grammar.from_string(grammar)
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         p = Parser(g)
         p.parse('0101000110001010')
 

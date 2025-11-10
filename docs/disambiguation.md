@@ -445,9 +445,9 @@ result = parser.parse('Ba. 34 baz 56')
 assert result == ['Ba. 34', 'baz 56']
 
 # But if Bar/Baz are too different from the correct pattern
-# we get ParseError. In this case `bza` score is below 0.7
+# we get SyntaxError. In this case `bza` score is below 0.7
 # for both Bar and Baz symbols.
-with pytest.raises(ParseError):
+with pytest.raises(SyntaxError):
     parser.parse('Bar. 34 bza 56')
 ```
 

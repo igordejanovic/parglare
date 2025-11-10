@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from parglare import Grammar, ParseError
+from parglare import Grammar, SyntaxError
 from parglare.grammar import ASSOC_LEFT, ASSOC_NONE, ASSOC_RIGHT
 
 from ..utils import output_cmp
@@ -43,8 +43,7 @@ def test_production_meta_data_must_be_key_value():
     grammar_str = r'''
     MyRule: 'a' {left, 1, dynamic, nops, label:'My Label', not_allowed};
     '''
-
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         Grammar.from_string(grammar_str)
 
     output_cmp(Path(Path(__file__).parent,
@@ -78,8 +77,7 @@ def test_terminal_meta_data_must_be_key_value():
     terminals
     a: 'a' {dynamic, 1, label: 'My Label', not_allowed};
     '''
-
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         Grammar.from_string(grammar_str)
 
     output_cmp(Path(Path(__file__).parent,

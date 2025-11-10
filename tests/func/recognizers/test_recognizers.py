@@ -1,6 +1,6 @@
 import pytest  # noqa
 from pathlib import Path
-from parglare import Grammar, Parser, ParseError, ParserInitError, \
+from parglare import Grammar, Parser, SyntaxError, ParserInitError, \
     GrammarError, DisambiguationError
 from parglare.actions import pass_single, pass_nochange, collect
 from ..utils import output_cmp
@@ -48,7 +48,7 @@ def test_parse_list_of_integers():
     assert p == ints
 
     # Test that error is correctly reported.
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         parser.parse([4, 2, 1, 6, 3])
 
     output_cmp(Path(Path(__file__).parent, 'test_recognizers_parse_list_of_integers.err'),

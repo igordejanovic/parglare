@@ -1,5 +1,5 @@
 import pytest  # noqa
-from parglare import Parser, GLRParser, Grammar, ParseError, visitor
+from parglare import Parser, GLRParser, Grammar, SyntaxError, visitor
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
@@ -220,7 +220,7 @@ def test_layout_terminal():
     g = Grammar.from_string(grammar)
     parser = Parser(g)
 
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse("a b")
     parser.parse("cacbc")
 
@@ -235,7 +235,7 @@ def test_layout_terminal():
     g = Grammar.from_string(grammar)
     parser = Parser(g)
 
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse("a b")
     result = parser.parse("4444a23b545")
     assert result == ['a', 'b']

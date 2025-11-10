@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from parglare import GLRParser, Grammar, ParseError
+from parglare import GLRParser, Grammar, SyntaxError
 
 from ..utils import output_cmp
 
@@ -224,7 +224,7 @@ def test_issue_112_wrong_error_report():
 
     g = Grammar.from_string(grammar)
     parser = GLRParser(g)
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         parser.parse('공부하:VHV; 는:ETM; 것:NNB; 은:TOP; 아니:VCN; ㅂ니다:SEF; .:SF;')
 
     output_cmp(Path(Path(__file__).parent, 'test_issue_112.err'), str(e.value))

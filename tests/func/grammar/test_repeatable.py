@@ -1,7 +1,7 @@
 import pytest
 
 from parglare import Grammar, Parser
-from parglare.exceptions import GrammarError, ParseError, RRConflicts
+from parglare.exceptions import GrammarError, RRConflicts, SyntaxError
 
 
 def test_repeatable_zero_or_more():
@@ -80,7 +80,7 @@ def test_repeatable_one_or_more():
     assert result == ["2", ["1", "1", "1"], "3"]
 
     input_str = '2 3'
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         result = p.parse(input_str)
     assert 'expected: b' in str(e.value)
 
@@ -108,7 +108,7 @@ def test_repeatable_one_or_more_with_separator():
     assert result == ["2", ["1", "1", "1"], "3"]
 
     input_str = '2 3'
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         p.parse(input_str)
     assert 'expected: b' in str(e.value)
 
@@ -143,7 +143,7 @@ def test_optional():
     assert result == ["2", "1", None]
 
     input_str = ' 1 3'
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         p.parse(input_str)
     assert 'expected: 2' in str(e.value)
 

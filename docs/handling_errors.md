@@ -2,9 +2,9 @@
 
 When parglare encounters a situation in which no SHIFT or REDUCE operation could
 be performed it will report an error by raising an instance of
-`parglare.ParseError` class.
+`parglare.SyntaxError` class.
 
-`ParseError` has the following attributes:
+`SyntaxError` has the following attributes:
 
 - **location** - an instance of the [Location class](./common.md#location-class)
   with information of the span of the error.
@@ -39,8 +39,8 @@ error recovery strategy that will try to search for expected tokens in the input
 ahead and when the first is found the parsing will continue. All errors will be
 collected as an `errors` list on the parser instance.
 
-Each error is an instance of [`ParseError` class](#handling-errors). In case no
-recovery is possible last `ParseError` will be raised. `ParserError` has a
+Each error is an instance of [`SyntaxError` class](#handling-errors). In case no
+recovery is possible last `SyntaxError` will be raised. `SyntaxError` has a
 location which represents the span of the error in the input (e.g.
 `error.location.start_position` and `error.location.end_position`).
 
@@ -56,7 +56,7 @@ following signature:
 
 
 - **context***- context like object (usually the parser head).
-- **error** - [`ParseError` instance](#handling-errors).
+- **error** - [`SyntaxError` instance](#handling-errors).
 
 Using the head object you can query the state of the parser. E.g. to get the
 position use `context.position`, to get the parser state use `context.state`, to

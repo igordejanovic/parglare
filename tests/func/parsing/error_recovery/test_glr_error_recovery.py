@@ -1,5 +1,5 @@
 import pytest  # noqa
-from parglare import GLRParser, Grammar, ParseError
+from parglare import GLRParser, Grammar, SyntaxError
 from parglare.parser import Token
 from parglare.actions import pass_single, pass_inner
 
@@ -114,7 +114,7 @@ def test_glr_recovery_custom_unsuccessful():
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         parser.parse('1 + 5 8 - 2')
 
     error = e.value

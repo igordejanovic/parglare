@@ -1,7 +1,7 @@
 import pytest
 
 from parglare import Grammar, Parser
-from parglare.exceptions import ParseError
+from parglare.exceptions import SyntaxError
 
 from .expression_grammar import get_grammar
 
@@ -29,7 +29,7 @@ def test_whitespace_redefinition():
         p.parse("""id+  id * (id
         +id  )
         """)
-    except ParseError as e:
+    except SyntaxError as e:
         assert e.location.start_position == 13
 
 
@@ -43,5 +43,5 @@ def test_whitespace_not_used_if_layout():
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse('a b')

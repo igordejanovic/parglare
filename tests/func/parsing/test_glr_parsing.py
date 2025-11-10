@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from parglare import GLRParser, Grammar, ParseError, Parser
+from parglare import GLRParser, Grammar, Parser, SyntaxError
 from parglare.exceptions import SRConflicts
 
 
@@ -39,7 +39,7 @@ def test_lr2_grammar():
     # will fail to parse any input as it will consume
     # greadily next rule ID as the body element of the previous Prod rule.
     parser = Parser(g)
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse(input_str)
 
     # But it can be parsed unambiguously by GLR.
@@ -73,7 +73,7 @@ def test_nops():
     # finish program. Prefer shift strategy will make parser always choose to
     # shift "end" in anticipation of "end transaction" statement instead of
     # reducing by "Statements" and finishing.
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse("""
         begin
             command
@@ -290,7 +290,7 @@ def test_empty_terminal():
     t: /b*/;
     """)
     p = GLRParser(g)
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         p.parse("a")
 
 
@@ -310,7 +310,7 @@ def test_empty_recognizer():
     t: ;
     """, recognizers={'t': match_bs})
     p = GLRParser(g)
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         p.parse("a")
 
 

@@ -93,7 +93,7 @@ class GrammarError(ParglareError):
         super().__init__(location, message, error_type=err("grammar error"))
 
 
-class ParseError(ParglareError):
+class SyntaxError(ParglareError):
     def __init__(self, location: Location, input,  symbols_expected, tokens_ahead=None,
                  symbols_before=None, last_heads=None, grammar=None):
         """

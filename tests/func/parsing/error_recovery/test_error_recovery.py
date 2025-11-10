@@ -1,6 +1,6 @@
 import pytest  # noqa
 from pathlib import Path
-from parglare import Parser, ParseError, Grammar
+from parglare import Parser, SyntaxError, Grammar
 from parglare.actions import pass_single
 from ...utils import output_cmp
 
@@ -94,12 +94,12 @@ def test_error_recovery_parse_error():
     dropping of characters as we'll end up with invalid expression at the end
     of the input.
 
-    The current solution is to throw ParseError at the beggining of the last
+    The current solution is to throw SyntaxError at the beggining of the last
     error that couldn't be recovered from.
     """
     parser = Parser(g, actions=actions, error_recovery=True)
 
-    with pytest.raises(ParseError) as einfo:
+    with pytest.raises(SyntaxError) as einfo:
         parser.parse("1 + 2 + * 3 + & -")
 
     assert einfo.value.location.start_position == 14
@@ -146,7 +146,7 @@ def test_recovery_custom_unsuccessful():
 
     parser = Parser(g, actions=actions, error_recovery=custom_recovery)
 
-    with pytest.raises(ParseError) as e:
+    with pytest.raises(SyntaxError) as e:
         parser.parse('1 + 5 8 - 2')
 
     error = e.value

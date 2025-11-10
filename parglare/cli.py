@@ -4,7 +4,7 @@ import sys
 import click
 
 import parglare.termui as t
-from parglare import GLRParser, Grammar, GrammarError, ParseError, Parser
+from parglare import GLRParser, Grammar, GrammarError, Parser, SyntaxError
 from parglare.export import grammar_pda_export
 from parglare.tables import create_load_table
 from parglare.termui import a_print, h_print, prints
@@ -181,7 +181,7 @@ def compile_get_grammar_table(grammar_file, debug, colors, prefer_shifts,
             a_print(message)
             prints("Try to resolve manually or use GLR parsing.")
 
-    except (GrammarError, ParseError) as e:
+    except (GrammarError, SyntaxError) as e:
         print("Error in the grammar file.")
         print(e)
         sys.exit(1)

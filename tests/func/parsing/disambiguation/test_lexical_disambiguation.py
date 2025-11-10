@@ -9,7 +9,7 @@ At the end disambiguation error is reported.
 import pytest  # noqa
 import difflib
 import re
-from parglare import Parser, Grammar, Token, ParseError, DisambiguationError
+from parglare import Parser, Grammar, Token, SyntaxError, DisambiguationError
 
 
 called = [False, False, False]
@@ -297,7 +297,7 @@ def test_dynamic_lexical_disambiguation():
     assert result == ['Ba. 34', 'baz 56']
 
     # But if Bar/Baz are too different from the correct pattern
-    # we get ParseError. In this case `bza` score is below 0.7
+    # we get SyntaxError. In this case `bza` score is below 0.7
     # for both Bar and Baz symbols.
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         parser.parse('Bar. 34 bza 56')

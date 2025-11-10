@@ -1,6 +1,6 @@
 import pytest
 
-from parglare import GLRParser, Grammar, ParseError
+from parglare import GLRParser, Grammar, SyntaxError
 
 
 def test_greedy_zero_or_more():
@@ -185,7 +185,7 @@ def test_greedy_interleaved_one():
 
     # This can't be parsed as A+! will collect all `a` and there will be none
     # left for the A+ at the end.
-    with pytest.raises(ParseError):
+    with pytest.raises(SyntaxError):
         forest = p.parse("a a a a")
 
     forest = p.parse("a a b a a")
