@@ -122,18 +122,18 @@ class ParseError(ParglareError):
         else:
             message = 'unexpected end of file'
         context_message = _('expected: ') + \
-            ', '.join(sorted([s.name for s in symbols_expected]))
+            ' '.join(sorted([s.name for s in symbols_expected]))
         super().__init__(location, message, context_message=context_message,
                          input=input, error_type=err("syntax error"))
 
 
 def expected_symbols_str(symbols):
-    return " or ".join(sorted([s.name for s in symbols]))
+    return " ".join(sorted([s.name for s in symbols]))
 
 
 def disambiguation_error(tokens):
     return "Can't disambiguate between: {}".format(
-                _(' or ').join(sorted([str(t) for t in tokens])))
+                _(' ').join(sorted([str(t) for t in tokens])))
 
 
 class ParserInitError(Exception):

@@ -1,3 +1,3 @@
 1:3: syntax error: unexpected token 
     1 | [4, 2, 1, 6, 3]
-      |           ^^^ expected: STOP, int_less_than_five
+      |           ^^^ expected: STOP int_less_than_five

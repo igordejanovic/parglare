@@ -1,3 +1,3 @@
 1:47: syntax error: unexpected token sentenceEnd(.:SF;)
     1 | 공부하:VHV; 는:ETM; 것:NNB; 은:TOP; 아니:VCN; ㅂ니다:SEF; .:SF;
-      |                                                ^^^ expected: adnominalSuffix, nominalizingSuffix, verbToNounModifyingForm
+      |                                                ^^^ expected: adnominalSuffix nominalizingSuffix verbToNounModifyingForm
