@@ -18,14 +18,16 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
-### Changed
-- Improved error reporting.
-
 ### Added
 - Support for Python 3.13 and 3.14.
 
+## Fixed
+- respect `--debug` flag in `pglr parse`
+- ignore `KEYWORD` terminal getting all lookahead tokens on parse failure
+
 ### Changed
 - Moved to [uv](https://docs.astral.sh/uv/) for dependency/project management.
+- Improved error reporting.
 
 
 ## [0.18.0] (released: 2024-02-23)
