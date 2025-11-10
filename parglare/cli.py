@@ -65,12 +65,12 @@ def parse(ctx, grammar_file, input_file, input, glr, recovery, dot, positions):
     prefer_shifts_over_empty = ctx.obj['prefer_shifts_over_empty']
     grammar = Grammar.from_file(grammar_file, debug=debug, debug_colors=colors)
     if glr:
-        parser = GLRParser(grammar, debug=False, debug_colors=colors,
+        parser = GLRParser(grammar, debug=debug, debug_colors=colors,
                            error_recovery=recovery,
                            prefer_shifts=prefer_shifts,
                            prefer_shifts_over_empty=prefer_shifts_over_empty)
     else:
-        parser = Parser(grammar, build_tree=True, debug=False, debug_colors=colors,
+        parser = Parser(grammar, build_tree=True, debug=debug, debug_colors=colors,
                         error_recovery=recovery,
                         prefer_shifts=prefer_shifts,
                         prefer_shifts_over_empty=prefer_shifts_over_empty)
