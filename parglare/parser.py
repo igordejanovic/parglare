@@ -539,6 +539,8 @@ class Parser:
         tokens = []
         if context.position < len(context.input_str):
             for terminal in self.grammar.terminals.values():
+                if terminal.name == 'KEYWORD':
+                    continue
                 try:
                     tok = terminal.recognizer(context.input_str,
                                               context.position)
