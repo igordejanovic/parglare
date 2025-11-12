@@ -15,6 +15,8 @@ be performed it will report an error by raising an instance of
   trying all terminal symbols recognizers from the grammar. Note that this list
   might be empty in case nothing can be recognized at the position or it might
   have more than one element if more recognizers succeeds (lexical ambiguity).
+  To prevent a terminal to be used in this find-all approach you can mark the
+  terminal by `unexpected: false` user meta-data.
 
 - **symbols_before (list)** - a list of last seen symbols. In the case of LR
   parser it will always be a single element list. In the case of GLR there might

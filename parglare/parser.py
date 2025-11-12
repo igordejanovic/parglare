@@ -539,6 +539,9 @@ class Parser:
         tokens = []
         if context.position < len(context.input_str):
             for terminal in self.grammar.terminals.values():
+                if terminal.user_meta is not None \
+                   and terminal.user_meta.get('unexpected', True) is False:
+                    continue
                 if terminal.name == 'KEYWORD':
                     continue
                 try:

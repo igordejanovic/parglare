@@ -20,6 +20,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ### Added
 - Support for Python 3.13 and 3.14.
+- `unexpected: false` special user meta-data to prevent terminal to be used in
+  finding all tokens ahead in case of syntax error.
 
 ## Fixed
 - respect `--debug` flag in `pglr parse`.

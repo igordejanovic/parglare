@@ -1,0 +1,3 @@
+/parsing/error_reporting/unexpected/unexpected_token.input:1:8: syntax error: unexpected tokens +, Add(+)
+    1 | 3 + 4 - + 5
+      |         ^^^ expected: number
