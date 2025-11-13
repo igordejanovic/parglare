@@ -67,7 +67,7 @@ target/
 site
 issues-temp
 tests/perf/*.pstats
-*.pgt
+*.pgc
 /.tool-versions
 /venv/
 /issues/

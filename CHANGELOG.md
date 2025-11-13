@@ -31,6 +31,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 - Moved to [uv](https://docs.astral.sh/uv/) for dependency/project management.
 - Improved error reporting.
 - Class name `ParseError` changed to `SyntaxError`.
+- Compiled parglare grammar file extension changed to `.pgc`.
 
 
 ## [0.18.0] (released: 2024-02-23)

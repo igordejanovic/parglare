@@ -31,8 +31,8 @@ module SomeModule {
 def test_diamond_import_resolving_and_model_creation():
 
     grammar_file = os.path.join(this_folder, 'model.pg')
-    table_file = os.path.join(this_folder, 'model.pgt')
-    table_cmp_file = os.path.join(this_folder, 'model_compare.pgt')
+    table_file = os.path.join(this_folder, 'model.pgc')
+    table_cmp_file = os.path.join(this_folder, 'model_compare.pgc')
 
     g = Grammar.from_file(grammar_file)
     with contextlib.suppress(Exception):

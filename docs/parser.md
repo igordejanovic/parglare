@@ -130,14 +130,14 @@ is provided more for experimentation purposes.
 
 ## force_load_table
 
-LR table is loaded from `<grammar_file_name>.pgt` file if the file exists and is
+LR table is loaded from `<grammar_file_name>.pgc` file if the file exists and is
 newer than all of the grammar files, root and imported. If any of the grammar
 file modification time is greater than the modification time of the cached LR
 table file, table is recalculated and persisted. If you are deploying the parser
 in a way that will change file modification times which would trigger table
 calculation you can set `force_load_table` to `True`. If this flag is set no
 modification check will be performed and table calculation will happen only if
-`.pgt` file doesn't exist.
+`.pgc` file doesn't exist.
 
 ## table
 

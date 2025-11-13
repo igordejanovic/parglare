@@ -70,13 +70,13 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
     table_file_name = None
     if grammar.file_path:
         file_basename, _ = os.path.splitext(grammar.file_path)
-        table_file_name = f"{file_basename}.pgt"
+        table_file_name = f"{file_basename}.pgc"
 
     create_table_file = True
 
     if not force_create and not force_load and grammar.file_path:
         file_basename, _ = os.path.splitext(grammar.file_path)
-        table_file_name = f"{file_basename}.pgt"
+        table_file_name = f"{file_basename}.pgc"
 
         if os.path.exists(table_file_name):
             create_table_file = False

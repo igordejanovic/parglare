@@ -192,7 +192,7 @@ print("Result = ", result)
     not proven, this should enable handling of all LR(1) grammars with reduced set
     of states and without conflicts. For grammars that are not LR(1) a GLR parsing
     is provided. If a grammar is loaded from file, its table will be persisted
-    between runs in `.pgt` file. To generate `.pgt` file explicitly use [pglr
+    between runs in `.pgc` file. To generate `.pgc` file explicitly use [pglr
     compile](./pglr.md#compiling-the-grammar) command.
 
 ## Citing parglare

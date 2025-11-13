@@ -30,8 +30,8 @@ Commands:
 ## Compiling the grammar
 
 `compile` command is used for checking the grammar, reporting conflicts and
-producing LR table `.pgt` files. It is not mandatory to compile the grammar as
-parglare will calculate table during parser construction if `.pgt` file doesn't
+producing LR table `.pgc` files. It is not mandatory to compile the grammar as
+parglare will calculate table during parser construction if `.pgc` file doesn't
 exist or is not newer than all of the grammar files. But it is recommended to
 use this command during development to investigate possible conflicts and
 calculate table in advance.
@@ -71,9 +71,9 @@ Expected: { or | or ; or Name or RegExTerm or StrTerm
 ```
 
 !!! tip
-    Be sure to deploy `.pgt` file to production as you will avoid unnecessary
+    Be sure to deploy `.pgc` file to production as you will avoid unnecessary
     table calculation on the first run. Furthermore, if parglare can't write to
-    `.pgt` file due to permission it will resort to calculating LR table
+    `.pgc` file due to permission it will resort to calculating LR table
     whenever started.
 
 

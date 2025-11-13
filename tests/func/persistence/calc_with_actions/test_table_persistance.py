@@ -17,7 +17,7 @@ def test_save_load_table():
     input_str_result = 1 + 2 * 5 - 7
     grammar = Grammar.from_file(calc_file)
 
-    table_file = os.path.join(this_folder, 'calc.pgt')
+    table_file = os.path.join(this_folder, 'calc.pgc')
     # remove table file if exists
     with contextlib.suppress(OSError):
         os.remove(table_file)
