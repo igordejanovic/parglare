@@ -95,7 +95,7 @@ class GrammarError(ParglareError):
 
 class SyntaxError(ParglareError):
     def __init__(self, location: Location, input,  symbols_expected, tokens_ahead=None,
-                 symbols_before=None, last_heads=None, grammar=None):
+                 symbols_before=None, last_heads=None, grammar=None, hint=None):
         """
         Args:
         location(Location): The :class:`Location` of the error.
@@ -124,7 +124,7 @@ class SyntaxError(ParglareError):
         context_message = _('expected: ') + \
             ' '.join(sorted([s.name for s in symbols_expected]))
         super().__init__(location, message, context_message=context_message,
-                         input=input, error_type=err("syntax error"))
+                         input=input, error_type=err("syntax error"), hint=hint)
 
 
 def expected_symbols_str(symbols):

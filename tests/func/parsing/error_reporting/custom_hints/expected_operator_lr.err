@@ -1,0 +1,4 @@
+1:6: syntax error: unexpected token number(4)
+    1 | 2 + 3 4 * 7
+      |       ^^^ expected: ) * + STOP
+  hint: You must have an operator between numbers

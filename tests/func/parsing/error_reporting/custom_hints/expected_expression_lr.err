@@ -1,0 +1,4 @@
+1:4: syntax error: unexpected token *
+    1 | 2 + * 4
+      |     ^^^ expected: ( number
+  hint: After `+` you must have an expression, not another operand.

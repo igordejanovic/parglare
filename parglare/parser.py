@@ -1,4 +1,8 @@
+import ast
+import json
 import logging
+from pathlib import Path
+from typing import Any, Dict, List, Tuple, Union
 
 from parglare import termui
 from parglare.actions import pass_none
@@ -12,7 +16,7 @@ from parglare.exceptions import (
     SyntaxError,
     expected_symbols_str,
 )
-from parglare.grammar import EMPTY, STOP
+from parglare.grammar import EMPTY, STOP, Grammar
 from parglare.tables import ACCEPT, LALR, REDUCE, SHIFT, SLR
 from parglare.termui import a_print, h_print, prints
 from parglare.trees import NodeNonTerm, NodeTerm
@@ -20,11 +24,20 @@ from parglare.trees import NodeNonTerm, NodeTerm
 logger = logging.getLogger(__name__)
 
 
+def hint_key(state: int,
+             tokens_ahead: Union[List['Token'], None]) -> Tuple[Any, ...]:
+    if tokens_ahead is not None:
+        lookaheads = sorted([t.symbol.name for t in tokens_ahead])
+    else:
+        lookaheads = []
+    return (state,) + tuple(lookaheads)
+
+
 class Parser:
     """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar, in_layout=False, actions=None,
+    def __init__(self, grammar: Grammar, in_layout=False, actions=None,
                  layout_actions=None, debug=False, debug_trace=False,
                  debug_colors=False, debug_layout=False, ws='\n\r\t ',
                  consume_input=True, build_tree=False,
@@ -111,6 +124,9 @@ class Parser:
                                    "parameter %s", name)
 
         self._check_parser()
+        if not self.in_layout:
+            self.error_hints = self._custom_error_hints()
+
         if debug:
             self.print_debug()
 
@@ -141,6 +157,95 @@ class Parser:
 
             if unhandled_conflicts:
                 raise RRConflicts(unhandled_conflicts)
+
+    def _custom_error_hints(self) -> Union[Dict[Tuple, str], None]:
+        """If custom error hints file exists check if it needs compiling and if
+        so perform compilation.
+
+        """
+        if self.grammar.file_path is None:
+            return
+
+        def compile_errors(hints_file: Path) -> Dict[Tuple, str]:
+            # Parse hints file
+            examples = []
+            with open(hints_file) as f:
+                example = []
+                hint = []
+                in_example = True
+                lookahead = False
+                def new_example():
+                    nonlocal example, hint, lookahead, in_example
+                    examples.append({
+                        'example': ''.join(example),
+                        'hint': '\n'.join(hint),
+                        'lookahead': lookahead,
+                    })
+                    example = []
+                    hint = []
+                    in_example = True
+
+                for line in f:
+                    if not in_example and line.strip() == '':
+                        continue
+                    if line.startswith('====='):
+                        new_example()
+                        continue
+
+                    if line.startswith(':::'):
+                        lookahead = line[3] == '+'
+                        in_example = False
+                        continue
+
+                    if in_example:
+                        example.append(line)
+                    else:
+                        hint.append(line.strip())
+
+                new_example()
+
+            compiled_examples = {}
+            for example in examples:
+                try:
+                    self.parse(example['example'])
+                except SyntaxError as e:
+                    del example['example']
+                    states = []
+                    try:
+                        states  = [self.parse_stack[-1].state.state_id]
+                    except AttributeError:
+                        # We are using GLR
+                        states = self._active_heads.keys()
+                    lookaheads = []
+                    lookahead = example.pop('lookahead')
+                    lookaheads = e.tokens_ahead if lookahead else None
+                    for state in states:
+                        key = hint_key(state, lookaheads)
+                        compiled_examples[key] = example['hint']
+
+            return compiled_examples
+
+        self._in_error_hints = True
+        grammar_file = Path(self.grammar.file_path)
+        hints_file = grammar_file.with_suffix('.pge')
+        compiled_hints = None
+        if hints_file.exists():
+            hints_file_compiled = hints_file.with_suffix('.pgec')
+            if not hints_file_compiled.exists() \
+               or grammar_file.stat().st_mtime > hints_file_compiled.stat().st_mtime \
+               or hints_file.stat().st_mtime > hints_file_compiled.stat().st_mtime:
+                # Compilation is needed
+                compiled_hints = compile_errors(hints_file)
+                with open(hints_file_compiled, 'w') as f:
+                    serializable = {str(k): v for k, v in compiled_hints.items()}
+                    json.dump(serializable, f)
+            else:
+                with open(hints_file_compiled) as f:
+                    loaded = json.load(f)
+                    compiled_hints = {ast.literal_eval(k): v for k, v in loaded.items()}
+
+        del self._in_error_hints
+        return compiled_hints
 
     def print_debug(self):
         if self.in_layout and self.debug_layout:
@@ -824,6 +929,16 @@ class Parser:
         symbols_before=None,
         last_heads=None,
     ):
+        hint = None
+        if not self.in_layout and not hasattr(self, '_in_error_hints') \
+           and self.error_hints is not None:
+            # Check if a specific version with tokens ahead is available
+            hint = self.error_hints.get(hint_key(context.state.state_id, tokens_ahead),
+                                        None)
+            if hint is None:
+                # Check if more generic version without tokens ahead is availabe
+                hint = self.error_hints.get(hint_key(context.state.state_id, None), None)
+
         error = SyntaxError(
             Location(context=ErrorContext(context)),
             input,
@@ -832,6 +947,7 @@ class Parser:
             symbols_before=symbols_before,
             last_heads=last_heads,
             grammar=self.grammar,
+            hint=hint,
         )
 
         if self.debug:

@@ -74,3 +74,64 @@ successful the function should return `True`, otherwise `False`.
 
 You can call a default error recovery from your custom recovery by
 `context.parser.default_error_recovery(context)`
+
+
+## Custom error hints from examples
+
+To improve error messages, you can define custom error hints by providing
+examples of erroneous inputs and corresponding error message hints. If parglare
+finds a `.pge` (parglare error examples) file in the same directory as the `.pg`
+file, it will use it to produce a special table of hints that is used during
+parsing to construct a more user-friendly error message.
+
+The content of the `.pge` file consists of example-hint pairs in the form:
+
+```
+out = in1 + in2
+:::+
+'out' is a reserved keyword and cannot be used as a variable
+```
+
+The first line is the example that triggers the error. The last line is the hint
+that will be part of the error message. The separator is `:::` with an optional
+`+` at the end, which signifies that a lookahead token should be matched for
+this rule to be used. The separator between example rules is `=====` (five
+consecutive `=` characters).
+
+When the parser instance is created, if the grammar is loaded from a file, a
+file with the same base name as the grammar but with the `.pge` extension will
+be searched for. If found, and there isn't a newer file with the `.pgec`
+extension, it will be compiled by parsing each example until an error state is
+reached. When that happens, for each example, the LR state, lookahead (if `+` is
+found after `:::`), and the hint message will be saved to the `.pgec` file. If a
+`.pgec` file is newer than the error examples file, it will be loaded and used
+during parsing.
+
+Later, during parsing, if hint states exist for the parser, the parser will
+consult them when creating an error message by passing the hint message of the
+corresponding state to the `SyntaxError` `hint` parameter. This will not modify
+the original syntax error message but will add a hint below that better explains
+the error.
+
+For example, for the definition above if we try to parse input:
+
+```
+fn test():
+    out = in1 + in2
+```
+
+We get error message:
+
+```
+2:7: syntax error: unexpected token =
+    1 | fn test():
+    2 |    out = in1 + in2
+      |        ^^^ expected: <
+  hint: Cannot use 'out' as variable name as it is a reserved keyword for IO variable declarations.
+```
+
+This is based on the paper:
+
+```
+JEFFERY, Clinton L. Generating LR syntax error messages from examples. ACM Transactions on Programming Languages and Systems (TOPLAS), 2003, 25.5: 631-640.
+```

@@ -1,0 +1,18 @@
+3 + * 4
+:::+
+After `+` you must have an expression, not another operand.
+
+=====
+(3 + 4
+:::
+Missing closing parenthesis
+
+=====
+3 + 4)
+:::+
+Unexpected closing parenthesis
+
+=====
+3 + 4 5
+:::+
+You must have an operator between numbers
