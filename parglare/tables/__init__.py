@@ -417,8 +417,8 @@ class LRTable:
                     state.finish_flags = [False] * len(state.actions)
         else:
             if lexical_disambiguation is not None:
-                logger.warn('lexical_disambiguation flag ignored '
-                            'because calc_finish_flags is not set')
+                logger.warning('lexical_disambiguation flag ignored '
+                               'because calc_finish_flags is not set')
         self.calc_conflicts_and_dynamic_terminals(debug)
 
     def sort_state_actions(self):

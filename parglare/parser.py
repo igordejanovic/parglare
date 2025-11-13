@@ -107,8 +107,8 @@ class Parser:
                 ('force_load_table', force_load_table, False),
             ]:
                 if value is not default:
-                    logger.warn("Precomputed table overrides value of "
-                                "parameter %s", name)
+                    logger.warning("Precomputed table overrides value of "
+                                   "parameter %s", name)
 
         self._check_parser()
         if debug:
