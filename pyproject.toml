@@ -70,7 +70,8 @@ doc = [
 ]
 
 dbg = [
-    "pudb>=2025.1.3",
+    "pudb",
+    "ipython",
 ]
 
 [project.scripts]
