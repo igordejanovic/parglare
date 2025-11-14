@@ -22,6 +22,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 - Support for Python 3.13 and 3.14.
 - `unexpected: false` special user meta-data to prevent terminal to be used in
   finding all tokens ahead in case of syntax error.
+- Errors by example - a way to specify error hints that better explain syntax
+  errors. See [cfb473deabf96351af96359e4277be52526fc387].
 
 ## Fixed
 - respect `--debug` flag in `pglr parse`.
