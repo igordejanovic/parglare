@@ -28,6 +28,14 @@ be performed it will report an error by raising an instance of
 - **grammar (Grammar)** - An instance of `parglare.Grammar` class used for
   parsing.
 
+- **message (str)** - The basic cause of the error. E.g. `unexpected token *`.
+
+- **context_message (str | None)** - In case of the syntax error this is an
+  information what is expected at the error location. E.g. `expected: ( number`.
+
+- **hint (str | None)** - Hint may be provided by the [Custom recovery
+  strategy](#custom-recovery-strategy).
+
 
 # Error recovery
 

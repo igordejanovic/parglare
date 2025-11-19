@@ -14,16 +14,20 @@ class ParglareError(Exception):
                  hint: Optional[str] = None):
 
         self.location = location
+        self.hint = hint
+        self.message = message
+        self.context_message = context_message
+        self.error_type = error_type
 
         context = get_context(input, location, context_message) \
             if context_message else None
         hint = _(f"  hint: {hint}") if hint else None
 
-        self.message = "\n".join(
+        self.full_message = "\n".join(
             filter(None, [f"{error_type}: {message}", context, hint]))
 
     def __str__(self):
-        return f"{self.location}: {self.message}"
+        return f"{self.location}: {self.full_message}"
 
 
 def get_line_col_at_position(text: str, pos: int) -> Tuple[Optional[int],
