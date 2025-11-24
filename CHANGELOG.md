@@ -32,6 +32,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ### Changed
 - Introduced mypy for static type checking.
 - Moved to GNU Make for project management.
+- Exposed `message`, `context_message`, and `hint` on `ParglareError` instances.
 - Moved to [uv](https://docs.astral.sh/uv/) for dependency/project management.
 - Improved error reporting.
 - Class name `ParseError` changed to `SyntaxError`.
