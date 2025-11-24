@@ -1,13 +1,9 @@
-.PHONY: clean clean-test clean-pyc clean-build docs help lint
+.PHONY: clean clean-test clean-pyc clean-build docs help lint test types coverage release release-test check
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
-import os, webbrowser, sys
-try:
-	from urllib import pathname2url
-except:
-	from urllib.request import pathname2url
-
-webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
+import webbrowser, sys
+print(sys.argv[1])
+webbrowser.open(sys.argv[1])
 endef
 export BROWSER_PYSCRIPT
 
@@ -21,7 +17,7 @@ for line in sys.stdin:
 		print("%-20s %s" % (target, help))
 endef
 export PRINT_HELP_PYSCRIPT
-BROWSER := python -c "$$BROWSER_PYSCRIPT"
+BROWSER := uv run python -c "$$BROWSER_PYSCRIPT"
 
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
@@ -42,44 +38,47 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
 
-clean-test: ## remove test and coverage artifacts
-	rm -fr .tox/
+clean-test:  ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 
-lint: ## check style with flake8
-	flake8
+lint:  ## check style with ruff
+	uv run --no-default-groups --group test ruff check parglare/ tests/func examples/
 
-test: ## run tests quickly with the default Python
-	py.test tests/func
+test:  ## run tests quickly with the default Python
+	uv run --no-default-groups --group test pytest tests/func
 
+types:  ## Run static type checks
+	uv run --no-default-groups --group test mypy parglare
 
-test-all: ## run tests on every Python version with tox
-	tox
+coverage:  ## check code coverage quickly with the default Python
+	uv run --no-default-groups --group test coverage run --omit parglare/cli.py --source parglare -m pytest tests/func
+	uv run --no-default-groups --group test coverage report --fail-under 90
+	uv run --no-default-groups --group test coverage html
+	$(BROWSER) "htmlcov/index.html"
 
-coverage: ## check code coverage quickly with the default Python
-	coverage run --source parglare -m pytest tests/func
+check: lint types coverage
 
-		coverage report -m
-		coverage html
-		$(BROWSER) htmlcov/index.html
+docs:  ## generate MkDocs HTML documentation
+	uv run --group docs mkdocs build
+	$(BROWSER) site/index.html
 
-docs: ## generate MkDocs HTML documentation
-	mkdocs build
-	$(BROWSER) docs/_build/html/index.html
-
-servedocs: ## compile the docs watching for changes
-	mkdocs serve
+servedocs:  ## compile the docs watching for changes
 	$(BROWSER) "http://localhost:8000/"
+	uv run --group docs mkdocs serve
 
-release: clean ## package and upload a release
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
+release-test: dist  ## release package to PyPI test server
+	uv run flit publish --repository test
 
-dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
+release: dist  ## release package to PyPI
+	uv run flit publish
+
+dist: clean  ## builds source and wheel package
+	uv run flit build
 	ls -l dist
 
-install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+install: clean  ## install the package to the active Python's site-packages
+	uv pip install .
+
+dev: clean  ## Setup development environment
+	uv sync

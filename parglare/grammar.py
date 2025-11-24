@@ -461,18 +461,31 @@ class PGFile:
         obj action.
     imports (dict): Mapping imported module/file local name to PGFile object.
     file_path (str): A full canonic path to the .pg file.
-    grammar (PGFile): A root/grammar file.
+    grammar (Grammar): A root/grammar file.
     recognizers (dict of callables): A dict of Python callables used as a
         terminal recognizers.
     """
-    def __init__(self, productions: List[Production],
-                 terminals: Optional[List[Terminal]] = None, classes=None,
-                 imports=None, file_path=None, grammar=None, recognizers=None,
-                 imported_with=None):
+
+    def __init__(
+        self,
+        productions: List[Production],
+        terminals: Optional[List[Terminal]] = None,
+        classes=None,
+        imports=None,
+        file_path=None,
+        grammar: Optional['Grammar'] = None,
+        recognizers=None,
+        imported_with=None,
+    ):
         self.productions = productions
         self.terminals = terminals
         self.classes = classes if classes else {}
-        self.grammar = self if grammar is None else grammar
+        self.grammar: Optional[Grammar]
+        if grammar is not None:
+            assert isinstance(grammar, Grammar)
+            self.grammar = grammar
+        else:
+            self.grammar = None
 
         self.file_path = path.realpath(file_path) if file_path else None
         self.imported_with = imported_with
@@ -481,7 +494,7 @@ class PGFile:
 
         self._make_symbols_resolution_map()
 
-        if self.file_path:
+        if self.file_path and self.grammar:
             self.grammar.imported_files[self.file_path] = self
 
         if imports:
@@ -493,7 +506,8 @@ class PGFile:
                 except OSError as ex:
                     raise GrammarError(
                         location=Location(file_name=self.file_path),
-                        message=f'Can\'t import file "{i.file_path}".') from ex
+                        message=f'Can\'t import file "{i.file_path}".',
+                    ) from ex
         else:
             self.imports = {}
 

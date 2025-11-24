@@ -69,12 +69,13 @@ Installation
 
     $ pip install parglare
 
-- Development version:
+- Development:
 
 .. code:: shell
 
     $ git clone git@github.com:igordejanovic/parglare.git
-    $ pip install -e parglare
+    $ cd parglare
+    $ make dev
 
 Citing parglare
 ---------------

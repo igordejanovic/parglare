@@ -2,7 +2,7 @@ import ast
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 from parglare import termui
 from parglare.actions import pass_none
@@ -16,6 +16,9 @@ from parglare.exceptions import (
     SyntaxError,
     expected_symbols_str,
 )
+
+if TYPE_CHECKING:
+    from parglare.glr import GLRParser
 from parglare.grammar import EMPTY, STOP, Grammar
 from parglare.tables import ACCEPT, LALR, REDUCE, SHIFT, SLR
 from parglare.termui import a_print, h_print, prints
@@ -164,24 +167,24 @@ class Parser:
 
         """
         if self.grammar.file_path is None:
-            return
+            return None
 
         def compile_errors(hints_file: Path) -> Dict[Tuple, str]:
             # Parse hints file
             examples = []
             with open(hints_file) as f:
-                example = []
-                hint = []
+                example_src: List[str] = []
+                hint: List[str] = []
                 in_example = True
                 lookahead = False
                 def new_example():
-                    nonlocal example, hint, lookahead, in_example
+                    nonlocal example_src, hint, lookahead, in_example
                     examples.append({
-                        'example': ''.join(example),
+                        'example': ''.join(example_src),
                         'hint': '\n'.join(hint),
                         'lookahead': lookahead,
                     })
-                    example = []
+                    example_src = []
                     hint = []
                     in_example = True
 
@@ -198,7 +201,7 @@ class Parser:
                         continue
 
                     if in_example:
-                        example.append(line)
+                        example_src.append(line)
                     else:
                         hint.append(line.strip())
 
@@ -215,8 +218,9 @@ class Parser:
                         states  = [self.parse_stack[-1].state.state_id]
                     except AttributeError:
                         # We are using GLR
+                        if TYPE_CHECKING:
+                            assert isinstance(self, GLRParser)
                         states = self._active_heads.keys()
-                    lookaheads = []
                     lookahead = example.pop('lookahead')
                     lookaheads = e.tokens_ahead if lookahead else None
                     for state in states:

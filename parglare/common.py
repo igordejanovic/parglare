@@ -1,4 +1,7 @@
-from typing import Union
+from typing import TYPE_CHECKING, Optional, Union
+
+if TYPE_CHECKING:
+    from parglare.parser import LRStackNode
 
 from parglare import termui as t
 from parglare.termui import s_attention as _a
@@ -25,13 +28,19 @@ class Location:
     __slots__ = ['start_position', 'end_position', 'input_str', 'file_name',
                  '_line', '_column', '_line_end', '_column_end']
 
-    def __init__(self, context=None, file_name=None):
-        self.start_position: Union[int, None] = context.start_position \
-            if context else None
+    def __init__(
+        self,
+        context: Optional[Union['LRStackNode', 'ErrorContext']] = None,
+        file_name: Optional[str] = None,
+    ):
+        self.start_position: Union[int, None] = (
+            context.start_position if context else None
+        )
         self.end_position: Union[int, None] = context.end_position if context else None
         self.input_str: Union[str, None] = context.input_str if context else None
-        self.file_name: Union[str, None] = file_name or context.file_name \
-            if context else None
+        self.file_name: Union[str, None] = (
+            file_name or context.file_name if context else None
+        )
 
         # Evaluate this only when string representation is needed.
         # E.g. during error reporting

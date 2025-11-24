@@ -22,17 +22,12 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install test dependencies
+    - name: Run all checks
       run: |
-        uv sync --no-default-groups --group dev
-    - name: Run unit tests
-      run: |
-        source .venv/bin/activate
-        ./runtests.sh
+        make check
     - name: Coveralls
       if: github.ref == 'refs/heads/master'
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
       run: |
-        source .venv/bin/activate
-        coveralls
+        uv run coveralls

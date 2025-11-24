@@ -53,18 +53,25 @@ name = "parglare"
 exclude = ["**/.*"]
 
 [tool.uv]
-default-groups = ["dev", "doc", "dbg"]
+default-groups = ["dev"]
 
 [dependency-groups]
 dev = [
-    "ruff",
     "flit",
+    {include-group = "test"},
+    {include-group = "docs"},
+    {include-group = "dbg"},
+]
+
+test = [
+    "ruff",
     "coverage",
     "coveralls",
     "pytest",
+    "mypy",
 ]
 
-doc = [
+docs = [
     "mkdocs",
     "mike",
 ]

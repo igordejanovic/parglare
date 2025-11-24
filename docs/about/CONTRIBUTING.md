@@ -65,34 +65,20 @@ Ready to contribute? Here's how to set up `parglare` for local development.
 
         $ git clone git@github.com:your_name_here/parglare.git
         
-
-4. Install your local copy into a virtual environment. This is how you set up
-   your fork for local development:
+4. Create a branch for local development::
 
         $ cd parglare/
-        $ uv venv 
-        $ source .venv/bin/activate
-        $ uv sync
-
-   This is needed just the first time. To work on parglare later you just need
-   to activate the virtual environment for each new terminal session:
-
-        $ cd parglare/
-        $ source .venv/bin/activate
-
-5. Create a branch for local development::
-
         $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-6. When you're done making changes, run tests:
+5. When you're done making changes, run tests:
 
-        $ ./runtests.sh
+        $ make check
 
    and verify that all tests pass.
 
-7. Commit your changes and push your branch to GitHub:
+6. Commit your changes and push your branch to GitHub:
 
         $ git add .
         $ git commit -m "Your detailed description of your changes."
@@ -121,11 +107,22 @@ Before you submit a pull request, check that it meets these guidelines:
 To run a subset of tests:
 
 ```
-$ pytest tests/func/mytest.py
+$ uv run pytest tests/func/mytest.py
 ```
 
 or a single test:
 
 ```
-$ pytest tests/func/mytest.py::some_test
+$ uv run pytest tests/func/mytest.py::some_test
+```
+
+To serve docs locally:
+
+```
+make servedocs
+```
+
+To see all make options:
+```
+make help
 ```
