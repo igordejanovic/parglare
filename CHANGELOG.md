@@ -18,12 +18,16 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.19.0] (released: 2025-11-26)
+
 ### Added
 - Support for Python 3.13 and 3.14.
 - `unexpected: false` special user meta-data to prevent terminal to be used in
   finding all tokens ahead in case of syntax error.
 - Errors by example - a way to specify error hints that better explain syntax
-  errors. See [this commit](https://github.com/igordejanovic/parglare/commit/cfb473deabf96351af96359e4277be52526fc387)
+  errors. See [this
+  commit](https://github.com/igordejanovic/parglare/commit/cfb473deabf96351af96359e4277be52526fc387)
 
 ## Fixed
 - respect `--debug` flag in `pglr parse`.
@@ -496,7 +500,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.17.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.19.0...HEAD
+[0.19.0]: https://github.com/igordejanovic/parglare/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/igordejanovic/parglare/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/igordejanovic/parglare/compare/0.16.1...0.17.0
 [0.16.1]: https://github.com/igordejanovic/parglare/compare/0.16.0...0.16.1
