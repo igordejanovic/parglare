@@ -54,6 +54,9 @@ coverage:
 # Run all checks
 check: check-format lint types coverage
 
+[private]
+check-ci: check-format lint types
+
 # Format code with ruff
 [no-cd]
 format *paths=".":
