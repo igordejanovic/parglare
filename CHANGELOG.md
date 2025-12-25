@@ -18,6 +18,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Changed
+- Migrated to [just](https://github.com/casey/just) for project management.
+- Autoformating code with [ruff](https://docs.astral.sh/ruff/).
 
 ## [0.19.0] (released: 2025-11-26)
 
