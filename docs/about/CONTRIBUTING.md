@@ -57,32 +57,35 @@ If you are proposing a feature:
 Ready to contribute? Here's how to set up `parglare` for local development.
 
 1. [Install uv](https://docs.astral.sh/uv/getting-started/installation/) Python
-   package/project manager.
+   package/project manager and [just](https://github.com/casey/just) task runner.
 
 2. Fork the `parglare` repo on GitHub.
 
 3. Clone your fork locally:
 
-        $ git clone git@github.com:your_name_here/parglare.git
+        git clone git@github.com:your_name_here/parglare.git
         
 4. Create a branch for local development::
 
-        $ cd parglare/
-        $ git checkout -b name-of-your-bugfix-or-feature
+        cd parglare/
+        git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, run tests:
+5. When you're done making changes:
+   - Reformat code:
 
-        $ make check
+        just reformat
 
-   and verify that all tests pass.
+   and verify that all checks pass:
+   
+        just check
 
 6. Commit your changes and push your branch to GitHub:
 
-        $ git add .
-        $ git commit -m "Your detailed description of your changes."
-        $ git push origin name-of-your-bugfix-or-feature
+        git add .
+        git commit -m "Your detailed description of your changes."
+        git push origin name-of-your-bugfix-or-feature
 
    Check [this](https://chris.beams.io/posts/git-commit/) on how to write nice
    git log messages.
@@ -107,22 +110,22 @@ Before you submit a pull request, check that it meets these guidelines:
 To run a subset of tests:
 
 ```
-$ uv run pytest tests/func/mytest.py
+just test tests/func/mytest.py
 ```
 
 or a single test:
 
 ```
-$ uv run pytest tests/func/mytest.py::some_test
+just test tests/func/mytest.py::some_test
 ```
 
 To serve docs locally:
 
 ```
-make servedocs
+just servedocs
 ```
 
-To see all make options:
+To see all `just` options:
 ```
-make help
+just
 ```
