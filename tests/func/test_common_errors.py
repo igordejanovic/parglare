@@ -27,12 +27,11 @@ def test_infinite_recursions():
         Parser(g)
 
     assert 'First set empty for grammar symbol "Elements"' in str(e.value)
-    assert 'infinite recursion' in str(e.value)
+    assert "infinite recursion" in str(e.value)
 
 
 def test_terminals_with_different_names():
-    """Test that all terminals with same string match have the same name.
-    """
+    """Test that all terminals with same string match have the same name."""
 
     # In this grammar we have 'd' terminal in S production and B terminal with
     # the same 'd' recognizer.
@@ -46,16 +45,16 @@ def test_terminals_with_different_names():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'B' in str(e.value)
-    assert 'd' in str(e.value)
-    assert 'match the same string' in str(e.value)
+    assert "B" in str(e.value)
+    assert "d" in str(e.value)
+    assert "match the same string" in str(e.value)
 
 
 def todo_test_grammar_without_valid_inputs():
     """
     TODO: There is no valid input for this grammar. This should be detected by
     the parser.
-   """
+    """
     grammar = """
     S: A | B;
     A: '1' S '1';
@@ -64,4 +63,4 @@ def todo_test_grammar_without_valid_inputs():
 
     g = Grammar.from_string(grammar)
     p = Parser(g)
-    p.parse('0101000110001010')
+    p.parse("0101000110001010")

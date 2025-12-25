@@ -4,7 +4,6 @@ from ..grammar.expression_grammar import get_grammar
 
 
 def test_to_dot():
-
     grammar = get_grammar()
     p = Parser(grammar, build_tree=True)
 
@@ -19,10 +18,9 @@ def test_to_dot():
 
 
 def test_forest_to_dot():
-
-    grammar = Grammar.from_string(r'''
+    grammar = Grammar.from_string(r"""
     E: E "+" E | E "-" E | "(" E ")" | "id";
-    ''')
+    """)
     p = GLRParser(grammar)
 
     forest = p.parse("""id+  id - (id

@@ -25,12 +25,20 @@ class Location:
         end and input_str.
     """
 
-    __slots__ = ['start_position', 'end_position', 'input_str', 'file_name',
-                 '_line', '_column', '_line_end', '_column_end']
+    __slots__ = [
+        "start_position",
+        "end_position",
+        "input_str",
+        "file_name",
+        "_line",
+        "_column",
+        "_line_end",
+        "_column_end",
+    ]
 
     def __init__(
         self,
-        context: Optional[Union['LRStackNode', 'ErrorContext']] = None,
+        context: Optional[Union["LRStackNode", "ErrorContext"]] = None,
         file_name: Optional[str] = None,
     ):
         self.start_position: Union[int, None] = (
@@ -78,21 +86,20 @@ class Location:
         return self.input_str is not None and self.start_position == len(self.input_str)
 
     def evaluate_line_col(self):
-        self._line, self._column = pos_to_line_col(
-            self.input_str, self.start_position)
+        self._line, self._column = pos_to_line_col(self.input_str, self.start_position)
 
     def evaluate_line_col_end(self):
         if self.end_position:
-            self._line_end, self._column_end = \
-                pos_to_line_col(self.input_str, self.end_position)
+            self._line_end, self._column_end = pos_to_line_col(
+                self.input_str, self.end_position
+            )
 
     def __str__(self):
         line, column = self.line, self.column
         if line is not None:
-            return ('{}{}:{}'
-                    .format(f"{self.file_name}:"
-                            if self.file_name else "",
-                            line, column))
+            return "{}{}:{}".format(
+                f"{self.file_name}:" if self.file_name else "", line, column
+            )
         if self.file_name:
             return _a(self.file_name)
         return "<Unknown location>"
@@ -105,9 +112,12 @@ def position_context(input_str, position):
     """
     Returns position context string.
     """
-    start = max(position-10, 0)
-    c = str(input_str[start:position]) + _a(" **> ") \
-        + str(input_str[position:position+10])
+    start = max(position - 10, 0)
+    c = (
+        str(input_str[start:position])
+        + _a(" **> ")
+        + str(input_str[position : position + 10])
+    )
     return replace_newlines(c)
 
 
@@ -124,8 +134,8 @@ def load_python_module(mod_name, mod_path):
     See https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
     """  # noqa: E501
     import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        mod_name, mod_path)
+
+    spec = importlib.util.spec_from_file_location(mod_name, mod_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
@@ -158,6 +168,7 @@ def get_collector():
                 else:
                     all[name] = f
                 return f
+
             if is_name:
                 return decorator
             else:
@@ -180,8 +191,8 @@ def pos_to_line_col(input_str, position):
         # If we are not parsing string
         return 1, position
 
-    line = input_str[: position].count('\n') + 1
-    line_start_pos = input_str.rfind('\n', 0, position)
+    line = input_str[:position].count("\n") + 1
+    line_start_pos = input_str.rfind("\n", 0, position)
     column = position - line_start_pos - 1
 
     return line, column
@@ -191,15 +202,17 @@ def dot_escape(s):
     colors = t.colors
     t.colors = False
     s = str(s)
-    out = s.replace('\n', r'\n')\
-           .replace('\\', '\\\\')\
-           .replace('"', r'\"')\
-           .replace('|', r'\|')\
-           .replace('{', r'\{')\
-           .replace('}', r'\}')\
-           .replace('>', r'\>')\
-           .replace('<', r'\<')\
-           .replace('?', r'\?')
+    out = (
+        s.replace("\n", r"\n")
+        .replace("\\", "\\\\")
+        .replace('"', r"\"")
+        .replace("|", r"\|")
+        .replace("{", r"\{")
+        .replace("}", r"\}")
+        .replace(">", r"\>")
+        .replace("<", r"\<")
+        .replace("?", r"\?")
+    )
     t.colors = colors
     return out
 
@@ -212,7 +225,7 @@ class ErrorContext:
     moved forward during error recovery.
     """
 
-    __slots__ = ['input_str', 'file_name', 'start_position', 'end_position']
+    __slots__ = ["input_str", "file_name", "start_position", "end_position"]
 
     def __init__(self, context):
         self.start_position = self.end_position = context.position

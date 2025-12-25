@@ -21,7 +21,7 @@ def test_action_explicit_get_collector():
     def STRING(context, value):
         return f"#{value}#"
 
-    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'))
+    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, "grammar.pg"))
     Parser(grammar, actions=action.all)
 
 
@@ -37,7 +37,7 @@ def test_action_explicit_get_collector_missing_action():
     def INT(context, value):
         return int(value)
 
-    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'))
+    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, "grammar.pg"))
     Parser(grammar, actions=action.all)
 
 
@@ -61,5 +61,5 @@ def test_actions_explicit_get_collector_action_for_unexisting_terminal():
     def STRING2(context, value):
         return f"#{value}#"
 
-    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'))
+    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, "grammar.pg"))
     Parser(grammar, actions=action.all)

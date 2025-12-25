@@ -28,8 +28,7 @@ def test_call_actions_during_tree_build():
         if term.value == "left":
             left_moves.append(term)
 
-    parser = Parser(g, build_tree=True,
-                    actions={"Direction": left_dir_collector})
+    parser = Parser(g, build_tree=True, actions={"Direction": left_dir_collector})
     parser.parse(code)
 
     # call_actions_during_tree_build is False by default, so left_dir_collector

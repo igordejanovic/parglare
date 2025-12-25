@@ -1,6 +1,7 @@
 """
 Test non-deterministic parsing.
 """
+
 import sys
 
 import pytest  # noqa
@@ -94,10 +95,10 @@ def test_nondeterministic_LR_raise_error():
     g = Grammar.from_string(grammar)
     with pytest.raises(SyntaxError):
         p = Parser(g)
-        p.parse('0101000110001010')
+        p.parse("0101000110001010")
 
     p = GLRParser(g)
-    results = p.parse('0101000110001010')
+    results = p.parse("0101000110001010")
 
     assert len(results) == 1
 
@@ -116,7 +117,7 @@ def test_cyclic_grammar_1():
         Parser(g, prefer_shifts=False)
 
     p = GLRParser(g)
-    results = p.parse('x')
+    results = p.parse("x")
 
     # This grammar builds infinite/looping tree
     # x -> A -> S -> A -> S...
@@ -124,9 +125,10 @@ def test_cyclic_grammar_1():
         len(results)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6),
-                    reason="list comparison doesn't work "
-                    "correctly in pytest 4.1")
+@pytest.mark.skipif(
+    sys.version_info < (3, 6),
+    reason="list comparison doesn't work correctly in pytest 4.1",
+)
 def test_cyclic_grammar_2():
     """
     Grammar G2 from the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
@@ -146,15 +148,16 @@ def test_cyclic_grammar_2():
         Parser(g, prefer_shifts=False)
 
     p = GLRParser(g)
-    results = p.parse('xx')
+    results = p.parse("xx")
 
     with pytest.raises(LoopError):
         len(results)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6),
-                    reason="list comparison doesn't work "
-                    "correctly in pytest 4.1")
+@pytest.mark.skipif(
+    sys.version_info < (3, 6),
+    reason="list comparison doesn't work correctly in pytest 4.1",
+)
 def test_cyclic_grammar_3():
     """
     Grammar with indirect cycle.
@@ -178,7 +181,7 @@ def test_cyclic_grammar_3():
     Parser(g)
 
     p = GLRParser(g)
-    results = p.parse('aa')
+    results = p.parse("aa")
 
     with pytest.raises(LoopError):
         len(results)

@@ -34,10 +34,18 @@ SLR = 0
 LALR = 1
 
 
-def create_load_table(grammar, itemset_type=LR_1, start_production=1,
-                      prefer_shifts=False, prefer_shifts_over_empty=True,
-                      force_create=False, force_load=False, in_layout=False,
-                      debug=False, **kwargs):
+def create_load_table(
+    grammar,
+    itemset_type=LR_1,
+    start_production=1,
+    prefer_shifts=False,
+    prefer_shifts_over_empty=True,
+    force_create=False,
+    force_load=False,
+    in_layout=False,
+    debug=False,
+    **kwargs,
+):
     """
     Construct table by loading from file if present and newer than the grammar.
     If table file is older than the grammar or non-existent calculate the table
@@ -59,10 +67,17 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
         # Those are usually very small grammars so there is no point in
         # using cached tables.
         if debug:
-            a_print("** Calculating LR table for the layout parser...",
-                    new_line=True)
-        return create_table(grammar, itemset_type, start_production,
-                            prefer_shifts, prefer_shifts_over_empty)
+            a_print(
+                "** Calculating LR table for the layout parser...",
+                new_line=True,
+            )
+        return create_table(
+            grammar,
+            itemset_type,
+            start_production,
+            prefer_shifts,
+            prefer_shifts_over_empty,
+        )
     else:
         if debug:
             a_print("** Calculating LR table...", new_line=True)
@@ -88,9 +103,15 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
                     break
 
     if (create_table_file or force_create) and not force_load:
-        table = create_table(grammar, itemset_type, start_production,
-                             prefer_shifts, prefer_shifts_over_empty,
-                             debug=debug, **kwargs)
+        table = create_table(
+            grammar,
+            itemset_type,
+            start_production,
+            prefer_shifts,
+            prefer_shifts_over_empty,
+            debug=debug,
+            **kwargs,
+        )
         if table_file_name:
             with contextlib.suppress(PermissionError):
                 save_table(table_file_name, table)
@@ -102,9 +123,15 @@ def create_load_table(grammar, itemset_type=LR_1, start_production=1,
     return table
 
 
-def create_table(grammar, itemset_type=LR_1, start_production=1,
-                 prefer_shifts=False, prefer_shifts_over_empty=True,
-                 debug=False, **kwargs):
+def create_table(
+    grammar,
+    itemset_type=LR_1,
+    start_production=1,
+    prefer_shifts=False,
+    prefer_shifts_over_empty=True,
+    debug=False,
+    **kwargs,
+):
     """
     Arguments:
     grammar (Grammar):
@@ -123,12 +150,13 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
     # Check for states with GOTO links but without SHIFT links.
     # This is invalid as the GOTO link will never be traversed.
     for nt, firsts in first_sets.items():
-        if nt.name != 'S\'' and not firsts:
+        if nt.name != "S'" and not firsts:
             raise GrammarError(
                 location=nt.location,
                 message=f'First set empty for grammar symbol "{nt}". '
-                        'An infinite recursion on the '
-                        'grammar symbol.')
+                "An infinite recursion on the "
+                "grammar symbol.",
+            )
 
     follow_sets = follow(grammar, first_sets)
 
@@ -137,8 +165,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
     grammar.productions[0].rhs = ProductionRHS([start_prod_symbol, STOP])
 
     # Create a state for the first production (augmented)
-    s = LRState(grammar, 0, AUGSYMBOL,
-                [LRItem(grammar.productions[0], 0, set())])
+    s = LRState(grammar, 0, AUGSYMBOL, [LRItem(grammar.productions[0], 0, set())])
 
     state_queue = [s]
     state_id = 1
@@ -175,10 +202,8 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                 # Here we calculate max priorities for each grammar symbol to
                 # use it for SHIFT/REDUCE conflict resolution
                 prod_prior = item.production.prior
-                old_prior = state._max_prior_per_symbol.setdefault(
-                    symbol, prod_prior)
-                state._max_prior_per_symbol[symbol] = max(prod_prior,
-                                                          old_prior)
+                old_prior = state._max_prior_per_symbol.setdefault(symbol, prod_prior)
+                state._max_prior_per_symbol[symbol] = max(prod_prior, old_prior)
 
         # For each group symbol we create new state and form its kernel
         # items from the group items with positions moved one step ahead.
@@ -206,11 +231,12 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
             else:
                 # A state with this kernel items already exists.
                 # LALR: Try to merge states, i.e. update items follow sets.
-                if itemset_type is LR_1 and \
-                   not merge_states(target_state, maybe_new_state):
-                        target_state = maybe_new_state
-                        state_queue.append(target_state)
-                        state_id += 1
+                if itemset_type is LR_1 and not merge_states(
+                    target_state, maybe_new_state
+                ):
+                    target_state = maybe_new_state
+                    state_queue.append(target_state)
+                    state_id += 1
 
             # Create entries in GOTO and ACTION tables
             if isinstance(symbol, NonTerminal):
@@ -230,7 +256,6 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
     # For LR(1) itemsets refresh/propagate item's follows as the LALR
     # merging might change item's follow in previous states
     if itemset_type is LR_1:
-
         # Propagate updates as long as there were items propagated in the last
         # loop run.
         update = True
@@ -246,9 +271,14 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                 # information about states created from this state
                 inc_items = [i.get_pos_inc() for i in state.items]
                 for target_state in chain(
-                        state.gotos.values(),
-                        [a.state for i in state.actions.values()
-                         for a in i if a.action is SHIFT]):
+                    state.gotos.values(),
+                    [
+                        a.state
+                        for i in state.actions.values()
+                        for a in i
+                        if a.action is SHIFT
+                    ],
+                ):
                     for next_item in target_state.kernel_items:
                         this_item = inc_items[inc_items.index(next_item)]
                         if this_item.follow.difference(next_item.follow):
@@ -256,8 +286,9 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                             next_item.follow.update(this_item.follow)
 
     if debug:
-        h_print("Calculate REDUCTION entries in ACTION tables and"
-                " resolve possible conflicts.")
+        h_print(
+            "Calculate REDUCTION entries in ACTION tables and resolve possible conflicts."
+        )
 
     # Calculate REDUCTION entries in ACTION tables and resolve possible
     # conflicts.
@@ -288,8 +319,7 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
 
                         # Only one SHIFT or ACCEPT might exists for a single
                         # terminal.
-                        shifts = [x for x in t_acts
-                                  if x.action in (SHIFT, ACCEPT)]
+                        shifts = [x for x in t_acts if x.action in (SHIFT, ACCEPT)]
                         assert len(shifts) <= 1
                         t_shift = shifts[0] if shifts else None
 
@@ -309,7 +339,8 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                                 sh_prior = DEFAULT_PRIORITY
                             else:
                                 sh_prior = state._max_prior_per_symbol[
-                                    t_shift.state.symbol]
+                                    t_shift.state.symbol
+                                ]
                             if prod.prior == sh_prior:
                                 if prod.assoc == ASSOC_LEFT:
                                     # Override SHIFT with this REDUCE
@@ -326,11 +357,14 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                                     # associativity defined use preferred
                                     # strategy.
                                     is_empty = len(prod.rhs) == 0
-                                    prod_pse = is_empty \
-                                        and prefer_shifts_over_empty \
+                                    prod_pse = (
+                                        is_empty
+                                        and prefer_shifts_over_empty
                                         and not prod.nopse
-                                    prod_ps = not is_empty \
-                                        and prefer_shifts and not prod.nops
+                                    )
+                                    prod_ps = (
+                                        not is_empty and prefer_shifts and not prod.nops
+                                    )
                                     should_reduce = not (prod_pse or prod_ps)
                             elif prod.prior > sh_prior:
                                 # This item operation priority is higher =>
@@ -352,9 +386,11 @@ def create_table(grammar, itemset_type=LR_1, start_production=1,
                                 elif prod.prior > t_reduces[0].prod.prior:
                                     # If this production priority is higher
                                     # it should override all other reductions.
-                                    actions[terminal][:] = \
-                                        [x for x in actions[terminal]
-                                         if x.action is not REDUCE]
+                                    actions[terminal][:] = [
+                                        x
+                                        for x in actions[terminal]
+                                        if x.action is not REDUCE
+                                    ]
                                     actions[terminal].append(new_reduce)
 
     grammar.productions[0].rhs = _old_start_production_rhs
@@ -385,10 +421,8 @@ def merge_states(old_state, new_state):
     # if after merging there could be a lookahead token that would call for
     # different reductions. If that is the case we shall not merge states.
     for old, new in item_pairs:
-        for s in (s for s in old_state.kernel_items
-                  if s.is_at_end and s is not old):
-            if s.follow.intersection(
-                    new.follow.difference(old.follow)):
+        for s in (s for s in old_state.kernel_items if s.is_at_end and s is not old):
+            if s.follow.intersection(new.follow.difference(old.follow)):
                 return False
 
     # Do the merge by updating old items follow sets.
@@ -399,11 +433,13 @@ def merge_states(old_state, new_state):
 
 class LRTable:
     def __init__(
-        self, states, calc_finish_flags=True,
+        self,
+        states,
+        calc_finish_flags=True,
         # lexical_disambiguation defaults to True, when
         # calc_finish_flags is set
         lexical_disambiguation=None,
-        debug=False
+        debug=False,
     ):
         self.states = states
         if calc_finish_flags:
@@ -417,8 +453,10 @@ class LRTable:
                     state.finish_flags = [False] * len(state.actions)
         else:
             if lexical_disambiguation is not None:
-                logger.warning('lexical_disambiguation flag ignored '
-                               'because calc_finish_flags is not set')
+                logger.warning(
+                    "lexical_disambiguation flag ignored because "
+                    "calc_finish_flags is not set"
+                )
         self.calc_conflicts_and_dynamic_terminals(debug)
 
     def sort_state_actions(self):
@@ -427,6 +465,7 @@ class LRTable:
         optimization based on explicit or implicit disambiguation.
         Also, by sorting actions table save file is made deterministic.
         """
+
         def act_order(act_item):
             """Priority is the strongest property. After that honor string
             recognizer over other types of recognizers.
@@ -435,19 +474,29 @@ class LRTable:
             symbol, act = act_item
             cmp_str = "{:010d}{:500s}".format(
                 symbol.prior * 1000
-                + (500 + (len(symbol.recognizer.value)
-                          if type(symbol.recognizer) is
-                          StringRecognizer else 0) +
-                   # Account for `\b` at the beginning and end of keyword regex
-                   ((len(symbol.recognizer._regex) - 4)
-                    if type(symbol.recognizer) is
-                    RegExRecognizer and symbol.keyword
-                    else 0)), symbol.fqn)
+                + (
+                    500
+                    + (
+                        len(symbol.recognizer.value)
+                        if type(symbol.recognizer) is StringRecognizer
+                        else 0
+                    )
+                    +
+                    # Account for `\b` at the beginning and end of keyword regex
+                    (
+                        (len(symbol.recognizer._regex) - 4)
+                        if type(symbol.recognizer) is RegExRecognizer and symbol.keyword
+                        else 0
+                    )
+                ),
+                symbol.fqn,
+            )
             return cmp_str
 
         for state in self.states:
-            state.actions = OrderedDict(sorted(state.actions.items(),
-                                               key=act_order, reverse=True))
+            state.actions = OrderedDict(
+                sorted(state.actions.items(), key=act_order, reverse=True)
+            )
 
     def calc_finish_flags(self):
         """
@@ -464,7 +513,8 @@ class LRTable:
                     finish_flags.append(
                         (symbol.prior > prior if prior else False)
                         or type(symbol.recognizer) is StringRecognizer
-                        or symbol.keyword)
+                        or symbol.keyword
+                    )
                 prior = symbol.prior
 
             finish_flags.reverse()
@@ -481,9 +531,7 @@ class LRTable:
             h_print("Calculating conflicts and dynamic terminals...")
 
         for state in self.states:
-
             for term, actions in state.actions.items():
-
                 # Mark state for dynamic disambiguation
                 if term.dynamic:
                     state.dynamic.add(term)
@@ -496,14 +544,13 @@ class LRTable:
                         # handling of EMPTY reduce in order to avoid infinite
                         # looping.
                         for r_act in actions[1:]:
-
                             # Mark state for dynamic disambiguation
                             if r_act.prod.dynamic:
                                 state.dynamic.add(term)
 
                             self.sr_conflicts.append(
-                                SRConflict(state, term,
-                                           [x.prod for x in actions[1:]]))
+                                SRConflict(state, term, [x.prod for x in actions[1:]])
+                            )
                     else:
                         prods = [x.prod for x in actions if len(x.prod.rhs)]
 
@@ -511,16 +558,13 @@ class LRTable:
                         if any([p.dynamic for p in prods]):
                             state.dynamic.add(term)
 
-                        empty_prods = [x.prod for x in actions
-                                       if not len(x.prod.rhs)]
+                        empty_prods = [x.prod for x in actions if not len(x.prod.rhs)]
                         # Multiple empty reductions possible
                         if len(empty_prods) > 1:
-                            self.rr_conflicts.append(
-                                RRConflict(state, term, empty_prods))
+                            self.rr_conflicts.append(RRConflict(state, term, empty_prods))
                         # Multiple non-empty reductions possible
                         if len(prods) > 1:
-                            self.rr_conflicts.append(
-                                RRConflict(state, term, prods))
+                            self.rr_conflicts.append(RRConflict(state, term, prods))
 
     def print_debug(self):
         a_print("*** STATES ***", new_line=True)
@@ -529,22 +573,38 @@ class LRTable:
 
             if state.gotos:
                 h_print("GOTO:", level=1, new_line=True)
-                prints("\t" + ", ".join([("%s" + s_emph("->") + "%d")
-                                         % (k, v.state_id)
-                                         for k, v in state.gotos.items()]))
+                prints(
+                    "\t"
+                    + ", ".join(
+                        [
+                            ("%s" + s_emph("->") + "%d") % (k, v.state_id)
+                            for k, v in state.gotos.items()
+                        ]
+                    )
+                )
             h_print("ACTIONS:", level=1, new_line=True)
-            prints("\t" + ", ".join(
-                [("%s" + s_emph("->") + "%s")
-                 % (k, str(v[0]) if len(v) == 1 else "[{}]".format(
-                     ",".join([str(x) for x in v])))
-                 for k, v in state.actions.items()]))
+            prints(
+                "\t"
+                + ", ".join(
+                    [
+                        ("%s" + s_emph("->") + "%s")
+                        % (
+                            k,
+                            str(v[0])
+                            if len(v) == 1
+                            else "[{}]".format(",".join([str(x) for x in v])),
+                        )
+                        for k, v in state.actions.items()
+                    ]
+                )
+            )
 
         if self.sr_conflicts:
             a_print("*** S/R conflicts ***", new_line=True)
             if len(self.sr_conflicts) == 1:
-                message = 'There is {} S/R conflict.'
+                message = "There is {} S/R conflict."
             else:
-                message = 'There are {} S/R conflicts.'
+                message = "There are {} S/R conflicts."
             h_print(message.format(len(self.sr_conflicts)))
             for src in self.sr_conflicts:
                 print(src)
@@ -552,16 +612,16 @@ class LRTable:
         if self.rr_conflicts:
             a_print("*** R/R conflicts ***", new_line=True)
             if len(self.rr_conflicts) == 1:
-                message = 'There is {} R/R conflict.'
+                message = "There is {} R/R conflict."
             else:
-                message = 'There are {} R/R conflicts.'
+                message = "There are {} R/R conflicts."
             h_print(message.format(len(self.rr_conflicts)))
             for rrc in self.rr_conflicts:
                 print(rrc)
 
 
 class Action:
-    __slots__ = ['action', 'state', 'prod']
+    __slots__ = ["action", "state", "prod"]
 
     def __init__(self, action, state=None, prod=None):
         self.action = action
@@ -569,16 +629,14 @@ class Action:
         self.prod = prod
 
     def __str__(self):
-        ac = {SHIFT: 'SHIFT',
-              REDUCE: 'REDUCE',
-              ACCEPT: 'ACCEPT'}.get(self.action)
+        ac = {SHIFT: "SHIFT", REDUCE: "REDUCE", ACCEPT: "ACCEPT"}.get(self.action)
         if self.action == SHIFT:
             p = self.state.state_id
         elif self.action == REDUCE:
             p = self.prod.prod_id
         else:
-            p = ''
-        return '{}{}'.format(ac, f':{p}' if p else '')
+            p = ""
+        return "{}{}".format(ac, f":{p}" if p else "")
 
     def __repr__(self):
         return str(self)
@@ -600,7 +658,8 @@ class LRItem:
     set is also defined. Follow set is a set of terminals that can follow
     non-terminal at given position in the given production.
     """
-    __slots__ = ('production', 'position', 'follow')
+
+    __slots__ = ("production", "position", "follow")
 
     def __init__(self, production, position, follow=None):
         self.production = production
@@ -608,8 +667,11 @@ class LRItem:
         self.follow = follow if follow else set()
 
     def __eq__(self, other):
-        return other and self.production == other.production and \
-            self.position == other.position
+        return (
+            other
+            and self.production == other.production
+            and self.position == other.position
+        )
 
     def __ne__(self, other):
         return not self == other
@@ -627,12 +689,20 @@ class LRItem:
             s.append(".")
         s = " ".join(s)
 
-        follow = (s_emph("{{") + "{}" + s_emph("}}"))\
-            .format(", ".join([str(t) for t in self.follow])) \
-            if self.follow else "{}"
+        follow = (
+            (s_emph("{{") + "{}" + s_emph("}}")).format(
+                ", ".join([str(t) for t in self.follow])
+            )
+            if self.follow
+            else "{}"
+        )
 
-        return (s_header("%d:") + " %s " + s_emph("=") + " %s   %s") \
-            % (self.production.prod_id, self.production.symbol, s, follow)
+        return (s_header("%d:") + " %s " + s_emph("=") + " %s   %s") % (
+            self.production.prod_id,
+            self.production.symbol,
+            s,
+            follow,
+        )
 
     @property
     def is_kernel(self):
@@ -650,7 +720,7 @@ class LRItem:
         """
 
         if self.position < len(self.production.rhs):
-            return LRItem(self.production, self.position+1, self.follow)
+            return LRItem(self.production, self.position + 1, self.follow)
 
     @property
     def symbol_at_position(self):
@@ -686,9 +756,18 @@ class LRState:
     finish_flags:
 
     """
-    __slots__ = ['grammar', 'state_id', 'symbol', 'items',
-                 'actions', 'gotos', 'dynamic', 'finish_flags',
-                 '_max_prior_per_symbol']
+
+    __slots__ = [
+        "grammar",
+        "state_id",
+        "symbol",
+        "items",
+        "actions",
+        "gotos",
+        "dynamic",
+        "finish_flags",
+        "_max_prior_per_symbol",
+    ]
 
     def __init__(self, grammar, state_id, symbol, items=None):
         self.grammar = grammar
@@ -732,7 +811,7 @@ class LRState:
         return self.items[self.items.index(other_item)]
 
     def __str__(self):
-        s = s_header(f'\n\nState {self.state_id}:{self.symbol}\n')
+        s = s_header(f"\n\nState {self.state_id}:{self.symbol}\n")
         return s + "\n".join([f"\t{i}" for i in self.items])
 
     def __unicode__(self):
@@ -754,10 +833,9 @@ def first(grammar):
     Returns:
     dict of sets of Terminal keyed by GrammarSymbol.
     """
-    assert isinstance(grammar, Grammar), \
-        "grammar parameter should be Grammar instance."
+    assert isinstance(grammar, Grammar), "grammar parameter should be Grammar instance."
 
-    if hasattr(grammar, '_first_sets'):
+    if hasattr(grammar, "_first_sets"):
         # If first sets is already calculated return it
         return grammar._first_sets
 
@@ -820,7 +898,7 @@ def follow(grammar, first_sets=None):
                 for idx, s in enumerate(p.rhs):
                     if s == symbol:
                         prod_follow = set()
-                        for rsymbol in p.rhs[idx+1:]:
+                        for rsymbol in p.rhs[idx + 1 :]:
                             sfollow = first_sets[rsymbol]
                             prod_follow.update(sfollow)
                             if EMPTY not in sfollow:

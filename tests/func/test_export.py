@@ -13,12 +13,12 @@ def test_dot_export():
     table = create_table(g)
 
     tmp_dir = tempfile.mkdtemp()
-    file_name = os.path.join(tmp_dir, 'testexport.dot')
+    file_name = os.path.join(tmp_dir, "testexport.dot")
 
     grammar_pda_export(table, file_name)
 
     with open(file_name) as f:
-        assert 'label' in f.read()
+        assert "label" in f.read()
 
     os.remove(file_name)
     os.rmdir(tmp_dir)

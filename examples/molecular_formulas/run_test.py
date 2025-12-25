@@ -15,11 +15,11 @@ else:
     timer = time.time
 
 _mw_table = {
-    'H': 1.00794,
-    'C': 12.001,
-    'Cl': 35.453,
-    'O': 15.999,
-    'S': 32.06,
+    "H": 1.00794,
+    "C": 12.001,
+    "Cl": 35.453,
+    "O": 15.999,
+    "S": 32.06,
 }
 
 _element_names = list(_mw_table.keys())
@@ -27,6 +27,7 @@ _element_names = list(_mw_table.keys())
 
 def _generate_random_formulas():
     import random
+
     # Using semi-random values so I can check a wide space
     # Number of terms in the formula
     _possible_lengths = (1, 2, 3, 4, 5, 10, 53, 104)
@@ -54,11 +55,10 @@ _selected_formulas = [
     (1.00794, "H"),
     (1.00794, "H1"),
     (32.06, "S"),
-    (12.001+1.00794*4, "CH4"),
-    ]
+    (12.001 + 1.00794 * 4, "CH4"),
+]
 
-good_test_data = (_selected_formulas +
-                  list(_generate_random_formulas()))
+good_test_data = _selected_formulas + list(_generate_random_formulas())
 
 
 def do_tests(calculate_mw):

@@ -2,9 +2,7 @@ from parglare import GLRParser, Grammar
 
 
 def test_glr_list_building_bug():
-    """Test regression for a bug in building lists from default `collect` actions.
-
-    """
+    """Test regression for a bug in building lists from default `collect` actions."""
     grammar = r"""
         S: B+;
         B: "b"? A+;
@@ -12,6 +10,9 @@ def test_glr_list_building_bug():
     """
     g = Grammar.from_string(grammar)
     parser = GLRParser(g, prefer_shifts=True)
-    result = parser.parse('b a b a a a')
+    result = parser.parse("b a b a a a")
     assert len(result) == 1
-    assert parser.call_actions(result[0]) == [['b', ['a']], ['b', ['a', 'a', 'a']]]
+    assert parser.call_actions(result[0]) == [
+        ["b", ["a"]],
+        ["b", ["a", "a", "a"]],
+    ]

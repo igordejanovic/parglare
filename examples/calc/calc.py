@@ -39,13 +39,15 @@ def act_assignment(context, nodes):
 actions = {
     "Calc": lambda _, nodes: nodes[1],
     "Assignment": act_assignment,
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          pass_inner,
-          pass_single,
-          pass_single],
+    "E": [
+        lambda _, nodes: nodes[0] + nodes[2],
+        lambda _, nodes: nodes[0] - nodes[2],
+        lambda _, nodes: nodes[0] * nodes[2],
+        lambda _, nodes: nodes[0] / nodes[2],
+        pass_inner,
+        pass_single,
+        pass_single,
+    ],
     "Number": lambda _, value: float(value),
     "VariableRef": lambda context, nodes: context.extra[nodes[0]],
 }
@@ -64,7 +66,7 @@ def main(debug=False):
 
     res = parser.parse(input_str)
 
-    assert res == 5. + 56.4 / 3 * 5 - 10 + 8 * 3
+    assert res == 5.0 + 56.4 / 3 * 5 - 10 + 8 * 3
     print("Input:\n", input_str)
     print("Result = ", res)
 

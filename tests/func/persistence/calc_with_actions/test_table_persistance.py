@@ -11,13 +11,13 @@ def test_save_load_table():
     """
     Test basic table save/load cycle with table file creation.
     """
-    calc_file = os.path.join(this_folder, 'calc.pg')
-    variable_file = os.path.join(this_folder, 'variable.pg')
-    input_str = 'a = 5   1 + 2 * a - 7'
+    calc_file = os.path.join(this_folder, "calc.pg")
+    variable_file = os.path.join(this_folder, "variable.pg")
+    input_str = "a = 5   1 + 2 * a - 7"
     input_str_result = 1 + 2 * 5 - 7
     grammar = Grammar.from_file(calc_file)
 
-    table_file = os.path.join(this_folder, 'calc.pgc')
+    table_file = os.path.join(this_folder, "calc.pgc")
     # remove table file if exists
     with contextlib.suppress(OSError):
         os.remove(table_file)
@@ -42,7 +42,7 @@ def test_save_load_table():
 
     # We are now touching variable.pg file
     # This should trigger table file regeneration
-    with open(variable_file, 'a'):
+    with open(variable_file, "a"):
         os.utime(variable_file, None)
     parser = Parser(grammar)
     assert parser.parse(input_str) == input_str_result
@@ -52,7 +52,7 @@ def test_save_load_table():
     # Now we test that force_load_table will load table even if not
     # newer than the grammar.
     time.sleep(1)
-    with open(variable_file, 'a'):
+    with open(variable_file, "a"):
         os.utime(variable_file, None)
     last_mtime = os.path.getmtime(table_file)
     parser = Parser(grammar, force_load_table=True)

@@ -17,18 +17,18 @@ DOT: ".";
 """  # noqa
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6),
-                    reason="list comparison doesn't work "
-                    "correctly in pytest 4.1")
+@pytest.mark.skipif(
+    sys.version_info < (3, 6),
+    reason="list comparison doesn't work correctly in pytest 4.1",
+)
 def test_issue_114_empty_and_lexical_ambiguity():
-
     g = Grammar.from_string(grammar)
     parser = GLRParser(g, build_tree=True)
 
     results = parser.parse("a car is a kind of vehicle.")
     assert len(results) == 2
 
-    expected = r'''
+    expected = r"""
 Sentence[0->27]
   KindDefinitionSentence[0->27]
     a[0->1, "a"]
@@ -63,15 +63,14 @@ Sentence[0->27]
           IdentifierWord[16->18, "of"]
         IdentifierWord[19->26, "vehicle"]
     DOT[26->27, "."]
-    '''
+    """
 
-    assert '\n\n'.join([r.to_str()
-                        for r in results]).strip() == expected.strip()
+    assert "\n\n".join([r.to_str() for r in results]).strip() == expected.strip()
 
     results = parser.parse("a car is a kind of vehicle with wheels.")
     assert len(results) == 3
 
-    expected = r'''
+    expected = r"""
 Sentence[0->39]
   OtherSentence[0->39]
     IdentifierWord_0[0->38]
@@ -135,7 +134,6 @@ Sentence[0->39]
           IdentifierWord_1[32->38]
             IdentifierWord[32->38, "wheels"]
     DOT[38->39, "."]
-    '''
+    """
 
-    assert '\n\n'.join([r.to_str()
-                        for r in results]).strip() == expected.strip()
+    assert "\n\n".join([r.to_str() for r in results]).strip() == expected.strip()

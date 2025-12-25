@@ -10,7 +10,7 @@ def test_recursive_rule():
 
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    parser.parse('aaa')
+    parser.parse("aaa")
 
 
 def test_recursive_rule_other_way():
@@ -21,4 +21,4 @@ def test_recursive_rule_other_way():
 
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    parser.parse('aaa')
+    parser.parse("aaa")

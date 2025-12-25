@@ -11,7 +11,6 @@ parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
 @parsers
 def test_grammar_in_error(parser_class):
-
     grammar = get_grammar()
     p = parser_class(grammar)
 
@@ -22,7 +21,6 @@ def test_grammar_in_error(parser_class):
 
 
 def test_glr_last_heads_in_error():
-
     grammar = get_grammar()
     p = GLRParser(grammar)
 
@@ -34,7 +32,6 @@ def test_glr_last_heads_in_error():
 
 @parsers
 def test_invalid_input(parser_class):
-
     grammar = get_grammar()
     p = parser_class(grammar)
 
@@ -42,19 +39,20 @@ def test_invalid_input(parser_class):
         p.parse("id+id*+id")
 
     assert e.value.location.start_position == 6
-    assert '*' in [s.name for s in e.value.symbols_before]
-    assert '+' in [t.value for t in e.value.tokens_ahead]
+    assert "*" in [s.name for s in e.value.symbols_before]
+    assert "+" in [t.value for t in e.value.tokens_ahead]
     expected_names = [s.name for s in e.value.symbols_expected]
-    assert 'id' in expected_names
-    assert '(' in expected_names
+    assert "id" in expected_names
+    assert "(" in expected_names
 
-    output_cmp(Path(Path(__file__).parent, 'test_parsing_errors_invalid_input.err'),
-               str(e.value))
+    output_cmp(
+        Path(Path(__file__).parent, "test_parsing_errors_invalid_input.err"),
+        str(e.value),
+    )
 
 
 @parsers
 def test_premature_end(parser_class):
-
     grammar = get_grammar()
     p = parser_class(grammar)
 
@@ -63,13 +61,15 @@ def test_premature_end(parser_class):
 
     assert e.value.location.start_position == 6
     expected_names = [s.name for s in e.value.symbols_expected]
-    assert 'id' in expected_names
-    assert '(' in expected_names
-    assert '*' in [s.name for s in e.value.symbols_before]
+    assert "id" in expected_names
+    assert "(" in expected_names
+    assert "*" in [s.name for s in e.value.symbols_before]
     assert e.value.tokens_ahead == []
 
-    output_cmp(Path(Path(__file__).parent, 'test_parsing_errors_premature_end.err'),
-               str(e.value))
+    output_cmp(
+        Path(Path(__file__).parent, "test_parsing_errors_premature_end.err"),
+        str(e.value),
+    )
 
 
 def test_ambiguous_glr():
@@ -88,10 +88,13 @@ def test_ambiguous_glr():
         parser.parse("1 + 2 * 3 / 5")
 
     assert e.value.location.start_position == 10
-    assert 'number' in [s.name for s in e.value.symbols_before]
+    assert "number" in [s.name for s in e.value.symbols_before]
 
-    output_cmp(Path(Path(__file__).parent, 'test_parsing_errors_ambiguous_glr.err'),
-               str(e.value))
+    output_cmp(
+        Path(Path(__file__).parent, "test_parsing_errors_ambiguous_glr.err"),
+        str(e.value),
+    )
+
 
 @parsers
 def test_line_column(parser_class):
@@ -142,8 +145,8 @@ def test_parser_output(parser_class):
     grammar = get_grammar()
     p = parser_class(grammar)
 
-    input_file = Path(os.path.dirname(__file__), 'parsing_errors.input')
-    err_file = Path(os.path.dirname(__file__), 'parsing_errors.err')
+    input_file = Path(os.path.dirname(__file__), "parsing_errors.input")
+    err_file = Path(os.path.dirname(__file__), "parsing_errors.err")
 
     with pytest.raises(SyntaxError) as e:
         p.parse_file(input_file)
@@ -157,10 +160,10 @@ def test_file_name(parser_class):
     grammar = get_grammar()
     p = parser_class(grammar)
 
-    input_file = Path(os.path.dirname(__file__), 'parsing_errors.input')
+    input_file = Path(os.path.dirname(__file__), "parsing_errors.input")
 
     with pytest.raises(SyntaxError) as e:
         p.parse_file(str(input_file))
 
-    assert 'parsing_errors.input' in str(e.value)
-    assert 'parsing_errors.input' in e.value.location.file_name
+    assert "parsing_errors.input" in str(e.value)
+    assert "parsing_errors.input" in e.value.location.file_name

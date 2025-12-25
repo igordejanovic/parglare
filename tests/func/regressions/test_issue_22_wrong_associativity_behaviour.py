@@ -1,6 +1,6 @@
 from parglare import Grammar, Parser, get_collector
 
-grammar_1 = r'''
+grammar_1 = r"""
 STMT : STMT ADDOP STMT {left, 1}
      | STMT MULOP STMT {left, 1}
      | "(" STMT ")" | NUMBER;
@@ -11,9 +11,9 @@ MULOP : "*" {2}
 
 terminals
 NUMBER: /\d+(.\d+)?/;
-'''
+"""
 
-grammar_2 = r'''
+grammar_2 = r"""
 STMT : STMT "+" STMT {left, 1}
      | STMT "-" STMT {left, 1}
      | STMT "*" STMT {left, 2}
@@ -22,11 +22,11 @@ STMT : STMT "+" STMT {left, 1}
 
 terminals
 NUMBER: /\d+(.\d+)?/;
-'''
+"""
 
 # Grammar could be simplified a bit
 # with https://github.com/igordejanovic/parglare/issues/17
-grammar_3 = r'''
+grammar_3 = r"""
 STMT {left}: STMT ADDOP STMT {1}
            | STMT MULOP STMT {2};
 STMT: "(" STMT ")" | NUMBER;
@@ -35,9 +35,9 @@ MULOP {2}: "*" | "/";
 
 terminals
 NUMBER: /\d+(.\d+)?/;
-'''
+"""
 
-expression = '1 - 2 / (3 - 1 + 5 / 6 - 8 + 8 * 2 - 5)'
+expression = "1 - 2 / (3 - 1 + 5 / 6 - 8 + 8 * 2 - 5)"
 result = 1 - 2 / (3 - 1 + 5 / 6 - 8 + 8 * 2 - 5)
 
 action = get_collector()
@@ -52,16 +52,16 @@ def NUMBER(_, value):
 def STMT(_, nodes):
     if len(nodes) == 1:
         return nodes[0]
-    elif nodes[0] == '(':
+    elif nodes[0] == "(":
         return nodes[1]
     else:
         left, op, right = nodes
 
-    if op == '+':
+    if op == "+":
         return left + right
-    elif op == '-':
+    elif op == "-":
         return left - right
-    elif op == '*':
+    elif op == "*":
         return left * right
     else:
         return left / right

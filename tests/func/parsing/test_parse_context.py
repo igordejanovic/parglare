@@ -18,17 +18,16 @@ def act_sum(is_tree):
     def act_sum(context, nodes):
         called[0] = True
         assert context.parser
-        assert context.state.symbol.name == 'E'
-        assert context.production.symbol.name == 'E'
+        assert context.state.symbol.name == "E"
+        assert context.production.symbol.name == "E"
         assert len(context.production.rhs) == 3
-        assert context.layout_content == '   '
+        assert context.layout_content == "   "
         assert context.start_position == 3
         assert context.end_position == 8
         if is_tree:
             # If parse tree is constructed `node` is available on
             # the context.
-            assert context.node.is_nonterm() \
-                and context.node.symbol.name == 'E'
+            assert context.node.is_nonterm() and context.node.symbol.name == "E"
         else:
             assert context.node is None
 
@@ -38,15 +37,15 @@ def act_sum(is_tree):
 def act_number(context, value):
     called[1] = True
     value = float(value)
-    assert context.symbol.name == 'number'
+    assert context.symbol.name == "number"
     if value == 1:
         assert context.start_position == 3
         assert context.end_position == 4
-        assert context.layout_content == '   '
+        assert context.layout_content == "   "
     else:
         assert context.start_position == 7
         assert context.end_position == 8
-        assert context.layout_content == ' '
+        assert context.layout_content == " "
     return value
 
 

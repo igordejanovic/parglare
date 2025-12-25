@@ -22,17 +22,17 @@ ASSOC_RIGHT = 2
 DEFAULT_PRIORITY = 10
 
 # Multiplicity
-MULT_ONE = '1'
-MULT_OPTIONAL = '0..1'
-MULT_ONE_OR_MORE = '1..*'
-MULT_ZERO_OR_MORE = '0..*'
+MULT_ONE = "1"
+MULT_OPTIONAL = "0..1"
+MULT_ONE_OR_MORE = "1..*"
+MULT_ZERO_OR_MORE = "0..*"
 
-RESERVED_SYMBOL_NAMES = ['STOP', 'EMPTY']
-SPECIAL_SYMBOL_NAMES = ['KEYWORD', 'LAYOUT']
+RESERVED_SYMBOL_NAMES = ["STOP", "EMPTY"]
+SPECIAL_SYMBOL_NAMES = ["KEYWORD", "LAYOUT"]
 
 
 def escape(instr):
-    return instr.replace('\n', r'\n').replace('\t', r'\t')
+    return instr.replace("\n", r"\n").replace("\t", r"\t")
 
 
 class GrammarSymbol:
@@ -51,8 +51,8 @@ class GrammarSymbol:
         imported from. Used for FQN calculation.
     user_meta(dict): User meta-data.
     """
-    def __init__(self, name, location=None, imported_with=None,
-                 user_meta=None):
+
+    def __init__(self, name, location=None, imported_with=None, user_meta=None):
         self.name = escape(name)
         self.location = location
         self.action_name = None
@@ -107,8 +107,15 @@ class NonTerminal(GrammarSymbol):
     productions(list of Production): A list of alternative productions for
         this NonTerminal.
     """
-    def __init__(self, name, productions=None, location=None,
-                 imported_with=None, user_meta=None):
+
+    def __init__(
+        self,
+        name,
+        productions=None,
+        location=None,
+        imported_with=None,
+        user_meta=None,
+    ):
         super().__init__(name, location, imported_with, user_meta)
         self.productions = productions if productions is not None else []
 
@@ -132,8 +139,8 @@ class Terminal(GrammarSymbol):
         stream. Should return a sublist of recognized objects. The sublist
         should be rooted at the given position.
     """
-    def __init__(self, name, recognizer=None, location=None,
-                 imported_with=None):
+
+    def __init__(self, name, recognizer=None, location=None, imported_with=None):
         self.prior = DEFAULT_PRIORITY
         self._recognizer = None
         self.recognizer = recognizer if recognizer else StringRecognizer(name)
@@ -168,8 +175,8 @@ class Reference:
         separator (symbol or Reference): A reference to the separator symbol or
             the separator symbol itself if resolved.
     """
-    def __init__(self, location: Location, name: str,
-                 imported_with: 'PGFileImport'):
+
+    def __init__(self, location: Location, name: str, imported_with: "PGFileImport"):
         self.name = name
         self.location = location
         self.imported_with = imported_with
@@ -184,8 +191,10 @@ class Reference:
         multiplicity/separator is used.
         """
         return make_multiplicity_fqn(
-            self.fqn, self.multiplicity,
-            self.separator.name if self.separator else None)
+            self.fqn,
+            self.multiplicity,
+            self.separator.name if self.separator else None,
+        )
 
     @property
     def fqn(self):
@@ -208,6 +217,7 @@ class Recognizer:
     Recognizers are callables capable of recognizing low-level patterns
     (a.k.a tokens) in the input.
     """
+
     def __init__(self, name, location=None):
         self.name = name
         self.location = location
@@ -222,10 +232,10 @@ class StringRecognizer(Recognizer):
 
     def __call__(self, in_str, pos):
         if self.ignore_case:
-            if in_str[pos:pos+len(self.value)].lower() == self.value_cmp:
+            if in_str[pos : pos + len(self.value)].lower() == self.value_cmp:
                 return self.value
         else:
-            if in_str[pos:pos+len(self.value)] == self.value_cmp:
+            if in_str[pos : pos + len(self.value)] == self.value_cmp:
                 return self.value
 
 
@@ -233,16 +243,29 @@ def esc_control_characters(regex):
     """
     Escape control characters in regular expressions.
     """
-    unescapes = [('\a', r'\a'), ('\b', r'\b'), ('\f', r'\f'), ('\n', r'\n'),
-                 ('\r', r'\r'), ('\t', r'\t'), ('\v', r'\v')]
+    unescapes = [
+        ("\a", r"\a"),
+        ("\b", r"\b"),
+        ("\f", r"\f"),
+        ("\n", r"\n"),
+        ("\r", r"\r"),
+        ("\t", r"\t"),
+        ("\v", r"\v"),
+    ]
     for val, text in unescapes:
         regex = regex.replace(val, text)
     return regex
 
 
 class RegExRecognizer(Recognizer):
-    def __init__(self, regex, name=None, re_flags=re.MULTILINE,
-                 ignore_case=False, **kwargs):
+    def __init__(
+        self,
+        regex,
+        name=None,
+        re_flags=re.MULTILINE,
+        ignore_case=False,
+        **kwargs,
+    ):
         if name is None:
             name = regex
         super().__init__(name, kwargs)
@@ -303,9 +326,18 @@ class Production:
         production grammar symbol.
     """
 
-    def __init__(self, symbol, rhs, assignments=None, assoc=ASSOC_NONE,
-                 prior=DEFAULT_PRIORITY, dynamic=False, nops=False,
-                 nopse=False, user_meta=None):
+    def __init__(
+        self,
+        symbol,
+        rhs,
+        assignments=None,
+        assoc=ASSOC_NONE,
+        prior=DEFAULT_PRIORITY,
+        dynamic=False,
+        nops=False,
+        nopse=False,
+        user_meta=None,
+    ):
         """
         Args:
         symbol (GrammarSymbol): A grammar symbol on the LHS of the production.
@@ -327,13 +359,16 @@ class Production:
         self.user_meta = user_meta
 
     def __str__(self):
-        if hasattr(self, 'prod_id'):
-            return (s_header("%d:") + " %s " + s_emph("=") +
-                    " %s") % (self.prod_id, self.symbol, self.rhs)
+        if hasattr(self, "prod_id"):
+            return (s_header("%d:") + " %s " + s_emph("=") + " %s") % (
+                self.prod_id,
+                self.symbol,
+                self.rhs,
+            )
         return ("%s " + s_emph("=") + " %s") % (self.symbol, self.rhs)
 
     def __repr__(self):
-        return f'Production({str(self)})'
+        return f"Production({str(self)})"
 
     def __getattr__(self, name):
         if self.user_meta is not None:
@@ -362,8 +397,7 @@ class ProductionRHS(list):
         return " ".join([str(x) for x in self])
 
     def __repr__(self):
-        return "ProductionRHS([{}])".format(
-            ", ".join([str(x) for x in self]))
+        return "ProductionRHS([{}])".format(", ".join([str(x) for x in self]))
 
 
 class Assignment:
@@ -371,6 +405,7 @@ class Assignment:
     General assignment (`=` or `?=`, a.k.a. `named matches`) in productions.
     Used also for references as LHS and assignment operator are optional.
     """
+
     def __init__(self, name, op, symbol):
         """
         Attributes:
@@ -388,8 +423,9 @@ class Assignment:
         self.op = op
         self.symbol = symbol
         self.symbol_name = symbol.name
-        self.multiplicity = symbol.multiplicity \
-            if isinstance(symbol, Reference) else MULT_ONE
+        self.multiplicity = (
+            symbol.multiplicity if isinstance(symbol, Reference) else MULT_ONE
+        )
         self.index = None
 
 
@@ -403,6 +439,7 @@ class PGAttribute:
         type_name(str): The type name of the attribute value(s). It is also the
             name of the referring grammar rule.
     """
+
     def __init__(self, name, multiplicity, type_name):
         self.name = name
         self.multiplicity = multiplicity
@@ -416,6 +453,7 @@ class GrammarContext:
     during grammar parsing.
 
     """
+
     classes: Dict = field(default_factory=dict)
     debug: bool = False
     debug_colors: bool = False
@@ -423,7 +461,7 @@ class GrammarContext:
     groups: List = field(default_factory=list)
     groups_counter: Counter = field(default_factory=Counter)
     ignore_case: bool = False
-    imported_with: Optional['PGFileImport'] = None
+    imported_with: Optional["PGFileImport"] = None
     inline_terminals: Dict = field(default_factory=dict)
 
 
@@ -473,7 +511,7 @@ class PGFile:
         classes=None,
         imports=None,
         file_path=None,
-        grammar: Optional['Grammar'] = None,
+        grammar: Optional["Grammar"] = None,
         recognizers=None,
         imported_with=None,
     ):
@@ -530,8 +568,8 @@ class PGFile:
             if terminal.name in terminals_by_name:
                 raise GrammarError(
                     location=terminal.location,
-                    message=f'Multiple definitions of terminal '
-                            f'rule "{terminal.name}"')
+                    message=f'Multiple definitions of terminal rule "{terminal.name}"',
+                )
             if isinstance(terminal.recognizer, StringRecognizer):
                 rec = terminal.recognizer
                 if rec.value in terminals_by_str_rec:
@@ -539,7 +577,8 @@ class PGFile:
                         location=terminal.location,
                         message=f'Terminals "{terminal.name}" and '
                         f'"{terminals_by_str_rec[rec.value].name}" match '
-                        'the same string.')
+                        "the same string.",
+                    )
                 terminals_by_str_rec[rec.value] = terminal
             terminals_by_name[terminal.name] = terminal
 
@@ -553,7 +592,8 @@ class PGFile:
             if symbol.name in self.terminals:
                 raise GrammarError(
                     location=symbol.location,
-                    message=f'Rule "{symbol.name}" already defined as terminal')
+                    message=f'Rule "{symbol.name}" already defined as terminal',
+                )
             # Unify all non-terminal objects
             if symbol.name in nonterminals_by_name:
                 old_symbol = symbol
@@ -565,20 +605,23 @@ class PGFile:
             new_symbol.productions.append(production)
 
             # Check grammar actions for rules/symbols.
-            if new_symbol.action_name and \
-                    new_symbol.action_name != old_symbol.action_name:
+            if (
+                new_symbol.action_name
+                and new_symbol.action_name != old_symbol.action_name
+            ):
                 raise GrammarError(
                     location=new_symbol.location,
-                    message='Multiple different grammar actions '
-                    f'for rule "{new_symbol.name}".')
+                    message="Multiple different grammar actions "
+                    f'for rule "{new_symbol.name}".',
+                )
 
         self.nonterminals = nonterminals_by_name
         self.symbols_by_name = dict(nonterminals_by_name)
         self.symbols_by_name.update(self.terminals)
 
         # Add special terminals
-        self.symbols_by_name['EMPTY'] = EMPTY
-        self.symbols_by_name['STOP'] = STOP
+        self.symbols_by_name["EMPTY"] = EMPTY
+        self.symbols_by_name["STOP"] = STOP
 
     def _check_overrides(self):
         """
@@ -588,21 +631,21 @@ class PGFile:
         for symbol_fqn, symbol in self.symbols_by_name.items():
             # Must resolve first level without resolve_symbol_by_name
             # as otherwise the override rule itself would be found.
-            if '.' in symbol_fqn:
-                import_module_name, name = symbol_fqn.split('.', 1)
+            if "." in symbol_fqn:
+                import_module_name, name = symbol_fqn.split(".", 1)
                 try:
                     imported_pg_file = self.imports[import_module_name]
                     if not imported_pg_file.resolve_symbol_by_name(name):
                         raise GrammarError(
                             location=symbol.location,
-                            message=f"Unexisting name for symbol "
-                                    f"override {symbol_fqn}."
+                            message=f"Unexisting name for symbol override {symbol_fqn}.",
                         )
                 except KeyError as ex_inner:
                     raise GrammarError(
                         location=symbol.location,
                         message=f'Unexisting module "{import_module_name}"'
-                                f' in reference "{symbol_fqn}"') from ex_inner
+                        f' in reference "{symbol_fqn}"',
+                    ) from ex_inner
 
     def _load_actions(self):
         """
@@ -614,18 +657,19 @@ class PGFile:
         if self.file_path:
             actions_file = path.join(
                 path.dirname(self.file_path),
-                "{}_actions.py".format(path.splitext(
-                    path.basename(self.file_path))[0]))
+                f"{path.splitext(path.basename(self.file_path))[0]}_actions.py",
+            )
             if path.exists(actions_file):
                 mod_name = "{}actions".format(
-                    self.imported_with.fqn
-                    if self.imported_with is not None else "")
+                    self.imported_with.fqn if self.imported_with is not None else ""
+                )
                 actions_module = load_python_module(mod_name, actions_file)
-                if not hasattr(actions_module, 'action'):
+                if not hasattr(actions_module, "action"):
                     raise GrammarError(
                         Location(file_name=actions_file),
                         message=f'Actions file "{actions_file}" must have "action" '
-                        'decorator defined.')
+                        "decorator defined.",
+                    )
                 self.actions = actions_module.action.all
 
     def _load_recognizers(self):
@@ -636,37 +680,38 @@ class PGFile:
         if self.file_path:
             recognizers_file = path.join(
                 path.dirname(self.file_path),
-                "{}_recognizers.py".format(path.splitext(
-                    path.basename(self.file_path))[0]))
+                f"{path.splitext(path.basename(self.file_path))[0]}_recognizers.py",
+            )
 
             if path.exists(recognizers_file):
                 mod_name = "{}recognizers".format(
-                    self.imported_with.fqn
-                    if self.imported_with is not None else "")
-                mod_recognizers = load_python_module(mod_name,
-                                                     recognizers_file)
+                    self.imported_with.fqn if self.imported_with is not None else ""
+                )
+                mod_recognizers = load_python_module(mod_name, recognizers_file)
                 recognizers = mod_recognizers.recognizer.all
 
                 for recognizer_name, recognizer in recognizers.items():
                     symbol = self.resolve_symbol_by_name(
                         recognizer_name,
-                        location=Location(file_name=recognizers_file))
+                        location=Location(file_name=recognizers_file),
+                    )
                     if symbol is None:
                         raise GrammarError(
                             location=Location(file_name=recognizers_file),
-                            message='Recognizer given for unknown '
-                            f'terminal "{recognizer_name}".'
+                            message="Recognizer given for unknown "
+                            f'terminal "{recognizer_name}".',
                         )
                     if not isinstance(symbol, Terminal):
                         raise GrammarError(
                             location=Location(file_name=recognizers_file),
-                            message='Recognizer given for non-terminal '
-                                    f'"{recognizer_name}".')
+                            message="Recognizer given for "
+                            f'non-terminal "{recognizer_name}".',
+                        )
                     symbol.recognizer = recognizer
 
     def resolve_symbol_by_name(
-            self, symbol_fqn: str,
-            location: Optional[Location] = None) -> Optional[GrammarSymbol]:
+        self, symbol_fqn: str, location: Optional[Location] = None
+    ) -> Optional[GrammarSymbol]:
         """
         Resolve symbol by FQN. Respect overrides.
         """
@@ -675,15 +720,16 @@ class PGFile:
             # imported grammars.
             return self.symbols_by_name[symbol_fqn]
         except KeyError:
-            if '.' in symbol_fqn:
-                import_module_name, name = symbol_fqn.split('.', 1)
+            if "." in symbol_fqn:
+                import_module_name, name = symbol_fqn.split(".", 1)
                 try:
                     imported_pg_file = self.imports[import_module_name]
                 except KeyError as ex_inner:
                     raise GrammarError(
                         location=location,
                         message=f'Unexisting module "{import_module_name}"'
-                                f' in reference "{symbol_fqn}"') from ex_inner
+                        f' in reference "{symbol_fqn}"',
+                    ) from ex_inner
                 return imported_pg_file.resolve_symbol_by_name(name, location)
         return None
 
@@ -693,8 +739,8 @@ class PGFile:
         """
         if action_name in self.actions:
             return self.actions[action_name]
-        if '.' in action_name:
-            import_module_name, name = action_name.split('.', 1)
+        if "." in action_name:
+            import_module_name, name = action_name.split(".", 1)
             if import_module_name in self.imports:
                 imported_pg_file = self.imports[import_module_name]
                 return imported_pg_file.resolve_action_by_name(name)
@@ -715,9 +761,17 @@ class Grammar(PGFile):
 
     """
 
-    def __init__(self, productions=None, terminals=None,
-                 classes=None, imports=None, file_path=None, recognizers=None,
-                 start_symbol=None, _no_check_recognizers=False):
+    def __init__(
+        self,
+        productions=None,
+        terminals=None,
+        classes=None,
+        imports=None,
+        file_path=None,
+        recognizers=None,
+        start_symbol=None,
+        _no_check_recognizers=False,
+    ):
         """
         Grammar constructor is not meant to be called directly by the user.
         See `from_str` and `from_file` static methods instead.
@@ -730,13 +784,15 @@ class Grammar(PGFile):
 
         self.imported_files = {}
 
-        super().__init__(productions=productions,
-                         terminals=terminals,
-                         classes=classes,
-                         imports=imports,
-                         file_path=file_path,
-                         grammar=self,
-                         recognizers=recognizers)
+        super().__init__(
+            productions=productions,
+            terminals=terminals,
+            classes=classes,
+            imports=imports,
+            file_path=file_path,
+            grammar=self,
+            recognizers=recognizers,
+        )
 
         self._no_check_recognizers = _no_check_recognizers
 
@@ -764,8 +820,8 @@ class Grammar(PGFile):
         # Reserve 0 production. It is used for augmented prod. in LR
         # automata calculation.
         self.productions.insert(
-            0,
-            Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP])))
+            0, Production(AUGSYMBOL, ProductionRHS([self.start_symbol, STOP]))
+        )
 
         self._add_resolve_all_production_symbols()
         self._enumerate_productions()
@@ -793,8 +849,7 @@ class Grammar(PGFile):
                     self.nonterminals[symbol.fqn] = symbol
                 for idx, rhs_elem in enumerate(production.rhs):
                     if isinstance(rhs_elem, Reference):
-                        rhs_elem = production.rhs[idx] = \
-                            self._resolve_ref(rhs_elem)
+                        rhs_elem = production.rhs[idx] = self._resolve_ref(rhs_elem)
                     if isinstance(rhs_elem, Terminal):
                         if rhs_elem.fqn not in self.terminals:
                             self.terminals[rhs_elem.fqn] = rhs_elem
@@ -811,7 +866,9 @@ class Grammar(PGFile):
                     else:
                         # This should never happen
                         raise AssertionError(
-                            f"Invalid RHS element type '{type(rhs_elem)}'.")
+                            f"Invalid RHS element type '{type(rhs_elem)}'."
+                        )
+
         add_productions(list(self.productions))
 
     def register_symbol(self, symbol):
@@ -836,29 +893,30 @@ class Grammar(PGFile):
         if not symbol:
             raise GrammarError(
                 location=symbol_ref.location,
-                message=f'Unknown symbol "{symbol_fqn}"')
+                message=f'Unknown symbol "{symbol_fqn}"',
+            )
 
         mult = symbol_ref.multiplicity
         if mult != MULT_ONE:
             # If multiplicity is used than we are referring to
             # sugared symbol
-            separator = symbol_ref.separator \
-                if symbol_ref.separator else None
+            separator = symbol_ref.separator if symbol_ref.separator else None
 
             base_symbol = symbol
             symbol_name = symbol_ref.multiplicity_fqn
-            symbol = self.resolve_symbol_by_name(symbol_name,
-                                                 symbol_ref.location)
+            symbol = self.resolve_symbol_by_name(symbol_name, symbol_ref.location)
             if not symbol:
                 # If there is no multiplicity version of the symbol we
                 # will create one at this place
                 symbol = self._make_multiplicity_symbol(
-                    symbol_ref, base_symbol, separator, self.imported_with)
+                    symbol_ref, base_symbol, separator, self.imported_with
+                )
 
         return symbol
 
-    def _make_multiplicity_symbol(self, symbol_ref, base_symbol, separator,
-                                  imported_with):
+    def _make_multiplicity_symbol(
+        self, symbol_ref, base_symbol, separator, imported_with
+    ):
         """
         Creates new NonTerminal for symbol refs using multiplicity and
         separators.
@@ -867,32 +925,36 @@ class Grammar(PGFile):
         assoc = ASSOC_RIGHT if symbol_ref.greedy else ASSOC_NONE
         if mult in [MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE]:
             symbol_name = make_multiplicity_fqn(
-                symbol_ref.fqn, MULT_ONE_OR_MORE,
-                separator.name if separator else None)
+                symbol_ref.fqn,
+                MULT_ONE_OR_MORE,
+                separator.name if separator else None,
+            )
             symbol = self.resolve_symbol_by_name(symbol_name)
             if not symbol:
                 # noqa See: http://www.igordejanovic.net/parglare/grammar_language/#one-or-more_1
                 productions = []
-                symbol = NonTerminal(symbol_name, productions,
-                                     base_symbol.location,
-                                     imported_with=imported_with)
+                symbol = NonTerminal(
+                    symbol_name,
+                    productions,
+                    base_symbol.location,
+                    imported_with=imported_with,
+                )
 
                 if separator:
                     productions.append(
-                        Production(symbol,
-                                   ProductionRHS([symbol,
-                                                  separator,
-                                                  base_symbol])))
-                    symbol.action_name = 'collect_sep'
+                        Production(
+                            symbol,
+                            ProductionRHS([symbol, separator, base_symbol]),
+                        )
+                    )
+                    symbol.action_name = "collect_sep"
                 else:
                     productions.append(
-                        Production(symbol,
-                                   ProductionRHS([symbol,
-                                                  base_symbol])))
-                    symbol.action_name = 'collect'
+                        Production(symbol, ProductionRHS([symbol, base_symbol]))
+                    )
+                    symbol.action_name = "collect"
 
-                productions.append(
-                    Production(symbol, ProductionRHS([base_symbol])))
+                productions.append(Production(symbol, ProductionRHS([base_symbol])))
 
                 self.register_symbol(symbol)
 
@@ -900,19 +962,26 @@ class Grammar(PGFile):
                 productions = []
                 symbol_one = symbol
                 symbol_name = make_multiplicity_fqn(
-                    symbol_ref.fqn, mult,
-                    separator.name if separator else None)
-                symbol = NonTerminal(symbol_name, productions,
-                                     base_symbol.location,
-                                     imported_with=imported_with)
+                    symbol_ref.fqn, mult, separator.name if separator else None
+                )
+                symbol = NonTerminal(
+                    symbol_name,
+                    productions,
+                    base_symbol.location,
+                    imported_with=imported_with,
+                )
 
-                productions.extend([Production(symbol,
-                                               ProductionRHS([symbol_one]),
-                                               assoc=assoc,
-                                               nops=True),
-                                    Production(symbol,
-                                               ProductionRHS([EMPTY]),
-                                               assoc=assoc)])
+                productions.extend(
+                    [
+                        Production(
+                            symbol,
+                            ProductionRHS([symbol_one]),
+                            assoc=assoc,
+                            nops=True,
+                        ),
+                        Production(symbol, ProductionRHS([EMPTY]), assoc=assoc),
+                    ]
+                )
 
                 def action(_, nodes):
                     if nodes:
@@ -927,13 +996,22 @@ class Grammar(PGFile):
                 if symbol_ref.greedy:
                     productions = []
                     symbol_one = symbol
-                    symbol = NonTerminal(f'{symbol_name}_g', productions,
-                                         base_symbol.location,
-                                         imported_with=imported_with)
-                    productions.extend([Production(symbol,
-                                                   ProductionRHS([symbol_one]),
-                                                   assoc=ASSOC_RIGHT)])
-                    symbol.action_name = 'pass_single'
+                    symbol = NonTerminal(
+                        f"{symbol_name}_g",
+                        productions,
+                        base_symbol.location,
+                        imported_with=imported_with,
+                    )
+                    productions.extend(
+                        [
+                            Production(
+                                symbol,
+                                ProductionRHS([symbol_one]),
+                                assoc=ASSOC_RIGHT,
+                            )
+                        ]
+                    )
+                    symbol.action_name = "pass_single"
                     self.register_symbol(symbol)
 
         else:
@@ -941,20 +1019,25 @@ class Grammar(PGFile):
             if separator:
                 raise GrammarError(
                     location=symbol_ref.location,
-                    message='Repetition modifier not allowed for '
-                    f'optional (?) for symbol "{symbol_ref.name}".')
+                    message="Repetition modifier not allowed for "
+                    f'optional (?) for symbol "{symbol_ref.name}".',
+                )
             productions = []
             symbol_name = make_multiplicity_fqn(symbol_ref.fqn, mult)
-            symbol = NonTerminal(symbol_name, productions,
-                                 base_symbol.location,
-                                 imported_with=imported_with)
-            productions.extend([Production(symbol,
-                                           ProductionRHS([base_symbol])),
-                                Production(symbol,
-                                           ProductionRHS([EMPTY]),
-                                           assoc=assoc)])
+            symbol = NonTerminal(
+                symbol_name,
+                productions,
+                base_symbol.location,
+                imported_with=imported_with,
+            )
+            productions.extend(
+                [
+                    Production(symbol, ProductionRHS([base_symbol])),
+                    Production(symbol, ProductionRHS([EMPTY]), assoc=assoc),
+                ]
+            )
 
-            symbol.action_name = 'optional'
+            symbol.action_name = "optional"
 
             self.register_symbol(symbol)
 
@@ -969,15 +1052,14 @@ class Grammar(PGFile):
         for idx, prod in enumerate(self.productions):
             prod.prod_id = idx
             prod.prod_symbol_id = idx_per_symbol.get(prod.symbol, 0)
-            idx_per_symbol[prod.symbol] = \
-                idx_per_symbol.get(prod.symbol, 0) + 1
+            idx_per_symbol[prod.symbol] = idx_per_symbol.get(prod.symbol, 0) + 1
 
     def _fix_keyword_terminals(self):
         """
         If KEYWORD terminal with regex match is given fix all matching string
         recognizers to match on a word boundary.
         """
-        keyword_term = self.get_terminal('KEYWORD')
+        keyword_term = self.get_terminal("KEYWORD")
         if keyword_term is None:
             return
 
@@ -986,7 +1068,8 @@ class Grammar(PGFile):
         if not isinstance(keyword_rec, RegExRecognizer):
             raise GrammarError(
                 location=keyword_term.location,
-                message='KEYWORD rule must have a regex recognizer defined.')
+                message="KEYWORD rule must have a regex recognizer defined.",
+            )
 
         # Change each string recognizer corresponding to the KEYWORD
         # regex by the regex recognizer that match on word boundaries.
@@ -995,12 +1078,11 @@ class Grammar(PGFile):
                 match = keyword_rec(term.recognizer.value, 0)
                 if match == term.recognizer.value:
                     term.recognizer = RegExRecognizer(
-                        rf'\b{match}\b',
-                        ignore_case=term.recognizer.ignore_case)
+                        rf"\b{match}\b", ignore_case=term.recognizer.ignore_case
+                    )
                     term.keyword = True
 
-    def _resolve_actions(self, action_overrides=None,
-                         fail_on_no_resolve=False):
+    def _resolve_actions(self, action_overrides=None, fail_on_no_resolve=False):
         """
         Checks and resolves semantic actions given in the grammar and
         additional `*_actions.py` module.
@@ -1012,12 +1094,11 @@ class Grammar(PGFile):
         import parglare.actions as actmodule
 
         for symbol in self:
-
             # Resolve trying from most specific to least specific
             action = None
 
             # 1. Resolve by fully qualified symbol name
-            if '.' in symbol.fqn:
+            if "." in symbol.fqn:
                 if action_overrides:
                     action = action_overrides.get(symbol.fqn, None)
 
@@ -1025,8 +1106,11 @@ class Grammar(PGFile):
                     action = self.resolve_action_by_name(symbol.fqn)
 
             # 2. Fully qualified action name
-            if action is None and symbol.action_fqn is not None \
-               and '.' in symbol.action_fqn:
+            if (
+                action is None
+                and symbol.action_fqn is not None
+                and "." in symbol.action_fqn
+            ):
                 if action_overrides:
                     action = action_overrides.get(symbol.action_fqn, None)
 
@@ -1055,12 +1139,12 @@ class Grammar(PGFile):
                     if hasattr(actmodule, action_name):
                         action = getattr(actmodule, action_name)
 
-            if symbol.action_name and action is None \
-               and fail_on_no_resolve:
+            if symbol.action_name and action is None and fail_on_no_resolve:
                 raise ParserInitError(
                     f'Action "{symbol.action_name}" given for rule "{symbol.name}" '
-                    'doesn\'t exists in parglare common actions and '
-                    'is not provided using "actions" parameter.')
+                    "doesn't exists in parglare common actions and "
+                    'is not provided using "actions" parameter.'
+                )
 
             if action is not None:
                 symbol.action = action
@@ -1069,14 +1153,15 @@ class Grammar(PGFile):
                 if isinstance(symbol.action, list):
                     if isinstance(symbol, Terminal):
                         raise ParserInitError(
-                            'Cannot use a list of actions for '
-                            f'terminal "{symbol.name}".')
+                            f'Cannot use a list of actions for terminal "{symbol.name}".'
+                        )
                     else:
                         if len(symbol.action) != len(symbol.productions):
                             raise ParserInitError(
-                                'Length of list of actions must match the '
-                                'number of productions for non-terminal '
-                                f'"{symbol.name}".')
+                                "Length of list of actions must match the "
+                                "number of productions for non-terminal "
+                                f'"{symbol.name}".'
+                            )
             else:
                 symbol.action = symbol.grammar_action
 
@@ -1090,14 +1175,16 @@ class Grammar(PGFile):
                         raise GrammarError(
                             location=term.location,
                             message=f'Terminal "{term.fqn}" has no recognizer defined '
-                            'and no recognizers are given during grammar '
-                            'construction.')
+                            "and no recognizers are given during grammar "
+                            "construction.",
+                        )
                     else:
                         if term.fqn not in self.recognizers:
                             raise GrammarError(
                                 location=term.location,
-                                message=f'Terminal "{term.fqn}" has no recognizer '
-                                'defined.')
+                                message=f'Terminal "{term.fqn}" '
+                                "has no recognizer defined.",
+                            )
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."
@@ -1119,9 +1206,11 @@ class Grammar(PGFile):
         return s
 
     def __iter__(self):
-        return (s for s in itertools.chain(self.nonterminals.values(),
-                                           self.terminals.values())
-                if s not in [AUGSYMBOL, STOP])
+        return (
+            s
+            for s in itertools.chain(self.nonterminals.values(), self.terminals.values())
+            if s not in [AUGSYMBOL, STOP]
+        )
 
     def get_production_id(self, name):
         "Returns first production id for the given symbol name"
@@ -1133,29 +1222,39 @@ class Grammar(PGFile):
     def from_struct(productions, start_symbol=None):
         """Used internally to bootstrap grammar file parser."""
         productions, terminals = create_productions_terminals(productions)
-        return Grammar(productions,
-                       terminals=terminals,
-                       start_symbol=start_symbol)
+        return Grammar(productions, terminals=terminals, start_symbol=start_symbol)
 
     @staticmethod
-    def _parse(parse_fun_name, what_to_parse, recognizers=None,
-               ignore_case=False, re_flags=re.MULTILINE, debug=False,
-               debug_parse=False, debug_colors=False,
-               _no_check_recognizers=False):
-        extra = GrammarContext(debug=debug, debug_colors=debug_colors,
-                               ignore_case=ignore_case, re_flags=re_flags)
+    def _parse(
+        parse_fun_name,
+        what_to_parse,
+        recognizers=None,
+        ignore_case=False,
+        re_flags=re.MULTILINE,
+        debug=False,
+        debug_parse=False,
+        debug_colors=False,
+        _no_check_recognizers=False,
+    ):
+        extra = GrammarContext(
+            debug=debug,
+            debug_colors=debug_colors,
+            ignore_case=ignore_case,
+            re_flags=re_flags,
+        )
         grammar_parser = get_grammar_parser(debug_parse, debug_colors)
-        imports, productions, terminals, classes = \
-            getattr(grammar_parser, parse_fun_name)(what_to_parse,
-                                                    extra=extra)
-        g = Grammar(productions=productions,
-                    terminals=terminals,
-                    classes=classes,
-                    imports=imports,
-                    recognizers=recognizers,
-                    file_path=what_to_parse
-                    if parse_fun_name == 'parse_file' else None,
-                    _no_check_recognizers=_no_check_recognizers)
+        imports, productions, terminals, classes = getattr(
+            grammar_parser, parse_fun_name
+        )(what_to_parse, extra=extra)
+        g = Grammar(
+            productions=productions,
+            terminals=terminals,
+            classes=classes,
+            imports=imports,
+            recognizers=recognizers,
+            file_path=what_to_parse if parse_fun_name == "parse_file" else None,
+            _no_check_recognizers=_no_check_recognizers,
+        )
         termui.colors = debug_colors
         if debug:
             g.print_debug()
@@ -1164,12 +1263,12 @@ class Grammar(PGFile):
 
     @staticmethod
     def from_string(grammar_str, **kwargs):
-        return Grammar._parse('parse', grammar_str, **kwargs)
+        return Grammar._parse("parse", grammar_str, **kwargs)
 
     @staticmethod
     def from_file(file_name, **kwargs):
         file_name = path.realpath(file_name)
-        return Grammar._parse('parse_file', file_name, **kwargs)
+        return Grammar._parse("parse_file", file_name, **kwargs)
 
     def print_debug(self):
         a_print("*** GRAMMAR ***", new_line=True)
@@ -1198,8 +1297,8 @@ class PGFileImport:
     pgfile (PGFile instance or None):
 
     """
-    def __init__(self, module_name: str, file_path: str,
-                 context: GrammarContext):
+
+    def __init__(self, module_name: str, file_path: str, context: GrammarContext):
         self.module_name = module_name
         self.file_path: str = file_path
         self.context = context
@@ -1225,18 +1324,18 @@ class PGFileImport:
                 context.file_name = self.file_path
                 context.inline_terminals = {}
                 context.imported_with = self
-                imports, productions, terminals, classes = \
-                    get_grammar_parser(
-                        self.context.debug,
-                        self.context.debug_colors).parse_file(
-                            self.file_path, extra=context)
-                self.pgfile = PGFile(productions=productions,
-                                     terminals=terminals,
-                                     classes=classes,
-                                     imports=imports,
-                                     grammar=self.grammar,
-                                     imported_with=self,
-                                     file_path=self.file_path)
+                imports, productions, terminals, classes = get_grammar_parser(
+                    self.context.debug, self.context.debug_colors
+                ).parse_file(self.file_path, extra=context)
+                self.pgfile = PGFile(
+                    productions=productions,
+                    terminals=terminals,
+                    classes=classes,
+                    imports=imports,
+                    grammar=self.grammar,
+                    imported_with=self,
+                    file_path=self.file_path,
+                )
 
     def resolve_symbol_by_name(self, symbol_name, location=None):
         "Resolves symbol from the imported file."
@@ -1265,8 +1364,8 @@ def create_productions_terminals(productions):
         if not isinstance(symbol, NonTerminal):
             raise GrammarError(
                 location=None,
-                message=f"Invalid production symbol '{symbol}' "
-                f"for production '{str(p)}'")
+                message=f"Invalid production symbol '{symbol}' for production '{str(p)}'",
+            )
         rhs = ProductionRHS(p[1])
         if len(p) > 2:
             assoc = p[2]
@@ -1277,34 +1376,38 @@ def create_productions_terminals(productions):
         for idx, t in enumerate(rhs):
             if isinstance(t, str):
                 if t not in inline_terminals:
-                    inline_terminals[t] = \
-                        Terminal(recognizer=StringRecognizer(t), name=t)
-                rhs[idx] = Reference(location=None, name=t,
-                                     imported_with=symbol.imported_with)
+                    inline_terminals[t] = Terminal(recognizer=StringRecognizer(t), name=t)
+                rhs[idx] = Reference(
+                    location=None, name=t, imported_with=symbol.imported_with
+                )
             elif isinstance(t, Terminal):
                 if t.name not in inline_terminals:
                     inline_terminals[t.name] = t
-                rhs[idx] = Reference(location=None, name=t.name,
-                                     imported_with=symbol.imported_with)
+                rhs[idx] = Reference(
+                    location=None,
+                    name=t.name,
+                    imported_with=symbol.imported_with,
+                )
 
         gp.append(Production(symbol, rhs, assoc=assoc, prior=prior))
 
     return gp, list(inline_terminals.values())
 
 
-def make_multiplicity_fqn(symbol_name, multiplicity=None,
-                          separator_name=None):
+def make_multiplicity_fqn(symbol_name, multiplicity=None, separator_name=None):
     if multiplicity is None or multiplicity == MULT_ONE:
         return symbol_name
     name_by_mult = {
         MULT_ZERO_OR_MORE: "0",
         MULT_ONE_OR_MORE: "1",
-        MULT_OPTIONAL: "opt"
+        MULT_OPTIONAL: "opt",
     }
     if multiplicity:
         return "{}_{}{}".format(
-            symbol_name, name_by_mult[multiplicity],
-            f"_{separator_name}" if separator_name else "")
+            symbol_name,
+            name_by_mult[multiplicity],
+            f"_{separator_name}" if separator_name else "",
+        )
 
 
 def check_name(context, name):
@@ -1315,225 +1418,238 @@ def check_name(context, name):
     if name in RESERVED_SYMBOL_NAMES:
         raise GrammarError(
             location=Location(context),
-            message=f'Rule name "{name}" is reserved.')
+            message=f'Rule name "{name}" is reserved.',
+        )
 
 
 # Grammar for grammars
 
-(PGFILE,
- IMPORTS,
- IMPORT,
- PRODUCTION_RULES,
- PRODUCTION_RULE,
- PRODUCTION_RULE_WITH_ACTION,
- PRODUCTION_RULE_RHS,
- PRODUCTION,
- PRODUCTION_GROUP,
- TERMINAL_RULES,
- TERMINAL_RULE,
- TERMINAL_RULE_WITH_ACTION,
- PROD_META_DATA,
- PROD_META_DATAS,
- TERM_META_DATA,
- TERM_META_DATAS,
- USER_META_DATA,
- CONST,
+(
+    PGFILE,
+    IMPORTS,
+    IMPORT,
+    PRODUCTION_RULES,
+    PRODUCTION_RULE,
+    PRODUCTION_RULE_WITH_ACTION,
+    PRODUCTION_RULE_RHS,
+    PRODUCTION,
+    PRODUCTION_GROUP,
+    TERMINAL_RULES,
+    TERMINAL_RULE,
+    TERMINAL_RULE_WITH_ACTION,
+    PROD_META_DATA,
+    PROD_META_DATAS,
+    TERM_META_DATA,
+    TERM_META_DATAS,
+    USER_META_DATA,
+    CONST,
+    ASSIGNMENT,
+    ASSIGNMENTS,
+    PLAIN_ASSIGNMENT,
+    BOOL_ASSIGNMENT,
+    GSYMBOL_REFERENCE,
+    OPT_REP_OPERATOR,
+    REP_OPERATOR,
+    OPT_REP_MODIFIERS_EXP,
+    OPT_REP_MODIFIERS,
+    OPT_REP_MODIFIER,
+    GSYMBOL,
+    RECOGNIZER,
+    LAYOUT,
+    LAYOUT_ITEM,
+    COMMENT,
+    CORNC,
+    CORNCS,
+) = (
+    NonTerminal(name)
+    for name in [
+        "PGFile",
+        "Imports",
+        "Import",
+        "ProductionRules",
+        "ProductionRule",
+        "ProductionRuleWithAction",
+        "ProductionRuleRHS",
+        "Production",
+        "ProductionGroup",
+        "TerminalRules",
+        "TerminalRule",
+        "TerminalRuleWithAction",
+        "ProductionMetaData",
+        "ProductionMetaDatas",
+        "TerminalMetaData",
+        "TerminalMetaDatas",
+        "UserMetaData",
+        "Const",
+        "Assignment",
+        "Assignments",
+        "PlainAssignment",
+        "BoolAssignment",
+        "GrammarSymbolReference",
+        "OptRepeatOperator",
+        "RepeatOperator",
+        "OptionalRepeatModifiersExpression",
+        "OptionalRepeatModifiers",
+        "OptionalRepeatModifier",
+        "GrammarSymbol",
+        "Recognizer",
+        "LAYOUT",
+        "LAYOUT_ITEM",
+        "Comment",
+        "CORNC",
+        "CORNCS",
+    ]
+)
 
- ASSIGNMENT,
- ASSIGNMENTS,
- PLAIN_ASSIGNMENT,
- BOOL_ASSIGNMENT,
-
- GSYMBOL_REFERENCE,
- OPT_REP_OPERATOR,
- REP_OPERATOR,
- OPT_REP_MODIFIERS_EXP,
- OPT_REP_MODIFIERS,
- OPT_REP_MODIFIER,
-
- GSYMBOL,
- RECOGNIZER,
- LAYOUT,
- LAYOUT_ITEM,
- COMMENT,
- CORNC,
- CORNCS) = (NonTerminal(name) for name in [
-     'PGFile',
-     'Imports',
-     'Import',
-     'ProductionRules',
-     'ProductionRule',
-     'ProductionRuleWithAction',
-     'ProductionRuleRHS',
-     'Production',
-     'ProductionGroup',
-     'TerminalRules',
-     'TerminalRule',
-     'TerminalRuleWithAction',
-     'ProductionMetaData',
-     'ProductionMetaDatas',
-     'TerminalMetaData',
-     'TerminalMetaDatas',
-     'UserMetaData',
-     'Const',
-
-     'Assignment',
-     'Assignments',
-     'PlainAssignment',
-     'BoolAssignment',
-
-     'GrammarSymbolReference',
-     'OptRepeatOperator',
-     'RepeatOperator',
-     'OptionalRepeatModifiersExpression',
-     'OptionalRepeatModifiers',
-     'OptionalRepeatModifier',
-
-     'GrammarSymbol',
-     'Recognizer',
-     'LAYOUT',
-     'LAYOUT_ITEM',
-     'Comment',
-     'CORNC',
-     'CORNCS'])
-
-pg_terminals = \
-    (NAME,
-     REGEX_TERM,
-     INT_CONST,
-     FLOAT_CONST,
-     BOOL_CONST,
-     STR_CONST,
-     ACTION,
-     WS,
-     COMMENTLINE,
-     NOTCOMMENT) = [Terminal(name, RegExRecognizer(regex)) for name, regex in
-                    [
-                        ('Name', r'[a-zA-Z_][a-zA-Z0-9_\.]*'),
-                        ('RegExTerm', r'\/(\\.|[^\/\\])*\/'),
-                        ('IntConst', r'\d+'),
-                        ('FloatConst',
-                         r'''[+-]?(\d+\.\d*|\.\d+)([eE][+-]?\d+)?(?<=[\w\.])(?![\w\.])'''),  # noqa
-                        ('BoolConst', r'true|false'),
-                        ('StrConst', r'''(?s)('[^'\\]*(?:\\.[^'\\]*)*')|'''
-                         r'''("[^"\\]*(?:\\.[^"\\]*)*")'''),
-                        ('Action', r'@[a-zA-Z0-9_]+'),
-                        ('WS', r'\s+'),
-                        ('CommentLine', r'\/\/.*'),
-                        ('NotComment', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
-                    ]]
+pg_terminals = (
+    NAME,
+    REGEX_TERM,
+    INT_CONST,
+    FLOAT_CONST,
+    BOOL_CONST,
+    STR_CONST,
+    ACTION,
+    WS,
+    COMMENTLINE,
+    NOTCOMMENT,
+) = [
+    Terminal(name, RegExRecognizer(regex))
+    for name, regex in [
+        ("Name", r"[a-zA-Z_][a-zA-Z0-9_\.]*"),
+        ("RegExTerm", r"\/(\\.|[^\/\\])*\/"),
+        ("IntConst", r"\d+"),
+        (
+            "FloatConst",
+            r"""[+-]?(\d+\.\d*|\.\d+)([eE][+-]?\d+)?(?<=[\w\.])(?![\w\.])""",
+        ),  # noqa
+        ("BoolConst", r"true|false"),
+        (
+            "StrConst",
+            r"""(?s)('[^'\\]*(?:\\.[^'\\]*)*')|"""
+            r"""("[^"\\]*(?:\\.[^"\\]*)*")""",
+        ),
+        ("Action", r"@[a-zA-Z0-9_]+"),
+        ("WS", r"\s+"),
+        ("CommentLine", r"\/\/.*"),
+        ("NotComment", r"((\*[^\/])|[^\s*\/]|\/[^\*])+"),
+    ]
+]
 
 pg_productions = [
     [PGFILE, [PRODUCTION_RULES]],
     [PGFILE, [IMPORTS, PRODUCTION_RULES]],
-    [PGFILE, [PRODUCTION_RULES, 'terminals', TERMINAL_RULES]],
-    [PGFILE, [IMPORTS, PRODUCTION_RULES, 'terminals', TERMINAL_RULES]],
-    [PGFILE, ['terminals', TERMINAL_RULES]],
+    [PGFILE, [PRODUCTION_RULES, "terminals", TERMINAL_RULES]],
+    [PGFILE, [IMPORTS, PRODUCTION_RULES, "terminals", TERMINAL_RULES]],
+    [PGFILE, ["terminals", TERMINAL_RULES]],
     [IMPORTS, [IMPORTS, IMPORT]],
     [IMPORTS, [IMPORT]],
-    [IMPORT, ['import', STR_CONST, ';']],
-    [IMPORT, ['import', STR_CONST, 'as', NAME, ';']],
+    [IMPORT, ["import", STR_CONST, ";"]],
+    [IMPORT, ["import", STR_CONST, "as", NAME, ";"]],
     [PRODUCTION_RULES, [PRODUCTION_RULES, PRODUCTION_RULE_WITH_ACTION]],
     [PRODUCTION_RULES, [PRODUCTION_RULE_WITH_ACTION]],
-
     [PRODUCTION_RULE_WITH_ACTION, [ACTION, PRODUCTION_RULE]],
     [PRODUCTION_RULE_WITH_ACTION, [PRODUCTION_RULE]],
-    [PRODUCTION_RULE, [NAME, ':', PRODUCTION_RULE_RHS, ';']],
-    [PRODUCTION_RULE, [NAME, '{', PROD_META_DATAS, '}', ':',
-                       PRODUCTION_RULE_RHS, ';']],
-    [PRODUCTION_RULE_RHS, [PRODUCTION_RULE_RHS, '|', PRODUCTION],
-     ASSOC_LEFT, 5],
+    [PRODUCTION_RULE, [NAME, ":", PRODUCTION_RULE_RHS, ";"]],
+    [
+        PRODUCTION_RULE,
+        [NAME, "{", PROD_META_DATAS, "}", ":", PRODUCTION_RULE_RHS, ";"],
+    ],
+    [
+        PRODUCTION_RULE_RHS,
+        [PRODUCTION_RULE_RHS, "|", PRODUCTION],
+        ASSOC_LEFT,
+        5,
+    ],
     [PRODUCTION_RULE_RHS, [PRODUCTION], ASSOC_LEFT, 5],
     [PRODUCTION, [ASSIGNMENTS]],
-    [PRODUCTION, [ASSIGNMENTS, '{', PROD_META_DATAS, '}']],
-
+    [PRODUCTION, [ASSIGNMENTS, "{", PROD_META_DATAS, "}"]],
     [TERMINAL_RULES, [TERMINAL_RULES, TERMINAL_RULE_WITH_ACTION]],
     [TERMINAL_RULES, [TERMINAL_RULE_WITH_ACTION]],
     [TERMINAL_RULE_WITH_ACTION, [ACTION, TERMINAL_RULE]],
     [TERMINAL_RULE_WITH_ACTION, [TERMINAL_RULE]],
-    [TERMINAL_RULE, [NAME, ':', RECOGNIZER, ';'], ASSOC_LEFT, 15],
-    [TERMINAL_RULE, [NAME, ':', ';'], ASSOC_LEFT, 15],
-    [TERMINAL_RULE, [NAME, ':', RECOGNIZER, '{', TERM_META_DATAS, '}', ';'],
-     ASSOC_LEFT, 15],
-    [TERMINAL_RULE, [NAME, ':', '{', TERM_META_DATAS, '}', ';'],
-     ASSOC_LEFT, 15],
-
-    [PROD_META_DATA, ['left']],
-    [PROD_META_DATA, ['reduce']],
-    [PROD_META_DATA, ['right']],
-    [PROD_META_DATA, ['shift']],
-    [PROD_META_DATA, ['dynamic']],
-    [PROD_META_DATA, ['nops']],   # no prefer shifts
-    [PROD_META_DATA, ['nopse']],  # no prefer shifts over empty
+    [TERMINAL_RULE, [NAME, ":", RECOGNIZER, ";"], ASSOC_LEFT, 15],
+    [TERMINAL_RULE, [NAME, ":", ";"], ASSOC_LEFT, 15],
+    [
+        TERMINAL_RULE,
+        [NAME, ":", RECOGNIZER, "{", TERM_META_DATAS, "}", ";"],
+        ASSOC_LEFT,
+        15,
+    ],
+    [
+        TERMINAL_RULE,
+        [NAME, ":", "{", TERM_META_DATAS, "}", ";"],
+        ASSOC_LEFT,
+        15,
+    ],
+    [PROD_META_DATA, ["left"]],
+    [PROD_META_DATA, ["reduce"]],
+    [PROD_META_DATA, ["right"]],
+    [PROD_META_DATA, ["shift"]],
+    [PROD_META_DATA, ["dynamic"]],
+    [PROD_META_DATA, ["nops"]],  # no prefer shifts
+    [PROD_META_DATA, ["nopse"]],  # no prefer shifts over empty
     [PROD_META_DATA, [INT_CONST]],  # priority
     [PROD_META_DATA, [USER_META_DATA]],
-    [PROD_META_DATAS, [PROD_META_DATAS, ',', PROD_META_DATA], ASSOC_LEFT],
+    [PROD_META_DATAS, [PROD_META_DATAS, ",", PROD_META_DATA], ASSOC_LEFT],
     [PROD_META_DATAS, [PROD_META_DATA]],
-
-    [TERM_META_DATA, ['prefer']],
-    [TERM_META_DATA, ['finish']],
-    [TERM_META_DATA, ['nofinish']],
-    [TERM_META_DATA, ['dynamic']],
+    [TERM_META_DATA, ["prefer"]],
+    [TERM_META_DATA, ["finish"]],
+    [TERM_META_DATA, ["nofinish"]],
+    [TERM_META_DATA, ["dynamic"]],
     [TERM_META_DATA, [INT_CONST]],  # priority
     [TERM_META_DATA, [USER_META_DATA]],
-    [TERM_META_DATAS, [TERM_META_DATAS, ',', TERM_META_DATA]],
+    [TERM_META_DATAS, [TERM_META_DATAS, ",", TERM_META_DATA]],
     [TERM_META_DATAS, [TERM_META_DATA]],
-
     # User custom meta-data
-    [USER_META_DATA, [NAME, ':', CONST]],
+    [USER_META_DATA, [NAME, ":", CONST]],
     [CONST, [INT_CONST]],
     [CONST, [FLOAT_CONST]],
     [CONST, [BOOL_CONST]],
     [CONST, [STR_CONST]],
-
     # Assignments
     [ASSIGNMENT, [PLAIN_ASSIGNMENT]],
     [ASSIGNMENT, [BOOL_ASSIGNMENT]],
     [ASSIGNMENT, [GSYMBOL_REFERENCE]],
     [ASSIGNMENTS, [ASSIGNMENTS, ASSIGNMENT]],
     [ASSIGNMENTS, [ASSIGNMENT]],
-    [PLAIN_ASSIGNMENT, [NAME, '=', GSYMBOL_REFERENCE]],
-    [BOOL_ASSIGNMENT, [NAME, '?=', GSYMBOL_REFERENCE]],
-
+    [PLAIN_ASSIGNMENT, [NAME, "=", GSYMBOL_REFERENCE]],
+    [BOOL_ASSIGNMENT, [NAME, "?=", GSYMBOL_REFERENCE]],
     # Groups
-    [PRODUCTION_GROUP, ['(', PRODUCTION_RULE_RHS, ')']],
-
+    [PRODUCTION_GROUP, ["(", PRODUCTION_RULE_RHS, ")"]],
     # Regex-like repeat operators
     [GSYMBOL_REFERENCE, [GSYMBOL, OPT_REP_OPERATOR]],
     [GSYMBOL_REFERENCE, [PRODUCTION_GROUP, OPT_REP_OPERATOR]],
     [OPT_REP_OPERATOR, [REP_OPERATOR]],
     [OPT_REP_OPERATOR, [EMPTY]],
-    [REP_OPERATOR, ['*', OPT_REP_MODIFIERS_EXP]],
-    [REP_OPERATOR, ['*!', OPT_REP_MODIFIERS_EXP]],
-    [REP_OPERATOR, ['+', OPT_REP_MODIFIERS_EXP]],
-    [REP_OPERATOR, ['+!', OPT_REP_MODIFIERS_EXP]],
-    [REP_OPERATOR, ['?', OPT_REP_MODIFIERS_EXP]],
-    [REP_OPERATOR, ['?!', OPT_REP_MODIFIERS_EXP]],
-    [OPT_REP_MODIFIERS_EXP, ['[', OPT_REP_MODIFIERS, ']']],
+    [REP_OPERATOR, ["*", OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ["*!", OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ["+", OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ["+!", OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ["?", OPT_REP_MODIFIERS_EXP]],
+    [REP_OPERATOR, ["?!", OPT_REP_MODIFIERS_EXP]],
+    [OPT_REP_MODIFIERS_EXP, ["[", OPT_REP_MODIFIERS, "]"]],
     [OPT_REP_MODIFIERS_EXP, [EMPTY]],
-    [OPT_REP_MODIFIERS, [OPT_REP_MODIFIERS, ',', OPT_REP_MODIFIER]],
+    [OPT_REP_MODIFIERS, [OPT_REP_MODIFIERS, ",", OPT_REP_MODIFIER]],
     [OPT_REP_MODIFIERS, [OPT_REP_MODIFIER]],
     [OPT_REP_MODIFIER, [NAME]],
-
     [GSYMBOL, [NAME]],
     [GSYMBOL, [STR_CONST]],
     [RECOGNIZER, [STR_CONST]],
     [RECOGNIZER, [REGEX_TERM]],
-
     # Support for comments,
     [LAYOUT, [LAYOUT_ITEM]],
     [LAYOUT, [LAYOUT, LAYOUT_ITEM]],
     [LAYOUT, [EMPTY]],
     [LAYOUT_ITEM, [WS]],
     [LAYOUT_ITEM, [COMMENT]],
-    [COMMENT, ['/*', CORNCS, '*/']],
+    [COMMENT, ["/*", CORNCS, "*/"]],
     [COMMENT, [COMMENTLINE]],
     [CORNCS, [CORNC]],
     [CORNCS, [CORNCS, CORNC]],
     [CORNCS, [EMPTY]],
     [CORNC, [COMMENT]],
     [CORNC, [NOTCOMMENT]],
-    [CORNC, [WS]]
+    [CORNC, [WS]],
 ]
 
 
@@ -1544,10 +1660,13 @@ def get_grammar_parser(debug, debug_colors):
     global grammar_parser
     if not grammar_parser:
         from parglare import Parser
-        grammar_parser = Parser(Grammar.from_struct(pg_productions, PGFILE),
-                                actions=pg_actions,
-                                debug=debug,
-                                debug_colors=debug_colors)
+
+        grammar_parser = Parser(
+            Grammar.from_struct(pg_productions, PGFILE),
+            actions=pg_actions,
+            debug=debug,
+            debug_colors=debug_colors,
+        )
     EMPTY.action = pass_none
     return grammar_parser
 
@@ -1572,16 +1691,18 @@ def act_pgfile(context, nodes):
 
 def act_import(context, nodes):
     if not context.file_name:
-        raise GrammarError(location=Location(context),
-                           message='Import can be used only for grammars '
-                           'defined in files.')
+        raise GrammarError(
+            location=Location(context),
+            message="Import can be used only for grammars defined in files.",
+        )
     import_path = nodes[1]
     module_name = nodes[3] if len(nodes) > 3 else None
     if module_name is None:
         module_name = path.splitext(path.basename(import_path))[0]
     if not path.isabs(import_path):
-        import_path = path.realpath(path.join(path.dirname(context.file_name),
-                                              import_path))
+        import_path = path.realpath(
+            path.join(path.dirname(context.file_name), import_path)
+        )
     else:
         import_path = path.realpath(import_path)
 
@@ -1623,7 +1744,7 @@ def act_production_rule(context, nodes):
         counter = context.extra.groups_counter
         while context.extra.groups:
             ref, gprods = context.extra.groups.pop()
-            gname = f'{name}_g{counter[name] + 1}'
+            gname = f"{name}_g{counter[name] + 1}"
             ref.name = gname
             counter[name] += 1
             group_prods.extend(_create_prods(context, gprods, gname, rule_meta_datas))
@@ -1632,10 +1753,12 @@ def act_production_rule(context, nodes):
 
 
 def _create_prods(context, rhs_prods, name, rule_meta_datas):
-
-    symbol = NonTerminal(name, location=Location(context),
-                         imported_with=context.extra.imported_with,
-                         user_meta=rule_meta_datas.get('user_meta', None))
+    symbol = NonTerminal(
+        name,
+        location=Location(context),
+        imported_with=context.extra.imported_with,
+        user_meta=rule_meta_datas.get("user_meta", None),
+    )
 
     # Collect all productions for this rule
     prods = []
@@ -1647,35 +1770,35 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
             if a.name:
                 a.index = idx
         gsymbols = (a.symbol for a in assignments)
-        assoc = meta_datas.get('assoc', rule_meta_datas.get('assoc',
-                                                            ASSOC_NONE))
-        prior = meta_datas.get('priority',
-                               rule_meta_datas.get('priority',
-                                                   DEFAULT_PRIORITY))
-        dynamic = meta_datas.get('dynamic',
-                                 rule_meta_datas.get('dynamic', False))
-        nops = meta_datas.get('nops',
-                              rule_meta_datas.get('nops', False))
-        nopse = meta_datas.get('nopse', rule_meta_datas.get('nopse', False))
+        assoc = meta_datas.get("assoc", rule_meta_datas.get("assoc", ASSOC_NONE))
+        prior = meta_datas.get(
+            "priority", rule_meta_datas.get("priority", DEFAULT_PRIORITY)
+        )
+        dynamic = meta_datas.get("dynamic", rule_meta_datas.get("dynamic", False))
+        nops = meta_datas.get("nops", rule_meta_datas.get("nops", False))
+        nopse = meta_datas.get("nopse", rule_meta_datas.get("nopse", False))
 
         # User meta-data if formed by rule-level user meta-data with overrides
         # from production-level user meta-data.
-        user_meta = dict(rule_meta_datas.get('user_meta', {}))
-        user_meta.update(meta_datas.get('user_meta', {}))
-        prods.append(Production(symbol,
-                                ProductionRHS(gsymbols),
-                                assignments=assignments,
-                                assoc=assoc,
-                                prior=prior,
-                                dynamic=dynamic,
-                                nops=nops,
-                                nopse=nopse,
-                                user_meta=user_meta))
+        user_meta = dict(rule_meta_datas.get("user_meta", {}))
+        user_meta.update(meta_datas.get("user_meta", {}))
+        prods.append(
+            Production(
+                symbol,
+                ProductionRHS(gsymbols),
+                assignments=assignments,
+                assoc=assoc,
+                prior=prior,
+                dynamic=dynamic,
+                nops=nops,
+                nopse=nopse,
+                user_meta=user_meta,
+            )
+        )
 
         for a in assignments:
             if a.name:
-                attrs[a.name] = PGAttribute(a.name, a.multiplicity,
-                                            a.symbol_name)
+                attrs[a.name] = PGAttribute(a.name, a.multiplicity, a.symbol_name)
             # TODO: check/handle multiple assignments to the same attribute
             #       If a single production have multiple assignment of the
             #       same attribute, multiplicity must be set to many.
@@ -1683,6 +1806,7 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
     # If named matches are used create Python class that will be used
     # for object instantiation.
     if attrs:
+
         class ParglareClass(metaclass=ParglareMetaClass):
             """Dynamically created class. Each parglare rule that uses named
             matches by default uses this action that will create Python object
@@ -1702,11 +1826,13 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
 
             """
 
-            __slots__ = list(attrs) + ['_pg_start_position',
-                                       '_pg_end_position',
-                                       '_pg_children',
-                                       '_pg_children_names',
-                                       '_pg_extras']
+            __slots__ = list(attrs) + [
+                "_pg_start_position",
+                "_pg_end_position",
+                "_pg_children",
+                "_pg_children_names",
+                "_pg_extras",
+            ]
 
             _pg_attrs = attrs
 
@@ -1717,27 +1843,32 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
                     setattr(self, attr_name, attr_value)
 
             def __repr__(self):
-                if hasattr(self, 'name'):
+                if hasattr(self, "name"):
                     return f"<{name}:{self.name}>"
                 else:
                     return f"<parglare:{name} instance at {hex(id(self))}>"
 
             def to_str(self):
                 def visit(n, subresults, depth):
-                    indent = '  ' * (depth + 1)
-                    if hasattr(n, '_pg_children'):
-                        s = '{} [{}->{}]\n{}'.format(
+                    indent = "  " * (depth + 1)
+                    if hasattr(n, "_pg_children"):
+                        s = "{} [{}->{}]\n{}".format(
                             n.__class__.__name__,
                             n._pg_start_position,
                             n._pg_end_position,
-                            '\n'.join([f'{indent}{n._pg_children_names[i]}={subresult}'
-                                       for (i, subresult) in enumerate(subresults)]))
+                            "\n".join(
+                                [
+                                    f"{indent}{n._pg_children_names[i]}={subresult}"
+                                    for (i, subresult) in enumerate(subresults)
+                                ]
+                            ),
+                        )
                     elif isinstance(n, list):
-                        s = '{}[\n{}\n{}]'.format(
+                        s = "{}[\n{}\n{}]".format(
                             indent,
-                            '\n'.join([f'{indent}{el}'
-                                       for el in subresults]),
-                            indent)
+                            "\n".join([f"{indent}{el}" for el in subresults]),
+                            indent,
+                        )
                     else:
                         s = repr(n)
                     return s
@@ -1751,7 +1882,7 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
         else:
             context.extra.classes[symbol.fqn] = ParglareClass
 
-        symbol.action_name = 'obj'
+        symbol.action_name = "obj"
 
     return prods
 
@@ -1759,23 +1890,23 @@ def _create_prods(context, rhs_prods, name, rule_meta_datas):
 def get_production_rule_meta_datas(raw_meta_datas):
     meta_datas = {}
     for meta_data in raw_meta_datas:
-        if meta_data in ['left', 'reduce']:
-            meta_datas['assoc'] = ASSOC_LEFT
-        elif meta_data in ['right', 'shift']:
-            meta_datas['assoc'] = ASSOC_RIGHT
-        elif meta_data == 'dynamic':
-            meta_datas['dynamic'] = True
-        elif meta_data == 'nops':
-            meta_datas['nops'] = True
-        elif meta_data == 'nopse':
-            meta_datas['nopse'] = True
+        if meta_data in ["left", "reduce"]:
+            meta_datas["assoc"] = ASSOC_LEFT
+        elif meta_data in ["right", "shift"]:
+            meta_datas["assoc"] = ASSOC_RIGHT
+        elif meta_data == "dynamic":
+            meta_datas["dynamic"] = True
+        elif meta_data == "nops":
+            meta_datas["nops"] = True
+        elif meta_data == "nopse":
+            meta_datas["nopse"] = True
         elif isinstance(meta_data, int):
-            meta_datas['priority'] = meta_data
+            meta_datas["priority"] = meta_data
         else:
             # User meta-data
             assert isinstance(meta_data, list)
             name, _, value = meta_data
-            meta_datas.setdefault('user_meta', {})[name] = value
+            meta_datas.setdefault("user_meta", {})[name] = value
     return meta_datas
 
 
@@ -1792,7 +1923,7 @@ def act_production_group(context, nodes):
     # Group name will be known when the grammar rule is
     # reduced so store these production for later.
     productions = nodes[1]
-    reference = Reference(Location(context), 'resolving', context.extra.imported_with)
+    reference = Reference(Location(context), "resolving", context.extra.imported_with)
     context.extra.groups.append((reference, productions))
     return reference
 
@@ -1805,13 +1936,13 @@ def _set_term_props(term, props):
             # User meta-data
             name, _, value = t
             term.add_user_meta_data(name, value)
-        elif t == 'finish':
+        elif t == "finish":
             term.finish = True
-        elif t == 'nofinish':
+        elif t == "nofinish":
             term.finish = False
-        elif t == 'prefer':
+        elif t == "prefer":
             term.prefer = True
-        elif t == 'dynamic':
+        elif t == "dynamic":
             term.dynamic = True
         else:
             print(t)
@@ -1819,13 +1950,16 @@ def _set_term_props(term, props):
 
 
 def act_term_rule(context, nodes):
-
     name = nodes[0]
     recognizer = nodes[2]
 
     check_name(context, name)
-    term = Terminal(name, recognizer, location=Location(context),
-                    imported_with=context.extra.imported_with)
+    term = Terminal(
+        name,
+        recognizer,
+        location=Location(context),
+        imported_with=context.extra.imported_with,
+    )
     if len(nodes) > 4:
         _set_term_props(term, nodes[4])
     return term
@@ -1835,8 +1969,11 @@ def act_term_rule_empty_body(context, nodes):
     name = nodes[0]
 
     check_name(context, name)
-    term = Terminal(name, location=Location(context),
-                    imported_with=context.extra.imported_with)
+    term = Terminal(
+        name,
+        location=Location(context),
+        imported_with=context.extra.imported_with,
+    )
     term.recognizer = None
     if len(nodes) > 3:
         _set_term_props(term, nodes[3])
@@ -1882,7 +2019,6 @@ def act_gsymbol_reference(context, nodes):
     """
     symbol_ref, rep_op = nodes
     if rep_op:
-
         if len(rep_op) > 1:
             rep_op, modifiers = rep_op
         else:
@@ -1892,18 +2028,17 @@ def act_gsymbol_reference(context, nodes):
         sep_ref = None
         if modifiers:
             sep_ref = modifiers[1]
-            sep_ref = Reference(Location(context), sep_ref,
-                                context.extra.imported_with)
+            sep_ref = Reference(Location(context), sep_ref, context.extra.imported_with)
             symbol_ref.separator = sep_ref
 
-        if rep_op.startswith('*'):
+        if rep_op.startswith("*"):
             symbol_ref.multiplicity = MULT_ZERO_OR_MORE
-        elif rep_op.startswith('+'):
+        elif rep_op.startswith("+"):
             symbol_ref.multiplicity = MULT_ONE_OR_MORE
         else:
             symbol_ref.multiplicity = MULT_OPTIONAL
 
-        if rep_op.endswith('!'):
+        if rep_op.endswith("!"):
             symbol_ref.greedy = True
 
     return symbol_ref
@@ -1912,13 +2047,15 @@ def act_gsymbol_reference(context, nodes):
 def act_gsymbol_string_recognizer(context, nodes):
     recognizer = act_recognizer_str(context, nodes)
 
-    terminal_ref = Reference(Location(context), recognizer.name,
-                             context.extra.imported_with)
+    terminal_ref = Reference(
+        Location(context), recognizer.name, context.extra.imported_with
+    )
 
     if terminal_ref.name not in context.extra.inline_terminals:
         check_name(context, terminal_ref.name)
-        context.extra.inline_terminals[terminal_ref.name] = \
-            Terminal(terminal_ref.name, recognizer, location=Location(context))
+        context.extra.inline_terminals[terminal_ref.name] = Terminal(
+            terminal_ref.name, recognizer, location=Location(context)
+        )
 
     return terminal_ref
 
@@ -1936,18 +2073,23 @@ def act_assignment(_, nodes):
 
 def act_recognizer_str(context, nodes):
     value = nodes[0]
-    value = value.replace(r'\"', '"')\
-                 .replace(r"\'", "'")\
-                 .replace(r"\\", "\\")\
-                 .replace(r"\n", "\n")\
-                 .replace(r"\t", "\t")
+    value = (
+        value.replace(r"\"", '"')
+        .replace(r"\'", "'")
+        .replace(r"\\", "\\")
+        .replace(r"\n", "\n")
+        .replace(r"\t", "\t")
+    )
     return StringRecognizer(value, ignore_case=context.extra.ignore_case)
 
 
 def act_recognizer_regex(context, nodes):
     value = nodes[0]
-    return RegExRecognizer(value, re_flags=context.extra.re_flags,
-                           ignore_case=context.extra.ignore_case)
+    return RegExRecognizer(
+        value,
+        re_flags=context.extra.re_flags,
+        ignore_case=context.extra.ignore_case,
+    )
 
 
 def act_str_term(context, value):
@@ -1965,55 +2107,48 @@ pg_actions = {
     "PGFile": act_pgfile,
     "Imports": collect,
     "Import": act_import,
-
     "ProductionRules": [act_production_rules, pass_single],
-    'ProductionRule': act_production_rule,
-    'ProductionRuleWithAction': act_production_rule_with_action,
-    'ProductionRuleRHS': collect_sep,
-    'Production': act_production,
-    'ProductionGroup': act_production_group,
-
-    'TerminalRules': collect,
-    'TerminalRule': [act_term_rule,
-                     act_term_rule_empty_body,
-                     act_term_rule,
-                     act_term_rule_empty_body],
-    'TerminalRuleWithAction': act_term_rule_with_action,
-
+    "ProductionRule": act_production_rule,
+    "ProductionRuleWithAction": act_production_rule_with_action,
+    "ProductionRuleRHS": collect_sep,
+    "Production": act_production,
+    "ProductionGroup": act_production_group,
+    "TerminalRules": collect,
+    "TerminalRule": [
+        act_term_rule,
+        act_term_rule_empty_body,
+        act_term_rule,
+        act_term_rule_empty_body,
+    ],
+    "TerminalRuleWithAction": act_term_rule_with_action,
     "ProductionMetaDatas": collect_sep,
     "TerminalMetaDatas": collect_sep,
-
     "Assignment": act_assignment,
     "Assignments": collect,
-
-    'GrammarSymbolReference': act_gsymbol_reference,
-
-    'GrammarSymbol': [lambda context, nodes: Reference(Location(context),
-                                                       nodes[0],
-                                                       context.extra.imported_with),
-                      act_gsymbol_string_recognizer],
-
-    'Recognizer': [act_recognizer_str, act_recognizer_regex],
-
-    'StrConst': act_str_term,
-    'RegExTerm': act_regex_term,
-
+    "GrammarSymbolReference": act_gsymbol_reference,
+    "GrammarSymbol": [
+        lambda context, nodes: Reference(
+            Location(context), nodes[0], context.extra.imported_with
+        ),
+        act_gsymbol_string_recognizer,
+    ],
+    "Recognizer": [act_recognizer_str, act_recognizer_regex],
+    "StrConst": act_str_term,
+    "RegExTerm": act_regex_term,
     # Constants
-    'IntConst': lambda _, value: int(value),
-    'FloatConst': lambda _, value: float(value),
-    'BoolConst': lambda _, value: value and value.lower() == 'true',
-
+    "IntConst": lambda _, value: int(value),
+    "FloatConst": lambda _, value: float(value),
+    "BoolConst": lambda _, value: value and value.lower() == "true",
 }
 
 
 class ParglareMetaClass(type):
-
     def __repr__(cls):
-        return f'<parglare:{cls.__name__} class at {id(cls)}>'
+        return f"<parglare:{cls.__name__} class at {id(cls)}>"
 
 
 def ast_tree_iterator(root):
-    if hasattr(root, '_pg_children'):
+    if hasattr(root, "_pg_children"):
         return iter(root._pg_children)
     if isinstance(root, list):
         return iter(root)

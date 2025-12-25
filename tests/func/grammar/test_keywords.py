@@ -1,6 +1,7 @@
 """
 Test special KEYWORD rule.
 """
+
 # -*- coding: utf-8 -*-
 import pytest
 
@@ -21,7 +22,7 @@ def test_keyword_must_be_regex():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'must have a regex recognizer defined' in str(e.value)
+    assert "must have a regex recognizer defined" in str(e.value)
 
 
 def test_keyword_grammar_init():
@@ -38,12 +39,12 @@ def test_keyword_grammar_init():
 
     # 'for' term matches KEYWORD rule so it'll be replaced by
     # RegExRecognizer instance.
-    for_term = g.get_terminal('for')
+    for_term = g.get_terminal("for")
     assert type(for_term.recognizer) is RegExRecognizer
-    assert for_term.recognizer._regex == r'\bfor\b'
+    assert for_term.recognizer._regex == r"\bfor\b"
 
     # '=' term doesn't match KEYWORD rule so it will not change
-    eq_term = g.get_terminal('=')
+    eq_term = g.get_terminal("=")
     assert type(eq_term.recognizer) is StringRecognizer
 
 
@@ -60,23 +61,23 @@ def test_keyword_matches_on_word_boundary():
 
     parser = Parser(g)
     # This will not raise an error
-    parser.parse('forid=10 to20')
+    parser.parse("forid=10 to20")
 
     # We add KEYWORD rule to the grammar to match ID-like keywords.
     grammar += r"KEYWORD: /\w+/;"
 
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    with pytest.raises(SyntaxError, match='expected: for'):
+    with pytest.raises(SyntaxError, match="expected: for"):
         # This *will* raise an error
-        parser.parse('forid=10 to20')
-    with pytest.raises(SyntaxError, match='expected: to'):
+        parser.parse("forid=10 to20")
+    with pytest.raises(SyntaxError, match="expected: to"):
         # This *will* also raise an error
-        parser.parse('for id=10 to20')
+        parser.parse("for id=10 to20")
 
     # But this is OK
-    parser.parse('for id=10 to 20')
-    parser.parse('for for=10 to 20')
+    parser.parse("for id=10 to 20")
+    parser.parse("for for=10 to 20")
 
 
 def test_keyword_preferred_over_regexes():

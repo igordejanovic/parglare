@@ -19,8 +19,8 @@ def test_recognizer_context():
         match = term_re.match(input, pos)
         if match is None:
             return None
-        return input[pos:match.end()]
+        return input[pos : match.end()]
 
-    g = Grammar.from_string(grammar, recognizers={'term': term})
+    g = Grammar.from_string(grammar, recognizers={"term": term})
     parser = Parser(g)
     assert parser.parse("a bb cc; d ee f; g hh i")

@@ -3,9 +3,9 @@
 
 from parglare import Grammar, GLRParser
 
-INPUT = '1 + 2 * 3 + 4'
+INPUT = "1 + 2 * 3 + 4"
 
-grammar = r'''
+grammar = r"""
 E: E '+' E
  | E '*' E
  | '(' E ')'
@@ -13,7 +13,7 @@ E: E '+' E
 
 terminals
 number: /\d+/;
-'''
+"""
 
 g = Grammar.from_string(grammar)
 parser = GLRParser(g, build_tree=True)
@@ -22,19 +22,20 @@ result = parser.parse(INPUT)
 
 
 def to_str(node, depth=0):
-    indent = '  ' * depth
+    indent = "  " * depth
     if node.is_nonterm():
-        s = '\n{}[.{} {}\n{}]'.format(indent,
-                                      node.production.symbol,
-                                      ''.join([to_str(n, depth+1)
-                                               for n in node.children]),
-                                      indent)
+        s = "\n{}[.{} {}\n{}]".format(
+            indent,
+            node.production.symbol,
+            "".join([to_str(n, depth + 1) for n in node.children]),
+            indent,
+        )
     else:
-        s = '\n{}[.{} ]'.format(indent, node.value)
+        s = "\n{}[.{} ]".format(indent, node.value)
     return s
 
 
-with open('qtree_out.txt', 'w') as f:
-    f.write('\begin{{tabular}}{{{}}}\n'.format('c' * len(result)))
-    trees = '&\n'.join(['\\Tree {}'.format(to_str(tree)) for tree in result])
+with open("qtree_out.txt", "w") as f:
+    f.write("\begin{{tabular}}{{{}}}\n".format("c" * len(result)))
+    trees = "&\n".join(["\\Tree {}".format(to_str(tree)) for tree in result])
     f.write(trees)

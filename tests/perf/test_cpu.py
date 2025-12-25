@@ -36,26 +36,25 @@ class TestResult:
 def cpu_tests():
     results = []
     for test_idx, test in enumerate(TESTS):
-        for parsing in ['LR', 'GLR']:
-            if ((not test.lr and parsing == 'LR') or
-                    (not test.glr and parsing == 'GLR')):
+        for parsing in ["LR", "GLR"]:
+            if (not test.lr and parsing == "LR") or (not test.glr and parsing == "GLR"):
                 continue
 
-            parser_class = Parser if parsing == 'LR' else GLRParser
+            parser_class = Parser if parsing == "LR" else GLRParser
             for input_idx in range(INPUTS):
-                result = TestResult(f'{test.name} {parsing}')
+                result = TestResult(f"{test.name} {parsing}")
                 result.input_idx = input_idx + 1
-                test_root = join(dirname(__file__), f'test{test_idx+1}')
-                file_name = join(test_root, f'input{input_idx+1}')
+                test_root = join(dirname(__file__), f"test{test_idx + 1}")
+                file_name = join(test_root, f"input{input_idx + 1}")
                 result.size = getsize(file_name)
 
-                g = Grammar.from_file(join(test_root, 'g.pg'))
+                g = Grammar.from_file(join(test_root, "g.pg"))
                 parser = parser_class(g)
                 result.nonterminals = len(g.nonterminals)
                 result.productions = len(g.productions)
                 result.states = len(parser.table.states)
 
-                with io.open(file_name, 'r', encoding='utf-8') as f:
+                with io.open(file_name, "r", encoding="utf-8") as f:
                     content = f.read()
                 gcold = gc.isenabled()
                 gc.disable()
@@ -69,30 +68,30 @@ def cpu_tests():
                         gc.enable()
 
                 result.time = t_end - t_start
-                result.speed = int(result.size / (t_end - t_start)*REPEAT)
-                if parsing == 'GLR':
+                result.speed = int(result.size / (t_end - t_start) * REPEAT)
+                if parsing == "GLR":
                     result.ambig = forest.ambiguities
 
                 results.append(result)
 
-    with open(join(dirname(__file__), 'reports', 'cpu-report.txt'), 'w') as f:
-        inputs = '|'.join(f'    I{i+1}   ' for i in range(INPUTS))
-        f.write(f'|               |{inputs}|\n')
-        previous_name = 'None'
+    with open(join(dirname(__file__), "reports", "cpu-report.txt"), "w") as f:
+        inputs = "|".join(f"    I{i + 1}   " for i in range(INPUTS))
+        f.write(f"|               |{inputs}|\n")
+        previous_name = "None"
         for name, results in groupby(results, lambda r: r.name):
             results = list(results)
             if not name.startswith(previous_name):
-                sizes_str = '|'.join(f'{r.size:^9,d}' for r in results)
-                title = '{:15s}'.format(name[:-3] + ' sizes')
-                f.write(f'|{title}|{sizes_str}|\n')
-            results_str = '|'.join(f'{r.speed:^9,d}' for r in results)
-            f.write(f'|{name:15s}|{results_str}|\n')
-            if name.endswith('GLR'):
-                ambig_str = '|'.join(f'{r.ambig:^9,d}' for r in results)
-                title = '{:15s}'.format(name[:-4] + ' ambig')
-                f.write(f'|{title}|{ambig_str}|\n')
-            previous_name = ''.join(name.split()[:-1])
+                sizes_str = "|".join(f"{r.size:^9,d}" for r in results)
+                title = "{:15s}".format(name[:-3] + " sizes")
+                f.write(f"|{title}|{sizes_str}|\n")
+            results_str = "|".join(f"{r.speed:^9,d}" for r in results)
+            f.write(f"|{name:15s}|{results_str}|\n")
+            if name.endswith("GLR"):
+                ambig_str = "|".join(f"{r.ambig:^9,d}" for r in results)
+                title = "{:15s}".format(name[:-4] + " ambig")
+                f.write(f"|{title}|{ambig_str}|\n")
+            previous_name = "".join(name.split()[:-1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cpu_tests()

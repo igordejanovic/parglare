@@ -1,10 +1,15 @@
 """
 Test for class/object auto AST building.
 """
+
 import pytest  # noqa
 from parglare import Grammar, Parser
-from parglare.grammar import MULT_ONE, MULT_ONE_OR_MORE, MULT_ZERO_OR_MORE, \
-    MULT_OPTIONAL
+from parglare.grammar import (
+    MULT_ONE,
+    MULT_ONE_OR_MORE,
+    MULT_ZERO_OR_MORE,
+    MULT_OPTIONAL,
+)
 from parglare.actions import obj
 
 
@@ -29,57 +34,57 @@ F: "f";
 
 def test_grammar_rule_assignment_create_class():
     g = Grammar.from_string(grammar)
-    assert 'A' in g.classes
-    assert 'Obj' in g.classes
+    assert "A" in g.classes
+    assert "Obj" in g.classes
     assert len(g.classes) == 2
 
 
 def test_class_attributes():
     g = Grammar.from_string(grammar)
 
-    A = g.classes['A']
+    A = g.classes["A"]
     assert len(A._pg_attrs) == 6
 
-    assert 'simple' in A._pg_attrs
-    simple = A._pg_attrs['simple']
-    assert simple.name == 'simple'
-    assert simple.type_name == 'B'
+    assert "simple" in A._pg_attrs
+    simple = A._pg_attrs["simple"]
+    assert simple.name == "simple"
+    assert simple.type_name == "B"
     assert simple.multiplicity == MULT_ONE
 
-    assert 'one_or_more' in A._pg_attrs
-    one_or_more = A._pg_attrs['one_or_more']
-    assert one_or_more.name == 'one_or_more'
-    assert one_or_more.type_name == 'C'
+    assert "one_or_more" in A._pg_attrs
+    one_or_more = A._pg_attrs["one_or_more"]
+    assert one_or_more.name == "one_or_more"
+    assert one_or_more.type_name == "C"
     assert one_or_more.multiplicity == MULT_ONE_OR_MORE
 
-    assert 'zero_or_more' in A._pg_attrs
-    zero_or_more = A._pg_attrs['zero_or_more']
-    assert zero_or_more.name == 'zero_or_more'
-    assert zero_or_more.type_name == 'D'
+    assert "zero_or_more" in A._pg_attrs
+    zero_or_more = A._pg_attrs["zero_or_more"]
+    assert zero_or_more.name == "zero_or_more"
+    assert zero_or_more.type_name == "D"
     assert zero_or_more.multiplicity == MULT_ZERO_OR_MORE
 
-    assert 'optional' in A._pg_attrs
-    optional = A._pg_attrs['optional']
-    assert optional.name == 'optional'
-    assert optional.type_name == 'E'
+    assert "optional" in A._pg_attrs
+    optional = A._pg_attrs["optional"]
+    assert optional.name == "optional"
+    assert optional.type_name == "E"
     assert optional.multiplicity == MULT_OPTIONAL
 
-    assert 'bool_attr' in A._pg_attrs
-    bool_attr = A._pg_attrs['bool_attr']
-    assert bool_attr.name == 'bool_attr'
-    assert bool_attr.type_name == 'F'
+    assert "bool_attr" in A._pg_attrs
+    bool_attr = A._pg_attrs["bool_attr"]
+    assert bool_attr.name == "bool_attr"
+    assert bool_attr.type_name == "F"
     assert bool_attr.multiplicity == MULT_ONE
 
-    assert 'obj' in A._pg_attrs
-    obj = A._pg_attrs['obj']
-    assert obj.name == 'obj'
-    assert obj.type_name == 'Obj'
+    assert "obj" in A._pg_attrs
+    obj = A._pg_attrs["obj"]
+    assert obj.name == "obj"
+    assert obj.type_name == "Obj"
     assert obj.multiplicity == MULT_ONE
 
-    Obj = g.classes['Obj']
-    a = Obj._pg_attrs['a']
-    assert a.name == 'a'
-    assert a.type_name == 'D'
+    Obj = g.classes["Obj"]
+    a = Obj._pg_attrs["a"]
+    assert a.name == "a"
+    assert a.type_name == "D"
     assert a.multiplicity == MULT_ONE
 
 
@@ -91,17 +96,17 @@ def test_default_object_create():
     g = Grammar.from_string(grammar)
 
     p = Parser(g)
-    a = p.parse('b c c d f d b')
+    a = p.parse("b c c d f d b")
 
-    assert isinstance(a, g.classes['A'])
-    assert isinstance(a.obj, g.classes['Obj'])
-    assert a.simple == 'b'
-    assert a.one_or_more == ['c', 'c']
-    assert a.zero_or_more == ['d']
+    assert isinstance(a, g.classes["A"])
+    assert isinstance(a.obj, g.classes["Obj"])
+    assert a.simple == "b"
+    assert a.one_or_more == ["c", "c"]
+    assert a.zero_or_more == ["d"]
     assert a.optional is None
     assert a.bool_attr is True
-    assert a.obj.a == 'd'
-    assert a.obj.b == ['b']
+    assert a.obj.a == "d"
+    assert a.obj.b == ["b"]
 
 
 def test_object_children_order():
@@ -110,28 +115,28 @@ def test_object_children_order():
     (this may be important for tree traversal order).
 
     """
-    grammar = r'''
+    grammar = r"""
     S: a=A b=B
      | b=B a=A
      | b=B;
     A: val="a";
     B: val="b";
-    '''
+    """
     g = Grammar.from_string(grammar)
     p = Parser(g)
 
-    ast = p.parse('a b')
-    res = ['a', 'b']
+    ast = p.parse("a b")
+    res = ["a", "b"]
     assert len(res) == len(ast._pg_children)
     assert all((x.val == y for x, y in zip(ast._pg_children, res)))
 
-    ast = p.parse('b a')
-    res = ['b', 'a']
+    ast = p.parse("b a")
+    res = ["b", "a"]
     assert len(res) == len(ast._pg_children)
     assert all((x.val == y for x, y in zip(ast._pg_children, res)))
 
-    ast = p.parse('b')
-    res = ['b']
+    ast = p.parse("b")
+    res = ["b"]
     assert len(res) == len(ast._pg_children)
     assert all((x.val == y for x, y in zip(ast._pg_children, res)))
 
@@ -145,8 +150,8 @@ def test_obj_action_override():
     B: "b";
     """
     g = Grammar.from_string(grammar)
-    A = g.get_nonterminal('A')
-    assert A.action_name == 'obj'
+    A = g.get_nonterminal("A")
+    assert A.action_name == "obj"
     assert A.action is obj
 
     grammar = """
@@ -155,8 +160,8 @@ def test_obj_action_override():
     B: "b";
     """
     g = Grammar.from_string(grammar)
-    A = g.get_nonterminal('A')
-    assert A.action_name == 'myaction'
+    A = g.get_nonterminal("A")
+    assert A.action_name == "myaction"
     assert A.action is None
 
 
@@ -197,7 +202,7 @@ def test_obj_extras():
     B: "b";
     """
     g = Grammar.from_string(grammar)
-    tree = Parser(g).parse('b')
+    tree = Parser(g).parse("b")
 
     tree._pg_extras = 1
     assert tree._pg_extras == 1

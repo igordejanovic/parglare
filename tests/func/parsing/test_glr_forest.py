@@ -14,7 +14,7 @@ def parser():
 
 @pytest.fixture
 def forest(parser):
-    return parser.parse('2 + 3 * 5 + 4 * 1 * 7')
+    return parser.parse("2 + 3 * 5 + 4 * 1 * 7")
 
 
 def test_solutions(parser):
@@ -23,16 +23,16 @@ def test_solutions(parser):
     forest is [Catalan number](https://en.wikipedia.org/wiki/Catalan_number).
 
     """
-    forest = parser.parse('2 + 3 * 5')
+    forest = parser.parse("2 + 3 * 5")
     assert forest.solutions == 2
 
-    forest = parser.parse('2 + 3 * 5 + 4')
+    forest = parser.parse("2 + 3 * 5 + 4")
     assert forest.solutions == 5
 
-    forest = parser.parse('2 + 3 * 5 + 4 *1')
+    forest = parser.parse("2 + 3 * 5 + 4 *1")
     assert forest.solutions == 14
 
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7')
+    forest = parser.parse("2 + 3 * 5 + 4 * 1 * 7")
     assert forest.solutions == 42
 
 
@@ -40,13 +40,13 @@ def test_ambiguities(parser):
     """
     Forest.ambiguities should return the number of ambiguous nodes in SPPF.
     """
-    forest = parser.parse('2 + 3 * 5')
+    forest = parser.parse("2 + 3 * 5")
     assert forest.ambiguities == 1
 
-    forest = parser.parse('2 + 3 * 5 + 4')
+    forest = parser.parse("2 + 3 * 5 + 4")
     assert forest.ambiguities == 3
 
-    forest = parser.parse('2 + 3 * 5 + 4 *1')
+    forest = parser.parse("2 + 3 * 5 + 4 *1")
     assert forest.ambiguities == 6
 
 
@@ -56,7 +56,7 @@ def test_forest_iteration(forest):
     tree_iterated = 0
     for tree in forest:
         assert tree.is_nonterm()
-        assert tree.symbol.name == 'E'
+        assert tree.symbol.name == "E"
         tree_iterated += 1
 
     assert tree_iterated == 42
@@ -81,22 +81,22 @@ def test_tree_enumeration(forest, lazy):
     tree = forest.get_tree() if lazy else forest.get_nonlazy_tree()
 
     assert tree.is_nonterm()
-    assert tree.symbol.name == 'E'
+    assert tree.symbol.name == "E"
     assert len(tree.children) == 3
-    assert 'Ambiguity' not in tree.to_str()
+    assert "Ambiguity" not in tree.to_str()
 
     tree = forest.get_nonlazy_tree(5)
     assert tree.is_nonterm()
-    assert tree.symbol.name == 'E'
+    assert tree.symbol.name == "E"
     assert len(tree.children) == 3
-    assert 'Ambiguity' not in tree.to_str()
+    assert "Ambiguity" not in tree.to_str()
 
     # Last tree
-    tree = forest.get_nonlazy_tree(len(forest)-1)
+    tree = forest.get_nonlazy_tree(len(forest) - 1)
     assert tree.is_nonterm()
-    assert tree.symbol.name == 'E'
+    assert tree.symbol.name == "E"
     assert len(tree.children) == 3
-    assert 'Ambiguity' not in tree.to_str()
+    assert "Ambiguity" not in tree.to_str()
 
     # If idx is greater than the number of solutions
     # exception is raised
@@ -113,7 +113,7 @@ def test_tree_index_iteration(forest, lazy):
     tree = forest.get_tree() if lazy else forest.get_nonlazy_tree()
 
     assert tree.is_nonterm()
-    assert tree.symbol.name == 'E'
+    assert tree.symbol.name == "E"
     assert len(tree.children) == 3
 
     # Iteration
@@ -140,7 +140,7 @@ def test_no_equal_trees(parser):
     """
     Test that forest returns different trees.
     """
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7 + 9 + 10')
+    forest = parser.parse("2 + 3 * 5 + 4 * 1 * 7 + 9 + 10")
 
     # Non-lazy iterator
     trees = set()
@@ -161,7 +161,7 @@ def test_lazy_nonlazy_same_trees(parser):
     """
     Test that both lazy and non lazy iterators return same trees.
     """
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7 + 9 + 10')
+    forest = parser.parse("2 + 3 * 5 + 4 * 1 * 7 + 9 + 10")
 
     for tree, lazy_tree in zip(forest.nonlazy_iter(), forest):
         assert tree.to_str() == lazy_tree.to_str()
@@ -172,7 +172,7 @@ def test_multiple_iteration(parser):
     Test that tree can be iterated multiple times yielding the
     same result.
     """
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7 + 9 + 10')
+    forest = parser.parse("2 + 3 * 5 + 4 * 1 * 7 + 9 + 10")
     for tree in forest:
         assert tree.to_str() == tree.to_str()
 
@@ -184,5 +184,5 @@ def test_get_first_tree(parser):
     """
     Test that unpacked tree is the same as lazy tree 0.
     """
-    forest = parser.parse('2 + 3 * 5 + 4 * 1 * 7 + 9 + 10')
+    forest = parser.parse("2 + 3 * 5 + 4 * 1 * 7 + 9 + 10")
     assert forest.get_first_tree().to_str() == forest[0].to_str()

@@ -6,6 +6,7 @@ If ambiguity is still unresolved priority is checked as the last resort.
 At the end disambiguation error is reported.
 
 """
+
 import pytest  # noqa
 import difflib
 import re
@@ -18,6 +19,7 @@ called = [False, False, False]
 def act_called(which_called):
     def _called(_, __):
         called[which_called] = True
+
     return _called
 
 
@@ -35,7 +37,6 @@ def cf():
 
 
 def test_priority(cf):
-
     grammar = r"""
     M: First | Second  | Third "5";
 
@@ -49,7 +50,7 @@ def test_priority(cf):
     parser = Parser(g, actions=actions, debug=False)
 
     # Priority is used first
-    parser.parse('14.75')
+    parser.parse("14.75")
     assert called == [False, False, True]
 
 
@@ -71,12 +72,11 @@ def test_priority_lower(cf):
     parser = Parser(g, actions=actions, debug=False)
 
     # Second should match as it has higher priority over First
-    parser.parse('14.75')
+    parser.parse("14.75")
     assert called == [False, True, False]
 
 
 def test_most_specific(cf):
-
     grammar = r"""
     S: First | Second | Third;
 
@@ -90,12 +90,11 @@ def test_most_specific(cf):
     parser = Parser(g, actions=actions, debug=True)
 
     # String match in rule Second is more specific than Third regexp rule.
-    parser.parse('14')
+    parser.parse("14")
     assert called == [False, True, False]
 
 
 def test_most_specific_longest_match(cf):
-
     grammar = r"""
     S: First | Second | Third;
 
@@ -111,12 +110,11 @@ def test_most_specific_longest_match(cf):
     # All three rules could match. First is tried first because it is
     # more specific (str match) and longest. It succeeds so other two
     # are not tried at all.
-    parser.parse('147')
+    parser.parse("147")
     assert called == [True, False, False]
 
 
 def test_longest_match(cf):
-
     grammar = r"""
     S: First | Second | Third;
 
@@ -131,12 +129,11 @@ def test_longest_match(cf):
 
     # If all matches are regexes of the same priority use longest match
     # disambiguation.
-    parser.parse('14.17')
+    parser.parse("14.17")
     assert called == [True, False, False]
 
 
 def test_failed_disambiguation(cf):
-
     grammar = r"""
     S: First | Second | Third;
 
@@ -154,16 +151,15 @@ def test_failed_disambiguation(cf):
     # Both have the same length.
 
     with pytest.raises(DisambiguationError) as e:
-        parser.parse('14.75')
+        parser.parse("14.75")
 
-    assert 'disambiguate' in str(e.value)
-    assert 'First' in str(e.value)
-    assert 'Second' not in str(e.value)
-    assert 'Third' in str(e.value)
+    assert "disambiguate" in str(e.value)
+    assert "First" in str(e.value)
+    assert "Second" not in str(e.value)
+    assert "Third" in str(e.value)
 
 
 def test_longest_match_prefer(cf):
-
     grammar = r"""
     S: First | Second | Third;
 
@@ -180,7 +176,7 @@ def test_longest_match_prefer(cf):
     # Both are regexes so longest match will be used.
     # Both have the same length but the third rule is preferred.
 
-    parser.parse('14.75')
+    parser.parse("14.75")
     assert called == [False, False, True]
 
 
@@ -208,7 +204,7 @@ def test_nofinish(cf):
     # will be set.
     g = Grammar.from_string(grammar)
     parser = Parser(g, actions=actions, consume_input=False)
-    parser.parse('*ThirdShouldMatchThis')
+    parser.parse("*ThirdShouldMatchThis")
     assert called == [False, True, False]
 
     # In this case we would actually like for Third to match as it is a longer
@@ -226,7 +222,7 @@ def test_nofinish(cf):
     called = [False, False, False]
     g = Grammar.from_string(grammar)
     parser = Parser(g, actions=actions)
-    parser.parse('*ThirdShouldMatchThis')
+    parser.parse("*ThirdShouldMatchThis")
     assert called == [False, False, True]
 
 
@@ -262,17 +258,17 @@ def test_dynamic_lexical_disambiguation():
         else:
             # If no tokens are found do the fuzzy match.
             matchers = [
-                lambda x: difflib.SequenceMatcher(None, 'bar.', x.lower()),
-                lambda x: difflib.SequenceMatcher(None, 'baz.', x.lower())
+                lambda x: difflib.SequenceMatcher(None, "bar.", x.lower()),
+                lambda x: difflib.SequenceMatcher(None, "baz.", x.lower()),
             ]
             symbols = [
-                grammar[0].get_terminal('Bar'),
-                grammar[0].get_terminal('Baz'),
+                grammar[0].get_terminal("Bar"),
+                grammar[0].get_terminal("Baz"),
             ]
             # Try to do fuzzy match at the position
-            elem = context.input_str[context.position:context.position+4]
-            elem_num = context.input_str[context.position:]
-            number_matcher = re.compile(r'[^\d]*(\d+)')
+            elem = context.input_str[context.position : context.position + 4]
+            elem_num = context.input_str[context.position :]
+            number_matcher = re.compile(r"[^\d]*(\d+)")
             number_match = number_matcher.match(elem_num)
             ratios = []
             for matcher in matchers:
@@ -280,24 +276,28 @@ def test_dynamic_lexical_disambiguation():
 
             max_ratio_index = ratios.index(max(ratios))
             if ratios[max_ratio_index] > 0.7 and number_match.group(1):
-                return [Token(symbols[max_ratio_index], number_match.group(),
-                              context.position)]
+                return [
+                    Token(
+                        symbols[max_ratio_index],
+                        number_match.group(),
+                        context.position,
+                    )
+                ]
 
-    parser = Parser(
-        g, custom_token_recognition=custom_token_recognition)
+    parser = Parser(g, custom_token_recognition=custom_token_recognition)
 
     # Bar and Baz will be recognized by a fuzzy match
-    result = parser.parse('bar. 56 Baz 12')
-    assert result == ['bar. 56', 'Baz 12']
+    result = parser.parse("bar. 56 Baz 12")
+    assert result == ["bar. 56", "Baz 12"]
 
-    result = parser.parse('Buz. 34 bar 56')
-    assert result == ['Buz. 34', 'bar 56']
+    result = parser.parse("Buz. 34 bar 56")
+    assert result == ["Buz. 34", "bar 56"]
 
-    result = parser.parse('Ba. 34 baz 56')
-    assert result == ['Ba. 34', 'baz 56']
+    result = parser.parse("Ba. 34 baz 56")
+    assert result == ["Ba. 34", "baz 56"]
 
     # But if Bar/Baz are too different from the correct pattern
     # we get SyntaxError. In this case `bza` score is below 0.7
     # for both Bar and Baz symbols.
     with pytest.raises(SyntaxError):
-        parser.parse('Bar. 34 bza 56')
+        parser.parse("Bar. 34 bza 56")

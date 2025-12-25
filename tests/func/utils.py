@@ -11,10 +11,10 @@ def output_cmp(file_path: Union[Path, str], file_content: str):
     with assert.
     """
     this_dir = str(Path(__file__).parent)
-    file_content = str(file_content).replace(str(this_dir), '')
+    file_content = str(file_content).replace(str(this_dir), "")
 
     if not Path(file_path).exists():
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             f.write(file_content)
     else:
         with open(file_path) as f:

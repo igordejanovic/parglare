@@ -2,8 +2,7 @@ from parglare import GLRParser, Grammar
 
 
 def test_regex_alternative_match_bug():
-    """
-    """
+    """ """
 
     grammar = """
     A: "Begin" Eq "End";
@@ -13,4 +12,4 @@ def test_regex_alternative_match_bug():
     """
     g = Grammar.from_string(grammar)
     parser = GLRParser(g)
-    parser.parse('Begin EQ End')
+    parser.parse("Begin EQ End")

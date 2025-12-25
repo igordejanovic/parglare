@@ -7,7 +7,6 @@ from parglare.exceptions import SRConflicts
 
 
 def test_lr2_grammar():
-
     grammar = r"""
     Model: Prods;
     Prods: Prod | Prods Prod;
@@ -114,15 +113,14 @@ def test_nops():
 
 
 def test_expressions():
-
     actions = {
         "s": lambda _, c: c[0],
         "E": [
             lambda _, nodes: nodes[0] + nodes[2],
             lambda _, nodes: nodes[0] * nodes[2],
             lambda _, nodes: nodes[1],
-            lambda _, nodes: int(nodes[0])
-        ]
+            lambda _, nodes: int(nodes[0]),
+        ],
     }
 
     # This grammar is highly ambiguous if priorities and
@@ -190,11 +188,11 @@ def test_expressions():
     assert p.call_actions(results[0]) == 4 + 2 * 3 + 8 * 5 * 3
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6),
-                    reason="list comparison doesn't work "
-                    "correctly in pytest 4.1")
+@pytest.mark.skipif(
+    sys.version_info < (3, 6),
+    reason="list comparison doesn't work correctly in pytest 4.1",
+)
 def test_epsilon_grammar():
-
     grammar = r"""
     Model: Prods;
     Prods: Prod | Prods Prod | EMPTY;
@@ -218,14 +216,21 @@ def test_epsilon_grammar():
 
     expected = [
         # First solution
-        [[['First', '=', [['One', 'Two'], 'three']],
-          ['Second', '=', ['Foo', 'Bar']]],
-         ['Third', '=', 'Baz']],
-
+        [
+            [
+                ["First", "=", [["One", "Two"], "three"]],
+                ["Second", "=", ["Foo", "Bar"]],
+            ],
+            ["Third", "=", "Baz"],
+        ],
         # Second solution
-        [[[[], ['First', '=', [['One', 'Two'], 'three']]],
-          ['Second', '=', ['Foo', 'Bar']]],
-         ['Third', '=', 'Baz']]
+        [
+            [
+                [[], ["First", "=", [["One", "Two"], "three"]]],
+                ["Second", "=", ["Foo", "Bar"]],
+            ],
+            ["Third", "=", "Baz"],
+        ],
     ]
     assert [p.call_actions(tree) for tree in forest] == expected
 
@@ -278,8 +283,7 @@ def test_no_consume_input_multiple_trees():
     # 1. First = One Two three Second
     # 2. ... Second = Foo Bar Third
     # 3. everything parsed
-    disambig_p = GLRParser(g_nonempty, consume_input=False,
-                           lexical_disambiguation=True)
+    disambig_p = GLRParser(g_nonempty, consume_input=False, lexical_disambiguation=True)
     assert len(disambig_p.parse(txt)) == 3
 
 
@@ -300,15 +304,18 @@ def test_empty_recognizer():
 
     def match_bs(input_str, pos):
         end_pos = pos
-        while end_pos < len(input_str) and input_str[end_pos] == 'b':
+        while end_pos < len(input_str) and input_str[end_pos] == "b":
             end_pos += 1
         return input_str[pos:end_pos]
 
-    g = Grammar.from_string("""
+    g = Grammar.from_string(
+        """
     a: a t | t;
     terminals
     t: ;
-    """, recognizers={'t': match_bs})
+    """,
+        recognizers={"t": match_bs},
+    )
     p = GLRParser(g)
     with pytest.raises(SyntaxError):
         p.parse("a")
@@ -326,7 +333,7 @@ def test_terminal_collision():
     letter: /[A-Z]/;
     """)
 
-    p = GLRParser(g, ws='')
+    p = GLRParser(g, ws="")
 
     p.parse("2 A")
     p.parse("1 B")
@@ -346,14 +353,14 @@ def test_lexical_ambiguity():
 
     p = GLRParser(g)
 
-    assert all([p.call_actions(x) in ['xx', ['x', 'x']] for x in p.parse('xx')])
+    assert all([p.call_actions(x) in ["xx", ["x", "x"]] for x in p.parse("xx")])
 
     disambig_p = GLRParser(g, lexical_disambiguation=True)
-    assert p.call_actions(disambig_p.parse("xx")[0]) == 'xx'
+    assert p.call_actions(disambig_p.parse("xx")[0]) == "xx"
 
 
 def test_lexical_ambiguity2():
-    g = Grammar.from_string(r'''
+    g = Grammar.from_string(r"""
     Stuff: Stuff "+" Stuff | Something;
     Something: INT | FLOAT | Object;
     Object: INT DOT INT;
@@ -362,29 +369,29 @@ def test_lexical_ambiguity2():
     INT: /\d+/;
     FLOAT: /\d+(\.\d+)?/;
     DOT: ".";
-    ''')
+    """)
 
     parser = GLRParser(g)
 
     # Lexical ambiguity between FLOAT and INT . INT
-    forest = parser.parse('42.12')
+    forest = parser.parse("42.12")
     assert len(forest) == 2
     assert forest.ambiguities == 1
 
     # Here also we have two ambiguities
-    forest = parser.parse('42.12 + 3.8')
+    forest = parser.parse("42.12 + 3.8")
     assert len(forest) == 4
     assert forest.ambiguities == 2
 
     # Here we have 3 lexical ambiguities and 1 ambiguity
     # for + operation
-    forest = parser.parse('34.78 + 8 + 3.3')
+    forest = parser.parse("34.78 + 8 + 3.3")
     assert len(forest) == 16
     assert forest.ambiguities == 4
 
     # Here we have 4 lexical ambiguities and 3 ambiguities
     # for + operation therefore 5 * 2 ^ 4 solutions
-    forest = parser.parse('34.78 + 8 + 3.3 + 1.2')
+    forest = parser.parse("34.78 + 8 + 3.3 + 1.2")
     assert len(forest) == 80
     assert forest.ambiguities == 7
 
@@ -394,22 +401,22 @@ def test_lexical_ambiguity2():
     parser = GLRParser(g, lexical_disambiguation=True)
 
     # Longest match is used to choose FLOAT
-    forest = parser.parse('42.12')
+    forest = parser.parse("42.12")
     assert len(forest) == 1
     assert forest.ambiguities == 0
 
     # Also, longest match will choose FLOAT in both cases
-    forest = parser.parse('42.12 + 3.8')
+    forest = parser.parse("42.12 + 3.8")
     assert len(forest) == 1
     assert forest.ambiguities == 0
 
     # Here we still have lexical ambiguity on "8"
-    forest = parser.parse('34.78 + 8 + 3.3')
+    forest = parser.parse("34.78 + 8 + 3.3")
     assert len(forest) == 4
     assert forest.ambiguities == 2
 
     # Lexical ambiguity on "8" and 3 syntactical ambiguities
     # on + operations
-    forest = parser.parse('34.78 + 8 + 3.3 + 1.2')
+    forest = parser.parse("34.78 + 8 + 3.3 + 1.2")
     assert len(forest) == 10
     assert forest.ambiguities == 4

@@ -29,11 +29,11 @@ tokens = (
 )
 
 mw_table = {
-    'H': 1.00794,
-    'C': 12.001,
-    'Cl': 35.453,
-    'O': 15.999,
-    'S': 32.06,
+    "H": 1.00794,
+    "C": 12.001,
+    "Cl": 35.453,
+    "O": 15.999,
+    "S": 32.06,
 }
 
 
@@ -55,9 +55,7 @@ mw_table = {
 # (This is more complicated than needed; it's to show how
 # this approach can scale to all 100+ known and named elements)
 
-atom_names = sorted(
-    mw_table.keys(),
-    key=lambda symbol: (symbol[0], -len(symbol), symbol))
+atom_names = sorted(mw_table.keys(), key=lambda symbol: (symbol[0], -len(symbol), symbol))
 
 # Creates a pattern like:  Cl|C|H|O|S
 atom_pattern = "|".join(atom_names)
@@ -97,7 +95,7 @@ lexer = lex.lex()
 
 # The molecular weight of "" is 0.0
 def p_mw_empty(p):
-    "mw : "
+    "mw :"
     p[0] = 0.0
 
 

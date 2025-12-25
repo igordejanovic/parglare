@@ -4,7 +4,6 @@ from ..grammar.expression_grammar import get_grammar
 
 
 def test_parse_tree_to_str():
-
     grammar = get_grammar()
     p = Parser(grammar, build_tree=True)
 
@@ -16,14 +15,13 @@ def test_parse_tree_to_str():
 
     assert '+[18->19, "+"]' in ts
     assert ')[23->24, ")"]' in ts
-    assert 'F[10->24]' in ts
+    assert "F[10->24]" in ts
 
 
 def test_forest_to_str():
-
-    grammar = Grammar.from_string(r'''
+    grammar = Grammar.from_string(r"""
     E: E "+" E | E "-" E | "(" E ")" | "id";
-    ''')
+    """)
     p = GLRParser(grammar)
 
     forest = p.parse("""id+  id - (id
@@ -32,9 +30,9 @@ def test_forest_to_str():
 
     ts = forest.to_str()
 
-    assert 'E - ambiguity[2]' in ts
-    assert 'E[10->24]' in ts
-    assert '      E[11->21]' in ts
+    assert "E - ambiguity[2]" in ts
+    assert "E[10->24]" in ts
+    assert "      E[11->21]" in ts
     assert '        +[18->19, "+"]' in ts
 
 
@@ -52,9 +50,11 @@ def test_ast_to_str():
     g = Grammar.from_string(grammar)
     parser = Parser(g)
 
-    result = parser.parse('1 2 3 3 3 4 2')
+    result = parser.parse("1 2 3 3 3 4 2")
     print(result.to_str())
-    assert result.to_str().strip() == """
+    assert (
+        result.to_str().strip()
+        == """
 S [0->13]
   second=Second [2->3]
     val='2'
@@ -66,6 +66,7 @@ S [0->13]
   fourth=Fourth [10->13]
     val=Second [12->13]
       val='2'""".strip()
+    )
 
 
 def test_ast_to_str_with_bnf_extensions():
@@ -82,9 +83,11 @@ def test_ast_to_str_with_bnf_extensions():
     g = Grammar.from_string(grammar)
     parser = Parser(g)
 
-    result = parser.parse('1 2 3 3 3 4 2')
+    result = parser.parse("1 2 3 3 3 4 2")
     print(result.to_str())
-    assert result.to_str().strip() == """
+    assert (
+        result.to_str().strip()
+        == """
 S [0->13]
   second=Second [2->3]
     val='2'
@@ -99,3 +102,4 @@ S [0->13]
   fourth=Fourth [10->13]
     val=Second [12->13]
       val='2'""".strip()
+    )

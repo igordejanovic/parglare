@@ -24,7 +24,7 @@ NewLine: "\n";
 
 def main(debug=False):
     g = Grammar.from_string(grammar)
-    parser = Parser(g, ws='\t ', debug=debug, debug_colors=True)
+    parser = Parser(g, ws="\t ", debug=debug, debug_colors=True)
 
     input_str = """
     First, Second with multiple words, "Third, quoted with comma"

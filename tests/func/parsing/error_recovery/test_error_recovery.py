@@ -19,13 +19,15 @@ number: /\d+(\.\d+)?/;
 
 actions = {
     "Result": pass_single,
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          lambda _, nodes: nodes[1],
-          lambda _, nodes: nodes[0]],
+    "E": [
+        lambda _, nodes: nodes[0] + nodes[2],
+        lambda _, nodes: nodes[0] - nodes[2],
+        lambda _, nodes: nodes[0] * nodes[2],
+        lambda _, nodes: nodes[0] / nodes[2],
+        lambda _, nodes: nodes[0] ** nodes[2],
+        lambda _, nodes: nodes[1],
+        lambda _, nodes: nodes[0],
+    ],
     "number": lambda _, value: float(value),
 }
 
@@ -40,8 +42,7 @@ def test_error_recovery_uncomplete():
     will succeed.
     """
 
-    parser = Parser(g, actions=actions, consume_input=False,
-                    error_recovery=True)
+    parser = Parser(g, actions=actions, consume_input=False, error_recovery=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
 
@@ -58,7 +59,10 @@ def test_error_recovery_uncomplete():
     assert e.location.start_position == 8
     assert e.location.end_position == 10
 
-    output_cmp(Path(Path(__file__).parent, 'test_error_recovery_uncomplete.err'), str(e))
+    output_cmp(
+        Path(Path(__file__).parent, "test_error_recovery_uncomplete.err"),
+        str(e),
+    )
 
 
 def test_error_recovery_complete():
@@ -85,7 +89,7 @@ def test_error_recovery_complete():
     assert e2.location.start_position == 12
     assert e2.location.end_position == 17
 
-    output_cmp(Path(Path(__file__).parent, 'test_error_recovery_complete.err'), str(e2))
+    output_cmp(Path(Path(__file__).parent, "test_error_recovery_complete.err"), str(e2))
 
 
 def test_error_recovery_parse_error():
@@ -117,11 +121,11 @@ def test_custom_error_recovery():
         expected_symbols = context.state.actions.keys()
         called[0] = True
         assert isinstance(context.parser, Parser)
-        assert context.input_str == '1 + 2 + * 3 - 5'
+        assert context.input_str == "1 + 2 + * 3 - 5"
         assert context.position == 8
-        open_par = g.get_terminal('(')
+        open_par = g.get_terminal("(")
         assert open_par in expected_symbols
-        number = g.get_terminal('number')
+        number = g.get_terminal("number")
         assert number in expected_symbols
         context.position += 1
         return True
@@ -147,7 +151,7 @@ def test_recovery_custom_unsuccessful():
     parser = Parser(g, actions=actions, error_recovery=custom_recovery)
 
     with pytest.raises(SyntaxError) as e:
-        parser.parse('1 + 5 8 - 2')
+        parser.parse("1 + 5 8 - 2")
 
     error = e.value
     assert error.location.start_position == 6

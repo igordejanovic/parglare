@@ -7,7 +7,6 @@ from .expression_grammar import get_grammar
 
 
 def test_default_whitespaces():
-
     grammar = get_grammar()
     p = Parser(grammar)
 
@@ -17,11 +16,10 @@ def test_default_whitespaces():
 
 
 def test_whitespace_redefinition():
-
     grammar = get_grammar()
 
     # Make newline treated as non-ws characted
-    p = Parser(grammar, ws=' \t')
+    p = Parser(grammar, ws=" \t")
 
     p.parse("""id+  id * (id +id  ) """)
 
@@ -44,4 +42,4 @@ def test_whitespace_not_used_if_layout():
     g = Grammar.from_string(grammar)
     parser = Parser(g)
     with pytest.raises(SyntaxError):
-        parser.parse('a b')
+        parser.parse("a b")

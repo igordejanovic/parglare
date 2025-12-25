@@ -2,12 +2,13 @@
 """
 Forest can be disambiguated by eliminating possibilities in Parent objects.
 """
+
 from parglare import GLRParser, Grammar, Node
 
 # Here, we have a grammar that defines a structure of a document with different
 # parts. The grammar is ambiguous. We will disambiguate the resulting forest by
 # not allowing the nesting of same type document parts.
-grammar = r'''
+grammar = r"""
 document: parts;
 
 parts: part1+
@@ -26,7 +27,7 @@ terminals
 title1: 'part1';
 title2: 'part2';
 title3: 'part3';
-'''
+"""
 
 
 def disambiguate(parent):
@@ -49,12 +50,13 @@ def disambiguate(parent):
             if isinstance(node, Node):
                 if node.symbol in parts_seen:
                     raise Invalid()
-                if node.symbol.name in ['part1', 'part2', 'part3']:
+                if node.symbol.name in ["part1", "part2", "part3"]:
                     parts_seen.add(node.symbol)
             for n in node:
                 traverse_tree(n)
             if node.symbol in parts_seen:
                 parts_seen.remove(node.symbol)
+
         try:
             traverse_tree(pos)
         except Invalid:
@@ -68,7 +70,7 @@ def disambiguate(parent):
 def test_glr_forest_disambiguation():
     parser = GLRParser(Grammar.from_string(grammar))
 
-    forest = parser.parse(r'''
+    forest = parser.parse(r"""
     part1
      part2
       part3
@@ -82,7 +84,7 @@ def test_glr_forest_disambiguation():
       part3
     part1
      part2
-    ''')
+    """)
 
     # We have 415 solutions.
     assert len(forest) == 415
@@ -92,7 +94,9 @@ def test_glr_forest_disambiguation():
 
     # After the disambiguation, only one solution remains.
     assert len(forest) == 1
-    assert forest.to_str().strip() == r'''
+    assert (
+        forest.to_str().strip()
+        == r"""
 document[5->147]
   parts[5->147]
     part1_1[5->147]
@@ -154,4 +158,5 @@ document[5->147]
               part2[137->147]
                 title2[137->142, "part2"]
                 parts_opt[147->147]
-    '''.strip()
+    """.strip()
+    )

@@ -4,7 +4,6 @@ from parglare import GLRParser, Grammar
 
 
 def test_import_plus_raises_keyerror():
-
     this_folder = dirname(__file__)
-    grammar = Grammar.from_file(join(this_folder, 'first.pg'))
+    grammar = Grammar.from_file(join(this_folder, "first.pg"))
     GLRParser(grammar)

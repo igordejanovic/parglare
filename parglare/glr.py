@@ -7,7 +7,14 @@ from parglare.common import dot_escape, position_context
 from parglare.common import replace_newlines as _
 from parglare.parser import REDUCE, SHIFT, Token, pos_to_line_col
 from parglare.termui import a_print, h_print, prints
-from parglare.trees import Forest, NodeNonTerm, NodeTerm, to_dot, to_str, visitor
+from parglare.trees import (
+    Forest,
+    NodeNonTerm,
+    NodeTerm,
+    to_dot,
+    to_str,
+    visitor,
+)
 
 
 def no_colors(f):
@@ -15,12 +22,14 @@ def no_colors(f):
     Decorator for trace methods to prevent ANSI COLOR codes appearing in
     the trace dot output.
     """
+
     def nc_f(*args, **kwargs):
         self = args[0]
         t.colors = False
         r = f(*args, **kwargs)
         t.colors = self.debug_colors
         return r
+
     return nc_f
 
 
@@ -28,32 +37,31 @@ class GLRParser(Parser):
     """
     A Tomita-style GLR parser.
     """
-    def __init__(self, *args, **kwargs):
 
-        table = kwargs.get('table')
-        lexical_disambiguation = kwargs.get('lexical_disambiguation')
+    def __init__(self, *args, **kwargs):
+        table = kwargs.get("table")
+        lexical_disambiguation = kwargs.get("lexical_disambiguation")
         if table is None:
             # The default for GLR is not to use any strategy preferring shifts
             # over reduce thus investigating all possibilities.
             # These settings are only applicable if parse table is not computed
             # yet. If it is, then leave None values to avoid
             # "parameter overriden" warnings.
-            prefer_shifts = kwargs.get('prefer_shifts')
-            prefer_shifts_over_empty = kwargs.get('prefer_shifts_over_empty')
+            prefer_shifts = kwargs.get("prefer_shifts")
+            prefer_shifts_over_empty = kwargs.get("prefer_shifts_over_empty")
 
-            prefer_shifts = False \
-                if prefer_shifts is None else prefer_shifts
-            prefer_shifts_over_empty = False \
-                if prefer_shifts_over_empty is None \
-                else prefer_shifts_over_empty
+            prefer_shifts = False if prefer_shifts is None else prefer_shifts
+            prefer_shifts_over_empty = (
+                False if prefer_shifts_over_empty is None else prefer_shifts_over_empty
+            )
             if lexical_disambiguation is None:
                 lexical_disambiguation = False
 
-            kwargs['prefer_shifts'] = prefer_shifts
-            kwargs['prefer_shifts_over_empty'] = prefer_shifts_over_empty
+            kwargs["prefer_shifts"] = prefer_shifts
+            kwargs["prefer_shifts_over_empty"] = prefer_shifts_over_empty
 
-        kwargs['lexical_disambiguation'] = lexical_disambiguation
-        self.debug_trace_frontiers = kwargs.pop('debug_trace_frontiers', False)
+        kwargs["lexical_disambiguation"] = lexical_disambiguation
+        self.debug_trace_frontiers = kwargs.pop("debug_trace_frontiers", False)
 
         super().__init__(*args, **kwargs)
 
@@ -79,8 +87,8 @@ class GLRParser(Parser):
             self.debug_frontier = 0
             self.debug_step = 0
             if self.debug_trace:
-                self._dot_trace = ''
-                self._dot_trace_ranks = ''
+                self._dot_trace = ""
+                self._dot_trace_ranks = ""
                 self._trace_frontier_heads = []
                 self._trace_frontier_steps = []
 
@@ -110,8 +118,10 @@ class GLRParser(Parser):
         self._active_heads = {0: start_head}
         while self._active_heads or self._in_error_reporting:
             if self.debug:
-                a_print(f"** REDUCING - frontier {self.debug_frontier}",
-                        new_line=True)
+                a_print(
+                    f"** REDUCING - frontier {self.debug_frontier}",
+                    new_line=True,
+                )
                 self._debug__active_heads(self._active_heads.values())
             if not self._in_error_reporting:
                 self._last_shifted_heads = list(self._active_heads.values())
@@ -137,8 +147,7 @@ class GLRParser(Parser):
 
             if not self._active_heads and not self._accepted_heads:
                 if self.debug:
-                    a_print("*** ENTERING ERROR REPORTING MODE.",
-                            new_line=True)
+                    a_print("*** ENTERING ERROR REPORTING MODE.", new_line=True)
                 self._enter_error_reporting()
 
         if self.debug and self.debug_trace:
@@ -149,7 +158,7 @@ class GLRParser(Parser):
             # Return results
             forest = Forest(self)
             if self.debug:
-                a_print(f'*** {forest.solutions} successful parse(s).')
+                a_print(f"*** {forest.solutions} successful parse(s).")
 
             self._remove_transient_state()
             return forest
@@ -167,8 +176,9 @@ class GLRParser(Parser):
             state_id, head = self._active_heads.popitem()
             if head.token_ahead is not None:
                 # May happen after error recovery
-                self._active_heads_per_symbol.setdefault(
-                    head.token_ahead.symbol, {})[head.state.state_id] = head
+                self._active_heads_per_symbol.setdefault(head.token_ahead.symbol, {})[
+                    head.state.state_id
+                ] = head
                 continue
             if debug:
                 h_print(f"Finding lookaheads for head {head}", new_line=True)
@@ -181,18 +191,20 @@ class GLRParser(Parser):
                     head.position,
                     head.layout_content_ahead,
                     lookahead_tokens=tokens,
-                    expected_symbols=head.state.actions.keys())
+                    expected_symbols=head.state.actions.keys(),
+                )
 
             if tokens:
                 while tokens:
                     token = tokens.pop()
                     head = head.for_token(token)
-                    self._active_heads_per_symbol.setdefault(
-                        token.symbol, {})[head.state.state_id] = head
+                    self._active_heads_per_symbol.setdefault(token.symbol, {})[
+                        head.state.state_id
+                    ] = head
             else:
                 # Can't find lookahead. This head can't progress
                 if debug:
-                    h_print('No lookaheads found. Killing head.')
+                    h_print("No lookaheads found. Killing head.")
 
     def _actor(self, head):
         debug = self.debug
@@ -205,7 +217,7 @@ class GLRParser(Parser):
                 if not self._in_error_reporting:
                     self._accepted_heads.append(head)
                     if debug:
-                        a_print('**ACCEPTING HEAD: ', str(head))
+                        a_print("**ACCEPTING HEAD: ", str(head))
                         if self.debug_trace:
                             self._trace_step_finish(head)
 
@@ -226,9 +238,14 @@ class GLRParser(Parser):
         prod_len = len(production.rhs)
         if prod_len == 0:
             # Special case, empty reduction
-            self._reduce(head, head, production,
-                         NodeNonTerm(None, [], production=production),
-                         head.position, head.position)
+            self._reduce(
+                head,
+                head,
+                production,
+                NodeNonTerm(None, [], production=production),
+                head.position,
+                head.position,
+            )
         else:
             # Find roots of possible reductions by going backwards for
             # prod_len steps following all possible paths. Collect
@@ -238,28 +255,28 @@ class GLRParser(Parser):
                 h_print(f"Calculate reduction paths of length {prod_len}:", level=1)
                 h_print(f"start node= {head}", level=2)
             while to_process:
-                (node,
-                 results,
-                 length,
-                 last_parent,
-                 traversed) = to_process.pop()
+                (node, results, length, last_parent, traversed) = to_process.pop()
                 length = length - 1
                 if debug:
-                    h_print(f"node = {node}", level=2,
-                            new_line=True)
-                    h_print("backpath length = {}{}"
-                            .format(prod_len - length,
-                                    " - ROOT" if not length else ""),
-                            level=2)
+                    h_print(f"node = {node}", level=2, new_line=True)
+                    h_print(
+                        "backpath length = {}{}".format(
+                            prod_len - length, " - ROOT" if not length else ""
+                        ),
+                        level=2,
+                    )
 
                 if node.frontier == head.frontier:
                     # Cache traversed states for revisit optimization
-                    states_traversed.setdefault(
-                        node.state.state_id, set()).add(head.state.state_id)
+                    states_traversed.setdefault(node.state.state_id, set()).add(
+                        head.state.state_id
+                    )
 
-                for parent in [update_parent] \
-                        if update_parent and update_parent.head == node \
-                        else list(node.parents.values()):
+                for parent in (
+                    [update_parent]
+                    if update_parent and update_parent.head == node
+                    else list(node.parents.values())
+                ):
                     if debug:
                         h_print("", str(parent.head), level=3)
 
@@ -268,23 +285,39 @@ class GLRParser(Parser):
                     if last_parent is None:
                         last_parent = parent
 
-                    traversed = traversed or (update_parent
-                                              and update_parent.head == node)
+                    traversed = traversed or (
+                        update_parent and update_parent.head == node
+                    )
 
                     if length:
-                        to_process.append((parent.root, new_results,
-                                           length, last_parent, traversed))
+                        to_process.append(
+                            (
+                                parent.root,
+                                new_results,
+                                length,
+                                last_parent,
+                                traversed,
+                            )
+                        )
                     elif traversed:
-                        self._reduce(head,
-                                     parent.root,
-                                     production,
-                                     NodeNonTerm(None, new_results,
-                                                 production=production),
-                                     parent.start_position,
-                                     last_parent.end_position)
+                        self._reduce(
+                            head,
+                            parent.root,
+                            production,
+                            NodeNonTerm(None, new_results, production=production),
+                            parent.start_position,
+                            last_parent.end_position,
+                        )
 
-    def _reduce(self, head, root_head, production, node_nonterm,
-                start_position, end_position):
+    def _reduce(
+        self,
+        head,
+        root_head,
+        production,
+        node_nonterm,
+        start_position,
+        end_position,
+    ):
         """
         Executes the given reduction.
         """
@@ -294,26 +327,37 @@ class GLRParser(Parser):
 
         if self.debug:
             self.debug_step += 1
-            a_print(f'{self._debug_step_str()} REDUCING head ',
-                    str(head), new_line=True)
-            a_print('by prod ', production, level=1)
-            a_print(f'to state {state.state_id}:{state.symbol}', level=1)
-            a_print('root is ', root_head, level=1)
-            a_print(f'Position span: {start_position} - {end_position}', level=1)
+            a_print(
+                f"{self._debug_step_str()} REDUCING head ",
+                str(head),
+                new_line=True,
+            )
+            a_print("by prod ", production, level=1)
+            a_print(f"to state {state.state_id}:{state.symbol}", level=1)
+            a_print("root is ", root_head, level=1)
+            a_print(f"Position span: {start_position} - {end_position}", level=1)
 
-        new_head = GSSNode(self, state, head.position,
-                           head.frontier, token_ahead=head.token_ahead,
-                           layout_content=root_head.layout_content,
-                           layout_content_ahead=head.layout_content_ahead)
-        parent = Parent(new_head, root_head,
-                        start_position, end_position,
-                        production=production,
-                        possibilities=[node_nonterm])
+        new_head = GSSNode(
+            self,
+            state,
+            head.position,
+            head.frontier,
+            token_ahead=head.token_ahead,
+            layout_content=root_head.layout_content,
+            layout_content_ahead=head.layout_content_ahead,
+        )
+        parent = Parent(
+            new_head,
+            root_head,
+            start_position,
+            end_position,
+            production=production,
+            possibilities=[node_nonterm],
+        )
 
-        if self.dynamic_filter and \
-                not self._call_dynamic_filter(parent, head.state, state,
-                                              REDUCE, production,
-                                              list(node_nonterm)):
+        if self.dynamic_filter and not self._call_dynamic_filter(
+            parent, head.state, state, REDUCE, production, list(node_nonterm)
+        ):
             # Action rejected by dynamic filter
             return
 
@@ -326,17 +370,22 @@ class GLRParser(Parser):
             # new head state on the current frontier should be considered.
             if created and state.state_id in self._states_traversed:
                 to_revisit = self._states_traversed[state.state_id].intersection(
-                    self._active_heads.keys()) - set(h.state.state_id
-                                                     for h in self._for_actor)
+                    self._active_heads.keys()
+                ) - set(h.state.state_id for h in self._for_actor)
                 if to_revisit:
                     if self.debug:
-                        h_print('Revisiting reductions for processed '
-                                f'active heads in states {to_revisit}',
-                                level=1)
+                        h_print(
+                            "Revisiting reductions for processed "
+                            f"active heads in states {to_revisit}",
+                            level=1,
+                        )
                     for r_head_state in to_revisit:
                         r_head = self._active_heads[r_head_state]
-                        for action in [a for a in r_head.state.actions.get(
-                                head.token_ahead.symbol, []) if a.action == REDUCE]:
+                        for action in [
+                            a
+                            for a in r_head.state.actions.get(head.token_ahead.symbol, [])
+                            if a.action == REDUCE
+                        ]:
                             self._do_reductions(r_head, action.prod, parent)
         else:
             # No cycles. Do the reduction.
@@ -354,8 +403,7 @@ class GLRParser(Parser):
         if debug:
             self.debug_frontier += 1
             self.debug_step = 0
-            a_print(f"** SHIFTING - frontier {self.debug_frontier}",
-                    new_line=True)
+            a_print(f"** SHIFTING - frontier {self.debug_frontier}", new_line=True)
             self._debug__active_heads(self._active_heads.values())
             if self.debug_trace:
                 self._trace_frontier()
@@ -366,8 +414,7 @@ class GLRParser(Parser):
         # We must order heads by position before shift to process them in
         # the right order. Only shift heads with minimal position during
         # a single frontier processing.
-        self._for_shifter.sort(key=lambda x: x[0].token_ahead.end_position,
-                               reverse=True)
+        self._for_shifter.sort(key=lambda x: x[0].token_ahead.end_position, reverse=True)
         end_position = None
         while self._for_shifter:
             head, to_state = self._for_shifter.pop()
@@ -377,35 +424,49 @@ class GLRParser(Parser):
             end_position = head.token_ahead.end_position
             if debug:
                 self.debug_step += 1
-                a_print(f"{self._debug_step_str()}. SHIFTING head: ", head,
-                        new_line=True)
+                a_print(
+                    f"{self._debug_step_str()}. SHIFTING head: ",
+                    head,
+                    new_line=True,
+                )
             shifted_head = self._active_heads.get(to_state.state_id, None)
             if shifted_head:
                 # If this token has already been shifted connect shifted head to
                 # this head.
                 parent = next(iter(shifted_head.parents.values())).clone_with_root(head)
-                if self.dynamic_filter and \
-                        not self._call_dynamic_filter(parent, head.state,
-                                                      to_state, SHIFT):
+                if self.dynamic_filter and not self._call_dynamic_filter(
+                    parent, head.state, to_state, SHIFT
+                ):
                     continue
             else:
                 # We need to create new shifted head
                 if debug:
-                    self._debug_context(head.position,
-                                        lookahead_tokens=head.token_ahead,
-                                        expected_symbols=None)
+                    self._debug_context(
+                        head.position,
+                        lookahead_tokens=head.token_ahead,
+                        expected_symbols=None,
+                    )
 
                 end_position = head.position + len(head.token_ahead)
-                shifted_head = GSSNode(self, to_state, end_position,
-                                       head.frontier + 1, ambiguity=1,
-                                       layout_content=head.layout_content_ahead)
-                parent = Parent(shifted_head, head,
-                                head.position, end_position,
-                                token=head.token_ahead)
+                shifted_head = GSSNode(
+                    self,
+                    to_state,
+                    end_position,
+                    head.frontier + 1,
+                    ambiguity=1,
+                    layout_content=head.layout_content_ahead,
+                )
+                parent = Parent(
+                    shifted_head,
+                    head,
+                    head.position,
+                    end_position,
+                    token=head.token_ahead,
+                )
 
-                if self.dynamic_filter and \
-                        not self._call_dynamic_filter(parent, head.state,
-                                                      to_state, SHIFT):
+                if self.dynamic_filter and not self._call_dynamic_filter(
+                    parent, head.state, to_state, SHIFT
+                ):
                     continue
 
                 if self.debug:
@@ -439,8 +500,8 @@ class GLRParser(Parser):
         self._last_shifted_heads.sort(key=lambda h: h.position, reverse=True)
         last_head = self._last_shifted_heads[0]
         farthest_heads = takewhile(
-            lambda h: h.position == last_head.position,
-            self._last_shifted_heads)
+            lambda h: h.position == last_head.position, self._last_shifted_heads
+        )
 
         self._tokens_ahead = self._get_all_possible_tokens_ahead(last_head)
 
@@ -448,19 +509,21 @@ class GLRParser(Parser):
         for head in farthest_heads:
             for possible_lookahead in head.state.actions:
                 h = head.for_token(Token(possible_lookahead, [], position=head.position))
-                self._active_heads_per_symbol.setdefault(
-                    possible_lookahead, {})[h.state.state_id] = h
+                self._active_heads_per_symbol.setdefault(possible_lookahead, {})[
+                    h.state.state_id
+                ] = h
 
     def _finish_error_reporting(self):
         # Expected symbols are only those that can cause active heads
         # to shift.
         self._expected = set(h.token_ahead.symbol for h, _ in self._for_shifter)
         if self.debug:
-            a_print("*** LEAVING ERROR REPORTING MODE.",
-                    new_line=True)
-            h_print("Tokens expected:",
-                    ', '.join([t.name for t in self._expected]),
-                    level=1)
+            a_print("*** LEAVING ERROR REPORTING MODE.", new_line=True)
+            h_print(
+                "Tokens expected:",
+                ", ".join([t.name for t in self._expected]),
+                level=1,
+            )
             h_print("Tokens found:", self._tokens_ahead, level=1)
 
         # After leaving error reporting mode, register error and try
@@ -469,12 +532,13 @@ class GLRParser(Parser):
         self.errors.append(
             self._create_error(
                 self.input_str,
-                context, self._expected,
+                context,
+                self._expected,
                 tokens_ahead=self._tokens_ahead,
-                symbols_before=list(
-                    {h.state.symbol
-                     for h in self._last_shifted_heads}),
-                last_heads=self._last_shifted_heads))
+                symbols_before=list({h.state.symbol for h in self._last_shifted_heads}),
+                last_heads=self._last_shifted_heads,
+            )
+        )
 
         self.for_shifter = []
         self._in_error_reporting = False
@@ -486,8 +550,7 @@ class GLRParser(Parser):
 
         """
         if self.debug:
-            a_print("*** STARTING ERROR RECOVERY.",
-                    new_line=True)
+            a_print("*** STARTING ERROR RECOVERY.", new_line=True)
         error = self.errors[-1]
         debug = self.debug
         self._active_heads = {}
@@ -495,10 +558,12 @@ class GLRParser(Parser):
             if debug:
                 input_str = head.input_str
                 symbols = head.state.actions.keys()
-                h_print(f"Recovery initiated for head {head}.",
-                        level=1, new_line=True)
-                h_print("Symbols expected: ",
-                        [s.name for s in symbols], level=1)
+                h_print(
+                    f"Recovery initiated for head {head}.",
+                    level=1,
+                    new_line=True,
+                )
+                h_print("Symbols expected: ", [s.name for s in symbols], level=1)
             if isinstance(self.error_recovery, bool):
                 # Default recovery
                 if debug:
@@ -513,16 +578,18 @@ class GLRParser(Parser):
             if successful:
                 error.location.end_position = head.position
                 if debug:
-                    a_print("New position is ",
-                            pos_to_line_col(input_str, head.position),
-                            level=1)
-                    a_print("New lookahead token is ", head.token_ahead,
-                            level=1)
+                    a_print(
+                        "New position is ",
+                        pos_to_line_col(input_str, head.position),
+                        level=1,
+                    )
+                    a_print("New lookahead token is ", head.token_ahead, level=1)
                 self._active_heads[head.state.state_id] = head
                 if self.debug:
                     a_print(
                         "*** ERROR RECOVERY SUCCEEDED. CONTINUING.",
-                        new_line=True)
+                        new_line=True,
+                    )
             else:
                 if debug:
                     a_print("Killing head: ", head, level=1)
@@ -539,11 +606,11 @@ class GLRParser(Parser):
         # del self._last_shifted_heads
 
     def _debug_step_str(self):
-        return f'{self.debug_frontier}.{self.debug_step}'
+        return f"{self.debug_frontier}.{self.debug_step}"
 
     def _debug__active_heads(self, heads):
         if not heads:
-            h_print('No active heads.')
+            h_print("No active heads.")
         else:
             h_print("Active heads = ", len(heads))
             for head in heads:
@@ -561,17 +628,20 @@ class GLRParser(Parser):
         for head in heads:
             prints(f"\t{head}")
 
-    def _debug_context(self, position, layout_content=None,
-                       lookahead_tokens=None, expected_symbols=None):
+    def _debug_context(
+        self,
+        position,
+        layout_content=None,
+        lookahead_tokens=None,
+        expected_symbols=None,
+    ):
         input_str = self.input_str
-        h_print("Position:",
-                pos_to_line_col(input_str, position))
+        h_print("Position:", pos_to_line_col(input_str, position))
         h_print("Context:", _(position_context(input_str, position)))
         if layout_content:
             h_print("Layout: ", f"'{_(layout_content)}'", level=1)
         if expected_symbols:
-            h_print("Symbols expected: ",
-                    [s.name for s in expected_symbols])
+            h_print("Symbols expected: ", [s.name for s in expected_symbols])
         if lookahead_tokens:
             h_print("Token(s) ahead:", _(str(lookahead_tokens)))
 
@@ -585,74 +655,85 @@ class GLRParser(Parser):
 
     @no_colors
     def _trace_step_finish(self, from_head):
-        self._dot_trace += f'\n{from_head.key} -> ACCEPT;\n'
+        self._dot_trace += f"\n{from_head.key} -> ACCEPT;\n"
 
     @no_colors
     def _trace_frontier(self):
         parents_processed = set()
 
         for head in self._trace_frontier_heads:
-            self._dot_trace += f'{head.key} [label="{head.frontier}. '\
-                               f'{head.state.state_id}:{dot_escape(head.state.symbol.name)}"];\n'
+            self._dot_trace += (
+                f'{head.key} [label="{head.frontier}. '
+                f'{head.state.state_id}:{dot_escape(head.state.symbol.name)}"];\n'
+            )
 
         for step_no, step in enumerate(self._trace_frontier_steps):
             step_no += 1
             from_head, parent = step
             if parent not in parents_processed:
-                self._dot_trace += f'{parent.head.key} -> {parent.root.key} '\
-                                   f'[label="{parent.ambiguity}"];\n'
+                self._dot_trace += (
+                    f"{parent.head.key} -> {parent.root.key} "
+                    f'[label="{parent.ambiguity}"];\n'
+                )
                 parents_processed.add(parent)
             if parent.production:
                 # Reduce step
                 label = f"R:{dot_escape(parent.production)}"
             else:
                 # Shift step
-                label = f"S:{dot_escape(parent.token.symbol.name)}"\
-                        f"({dot_escape(parent.token.value)})"
-            self._dot_trace += f'{from_head.key} -> {parent.head.key} '\
-                               f'[label="{parent.head.frontier}.{step_no} '\
-                               f'{label}" {TRACE_DOT_STEP_STYLE}];\n'
+                label = (
+                    f"S:{dot_escape(parent.token.symbol.name)}"
+                    f"({dot_escape(parent.token.value)})"
+                )
+            self._dot_trace += (
+                f"{from_head.key} -> {parent.head.key} "
+                f'[label="{parent.head.frontier}.{step_no} '
+                f'{label}" {TRACE_DOT_STEP_STYLE}];\n'
+            )
 
-        self._dot_trace_ranks += \
-            '{{rank=same; {}; {}}}\n'.format(
-                self.debug_frontier - 1,
-                ''.join([f' {x.key};'
-                         for x in self._trace_frontier_heads]))
+        self._dot_trace_ranks += "{{rank=same; {}; {}}}\n".format(
+            self.debug_frontier - 1,
+            "".join([f" {x.key};" for x in self._trace_frontier_heads]),
+        )
         self._trace_frontier_heads = []
         self._trace_frontier_steps = []
 
     @no_colors
     def _trace_step_kill(self, from_head):
-        self._dot_trace += \
+        self._dot_trace += (
             f'{from_head.key}_killed [shape="diamond" fillcolor="red" label="killed"];\n'
-        self._dot_trace += \
-            f'{from_head.key} -> {from_head.key}_killed '\
+        )
+        self._dot_trace += (
+            f"{from_head.key} -> {from_head.key}_killed "
             f'[label="{self._debug_step_str()}." {TRACE_DOT_STEP_STYLE}];\n'
+        )
 
     @no_colors
     def _trace_step_drop(self, from_head, to_head):
-        self._dot_trace += f'{from_head.key} -> {to_head.key} '\
-                           f'[label="drop empty" {TRACE_DOT_DROP_STYLE}];\n'
+        self._dot_trace += (
+            f"{from_head.key} -> {to_head.key} "
+            f'[label="drop empty" {TRACE_DOT_DROP_STYLE}];\n'
+        )
 
     @no_colors
     def _trace_finish(self):
         if self.debug_trace and self.debug_trace_frontiers:
             self._dot_trace += '\nnode [shape=none, style=""]\n'
             self._dot_trace += self._dot_trace_ranks
-            self._dot_trace += '->'.join(str(i) for i in range(self.debug_frontier))
-            self._dot_trace += '[arrowhead=none];\n'
+            self._dot_trace += "->".join(str(i) for i in range(self.debug_frontier))
+            self._dot_trace += "[arrowhead=none];\n"
 
     def _export__dot_trace(self):
-        file_name = f"{self.file_name}_trace.dot" \
-                    if self.file_name else "parglare_trace.dot"
-        with open(file_name, 'w', encoding="utf-8") as f:
+        file_name = (
+            f"{self.file_name}_trace.dot" if self.file_name else "parglare_trace.dot"
+        )
+        with open(file_name, "w", encoding="utf-8") as f:
             f.write(DOT_HEADER)
             f.write(self._dot_trace)
             f.write("}\n")
 
         prints(f"Generated file {file_name}.")
-        prints("You can use dot viewer or generate pdf with the "
-               "following command:")
+        prints("You can use dot viewer or generate pdf with the following command:")
         h_print(f"dot -Tpdf -O {file_name}")
 
 
@@ -661,17 +742,33 @@ class Parent:
     Represent a backlink in the GSS stack with all possibilities in
     case of ambiguity.
     """
-    __slots__ = ['head', 'root', 'start_position', 'end_position',
-                 'possibilities', '_solutions', '_ambiguities', 'production', 'token']
 
-    def __init__(self, head, root, start_position, end_position=None,
-                 possibilities=None, production=None,
-                 token=None):
+    __slots__ = [
+        "head",
+        "root",
+        "start_position",
+        "end_position",
+        "possibilities",
+        "_solutions",
+        "_ambiguities",
+        "production",
+        "token",
+    ]
+
+    def __init__(
+        self,
+        head,
+        root,
+        start_position,
+        end_position=None,
+        possibilities=None,
+        production=None,
+        token=None,
+    ):
         self.root = root
         self.head = head
         self.start_position = start_position
-        self.end_position = end_position \
-            if end_position is not None else start_position
+        self.end_position = end_position if end_position is not None else start_position
 
         self.production = production
         self.token = token
@@ -693,8 +790,14 @@ class Parent:
         self._solutions = None
 
     def clone_with_root(self, root):
-        return Parent(self.head, root, self.start_position, self.end_position,
-                      list(self.possibilities), token=self.token)
+        return Parent(
+            self.head,
+            root,
+            self.start_position,
+            self.end_position,
+            list(self.possibilities),
+            token=self.token,
+        )
 
     @property
     def ambiguity(self):
@@ -715,6 +818,7 @@ class Parent:
                         if id(i) not in visited:
                             visited.add(id(i))
                             yield i
+
                 if isinstance(node, Parent):
                     return iter_non_visited(node, node.possibilities)
                 elif isinstance(node, NodeNonTerm):
@@ -728,8 +832,9 @@ class Parent:
                     amb = 1
                 return sum(subresults) + amb
 
-            self._ambiguities = visitor(self, iterator, calculate, memoize=True,
-                                        check_cycle=True)
+            self._ambiguities = visitor(
+                self, iterator, calculate, memoize=True, check_cycle=True
+            )
             del visited
 
         return self._ambiguities
@@ -738,6 +843,7 @@ class Parent:
     def solutions(self):
         "Total number of trees/solutions."
         if self._solutions is None:
+
             def iterator(node):
                 if isinstance(node, Parent):
                     return iter(node.possibilities)
@@ -750,16 +856,17 @@ class Parent:
                 if isinstance(node, Parent):
                     return sum(subresults)
                 else:
-                    return reduce(lambda x, y: x*y, subresults, 1)
+                    return reduce(lambda x, y: x * y, subresults, 1)
 
-            self._solutions = visitor(self, iterator, calculate, memoize=True,
-                                      check_cycle=True)
+            self._solutions = visitor(
+                self, iterator, calculate, memoize=True, check_cycle=True
+            )
 
         return self._solutions
 
     @property
     def id(self):
-        return f'{self.head.id}->{self.root.id}'
+        return f"{self.head.id}->{self.root.id}"
 
     @property
     def layout_content(self):
@@ -780,8 +887,10 @@ class Parent:
         return hash(self.id)
 
     def __str__(self):
-        return f'{self.root.id}({self.root.symbol})<-{self.head.id}'\
-               f'({self.head.symbol}) [{self.ambiguity}]'
+        return (
+            f"{self.root.id}({self.root.symbol})<-{self.head.id}"
+            f"({self.head.symbol}) [{self.ambiguity}]"
+        )
 
     def __repr__(self):
         return str(self)
@@ -823,17 +932,37 @@ class GSSNode:
             token are considered the same. Created from shift level and
             state id.
     """
-    __slots__ = ['parser', 'id', 'state', 'position', 'frontier',
-                 'parents', '_ambiguity', 'token_ahead',
-                 'layout_content', 'layout_content_ahead', '_hash']
 
-    def __init__(self, parser, state, position, frontier, ambiguity=None,
-                 token_ahead=None, layout_content='', layout_content_ahead=''):
+    __slots__ = [
+        "parser",
+        "id",
+        "state",
+        "position",
+        "frontier",
+        "parents",
+        "_ambiguity",
+        "token_ahead",
+        "layout_content",
+        "layout_content_ahead",
+        "_hash",
+    ]
+
+    def __init__(
+        self,
+        parser,
+        state,
+        position,
+        frontier,
+        ambiguity=None,
+        token_ahead=None,
+        layout_content="",
+        layout_content_ahead="",
+    ):
         self.parser = parser
         self.state = state
         self.position = position
         self.frontier = frontier
-        self.id = f'{frontier}_{state.state_id}'
+        self.id = f"{frontier}_{state.state_id}"
 
         self._ambiguity = ambiguity
 
@@ -884,9 +1013,14 @@ class GSSNode:
         elif self.token_ahead == token:
             return self
         else:
-            new_head = GSSNode(self.parser, self.state, self.position,
-                               self.frontier, token_ahead=token,
-                               layout_content=self.layout_content)
+            new_head = GSSNode(
+                self.parser,
+                self.state,
+                self.position,
+                self.frontier,
+                token_ahead=token,
+                layout_content=self.layout_content,
+            )
             new_head.parents = dict(self.parents)
             return new_head
 
@@ -895,20 +1029,24 @@ class GSSNode:
         Stack nodes are equal if they are on the same position in the same
         state for the same lookahead token.
         """
-        return self.id == other.id \
-            and self.token_ahead == other.token_ahead
+        return self.id == other.id and self.token_ahead == other.token_ahead
 
     def __ne__(self, other):
         return not self == other
 
     def __str__(self):
-        return _("<{}:{}, id={}{}, position={}, "
-                 "ambiguity={}>".format(
-                     self.state.state_id, self.state.symbol,
-                     self.id,
-                     f", token ahead={self.token_ahead}"
-                     if self.token_ahead is not None else "",
-                     self.position, self.ambiguity))
+        return _(
+            "<{}:{}, id={}{}, position={}, ambiguity={}>".format(
+                self.state.state_id,
+                self.state.symbol,
+                self.id,
+                f", token ahead={self.token_ahead}"
+                if self.token_ahead is not None
+                else "",
+                self.position,
+                self.ambiguity,
+            )
+        )
 
     def __repr__(self):
         return str(self)

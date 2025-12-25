@@ -6,7 +6,12 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 from parglare import termui
 from parglare.actions import pass_none
-from parglare.common import ErrorContext, Location, pos_to_line_col, position_context
+from parglare.common import (
+    ErrorContext,
+    Location,
+    pos_to_line_col,
+    position_context,
+)
 from parglare.exceptions import (
     DisambiguationError,
     DynamicDisambiguationConflict,
@@ -27,8 +32,7 @@ from parglare.trees import NodeNonTerm, NodeTerm
 logger = logging.getLogger(__name__)
 
 
-def hint_key(state: int,
-             tokens_ahead: Union[List['Token'], None]) -> Tuple[Any, ...]:
+def hint_key(state: int, tokens_ahead: Union[List["Token"], None]) -> Tuple[Any, ...]:
     if tokens_ahead is not None:
         lookaheads = sorted([t.symbol.name for t in tokens_ahead])
     else:
@@ -40,40 +44,59 @@ class Parser:
     """Parser works like a DFA driven by LR tables. For a given grammar LR table
     will be created and cached or loaded from cache if cache is found.
     """
-    def __init__(self, grammar: Grammar, in_layout=False, actions=None,
-                 layout_actions=None, debug=False, debug_trace=False,
-                 debug_colors=False, debug_layout=False, ws='\n\r\t ',
-                 consume_input=True, build_tree=False,
-                 call_actions_during_tree_build=False, tables=LALR,
-                 return_position=False, prefer_shifts=None,
-                 prefer_shifts_over_empty=None, error_recovery=False,
-                 dynamic_filter=None, custom_token_recognition=None,
-                 lexical_disambiguation=True, force_load_table=False,
-                 table=None):
+
+    def __init__(
+        self,
+        grammar: Grammar,
+        in_layout=False,
+        actions=None,
+        layout_actions=None,
+        debug=False,
+        debug_trace=False,
+        debug_colors=False,
+        debug_layout=False,
+        ws="\n\r\t ",
+        consume_input=True,
+        build_tree=False,
+        call_actions_during_tree_build=False,
+        tables=LALR,
+        return_position=False,
+        prefer_shifts=None,
+        prefer_shifts_over_empty=None,
+        error_recovery=False,
+        dynamic_filter=None,
+        custom_token_recognition=None,
+        lexical_disambiguation=True,
+        force_load_table=False,
+        table=None,
+    ):
         self.grammar = grammar
         self.in_layout = in_layout
 
         EMPTY.action = pass_none
         if actions:
-            self.grammar._resolve_actions(action_overrides=actions,
-                                          fail_on_no_resolve=True)
+            self.grammar._resolve_actions(
+                action_overrides=actions, fail_on_no_resolve=True
+            )
 
         self.layout_parser = None
         if self.in_layout:
-            start_production = grammar.get_production_id('LAYOUT')
+            start_production = grammar.get_production_id("LAYOUT")
         else:
             start_production = 1
-            layout_symbol = grammar.get_symbol('LAYOUT')
+            layout_symbol = grammar.get_symbol("LAYOUT")
             if layout_symbol:
                 self.layout_parser = Parser(
                     grammar,
                     in_layout=True,
                     consume_input=False,
                     actions=layout_actions,
-                    ws=None, return_position=True,
+                    ws=None,
+                    return_position=True,
                     prefer_shifts=True,
                     prefer_shifts_over_empty=True,
-                    debug=debug_layout)
+                    debug=debug_layout,
+                )
 
         self.ws = ws
         self.return_position = return_position
@@ -104,27 +127,31 @@ class Parser:
                 prefer_shifts_over_empty = True
 
             self.table = create_load_table(
-                grammar, itemset_type=itemset_type,
+                grammar,
+                itemset_type=itemset_type,
                 start_production=start_production,
                 prefer_shifts=prefer_shifts,
                 prefer_shifts_over_empty=prefer_shifts_over_empty,
                 lexical_disambiguation=lexical_disambiguation,
                 force_load=force_load_table,
                 in_layout=self.in_layout,
-                debug=debug)
+                debug=debug,
+            )
         else:
             self.table = table
 
             # warn about overriden parameters
             for name, value, default in [
-                ('tables', tables, LALR),
-                ('prefer_shifts', prefer_shifts, None),
-                ('prefer_shifts_over_empty', prefer_shifts_over_empty, None),
-                ('force_load_table', force_load_table, False),
+                ("tables", tables, LALR),
+                ("prefer_shifts", prefer_shifts, None),
+                ("prefer_shifts_over_empty", prefer_shifts_over_empty, None),
+                ("force_load_table", force_load_table, False),
             ]:
                 if value is not default:
-                    logger.warning("Precomputed table overrides value of "
-                                   "parameter %s", name)
+                    logger.warning(
+                        "Precomputed table overrides value of parameter %s",
+                        name,
+                    )
 
         self._check_parser()
         if not self.in_layout:
@@ -177,26 +204,29 @@ class Parser:
                 hint: List[str] = []
                 in_example = True
                 lookahead = False
+
                 def new_example():
                     nonlocal example_src, hint, lookahead, in_example
-                    examples.append({
-                        'example': ''.join(example_src),
-                        'hint': '\n'.join(hint),
-                        'lookahead': lookahead,
-                    })
+                    examples.append(
+                        {
+                            "example": "".join(example_src),
+                            "hint": "\n".join(hint),
+                            "lookahead": lookahead,
+                        }
+                    )
                     example_src = []
                     hint = []
                     in_example = True
 
                 for line in f:
-                    if not in_example and line.strip() == '':
+                    if not in_example and line.strip() == "":
                         continue
-                    if line.startswith('====='):
+                    if line.startswith("====="):
                         new_example()
                         continue
 
-                    if line.startswith(':::'):
-                        lookahead = line[3] == '+'
+                    if line.startswith(":::"):
+                        lookahead = line[3] == "+"
                         in_example = False
                         continue
 
@@ -210,37 +240,39 @@ class Parser:
             compiled_examples = {}
             for example in examples:
                 try:
-                    self.parse(example['example'])
+                    self.parse(example["example"])
                 except SyntaxError as e:
-                    del example['example']
+                    del example["example"]
                     states = []
                     try:
-                        states  = [self.parse_stack[-1].state.state_id]
+                        states = [self.parse_stack[-1].state.state_id]
                     except AttributeError:
                         # We are using GLR
                         if TYPE_CHECKING:
                             assert isinstance(self, GLRParser)
                         states = self._active_heads.keys()
-                    lookahead = example.pop('lookahead')
+                    lookahead = example.pop("lookahead")
                     lookaheads = e.tokens_ahead if lookahead else None
                     for state in states:
                         key = hint_key(state, lookaheads)
-                        compiled_examples[key] = example['hint']
+                        compiled_examples[key] = example["hint"]
 
             return compiled_examples
 
         self._in_error_hints = True
         grammar_file = Path(self.grammar.file_path)
-        hints_file = grammar_file.with_suffix('.pge')
+        hints_file = grammar_file.with_suffix(".pge")
         compiled_hints = None
         if hints_file.exists():
-            hints_file_compiled = hints_file.with_suffix('.pgec')
-            if not hints_file_compiled.exists() \
-               or grammar_file.stat().st_mtime > hints_file_compiled.stat().st_mtime \
-               or hints_file.stat().st_mtime > hints_file_compiled.stat().st_mtime:
+            hints_file_compiled = hints_file.with_suffix(".pgec")
+            if (
+                not hints_file_compiled.exists()
+                or grammar_file.stat().st_mtime > hints_file_compiled.stat().st_mtime
+                or hints_file.stat().st_mtime > hints_file_compiled.stat().st_mtime
+            ):
                 # Compilation is needed
                 compiled_hints = compile_errors(hints_file)
-                with open(hints_file_compiled, 'w') as f:
+                with open(hints_file_compiled, "w") as f:
                     serializable = {str(k): v for k, v in compiled_hints.items()}
                     json.dump(serializable, f)
             else:
@@ -253,7 +285,7 @@ class Parser:
 
     def print_debug(self):
         if self.in_layout and self.debug_layout:
-            a_print('*** LAYOUT parser ***', new_line=True)
+            a_print("*** LAYOUT parser ***", new_line=True)
         self.table.print_debug()
 
     def parse_file(self, file_name, **kwargs):
@@ -262,7 +294,7 @@ class Parser:
         Args:
             file_name(str): A file name.
         """
-        with open(file_name, encoding='utf-8') as f:
+        with open(file_name, encoding="utf-8") as f:
             content = f.read()
         return self.parse(content, file_name=file_name, **kwargs)
 
@@ -299,26 +331,31 @@ class Parser:
             head = parse_stack[-1]
             cur_state = head.state
             if debug:
-                a_print("Current state:", str(cur_state.state_id),
-                        new_line=True)
+                a_print("Current state:", str(cur_state.state_id), new_line=True)
 
             if head.token_ahead is None:
                 if not self.in_layout:
                     self._skipws(head, input_str)
                     if self.debug:
-                        h_print("Layout content:",
-                                f"'{head.layout_content}'",
-                                level=1)
+                        h_print(
+                            "Layout content:",
+                            f"'{head.layout_content}'",
+                            level=1,
+                        )
 
                 head.token_ahead = next_token(head)
 
             if debug:
-                h_print("Context:",
-                        position_context(head.input_str,
-                                         head.position), level=1)
-                h_print("Tokens expected:",
-                        expected_symbols_str(cur_state.actions.keys()),
-                        level=1)
+                h_print(
+                    "Context:",
+                    position_context(head.input_str, head.position),
+                    level=1,
+                )
+                h_print(
+                    "Tokens expected:",
+                    expected_symbols_str(cur_state.actions.keys()),
+                    level=1,
+                )
                 h_print("Token ahead:", head.token_ahead, level=1)
 
             actions = None
@@ -330,25 +367,28 @@ class Parser:
                 actions = cur_state.actions.get(STOP)
 
             if not actions:
-
                 symbols_expected = list(cur_state.actions.keys())
                 tokens_ahead = self._get_all_possible_tokens_ahead(head)
-                self.errors.append(self._create_error(
-                    input_str,
-                    head, symbols_expected,
-                    tokens_ahead,
-                    symbols_before=[cur_state.symbol]))
+                self.errors.append(
+                    self._create_error(
+                        input_str,
+                        head,
+                        symbols_expected,
+                        tokens_ahead,
+                        symbols_before=[cur_state.symbol],
+                    )
+                )
 
                 if self.error_recovery:
                     if self.debug:
-                        a_print("*** STARTING ERROR RECOVERY.",
-                                new_line=True)
+                        a_print("*** STARTING ERROR RECOVERY.", new_line=True)
                     if self._do_recovery():
                         # Error recovery succeeded
                         if self.debug:
                             a_print(
                                 "*** ERROR RECOVERY SUCCEEDED. CONTINUING.",
-                                new_line=True)
+                                new_line=True,
+                            )
                         continue
                     else:
                         break
@@ -362,9 +402,17 @@ class Parser:
                 # If after dynamic disambiguation we still have at least one
                 # shift and non-empty reduction or multiple non-empty
                 # reductions raise exception.
-                if len([a for a in actions
-                        if (a.action is SHIFT)
-                        or ((a.action is REDUCE) and len(a.prod.rhs))]) > 1:
+                if (
+                    len(
+                        [
+                            a
+                            for a in actions
+                            if (a.action is SHIFT)
+                            or ((a.action is REDUCE) and len(a.prod.rhs))
+                        ]
+                    )
+                    > 1
+                ):
                     raise DynamicDisambiguationConflict(head, actions)
 
             # If dynamic disambiguation is disabled either globaly by not
@@ -379,11 +427,13 @@ class Parser:
                 cur_state = act.state
 
                 if debug:
-                    a_print("Shift:",
-                            f"{cur_state.state_id} \"{head.token_ahead.value}\""
-                            + " at position " +
-                            str(pos_to_line_col(self.input_str,
-                                                head.position)), level=1)
+                    a_print(
+                        "Shift:",
+                        f'{cur_state.state_id} "{head.token_ahead.value}"'
+                        + " at position "
+                        + str(pos_to_line_col(self.input_str, head.position)),
+                        level=1,
+                    )
 
                 new_position = head.position + len(head.token_ahead)
                 new_head = LRStackNode(
@@ -394,7 +444,7 @@ class Parser:
                     layout_content=head.layout_content_ahead,
                     position=new_position,
                     start_position=head.position,
-                    end_position=new_position
+                    end_position=new_position,
                 )
                 new_head.results = self._call_shift_action(new_head)
                 parse_stack.append(new_head)
@@ -409,8 +459,7 @@ class Parser:
                 production = act.prod
 
                 if debug:
-                    a_print("Reducing", f"by prod '{production}'.",
-                            level=1)
+                    a_print("Reducing", f"by prod '{production}'.", level=1)
 
                 r_length = len(production.rhs)
                 if r_length:
@@ -428,7 +477,7 @@ class Parser:
                         end_position=head.end_position,
                         token_ahead=head.token_ahead,
                         layout_content=start_reduction_head.layout_content,
-                        layout_content_ahead=head.layout_content_ahead
+                        layout_content_ahead=head.layout_content_ahead,
                     )
                 else:
                     # Empty reduction
@@ -443,8 +492,8 @@ class Parser:
                         start_position=head.end_position,
                         end_position=head.end_position,
                         token_ahead=head.token_ahead,
-                        layout_content='',
-                        layout_content_ahead=head.layout_content_ahead
+                        layout_content="",
+                        layout_content_ahead=head.layout_content_ahead,
                     )
 
                 # Calling reduce action
@@ -469,21 +518,28 @@ class Parser:
         """
         Calls semantic actions for the given tree node.
         """
+
         def inner_call_actions(node):
             sem_action = node.symbol.action
             if node.is_term():
                 if sem_action:
                     try:
-                        result = sem_action(node.context, node.value,
-                                            *node.additional_data)
+                        result = sem_action(
+                            node.context, node.value, *node.additional_data
+                        )
                     except TypeError as e:
-                        raise TypeError('{}: terminal={} action={} params={}'
-                                        .format(
-                                            str(e),
-                                            node.symbol.name,
-                                            repr(sem_action),
-                                            (node.context, node.value,
-                                             node.additional_data))) from e
+                        raise TypeError(
+                            "{}: terminal={} action={} params={}".format(
+                                str(e),
+                                node.symbol.name,
+                                repr(sem_action),
+                                (
+                                    node.context,
+                                    node.value,
+                                    node.additional_data,
+                                ),
+                            )
+                        ) from e
                 else:
                     result = node.value
             else:
@@ -499,66 +555,57 @@ class Parser:
                     if assignments:
                         assgn_results = {}
                         for a in assignments.values():
-                            if a.op == '=':
+                            if a.op == "=":
                                 assgn_results[a.name] = subresults[a.index]
                             else:
-                                assgn_results[a.name] = \
-                                    bool(subresults[a.index])
+                                assgn_results[a.name] = bool(subresults[a.index])
                     if isinstance(sem_action, list):
                         if assignments:
-                            result = \
-                                sem_action[
-                                    node.production.prod_symbol_id](
-                                        node, subresults, **assgn_results)
+                            result = sem_action[node.production.prod_symbol_id](
+                                node, subresults, **assgn_results
+                            )
                         else:
-                            result = \
-                                sem_action[
-                                    node.production.prod_symbol_id](
-                                        node.context, subresults)
+                            result = sem_action[node.production.prod_symbol_id](
+                                node.context, subresults
+                            )
                     else:
                         if assignments:
-                            result = sem_action(node.context, subresults,
-                                                **assgn_results)
+                            result = sem_action(node.context, subresults, **assgn_results)
                         else:
                             result = sem_action(node.context, subresults)
                 else:
-                    result = subresults[0] \
-                        if len(subresults) == 1 else subresults
+                    result = subresults[0] if len(subresults) == 1 else subresults
 
             return result
 
         return inner_call_actions(node)
 
     def _skipws(self, head, input_str):
-
         in_len = len(input_str)
-        layout_content_ahead = ''
+        layout_content_ahead = ""
 
         if self.layout_parser:
             _, pos = self.layout_parser.parse(input_str, head.position)
             if pos > head.position:
-                layout_content_ahead = input_str[head.position:pos]
+                layout_content_ahead = input_str[head.position : pos]
                 head.position = pos
         elif self.ws:
             old_pos = head.position
             try:
-                while head.position < in_len \
-                      and input_str[head.position] in self.ws:
+                while head.position < in_len and input_str[head.position] in self.ws:
                     head.position += 1
             except TypeError as ex:
                 raise ParserInitError(
-                    "For parsing non-textual content please "
-                    "set `ws` to `None`.") from ex
-            layout_content_ahead = input_str[old_pos:head.position]
+                    "For parsing non-textual content please set `ws` to `None`."
+                ) from ex
+            layout_content_ahead = input_str[old_pos : head.position]
 
         if self.debug:
             content = layout_content_ahead
             if isinstance(layout_content_ahead, str):
                 content = content.replace("\n", "\\n")
-            h_print("Skipping whitespaces:",
-                    f"'{content}'")
-            h_print("New position:", pos_to_line_col(input_str,
-                                                     head.position))
+            h_print("Skipping whitespaces:", f"'{content}'")
+            h_print("New position:", pos_to_line_col(input_str, head.position))
         head.layout_content_ahead = layout_content_ahead
 
     def _next_token(self, head):
@@ -585,19 +632,22 @@ class Parser:
         tokens = []
 
         # add special STOP token if they are applicable
-        if STOP in actions and (not self.consume_input \
-               or (self.consume_input and position == in_len)):
+        if STOP in actions and (
+            not self.consume_input or (self.consume_input and position == in_len)
+        ):
             tokens.append(STOP_token)
 
         if position < in_len:
             # Get tokens by trying recognizers - but only if we are not at
             # the end, because token cannot be empty
             if self.custom_token_recognition:
+
                 def get_tokens():
                     return self._token_recognition(head)
 
                 custom_tokens = self.custom_token_recognition(
-                    head, get_tokens,
+                    head,
+                    get_tokens,
                 )
                 if custom_tokens is not None:
                     tokens.extend(custom_tokens)
@@ -628,8 +678,7 @@ class Parser:
                 try:
                     tok = symbol.recognizer(head, input_str, position)
                 except TypeError as e:
-                    raise TypeError(
-                        f'In recognizer for "{symbol}": {e}') from e
+                    raise TypeError(f'In recognizer for "{symbol}": {e}') from e
 
             additional_data = ()
             if type(tok) is tuple:
@@ -648,23 +697,24 @@ class Parser:
         tokens = []
         if context.position < len(context.input_str):
             for terminal in self.grammar.terminals.values():
-                if terminal.user_meta is not None \
-                   and terminal.user_meta.get('unexpected', True) is False:
+                if (
+                    terminal.user_meta is not None
+                    and terminal.user_meta.get("unexpected", True) is False
+                ):
                     continue
-                if terminal.name == 'KEYWORD':
+                if terminal.name == "KEYWORD":
                     continue
                 try:
-                    tok = terminal.recognizer(context.input_str,
-                                              context.position)
+                    tok = terminal.recognizer(context.input_str, context.position)
                 except TypeError:
-                    tok = terminal.recognizer(context, context.input_str,
-                                              context.position)
+                    tok = terminal.recognizer(
+                        context, context.input_str, context.position
+                    )
                 additional_data = ()
                 if type(tok) is tuple:
                     tok, *additional_data = tok
                 if tok:
-                    tokens.append(Token(terminal, tok, context.position,
-                                        additional_data))
+                    tokens.append(Token(terminal, tok, context.position, additional_data))
         return tokens
 
     def _init_dynamic_disambiguation(self, context):
@@ -674,37 +724,38 @@ class Parser:
             self.dynamic_filter(context, None, None, None, None, None)
 
     def _dynamic_disambiguation(self, context, actions):
-
         dyn_actions = []
         for a in actions:
             if a.action is SHIFT:
-                if self._call_dynamic_filter(context,
-                                             context.state,
-                                             a.state,
-                                             SHIFT):
+                if self._call_dynamic_filter(context, context.state, a.state, SHIFT):
                     dyn_actions.append(a)
             elif a.action is REDUCE:
                 r_len = len(a.prod.rhs)
                 results = [x.results for x in self.parse_stack[-r_len:]] if r_len else []
                 context.production = a.prod
-                if self._call_dynamic_filter(context,
-                                             context.state,
-                                             a.state,
-                                             REDUCE,
-                                             a.prod,
-                                             results):
+                if self._call_dynamic_filter(
+                    context, context.state, a.state, REDUCE, a.prod, results
+                ):
                     dyn_actions.append(a)
             else:
                 dyn_actions.append(a)
         return dyn_actions
 
-    def _call_dynamic_filter(self, context, from_state, to_state, action,
-                             production=None, subresults=None):
+    def _call_dynamic_filter(
+        self,
+        context,
+        from_state,
+        to_state,
+        action,
+        production=None,
+        subresults=None,
+    ):
         token = context.token
         if context.token is None:
             context.token = context.token_ahead
-        if (action is SHIFT and not to_state.symbol.dynamic)\
-           or (action is REDUCE and not production.dynamic):
+        if (action is SHIFT and not to_state.symbol.dynamic) or (
+            action is REDUCE and not production.dynamic
+        ):
             return True
 
         if self.debug:
@@ -719,12 +770,15 @@ class Parser:
                 production = f", prod={context.production}"
                 subresults = f", subresults={subresults}"
 
-            h_print("Calling filter for action:",
-                    f" {act_str}, token={token}{production}{subresults}",
-                    level=2)
+            h_print(
+                "Calling filter for action:",
+                f" {act_str}, token={token}{production}{subresults}",
+                level=2,
+            )
 
-        accepted = self.dynamic_filter(context, from_state, to_state,
-                                       action, production, subresults)
+        accepted = self.dynamic_filter(
+            context, from_state, to_state, action, production, subresults
+        )
         if self.debug:
             if accepted:
                 a_print("Action accepted.", level=2)
@@ -744,8 +798,7 @@ class Parser:
         if self.build_tree:
             # call action for building tree node if tree building is enabled
             if debug:
-                h_print("Building terminal node",
-                        f"'{token.symbol.name}'.", level=2)
+                h_print("Building terminal node", f"'{token.symbol.name}'.", level=2)
 
             # If both build_tree and call_actions_during_build are set to
             # True, semantic actions will be call but their result will be
@@ -761,15 +814,19 @@ class Parser:
 
         else:
             if debug:
-                h_print("No action defined",
-                        f"for '{token.symbol.name}'. "
-                        "Result is matched string.",
-                        level=1)
+                h_print(
+                    "No action defined",
+                    f"for '{token.symbol.name}'. Result is matched string.",
+                    level=1,
+                )
             result = token.value
 
         if debug:
-            h_print("Action result = ",
-                    f"type:{type(result)} value:{repr(result)}", level=1)
+            h_print(
+                "Action result = ",
+                f"type:{type(result)} value:{repr(result)}",
+                level=1,
+            )
 
         return result
 
@@ -785,11 +842,13 @@ class Parser:
         if self.build_tree:
             # call action for building tree node if enabled.
             if debug:
-                h_print("Building non-terminal node",
-                        f"'{production.symbol.name}'.", level=2)
+                h_print(
+                    "Building non-terminal node",
+                    f"'{production.symbol.name}'.",
+                    level=2,
+                )
 
-            bt_result = NodeNonTerm(context, children=subresults,
-                                    production=production)
+            bt_result = NodeNonTerm(context, children=subresults, production=production)
             context.node = bt_result
             if not self.call_actions_during_tree_build:
                 return bt_result
@@ -800,7 +859,7 @@ class Parser:
             if assignments:
                 assgn_results = {}
                 for a in assignments.values():
-                    if a.op == '=':
+                    if a.op == "=":
                         assgn_results[a.name] = subresults[a.index]
                     else:
                         assgn_results[a.name] = bool(subresults[a.index])
@@ -808,10 +867,10 @@ class Parser:
             if isinstance(sem_action, list):
                 if assignments:
                     result = sem_action[production.prod_symbol_id](
-                        context, subresults, **assgn_results)
+                        context, subresults, **assgn_results
+                    )
                 else:
-                    result = sem_action[production.prod_symbol_id](context,
-                                                                   subresults)
+                    result = sem_action[production.prod_symbol_id](context, subresults)
             else:
                 if assignments:
                     result = sem_action(context, subresults, **assgn_results)
@@ -820,8 +879,11 @@ class Parser:
 
         else:
             if debug:
-                h_print("No action defined",
-                        f" for '{production.symbol.name}'.", level=1)
+                h_print(
+                    "No action defined",
+                    f" for '{production.symbol.name}'.",
+                    level=1,
+                )
             if len(subresults) == 1:
                 if debug:
                     h_print("Unpacking a single subresult.", level=1)
@@ -832,8 +894,11 @@ class Parser:
                 result = subresults
 
         if debug:
-            h_print("Action result =",
-                    f"type:{type(result)} value:{repr(result)}", level=1)
+            h_print(
+                "Action result =",
+                f"type:{type(result)} value:{repr(result)}",
+                level=1,
+            )
 
         # If build_tree is set to True, discard the result of the semantic
         # action, and return the result of treebuild_reduce_action.
@@ -848,8 +913,11 @@ class Parser:
         """
 
         if self.debug:
-            h_print("Lexical disambiguation.",
-                    f" Tokens: {[x for x in tokens]}", level=1)
+            h_print(
+                "Lexical disambiguation.",
+                f" Tokens: {[x for x in tokens]}",
+                level=1,
+            )
 
         if len(tokens) <= 1:
             return tokens
@@ -858,8 +926,11 @@ class Parser:
         max_len = max(len(x.value) for x in tokens)
         tokens = [x for x in tokens if len(x.value) == max_len]
         if self.debug:
-            h_print("Disambiguation by longest-match strategy.",
-                    f"Tokens: {[x for x in tokens]}", level=1)
+            h_print(
+                "Disambiguation by longest-match strategy.",
+                f"Tokens: {[x for x in tokens]}",
+                level=1,
+            )
         if len(tokens) == 1:
             return tokens
 
@@ -867,14 +938,12 @@ class Parser:
         pref_tokens = [x for x in tokens if x.symbol.prefer]
         if pref_tokens:
             if self.debug:
-                h_print(f"Preferring tokens {pref_tokens}.",
-                        level=1)
+                h_print(f"Preferring tokens {pref_tokens}.", level=1)
             return pref_tokens
 
         return tokens
 
     def _do_recovery(self):
-
         debug = self.debug
         if debug:
             a_print("**Recovery initiated.**")
@@ -901,11 +970,12 @@ class Parser:
                 h_print("Recovery ")
             error.location.end_position = head.position
             if debug:
-                a_print("New position is ",
-                        pos_to_line_col(head.input_str, head.position),
-                        level=1)
-                a_print("New lookahead token is ", head.token_ahead,
-                        level=1)
+                a_print(
+                    "New position is ",
+                    pos_to_line_col(head.input_str, head.position),
+                    level=1,
+                )
+                a_print("New lookahead token is ", head.token_ahead, level=1)
         return successful
 
     def default_error_recovery(self, head):
@@ -934,11 +1004,15 @@ class Parser:
         last_heads=None,
     ):
         hint = None
-        if not self.in_layout and not hasattr(self, '_in_error_hints') \
-           and self.error_hints is not None:
+        if (
+            not self.in_layout
+            and not hasattr(self, "_in_error_hints")
+            and self.error_hints is not None
+        ):
             # Check if a specific version with tokens ahead is available
-            hint = self.error_hints.get(hint_key(context.state.state_id, tokens_ahead),
-                                        None)
+            hint = self.error_hints.get(
+                hint_key(context.state.state_id, tokens_ahead), None
+            )
             if hint is None:
                 # Check if more generic version without tokens ahead is availabe
                 hint = self.error_hints.get(hint_key(context.state.state_id, None), None)
@@ -965,15 +1039,37 @@ class LRStackNode:
     An element of the LR parsing stack. Also the parsing context.
     """
 
-    __slots__ = ['parser', 'state', 'frontier', 'position', 'results',
-                 'start_position', 'end_position', 'token_ahead', 'token',
-                 'production', 'layout_content', 'layout_content_ahead',
-                 'node']
+    __slots__ = [
+        "parser",
+        "state",
+        "frontier",
+        "position",
+        "results",
+        "start_position",
+        "end_position",
+        "token_ahead",
+        "token",
+        "production",
+        "layout_content",
+        "layout_content_ahead",
+        "node",
+    ]
 
-    def __init__(self, parser, state, frontier, position, results=None,
-                 start_position=None, end_position=None, token=None,
-                 token_ahead=None, production=None, layout_content='',
-                 layout_content_ahead=''):
+    def __init__(
+        self,
+        parser,
+        state,
+        frontier,
+        position,
+        results=None,
+        start_position=None,
+        end_position=None,
+        token=None,
+        token_ahead=None,
+        production=None,
+        layout_content="",
+        layout_content_ahead="",
+    ):
         self.parser = parser
         self.state = state
         self.frontier = frontier
@@ -999,10 +1095,13 @@ class LRStackNode:
         self.node = None
 
     def __repr__(self):
-        return "<LRStackNode({}:{}{})>"\
-            .format(self.state.state_id, self.state.symbol,
-                    f", pos=({self.start_position}-{self.end_position})"
-                    if self.start_position is not None else "")
+        return "<LRStackNode({}:{}{})>".format(
+            self.state.state_id,
+            self.state.symbol,
+            f", pos=({self.start_position}-{self.end_position})"
+            if self.start_position is not None
+            else "",
+        )
 
     @property
     def symbol(self):
@@ -1029,7 +1128,8 @@ class Token:
     """
     Token or lexeme matched from the input.
     """
-    __slots__ = ['symbol', 'value', 'additional_data', 'length', 'position']
+
+    __slots__ = ["symbol", "value", "additional_data", "length", "position"]
 
     def __init__(self, symbol, value, position, additional_data=(), length=None):
         self.symbol = symbol
@@ -1055,4 +1155,4 @@ class Token:
         return True
 
 
-STOP_token = Token(STOP, '', None)
+STOP_token = Token(STOP, "", None)

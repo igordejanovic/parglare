@@ -17,16 +17,16 @@ def test_repeatable_zero_or_more():
     """
 
     g = Grammar.from_string(grammar)
-    assert g.get_nonterminal('b_0')
-    assert g.get_nonterminal('b_1')
+    assert g.get_nonterminal("b_0")
+    assert g.get_nonterminal("b_1")
 
     p = Parser(g)
 
-    input_str = '2 1 1 1 3'
+    input_str = "2 1 1 1 3"
     result = p.parse(input_str)
     assert result == ["2", ["1", "1", "1"], "3"]
 
-    input_str = '2 3'
+    input_str = "2 3"
     result = p.parse(input_str)
     assert result == ["2", [], "3"]
 
@@ -45,15 +45,15 @@ def test_repeatable_zero_or_more_with_separator():
     """
 
     g = Grammar.from_string(grammar)
-    assert g.get_nonterminal('b_0_comma')
+    assert g.get_nonterminal("b_0_comma")
 
     p = Parser(g)
 
-    input_str = '2 1, 1 , 1 3'
+    input_str = "2 1, 1 , 1 3"
     result = p.parse(input_str)
     assert result == ["2", ["1", "1", "1"], "3"]
 
-    input_str = '2 3'
+    input_str = "2 3"
     result = p.parse(input_str)
     assert result == ["2", [], "3"]
 
@@ -71,18 +71,18 @@ def test_repeatable_one_or_more():
     """
 
     g = Grammar.from_string(grammar)
-    assert g.get_nonterminal('b_1')
+    assert g.get_nonterminal("b_1")
 
     p = Parser(g)
 
-    input_str = '2 1 1 1 3'
+    input_str = "2 1 1 1 3"
     result = p.parse(input_str)
     assert result == ["2", ["1", "1", "1"], "3"]
 
-    input_str = '2 3'
+    input_str = "2 3"
     with pytest.raises(SyntaxError) as e:
         result = p.parse(input_str)
-    assert 'expected: b' in str(e.value)
+    assert "expected: b" in str(e.value)
 
 
 def test_repeatable_one_or_more_with_separator():
@@ -99,18 +99,18 @@ def test_repeatable_one_or_more_with_separator():
     """
 
     g = Grammar.from_string(grammar)
-    assert g.get_nonterminal('b_1_comma')
+    assert g.get_nonterminal("b_1_comma")
 
     p = Parser(g)
 
-    input_str = '2 1, 1 , 1 3'
+    input_str = "2 1, 1 , 1 3"
     result = p.parse(input_str)
     assert result == ["2", ["1", "1", "1"], "3"]
 
-    input_str = '2 3'
+    input_str = "2 3"
     with pytest.raises(SyntaxError) as e:
         p.parse(input_str)
-    assert 'expected: b' in str(e.value)
+    assert "expected: b" in str(e.value)
 
 
 def test_optional():
@@ -126,26 +126,26 @@ def test_optional():
     """
 
     g = Grammar.from_string(grammar)
-    assert g.get_nonterminal('b_opt')
+    assert g.get_nonterminal("b_opt")
 
     p = Parser(g)
 
-    input_str = '2 1 3'
+    input_str = "2 1 3"
     result = p.parse(input_str)
     assert result == ["2", "1", "3"]
 
-    input_str = '2 3'
+    input_str = "2 3"
     result = p.parse(input_str)
     assert result == ["2", None, "3"]
 
-    input_str = '2 1'
+    input_str = "2 1"
     result = p.parse(input_str)
     assert result == ["2", "1", None]
 
-    input_str = ' 1 3'
+    input_str = " 1 3"
     with pytest.raises(SyntaxError) as e:
         p.parse(input_str)
-    assert 'expected: 2' in str(e.value)
+    assert "expected: 2" in str(e.value)
 
 
 def test_optional_no_modifiers():
@@ -181,12 +181,12 @@ def test_multiple_repetition_operators():
     """
 
     g = Grammar.from_string(grammar)
-    assert g.get_nonterminal('b_0_comma')
-    assert g.get_nonterminal('c_1')
+    assert g.get_nonterminal("b_0_comma")
+    assert g.get_nonterminal("c_1")
 
     p = Parser(g)
 
-    input_str = '2 b, b  c 3'
+    input_str = "2 b, b  c 3"
     result = p.parse(input_str)
     assert result == ["2", ["b", "b"], ["c"], "3"]
 
@@ -205,11 +205,11 @@ def test_repetition_operator_many_times_same():
     """
 
     g = Grammar.from_string(grammar)
-    assert g.get_nonterminal('b_0_comma')
+    assert g.get_nonterminal("b_0_comma")
 
     p = Parser(g)
 
-    input_str = '2 b  3 b, b'
+    input_str = "2 b  3 b, b"
     result = p.parse(input_str)
     assert result == ["2", ["b"], "3", ["b", "b"]]
 

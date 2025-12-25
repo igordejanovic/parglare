@@ -3,7 +3,7 @@ from functools import reduce
 from parglare.common import dot_escape
 from parglare.exceptions import LoopError
 
-DOT_HEADER = '''
+DOT_HEADER = """
     digraph grammar {
     rankdir=TD
     fontname = "Bitstream Vera Sans"
@@ -12,7 +12,7 @@ DOT_HEADER = '''
     edge[dir=black,arrowtail=empty, fontsize=6 arrowsize=.5 penwidth=0.7]
     node[shape=plain height=0.1 width=0.1]
 
-'''
+"""
 
 
 def tree_node_iterator(n):
@@ -20,17 +20,20 @@ def tree_node_iterator(n):
     Iterator for forests and trees nodes. Used in visitors.
     """
     from parglare.glr import Parent
+
     if isinstance(n, Parent):
         return iter(n.possibilities)
     elif n.is_term():
         return iter([])
     else:
+
         def _iter():
             for i in n.children:
                 if isinstance(i, Parent) and len(i.possibilities) == 1:
                     yield i.possibilities[0]
                 else:
                     yield i
+
         return _iter()
 
 
@@ -38,60 +41,68 @@ def to_str(root):
     from parglare.glr import Parent
 
     def visit(n, subresults, depth):
-        indent = '  ' * depth
+        indent = "  " * depth
         if isinstance(n, Parent):
-            s = f'{indent}{n.head.symbol} - ambiguity[{n.ambiguity}]'
+            s = f"{indent}{n.head.symbol} - ambiguity[{n.ambiguity}]"
             for idx, p in enumerate(subresults):
-                s += f'\n{indent}{idx+1}:{p}'
+                s += f"\n{indent}{idx + 1}:{p}"
         elif n.is_nonterm():
-            s = f'{indent}{n.production.symbol}[{n.start_position}->{n.end_position}]'
+            s = f"{indent}{n.production.symbol}[{n.start_position}->{n.end_position}]"
             if subresults:
-                s = '{}\n{}'.format(s, '\n'.join(subresults))
+                s = "{}\n{}".format(s, "\n".join(subresults))
         else:
             s = f'{indent}{n.symbol}[{n.start_position}->{n.end_position}, "{n.value}"]'
         return s
+
     return visitor(root, tree_node_iterator, visit)
 
 
 def to_dot(self, positions=True):
     from parglare.glr import Parent
+
     rendered = set()
     terminals = []
 
     def visit(n, subresults, _):
-        sub_str = ''.join(s[1] for s in subresults if id(s[1]) not in rendered)
+        sub_str = "".join(s[1] for s in subresults if id(s[1]) not in rendered)
         rendered.update(id(s[1]) for s in subresults)
-        pos = f'[{n.start_position}-{n.end_position}]' if positions else ''
+        pos = f"[{n.start_position}-{n.end_position}]" if positions else ""
         if isinstance(n, Parent):
             s = '{}[label="Amb({},{})" shape=box];\n'.format(
-                id(n),
-                dot_escape(f'{n.head.symbol}{pos}'), n.ambiguity)
+                id(n), dot_escape(f"{n.head.symbol}{pos}"), n.ambiguity
+            )
             s += sub_str
-            s += ''.join(f'{id(n)}->{id(s[0])};\n' for s in subresults)
+            s += "".join(f"{id(n)}->{id(s[0])};\n" for s in subresults)
         elif n.is_nonterm():
-            s = '{}[label="{}"];\n'.format(
-                id(n),
-                dot_escape(f'{n.symbol}{pos}'))
+            s = '{}[label="{}"];\n'.format(id(n), dot_escape(f"{n.symbol}{pos}"))
             s += sub_str
-            s += ''.join((f'{id(n)}->{id(s[0])}[label="{idx+1}"];\n'
-                          for idx, s in enumerate(subresults)))
+            s += "".join(
+                (
+                    f'{id(n)}->{id(s[0])}[label="{idx + 1}"];\n'
+                    for idx, s in enumerate(subresults)
+                )
+            )
         else:
             terminals.append(n)
-            label = f'{n.symbol}({n.value[:10]})' \
-                if n.symbol.name != n.value else n.symbol.name
-            s = '{} [label="{}"];\n'\
-                .format(id(n), dot_escape(f'{label}{pos}'))
+            label = (
+                f"{n.symbol}({n.value[:10]})"
+                if n.symbol.name != n.value
+                else n.symbol.name
+            )
+            s = '{} [label="{}"];\n'.format(id(n), dot_escape(f"{label}{pos}"))
         return (n, s)
-    return '{}\n{}\n{}\n}}\n'.format(
+
+    return "{}\n{}\n{}\n}}\n".format(
         DOT_HEADER,
         visitor(self, tree_node_iterator, visit)[1],
-        '{{rank=same {} [style=invis]}}'.format('->'.join(str(id(t)) for t in terminals)))
+        "{{rank=same {} [style=invis]}}".format("->".join(str(id(t)) for t in terminals)),
+    )
 
 
 class Node:
     """A node of the parse tree."""
 
-    __slots__ = ['context']
+    __slots__ = ["context"]
 
     def __init__(self, context):
         self.context = context
@@ -122,7 +133,7 @@ class Node:
 
 
 class NodeNonTerm(Node):
-    __slots__ = ['production', 'children']
+    __slots__ = ["production", "children"]
 
     def __init__(self, context, children, production=None):
         super().__init__(context)
@@ -132,7 +143,7 @@ class NodeNonTerm(Node):
     @property
     def solutions(self):
         "For SPPF trees"
-        return reduce(lambda x, y: x*y, (c.solutions for c in self.children), 1)
+        return reduce(lambda x, y: x * y, (c.solutions for c in self.children), 1)
 
     @property
     def symbol(self):
@@ -142,8 +153,10 @@ class NodeNonTerm(Node):
         return True
 
     def __str__(self):
-        return f'NonTerm({self.production.symbol}, '\
-               f'{self.start_position}-{self.end_position})'
+        return (
+            f"NonTerm({self.production.symbol}, "
+            f"{self.start_position}-{self.end_position})"
+        )
 
     def __iter__(self):
         return iter(self.children)
@@ -178,15 +191,18 @@ class NodeTerm(Node):
         return True
 
     def __str__(self):
-        return f'Term({self.symbol} "{self.value[:20]}", '\
-               f'{self.start_position}-{self.end_position})'
+        return (
+            f'Term({self.symbol} "{self.value[:20]}", '
+            f"{self.start_position}-{self.end_position})"
+        )
 
 
 class Tree:
     """
     Represents a tree from the parse forest.
     """
-    __slots__ = ['root', 'children']
+
+    __slots__ = ["root", "children"]
 
     def __init__(self, root, counter):
         possibility = 0
@@ -213,7 +229,7 @@ class Tree:
         # Basically, enumerating variations of children solutions.
         weights = [c.solutions for c in self.root.children]
         for idx, c in enumerate(self.root.children):
-            factor = reduce(lambda x, y: x*y, weights[idx+1:], 1)
+            factor = reduce(lambda x, y: x * y, weights[idx + 1 :], 1)
             new_counter = counter // factor
             counter %= factor
             children.append(self.__class__(c, new_counter))
@@ -247,7 +263,8 @@ class LazyTree(Tree):
     root(Parent):
     counter(int):
     """
-    __slots__ = ['root', 'counter', '_children']
+
+    __slots__ = ["root", "counter", "_children"]
 
     def __init__(self, root, counter):
         self._children = None
@@ -257,7 +274,7 @@ class LazyTree(Tree):
         self.counter = counter
 
     def __getattr__(self, attr):
-        if attr == 'children':
+        if attr == "children":
             if self._children is None and self.root.is_nonterm():
                 self._children = self._enumerate_children(self.counter)
             return self._children
@@ -270,6 +287,7 @@ class Forest:
     Shared packed forest returned by the GLR parser.
     Creates lazy tree enumerators and enables iteration over trees.
     """
+
     def __init__(self, parser):
         self.parser = parser
         results = [p for r in parser._accepted_heads for p in r.parents.values()]
@@ -338,7 +356,7 @@ class Forest:
         return visitor(self.result, tree_iterator, visit)
 
     def __str__(self):
-        return f'Forest({self.solutions})'
+        return f"Forest({self.solutions})"
 
     def to_str(self):
         return self.result.to_str()
@@ -395,8 +413,10 @@ def visitor(root, iterator, visit, memoize=True, check_cycle=False):
                 stack[-1][-1].append(result)
             continue
         if check_cycle and id(next_elem) in visiting:
-            raise LoopError(f'Looping during traversal on "{next_elem}". '
-                            f'Last elements: {[r[0] for r in stack[-10:]]}')
+            raise LoopError(
+                f'Looping during traversal on "{next_elem}". '
+                f"Last elements: {[r[0] for r in stack[-10:]]}"
+            )
         if memoize and id(next_elem) in cache:
             results.append(cache[id(next_elem)][0])
         else:

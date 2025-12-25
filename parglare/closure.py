@@ -27,10 +27,8 @@ def closure(state, itemset_type, first_sets=None):
         # item.
         if itemset_type is LR_1:
             follow = _new_item_follow(item, first_sets)
-        for prod in [p for p in state.grammar.productions
-                     if p.symbol == symbol]:
-            new_item = LRItem(prod, 0,
-                              set(follow) if itemset_type is LR_1 else None)
+        for prod in [p for p in state.grammar.productions if p.symbol == symbol]:
+            new_item = LRItem(prod, 0, set(follow) if itemset_type is LR_1 else None)
             if new_item not in state.items:
                 # If the item doesn't exists yet add it and reprocess it.
                 state.items.append(new_item)
@@ -62,7 +60,7 @@ def _new_item_follow(item, first_sets):
     """
 
     new_follow = set()
-    for s in item.production.rhs[item.position + 1:]:
+    for s in item.production.rhs[item.position + 1 :]:
         new_follow.update(first_sets[s])
         if EMPTY not in new_follow:
             # If EMPTY can't be derived at current position then we have found

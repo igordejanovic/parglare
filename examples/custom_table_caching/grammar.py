@@ -5,4 +5,4 @@ grammar = Grammar.from_string("""
     ab: "a" ab "b" | EMPTY;
 """)
 
-start_symbol = 'start'
+start_symbol = "start"

@@ -18,14 +18,15 @@ def test_recognizer_explicit_get_collector():
 
     @recognizer
     def INT(input, pos):
-        return re.compile(r'\d+').match(input[pos:])
+        return re.compile(r"\d+").match(input[pos:])
 
     @recognizer
     def STRING(input, pos):
-        return re.compile(r'\d+').match(input[pos:])
+        return re.compile(r"\d+").match(input[pos:])
 
-    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'),
-                                recognizers=recognizer.all)
+    grammar = Grammar.from_file(
+        os.path.join(THIS_FOLDER, "grammar.pg"), recognizers=recognizer.all
+    )
     parser = Parser(grammar)
     assert parser
 
@@ -40,12 +41,14 @@ def test_recognizer_explicit_get_collector_missing_recognizer():
 
     @recognizer
     def INT(input, pos):
-        return re.compile(r'\d+').match(input[pos:])
+        return re.compile(r"\d+").match(input[pos:])
 
-    with pytest.raises(GrammarError,
-                       match=r'Terminal "STRING" has no recognizer defined.'):
-        Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'),
-                          recognizers=recognizer.all)
+    with pytest.raises(
+        GrammarError, match=r'Terminal "STRING" has no recognizer defined.'
+    ):
+        Grammar.from_file(
+            os.path.join(THIS_FOLDER, "grammar.pg"), recognizers=recognizer.all
+        )
 
 
 def test_recognizer_explicit_get_collector_recognizer_for_unexisting_terminal():  # noqa
@@ -58,17 +61,18 @@ def test_recognizer_explicit_get_collector_recognizer_for_unexisting_terminal():
 
     @recognizer
     def INT(input, pos):
-        return re.compile(r'\d+').match(input[pos:])
+        return re.compile(r"\d+").match(input[pos:])
 
     @recognizer
     def STRING(input, pos):
-        return re.compile(r'\d+').match(input[pos:])
+        return re.compile(r"\d+").match(input[pos:])
 
     @recognizer
     def STRING2(input, pos):
-        return re.compile(r'\d+').match(input[pos:])
+        return re.compile(r"\d+").match(input[pos:])
 
-    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'),
-                                recognizers=recognizer.all)
+    grammar = Grammar.from_file(
+        os.path.join(THIS_FOLDER, "grammar.pg"), recognizers=recognizer.all
+    )
     parser = Parser(grammar)
     assert parser

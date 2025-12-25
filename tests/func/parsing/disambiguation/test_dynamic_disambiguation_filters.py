@@ -13,13 +13,15 @@ number: /\d+/;
 op_sum: '+' {dynamic};
 op_mul: '*' {dynamic};
 """
-instr1 = '1 + 2 * 5 + 3'
-instr2 = '1 * 2 + 5 * 3'
+instr1 = "1 + 2 * 5 + 3"
+instr2 = "1 * 2 + 5 * 3"
 
 actions = {
-    'E': [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: float(nodes[0])]
+    "E": [
+        lambda _, nodes: nodes[0] + nodes[2],
+        lambda _, nodes: nodes[0] * nodes[2],
+        lambda _, nodes: float(nodes[0]),
+    ]
 }
 
 
@@ -29,8 +31,9 @@ g = Grammar.from_string(grammar)
 operations = []
 
 
-def custom_disambiguation_filter(context, from_state, to_state, action,
-                                 production, subresults):
+def custom_disambiguation_filter(
+    context, from_state, to_state, action, production, subresults
+):
     """
     Make first operation that appears in the input as lower priority.
     This demonstrates how priority rule can change dynamically depending
@@ -49,7 +52,7 @@ def custom_disambiguation_filter(context, from_state, to_state, action,
     operation = context.token.symbol if action is SHIFT else context.token_ahead.symbol
 
     actions = from_state.actions[operation]
-    if operation not in operations and operation.name != 'STOP':
+    if operation not in operations and operation.name != "STOP":
         operations.append(operation)
 
     if action is SHIFT:
@@ -65,14 +68,13 @@ def custom_disambiguation_filter(context, from_state, to_state, action,
         return operations.index(operation) > operations.index(red_op)
 
     elif action is REDUCE:
-
         # Current reduction operation
         red_op = production.rhs[1]
 
         # If operation ahead is STOP or is of less or equal priority -> reduce.
-        return ((operation not in operations)
-                or (operations.index(operation)
-                    <= operations.index(red_op)))
+        return (operation not in operations) or (
+            operations.index(operation) <= operations.index(red_op)
+        )
 
 
 def test_dynamic_disambiguation():
@@ -87,8 +89,12 @@ def test_dynamic_disambiguation():
 
     # But if we provide dynamic disambiguation filter
     # the conflicts can be handled at run-time.
-    p = Parser(g, actions=actions, prefer_shifts=False,
-               dynamic_filter=custom_disambiguation_filter)
+    p = Parser(
+        g,
+        actions=actions,
+        prefer_shifts=False,
+        dynamic_filter=custom_disambiguation_filter,
+    )
 
     # * operation will be of higher priority as it appears later in the stream.
     result1 = p.parse(instr1)
@@ -104,8 +110,7 @@ def test_dynamic_disambiguation_glr():
     Test disambiguation determined at run-time based on the input.
     This tests GLR parsing.
     """
-    p = GLRParser(g, actions=actions,
-                  dynamic_filter=custom_disambiguation_filter)
+    p = GLRParser(g, actions=actions, dynamic_filter=custom_disambiguation_filter)
 
     # * operation will be of higher priority as it appears later in the stream.
     result1 = p.parse(instr1)

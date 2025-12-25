@@ -120,12 +120,10 @@ def test_layout_context(parser_class):
 
     def layout_action(context, _):
         layout_called[0] = True
-        if 'This is a comment' in context.layout_content:
+        if "This is a comment" in context.layout_content:
             layout_passed[0] = True
 
-    actions = {
-        "a": layout_action
-    }
+    actions = {"a": layout_action}
 
     layout_called = [False]
     layout_passed = [False]
@@ -144,7 +142,7 @@ def test_layout_context(parser_class):
             content.add(n.layout_content_ahead)
 
         visitor(tree, lambda n: iter(n.children or []), collect)
-        assert any('This is a comment' in c for c in content)
+        assert any("This is a comment" in c for c in content)
 
     else:
         assert layout_called[0]
@@ -181,7 +179,7 @@ def test_layout_actions(parser_class):
         layout_called[0] = True
 
     def layout_action(_, nodes):
-        ret = ''
+        ret = ""
         for n in nodes:
             if n:
                 ret += n
@@ -191,9 +189,9 @@ def test_layout_actions(parser_class):
         called[0] = True
 
     actions = {
-        'Comment': comment_action,
-        'LAYOUT': layout_action,
-        'a': a_action
+        "Comment": comment_action,
+        "LAYOUT": layout_action,
+        "a": a_action,
     }
 
     called = [False]
@@ -238,4 +236,4 @@ def test_layout_terminal():
     with pytest.raises(SyntaxError):
         parser.parse("a b")
     result = parser.parse("4444a23b545")
-    assert result == ['a', 'b']
+    assert result == ["a", "b"]

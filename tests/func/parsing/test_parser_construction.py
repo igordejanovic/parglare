@@ -6,7 +6,16 @@ from parglare import EMPTY, GLRParser, Grammar, Parser
 from parglare.grammar import STOP
 from parglare.tables import REDUCE, SHIFT, create_table, first, follow
 
-from ..grammar.expression_grammar import CLOSE, ID, MULT, OPEN, PLUS, E, T, get_grammar
+from ..grammar.expression_grammar import (
+    CLOSE,
+    ID,
+    MULT,
+    OPEN,
+    PLUS,
+    E,
+    T,
+    get_grammar,
+)
 
 HAS_MOCK = sys.version_info[0] >= 3
 if HAS_MOCK:
@@ -47,10 +56,10 @@ def test_first_empty_in_rhs():
 
     first_set = first(g)
 
-    A = g.get_nonterminal('A')
-    B = g.get_terminal('B')
-    C = g.get_terminal('C')
-    S = g.get_nonterminal('S')
+    A = g.get_nonterminal("A")
+    B = g.get_terminal("B")
+    C = g.get_terminal("C")
+    S = g.get_nonterminal("S")
 
     assert EMPTY in first_set[A]
     assert B in first_set[A]
@@ -91,13 +100,13 @@ def test_table_construction():
     g = Grammar.from_string(grammar)
     table = create_table(g)
 
-    c = g.get_terminal('c')
-    d = g.get_terminal('d')
+    c = g.get_terminal("c")
+    d = g.get_terminal("d")
 
     assert len(table.states) == 10
     assert table.states[0].symbol.name == "S'"
     state = table.states[2]
-    assert state.symbol.name == 'a'
+    assert state.symbol.name == "a"
     assert len(state.kernel_items) == 1
     assert len(state.items) == 3
     assert len(state.actions) == 1
@@ -107,7 +116,7 @@ def test_table_construction():
     assert action.state.state_id == 5
 
     state = table.states[5]
-    assert state.symbol.name == 'c'
+    assert state.symbol.name == "c"
     assert len(state.kernel_items) == 2
     assert len(state.items) == 4
     assert len(state.actions) == 2
@@ -156,9 +165,10 @@ def test_priority_conflicts_resolving():
     """
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6),
-                    reason="list comparison doesn't work "
-                    "correctly in pytest 4.1")
+@pytest.mark.skipif(
+    sys.version_info < (3, 6),
+    reason="list comparison doesn't work correctly in pytest 4.1",
+)
 def test_prefer_shifts_no_sr_conflicts():
     """
     Test that grammar with S/R conflict will be resolved to SHIFT actions
@@ -188,8 +198,8 @@ def test_prefer_shifts_no_sr_conflicts():
     assert len(table.sr_conflicts) == 0
 
     # With prefer_shifts we get a greedy behavior
-    input_str = 'b a a a b a a'
-    output = [['b', ['a', 'a', 'a']], ['b', ['a', 'a']]]
+    input_str = "b a a a b a a"
+    output = [["b", ["a", "a", "a"]], ["b", ["a", "a"]]]
     parser = Parser(g, prefer_shifts=True)
     result = parser.parse(input_str)
     assert result == output
@@ -200,14 +210,20 @@ def test_prefer_shifts_no_sr_conflicts():
     results = [parser.call_actions(tree) for tree in parser.parse(input_str)]
 
     expected = [
-        [['b', ['a']], [None, ['a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a', 'a']], [None, ['a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a']], [None, ['a', 'a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a', 'a', 'a']], ['b', ['a']], [None, ['a']]],
-        [['b', ['a']], [None, ['a']], [None, ['a']], ['b', ['a', 'a']]],
-        [['b', ['a', 'a']], [None, ['a']], ['b', ['a', 'a']]],
-        [['b', ['a']], [None, ['a', 'a']], ['b', ['a', 'a']]],
-        [['b', ['a', 'a', 'a']], ['b', ['a', 'a']]]
+        [
+            ["b", ["a"]],
+            [None, ["a"]],
+            [None, ["a"]],
+            ["b", ["a"]],
+            [None, ["a"]],
+        ],
+        [["b", ["a", "a"]], [None, ["a"]], ["b", ["a"]], [None, ["a"]]],
+        [["b", ["a"]], [None, ["a", "a"]], ["b", ["a"]], [None, ["a"]]],
+        [["b", ["a", "a", "a"]], ["b", ["a"]], [None, ["a"]]],
+        [["b", ["a"]], [None, ["a"]], [None, ["a"]], ["b", ["a", "a"]]],
+        [["b", ["a", "a"]], [None, ["a"]], ["b", ["a", "a"]]],
+        [["b", ["a"]], [None, ["a", "a"]], ["b", ["a", "a"]]],
+        [["b", ["a", "a", "a"]], ["b", ["a", "a"]]],
     ]
     assert results == expected
 
@@ -231,9 +247,9 @@ def test_precomputed_table():
     grammar = get_grammar()
     table = create_table(grammar)
     if HAS_MOCK:
-        with patch('parglare.tables.create_table') as mocked_create_table:
+        with patch("parglare.tables.create_table") as mocked_create_table:
             parser = GLRParser(grammar, table=table)
             assert not mocked_create_table.called
     else:
         parser = GLRParser(grammar, table=table)
-    parser.parse('id+id')
+    parser.parse("id+id")

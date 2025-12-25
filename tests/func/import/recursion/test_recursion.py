@@ -6,10 +6,10 @@ this_folder = os.path.dirname(__file__)
 
 
 def test_recursive_grammar_import():
-    g = Grammar.from_file(os.path.join(this_folder, 'model.pg'))
+    g = Grammar.from_file(os.path.join(this_folder, "model.pg"))
     assert g
 
-    input_str = '''
+    input_str = """
 
     package First
     package Second
@@ -24,7 +24,7 @@ def test_recursive_grammar_import():
 
     }
 
-    '''
+    """
 
     result = Parser(g).parse(input_str)
     assert result

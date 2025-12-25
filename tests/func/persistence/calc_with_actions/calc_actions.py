@@ -21,6 +21,6 @@ E = [
     lambda _, n: n[0] / n[2],
     lambda _, n: n[1],
     lambda context, n: context.extra[n[0]],
-    lambda _, n: float(n[0])
+    lambda _, n: float(n[0]),
 ]
-action('E')(E)
+action("E")(E)

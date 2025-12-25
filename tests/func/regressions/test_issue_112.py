@@ -8,8 +8,7 @@ from ..utils import output_cmp
 
 
 def test_issue_112_fail_on_empty():
-
-    grammar = r'''
+    grammar = r"""
     sentence1:              subordinateClause* clause sentenceEnd;
 
     subordinateClause:      clause clauseConnector;
@@ -30,14 +29,14 @@ def test_issue_112_fail_on_empty():
         simpleVerb:             /[^:]+:(VV|VVD|VHV);/;
         verbSuffix:             /[^:]+:(EP|TNS);/;
         predicateEndingSuffix:  /[^:]+:(SEF|EF);/;
-    '''
+    """
 
     g = Grammar.from_string(grammar)
     parser = GLRParser(g, build_tree=True)
 
-    results = parser.parse('자전거:NNG; 있:VV; 어요:SEF; .:SF;')
+    results = parser.parse("자전거:NNG; 있:VV; 어요:SEF; .:SF;")
 
-    expected = r'''
+    expected = r"""
 sentence1[0->28]
   subordinateClause_0[0->0]
   clause[0->22]
@@ -52,7 +51,7 @@ sentence1[0->28]
       predicateEndingSuffix_opt[15->22]
         predicateEndingSuffix[15->22, "어요:SEF;"]
   sentenceEnd[23->28, ".:SF;"]
-'''
+"""
 
     assert len(results) == 1
     assert results[0].to_str().strip() == expected.strip()
@@ -62,7 +61,7 @@ def test_issue_112_wrong_error_report():
     """
     Test that token ahead is not among expected symbols in error message.
     """
-    grammar = r'''
+    grammar = r"""
     _input:                  sentence
                         |   standalonePhrase;
 
@@ -220,11 +219,11 @@ def test_issue_112_wrong_error_report():
         nominalForm:            /[^:]+:(NNOM);/;
         verbToNounModifyingForm: /[^:]+:(NMOD);/;
         nominalVerbForm:        /[^:]+:(VNOM);/;
-    '''  # noqa
+    """  # noqa
 
     g = Grammar.from_string(grammar)
     parser = GLRParser(g)
     with pytest.raises(SyntaxError) as e:
-        parser.parse('공부하:VHV; 는:ETM; 것:NNB; 은:TOP; 아니:VCN; ㅂ니다:SEF; .:SF;')
+        parser.parse("공부하:VHV; 는:ETM; 것:NNB; 은:TOP; 아니:VCN; ㅂ니다:SEF; .:SF;")
 
-    output_cmp(Path(Path(__file__).parent, 'test_issue_112.err'), str(e.value))
+    output_cmp(Path(Path(__file__).parent, "test_issue_112.err"), str(e.value))

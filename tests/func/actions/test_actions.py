@@ -6,7 +6,6 @@ from ..grammar.expression_grammar_numbers import get_grammar
 
 
 def get_actions():
-
     def sum_act(_, nodes):
         return nodes[0] + nodes[2]
 
@@ -29,14 +28,13 @@ def get_actions():
         # Check symbol-level action
         "T": t_act,
         # Again action for each alternative
-        "F": [parenthesses_act, pass_act]
+        "F": [parenthesses_act, pass_act],
     }
 
     return actions
 
 
 def test_actions():
-
     grammar = get_grammar()
     p = Parser(grammar, actions=get_actions())
 
@@ -59,32 +57,29 @@ def test_actions_manual():
 
     assert type(result) is NodeNonTerm
 
-    assert p.call_actions(result) == \
-        34.7 + 78 * 34 + 89 + 12.223 * 4
+    assert p.call_actions(result) == 34.7 + 78 * 34 + 89 + 12.223 * 4
 
 
 def test_action_list_assigned_to_terminal():
     """
     Test that list of actions can't be assigned to a Terminal.
     """
-    grammar = '''
+    grammar = """
     S: A+;
 
     terminals
     A: 'a';
-    '''
+    """
     g = Grammar.from_string(grammar)
 
     def some_action(_, nodes):
         return nodes[0]
 
-    actions = {
-        'S': some_action,
-        'A': [some_action, some_action]
-    }
+    actions = {"S": some_action, "A": [some_action, some_action]}
 
-    with pytest.raises(ParserInitError,
-                       match=r'Cannot use a list of actions for terminal.*'):
+    with pytest.raises(
+        ParserInitError, match=r"Cannot use a list of actions for terminal.*"
+    ):
         Parser(g, actions=actions)
 
 
@@ -93,33 +88,25 @@ def test_invalid_number_of_actions():
     Test that parser error is raised if rule is given list of actions
     where there is less/more actions than rule productions.
     """
-    grammar = '''
+    grammar = """
     S: A+ | B+;
     A: 'a';
     B: 'b';
-    '''
+    """
     g = Grammar.from_string(grammar)
 
     def some_action(_, nodes):
         return nodes[0]
 
-    actions = {
-        'S': [some_action, some_action]
-    }
+    actions = {"S": [some_action, some_action]}
     Parser(g, actions=actions)
 
-    actions = {
-        'S': [some_action]
-    }
-    with pytest.raises(ParserInitError,
-                       match=r'Length of list of actions must match.*'):
+    actions = {"S": [some_action]}
+    with pytest.raises(ParserInitError, match=r"Length of list of actions must match.*"):
         Parser(g, actions=actions)
 
-    actions = {
-        'S': [some_action, some_action, some_action]
-    }
-    with pytest.raises(ParserInitError,
-                       match=r'Length of list of actions must match.*'):
+    actions = {"S": [some_action, some_action, some_action]}
+    with pytest.raises(ParserInitError, match=r"Length of list of actions must match.*"):
         Parser(g, actions=actions)
 
 
@@ -134,11 +121,11 @@ def test_action_decorator():
     def number(_, value):
         return float(value)
 
-    @action('E')
+    @action("E")
     def sum_act(_, nodes):
         return nodes[0] + nodes[2]
 
-    @action('E')
+    @action("E")
     def pass_act_E(_, nodes):
         return nodes[0]
 
@@ -149,11 +136,11 @@ def test_action_decorator():
         else:
             return nodes[0]
 
-    @action('F')
+    @action("F")
     def parenthesses_act(_, nodes):
         return nodes[1]
 
-    @action('F')
+    @action("F")
     def pass_act_F(_, nodes):
         return nodes[0]
 

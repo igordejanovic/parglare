@@ -12,6 +12,6 @@ table = create_table(
 )
 serializable_table = table_to_serializable(table)
 
-with open('_table.py', 'w') as f:
-    f.write('table = ')
+with open("_table.py", "w") as f:
+    f.write("table = ")
     f.write(repr(serializable_table))

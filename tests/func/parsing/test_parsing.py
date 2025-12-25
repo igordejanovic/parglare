@@ -17,7 +17,7 @@ def test_parsing():
 def test_parsing_from_file():
     grammar = get_grammar()
     p = Parser(grammar)
-    assert p.parse_file(join(dirname(__file__), 'parsing_from_file.txt'))
+    assert p.parse_file(join(dirname(__file__), "parsing_from_file.txt"))
 
 
 def test_partial_parse():
@@ -32,7 +32,7 @@ def test_partial_parse():
     parser = Parser(g, consume_input=False)
 
     # Parser should succesfuly parse 'ab' at the beginning.
-    parser.parse('abc')
+    parser.parse("abc")
 
     # But if `consume_input` is not set to `False` it should be `True` by
     # default and the parser will not accept partial parses.
@@ -42,6 +42,6 @@ def test_partial_parse():
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    parser.parse('a b')
+    parser.parse("a b")
     with pytest.raises(SyntaxError):
-        parser.parse('a b c')
+        parser.parse("a b c")

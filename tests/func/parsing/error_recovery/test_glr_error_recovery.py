@@ -17,13 +17,15 @@ number: /\d+(\.\d+)?/;
 """
 
 actions = {
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          pass_inner,
-          pass_single],
+    "E": [
+        lambda _, nodes: nodes[0] + nodes[2],
+        lambda _, nodes: nodes[0] - nodes[2],
+        lambda _, nodes: nodes[0] * nodes[2],
+        lambda _, nodes: nodes[0] / nodes[2],
+        lambda _, nodes: nodes[0] ** nodes[2],
+        pass_inner,
+        pass_single,
+    ],
     "number": lambda _, value: float(value),
 }
 
@@ -39,7 +41,7 @@ def test_glr_recovery_default():
     """
     parser = GLRParser(g, actions=actions, error_recovery=True)
 
-    results = parser.parse('1 + 2 + * 3 & 89 - 5')
+    results = parser.parse("1 + 2 + * 3 & 89 - 5")
 
     assert len(parser.errors) == 2
     e1, e2 = parser.errors
@@ -72,7 +74,7 @@ def test_glr_recovery_custom_new_position():
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 
-    results = parser.parse('1 + 5 & 89 - 2')
+    results = parser.parse("1 + 5 & 89 - 2")
 
     assert len(parser.errors) == 1
     assert len(results) == 2
@@ -89,12 +91,12 @@ def test_glr_recovery_custom_new_token():
 
     def custom_recovery(head, error):
         # Here we will introduce missing operation token
-        head.token_ahead = Token(g.get_terminal('-'), '-', head.position, length=0)
+        head.token_ahead = Token(g.get_terminal("-"), "-", head.position, length=0)
         return True
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 
-    results = parser.parse('1 + 5 8 - 2')
+    results = parser.parse("1 + 5 8 - 2")
 
     assert len(parser.errors) == 1
     assert len(results) == 5
@@ -115,7 +117,7 @@ def test_glr_recovery_custom_unsuccessful():
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 
     with pytest.raises(SyntaxError) as e:
-        parser.parse('1 + 5 8 - 2')
+        parser.parse("1 + 5 8 - 2")
 
     error = e.value
     assert error.location.start_position == 6

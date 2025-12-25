@@ -20,8 +20,8 @@ def test_single_terminal():
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    result = parser.parse('a')
-    assert result == 'a'
+    result = parser.parse("a")
+    assert result == "a"
 
     grammar = r"""
     S: A;
@@ -30,8 +30,8 @@ def test_single_terminal():
     """
     g = Grammar.from_string(grammar)
     parser = Parser(g)
-    result = parser.parse('23')
-    assert result == '23'
+    result = parser.parse("23")
+    assert result == "23"
 
 
 def test_undefined_grammar_symbol():
@@ -44,12 +44,11 @@ def test_undefined_grammar_symbol():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Unknown symbol' in str(e.value)
-    assert 'id' in str(e.value)
+    assert "Unknown symbol" in str(e.value)
+    assert "id" in str(e.value)
 
 
 def test_multiple_terminal_definition():
-
     grammar = """
     S: A A;
     terminals
@@ -57,8 +56,7 @@ def test_multiple_terminal_definition():
     A: "b";
     """
 
-    with pytest.raises(GrammarError,
-                       match=r'.*Multiple definitions of terminal rule.*'):
+    with pytest.raises(GrammarError, match=r".*Multiple definitions of terminal rule.*"):
         Grammar.from_string(grammar)
 
 
@@ -72,7 +70,7 @@ def test_reserved_symbol_names():
     """
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
-    assert 'is reserved' in str(e.value)
+    assert "is reserved" in str(e.value)
 
     grammar = """
     S: EMPTY "First";
@@ -80,7 +78,7 @@ def test_reserved_symbol_names():
     """
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
-    assert 'is reserved' in str(e.value)
+    assert "is reserved" in str(e.value)
 
 
 def test_assoc_prior():
@@ -138,7 +136,7 @@ def test_terminal_priority():
     g = Grammar.from_string(grammar)
 
     for t in g.terminals.values():
-        if t.name == 'A':
+        if t.name == "A":
             assert t.prior == 15
         else:
             assert t.prior == DEFAULT_PRIORITY
@@ -155,8 +153,10 @@ def test_no_terminal_associavitity():
     with pytest.raises(SyntaxError) as e:
         Grammar.from_string(grammar)
 
-    output_cmp(Path(Path(__file__).parent,
-                    'test_grammar_no_terminal_associavitity.err'), str(e.value))
+    output_cmp(
+        Path(Path(__file__).parent, "test_grammar_no_terminal_associavitity.err"),
+        str(e.value),
+    )
 
 
 def test_terminal_empty_body():
@@ -171,11 +171,11 @@ def test_terminal_empty_body():
     B: ;
     """
 
-    g = Grammar.from_string(grammar, recognizers={'B': None, 'A': None})
+    g = Grammar.from_string(grammar, recognizers={"B": None, "A": None})
 
-    a = g.get_terminal('A')
+    a = g.get_terminal("A")
     assert a.prior == 15
-    b = g.get_terminal('B')
+    b = g.get_terminal("B")
     assert b.recognizer is None
 
 
@@ -187,9 +187,9 @@ def test_terminal_regexp_with_backslash():
     t1: /\\/;
     t2: /a/;
     """)
-    t1 = grammar.get_terminal('t1')
-    assert t1.recognizer._regex == '\\\\'
-    assert t1.recognizer('\\', 0) == '\\'
+    t1 = grammar.get_terminal("t1")
+    assert t1.recognizer._regex == "\\\\"
+    assert t1.recognizer("\\", 0) == "\\"
 
 
 def test_builtin_grammar_action():
@@ -207,12 +207,13 @@ def test_builtin_grammar_action():
 
     g = Grammar.from_string(grammar)
 
-    ones = g.get_nonterminal('Ones')
+    ones = g.get_nonterminal("Ones")
     from parglare.actions import collect
+
     assert ones.action == collect
 
     p = Parser(g)
-    result = p.parse('1 1 1 1 1')
+    result = p.parse("1 1 1 1 1")
 
     assert result == ["1", "1", "1", "1", "1"]
 
@@ -240,7 +241,7 @@ def test_multiple_grammar_action_raises_error():
     with pytest.raises(GrammarError) as e:
         Grammar.from_string(grammar)
 
-    assert 'Multiple' in str(e.value)
+    assert "Multiple" in str(e.value)
 
 
 def test_action_override():
@@ -265,9 +266,7 @@ def test_action_override():
     result = p.parse(input_str)
     assert result == ["foo", ["1", "a"]]
 
-    actions = {
-        "Foo": lambda _, __: "eggs",
-        "Bar": lambda _, __: "bar reduce"}
+    actions = {"Foo": lambda _, __: "eggs", "Bar": lambda _, __: "bar reduce"}
 
     p = Parser(g, actions=actions)
     result = p.parse(input_str)
@@ -301,7 +300,7 @@ def test_assignment_plain():
     """
 
     g = Grammar.from_string(grammar)
-    assert assignment_in_productions(g.productions, 'S', 'first')
+    assert assignment_in_productions(g.productions, "S", "first")
 
     called = [False]
 
@@ -310,13 +309,11 @@ def test_assignment_plain():
         assert first == "2"
         return nodes
 
-    actions = {
-        "S": act_s
-    }
+    actions = {"S": act_s}
 
     p = Parser(g, actions=actions)
 
-    input_str = '1 2 3'
+    input_str = "1 2 3"
 
     result = p.parse(input_str)
     assert result == ["1", "2", "3"]
@@ -337,10 +334,10 @@ def test_assignment_create_python_class():
     """
 
     g = Grammar.from_string(grammar)
-    assert repr(g.classes['S']).startswith('<parglare:S class at')
-    assert g.classes['S'].__name__ == 'S'
-    assert repr(g.classes['Third']).startswith('<parglare:Third class at')
-    assert g.classes['Third'].__name__ == 'Third'
+    assert repr(g.classes["S"]).startswith("<parglare:S class at")
+    assert g.classes["S"].__name__ == "S"
+    assert repr(g.classes["Third"]).startswith("<parglare:Third class at")
+    assert g.classes["Third"].__name__ == "Third"
 
 
 def test_assignment_bool():
@@ -356,7 +353,7 @@ def test_assignment_bool():
     """
 
     g = Grammar.from_string(grammar)
-    assert assignment_in_productions(g.productions, 'S', 'first')
+    assert assignment_in_productions(g.productions, "S", "first")
 
     called = [False]
 
@@ -365,13 +362,11 @@ def test_assignment_bool():
         assert first is True
         return nodes
 
-    actions = {
-        "S": act_s
-    }
+    actions = {"S": act_s}
 
     p = Parser(g, actions=actions)
 
-    input_str = '1 2 3'
+    input_str = "1 2 3"
 
     result = p.parse(input_str)
     assert result == ["1", "2", "3"]
@@ -391,7 +386,7 @@ def test_assignment_of_repetition():
     """
 
     g = Grammar.from_string(grammar)
-    assert assignment_in_productions(g.productions, 'S', 'first')
+    assert assignment_in_productions(g.productions, "S", "first")
 
     called = [False]
 
@@ -400,13 +395,11 @@ def test_assignment_of_repetition():
         assert first == ["2", "2"]
         return nodes
 
-    actions = {
-        "S": act_s
-    }
+    actions = {"S": act_s}
 
     p = Parser(g, actions=actions)
 
-    input_str = '1 2 2 3'
+    input_str = "1 2 2 3"
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], "3"]
@@ -427,7 +420,7 @@ def test_assignment_of_repetition_with_sep():
     """
 
     g = Grammar.from_string(grammar)
-    assert assignment_in_productions(g.productions, 'S', 'first')
+    assert assignment_in_productions(g.productions, "S", "first")
 
     called = [False]
 
@@ -436,13 +429,11 @@ def test_assignment_of_repetition_with_sep():
         assert first == ["2", "2"]
         return nodes
 
-    actions = {
-        "S": act_s
-    }
+    actions = {"S": act_s}
 
     p = Parser(g, actions=actions)
 
-    input_str = '1 2, 2 3'
+    input_str = "1 2, 2 3"
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], "3"]
@@ -463,8 +454,8 @@ def test_multiple_assignment_with_repetitions():
     """
 
     g = Grammar.from_string(grammar)
-    assert assignment_in_productions(g.productions, 'S', 'first')
-    assert assignment_in_productions(g.productions, 'S', 'second')
+    assert assignment_in_productions(g.productions, "S", "first")
+    assert assignment_in_productions(g.productions, "S", "second")
 
     called = [False]
 
@@ -474,13 +465,11 @@ def test_multiple_assignment_with_repetitions():
         assert second is True
         return nodes
 
-    actions = {
-        "S": act_s
-    }
+    actions = {"S": act_s}
 
     p = Parser(g, actions=actions)
 
-    input_str = '1 2, 2 2 2 2 3'
+    input_str = "1 2, 2 2 2 2 3"
 
     result = p.parse(input_str)
     assert result == ["1", ["2", "2"], ["2", "2", "2"], "3"]
@@ -505,11 +494,11 @@ def test_case_insensitive_parsing():
     # By default parsing is case sensitive for both string and regex matches.
     parser = Parser(g)
     with pytest.raises(SyntaxError):
-        parser.parse('One Two Aaa')
+        parser.parse("One Two Aaa")
     with pytest.raises(SyntaxError):
-        parser.parse('one Two AAa')
+        parser.parse("one Two AAa")
 
     g = Grammar.from_string(grammar, ignore_case=True)
     parser = Parser(g)
-    parser.parse('One Two Aaa')
-    parser.parse('one Two AAa')
+    parser.parse("One Two Aaa")
+    parser.parse("one Two AAa")

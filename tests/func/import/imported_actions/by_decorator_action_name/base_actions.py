@@ -3,6 +3,6 @@ from parglare import get_collector
 action = get_collector()
 
 
-@action('number')
+@action("number")
 def NUMERIC(_, value):
     return float(value)

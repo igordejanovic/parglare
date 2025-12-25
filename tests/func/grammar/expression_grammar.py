@@ -1,16 +1,15 @@
 from parglare import Grammar, NonTerminal, Terminal
 
 # Expression grammar
-E, T, F = (NonTerminal(name) for name in ['E', 'T', 'F'])
-PLUS, MULT, ID, OPEN, CLOSE = (
-    Terminal(value) for value in ['+', '*', 'id', '(', ')'])
+E, T, F = (NonTerminal(name) for name in ["E", "T", "F"])
+PLUS, MULT, ID, OPEN, CLOSE = (Terminal(value) for value in ["+", "*", "id", "(", ")"])
 productions = [
     (E, (E, PLUS, T)),
-    (E, (T, )),
+    (E, (T,)),
     (T, (T, MULT, F)),
-    (T, (F, )),
+    (T, (F,)),
     (F, (OPEN, E, CLOSE)),
-    (F, (ID,))
+    (F, (ID,)),
 ]
 
 

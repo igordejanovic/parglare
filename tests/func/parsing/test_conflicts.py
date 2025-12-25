@@ -14,8 +14,9 @@ def test_sr_conflict():
     g = Grammar.from_string(grammar, _no_check_recognizers=True)
     with pytest.raises(SRConflicts) as e:
         Parser(g, prefer_shifts=False)
-    assert "whether to shift or reduce by production(s) '2: As = As A'" in \
-        str(e.value.conflicts[0])
+    assert "whether to shift or reduce by production(s) '2: As = As A'" in str(
+        e.value.conflicts[0]
+    )
 
 
 def test_rr_empty_conflict():
@@ -35,8 +36,7 @@ def test_rr_empty_conflict():
         Parser(g)
 
     # For B and D empty reductions both "A B C" and "A D C" can reduce to S
-    assert "'6: D = EMPTY' or '4: B = EMPTY'" \
-        in str(e.value.conflicts[0])
+    assert "'6: D = EMPTY' or '4: B = EMPTY'" in str(e.value.conflicts[0])
 
 
 def test_rr_nonempty_conflict():
@@ -54,5 +54,4 @@ def test_rr_nonempty_conflict():
         Parser(g)
 
     # "A1 B1" can reduce to both A and B
-    assert "'4: B = A1 B1' or '3: A = A1 B1'" \
-        in str(e.value.conflicts[0])
+    assert "'4: B = A1 B1' or '3: A = A1 B1'" in str(e.value.conflicts[0])
