@@ -71,9 +71,9 @@ Installation
 
 - Development:
 
-.. code:: shell
+  Install [just](https://github.com/casey/just).
 
-    Install [just](https://github.com/casey/just).
+.. code:: shell
 
     $ git clone git@github.com:igordejanovic/parglare.git
     $ cd parglare
