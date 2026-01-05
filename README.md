@@ -99,6 +99,7 @@ DOI:10.1016/j.scico.2021.102734, 2021.
     pages = {102734},
     url = {https://www.sciencedirect.com/science/article/pii/S0167642321001271},
     year = {2021}
+}
 ```
 
 ## License
