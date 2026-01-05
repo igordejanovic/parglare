@@ -87,7 +87,7 @@ publish-docs-stable: publish-docs-latest
 release-test: dist  
 	uv run flit publish --repository test
 
-## release package to PyPI
+# release package to PyPI
 release: dist  
 	uv run flit publish
 
