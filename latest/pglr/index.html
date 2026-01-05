@@ -160,8 +160,8 @@ Commands:
 </code></pre>
 <h2 id="compiling-the-grammar">Compiling the grammar<a class="headerlink" href="#compiling-the-grammar" title="Permanent link">&para;</a></h2>
 <p><code>compile</code> command is used for checking the grammar, reporting conflicts and
-producing LR table <code>.pgt</code> files. It is not mandatory to compile the grammar as
-parglare will calculate table during parser construction if <code>.pgt</code> file doesn't
+producing LR table <code>.pgc</code> files. It is not mandatory to compile the grammar as
+parglare will calculate table during parser construction if <code>.pgc</code> file doesn't
 exist or is not newer than all of the grammar files. But it is recommended to
 use this command during development to investigate possible conflicts and
 calculate table in advance.</p>
@@ -192,9 +192,9 @@ Expected: { or | or ; or Name or RegExTerm or StrTerm
 </code></pre>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Be sure to deploy <code>.pgt</code> file to production as you will avoid unnecessary
+<p>Be sure to deploy <code>.pgc</code> file to production as you will avoid unnecessary
 table calculation on the first run. Furthermore, if parglare can't write to
-<code>.pgt</code> file due to permission it will resort to calculating LR table
+<code>.pgc</code> file due to permission it will resort to calculating LR table
 whenever started.</p>
 </div>
 <h2 id="getting-detailed-information-about-the-grammar">Getting detailed information about the grammar<a class="headerlink" href="#getting-detailed-information-about-the-grammar" title="Permanent link">&para;</a></h2>

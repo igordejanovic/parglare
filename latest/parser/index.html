@@ -247,14 +247,14 @@ used with a slight twist to avoid Reduce/Reduce conflicts that may happen with
 pure LALR tables. This parameter should not be used in normal circumstances and
 is provided more for experimentation purposes.</p>
 <h2 id="force_load_table">force_load_table<a class="headerlink" href="#force_load_table" title="Permanent link">&para;</a></h2>
-<p>LR table is loaded from <code>&lt;grammar_file_name&gt;.pgt</code> file if the file exists and is
+<p>LR table is loaded from <code>&lt;grammar_file_name&gt;.pgc</code> file if the file exists and is
 newer than all of the grammar files, root and imported. If any of the grammar
 file modification time is greater than the modification time of the cached LR
 table file, table is recalculated and persisted. If you are deploying the parser
 in a way that will change file modification times which would trigger table
 calculation you can set <code>force_load_table</code> to <code>True</code>. If this flag is set no
 modification check will be performed and table calculation will happen only if
-<code>.pgt</code> file doesn't exist.</p>
+<code>.pgc</code> file doesn't exist.</p>
 <h2 id="table">table<a class="headerlink" href="#table" title="Permanent link">&para;</a></h2>
 <p>You can pass precomputed parsing table here. This is useful for implementing
 custom parse table caching. <code>None</code> value for this parameter (the default)

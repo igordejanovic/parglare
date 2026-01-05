@@ -163,7 +163,8 @@ helps, and credit will always be given.</p>
 wanted" is open to whoever wants to implement it.</p>
 <h3 id="implement-features">Implement Features<a class="headerlink" href="#implement-features" title="Permanent link">&para;</a></h3>
 <p>Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.</p>
+and "help wanted" is open to whoever wants to implement it. Please, discuss
+about your plans before implementation.</p>
 <h3 id="write-documentation">Write Documentation<a class="headerlink" href="#write-documentation" title="Permanent link">&para;</a></h3>
 <p>parglare could always use more documentation, whether as part of the official
 parglare docs, in docstrings, or even on the web in blog posts, articles, and
@@ -181,43 +182,39 @@ https://github.com/igordejanovic/parglare/issues.</p>
 <h2 id="get-started">Get Started!<a class="headerlink" href="#get-started" title="Permanent link">&para;</a></h2>
 <p>Ready to contribute? Here's how to set up <code>parglare</code> for local development.</p>
 <ol>
-<li>Fork the <code>parglare</code> repo on GitHub.</li>
+<li>
+<p><a href="https://docs.astral.sh/uv/getting-started/installation/">Install uv</a> Python
+   package/project manager and <a href="https://github.com/casey/just">just</a> task runner.</p>
+</li>
+<li>
+<p>Fork the <code>parglare</code> repo on GitHub.</p>
+</li>
 <li>
 <p>Clone your fork locally:</p>
-<pre><code>$ git clone git@github.com:your_name_here/parglare.git
+<pre><code>git clone git@github.com:your_name_here/parglare.git
 </code></pre>
 </li>
 <li>
-<p>Install your local copy into a virtual environment. This is how you set up
-   your fork for local development:</p>
-<pre><code>$ cd parglare/
-$ python -m venv venv
-$ source venv/bin/activate
-$ ./install-dev.sh
-</code></pre>
-</li>
-</ol>
-<p>This is needed just the first time. To work on parglare later you just need
-   to activate the virtual environment for each new terminal session:</p>
-<pre><code>    $ cd parglare/
-    $ source venv/bin/activate
-</code></pre>
-<ol>
-<li>Create a branch for local development::<pre><code>$ git checkout -b name-of-your-bugfix-or-feature
+<p>Create a branch for local development::</p>
+<pre><code>cd parglare/
+git checkout -b name-of-your-bugfix-or-feature
 </code></pre>
 </li>
 </ol>
 <p>Now you can make your changes locally.</p>
 <ol>
-<li>When you're done making changes, run tests:<pre><code>$ ./runtests.sh
+<li>When you're done making changes:</li>
+<li>Reformat code:<pre><code>just reformat
 </code></pre>
 </li>
 </ol>
-<p>and verify that all tests pass.</p>
+<p>and verify that all checks pass:</p>
+<pre><code>    just check
+</code></pre>
 <ol>
-<li>Commit your changes and push your branch to GitHub:<pre><code>$ git add .
-$ git commit -m "Your detailed description of your changes."
-$ git push origin name-of-your-bugfix-or-feature
+<li>Commit your changes and push your branch to GitHub:<pre><code>git add .
+git commit -m "Your detailed description of your changes."
+git push origin name-of-your-bugfix-or-feature
 </code></pre>
 </li>
 </ol>
@@ -232,16 +229,22 @@ $ git push origin name-of-your-bugfix-or-feature
 <ol>
 <li>The pull request should include tests.</li>
 <li>If the pull request adds/changes functionality, the docs should be updated.</li>
-<li>The pull request should work for Python 3.8-3.12. Check
+<li>The pull request should work for Python 3.8-3.14. Check
    https://travis-ci.org/igordejanovic/parglare/pull_requests and make sure that
    the tests pass for all supported Python versions.</li>
 </ol>
 <h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h2>
 <p>To run a subset of tests:</p>
-<pre><code>$ py.test tests/func/mytest.py
+<pre><code>just test tests/func/mytest.py
 </code></pre>
 <p>or a single test:</p>
-<pre><code>$ py.test tests/func/mytest.py::some_test
+<pre><code>just test tests/func/mytest.py::some_test
+</code></pre>
+<p>To serve docs locally:</p>
+<pre><code>just servedocs
+</code></pre>
+<p>To see all <code>just</code> options:</p>
+<pre><code>just
 </code></pre>
               
             </div>
