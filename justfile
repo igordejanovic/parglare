@@ -1,5 +1,6 @@
 # Define a variable with the python command to open a browser.
 BROWSER := "uv run python -c 'import webbrowser, sys; webbrowser.open(sys.argv[1])'"
+VERSION := `awk -F'"' '/^version/ {print $2}' pyproject.toml`
 
 # Show all available recipes
 [default]
@@ -72,6 +73,15 @@ docs:
 servedocs:  
 	{{BROWSER}} "http://localhost:8000/"
 	uv run --group docs mkdocs serve
+
+# Publish latest docs
+publish-docs-latest:
+     uv run mike deploy latest -p
+
+# Publish stable docs for major/minor versions
+publish-docs-stable: publish-docs-latest
+    uv run mike delete stable
+    uv run mike deploy {{VERSION}} stable -p
 
 # release package to PyPI test server
 release-test: dist  
