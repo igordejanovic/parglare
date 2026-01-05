@@ -6,12 +6,12 @@ no changes.
 ## Greedy repetitions
 
 The most important new feature in this release is a support for greedy
-repetition. Read more in [the docs](../../grammar_language/#greedy-repetitions).
+repetition. Read more in [the docs](../grammar_language.md#greedy-repetitions).
 
 ## New way to disambiguate the GLR forest
 
 A new and recommended way for dynamic disambiguation is by using
-`forest.disambiguate`. Read more in [the docs](../../disambiguation/#disambiguation-of-a-glr-forest).
+`forest.disambiguate`. Read more in [the docs](../disambiguation.md#disambiguation-of-a-glr-forest).
 
 ## Optimized getting of the first tree from the GLR forest
 

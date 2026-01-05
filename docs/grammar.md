@@ -45,16 +45,16 @@ parameters:
 
 ### Attributes
 
-- **terminals** - a dict of terminals (instances of [`Terminal`](#terminal))
+- **terminals** - a dict of terminals (instances of [`Terminal`](#terminal-class))
   keyed by fully qualified name;
 
 - **nonterminals** - a dict of non-terminal (instances
-  of [`NonTerminal`](#nonterminal)) keyed by fully qualified name;
+  of [`NonTerminal`](#nonterminal-class)) keyed by fully qualified name;
 
 - **start_symbol** - a grammar symbol of the start/root rule. By default this is
   the first rule in the grammar;
 
-- **productions** - a list of productions ([`Production`](#production)
+- **productions** - a list of productions ([`Production`](#production-class)
   instances);
 
 - **recognizers** - a dict of [user supplied recognizers](./recognizers.md)
