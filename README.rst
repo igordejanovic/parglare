@@ -73,9 +73,11 @@ Installation
 
 .. code:: shell
 
+    Install [just](https://github.com/casey/just).
+
     $ git clone git@github.com:igordejanovic/parglare.git
     $ cd parglare
-    $ make dev
+    $ just dev
 
 Citing parglare
 ---------------
