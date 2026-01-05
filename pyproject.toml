@@ -8,7 +8,7 @@ authors = [
 maintainers = [
     {name = "Igor R. Dejanović", email = "igor.dejanovic@gmail.com"},
 ]
-readme = "README.rst"
+readme = "README.md"
 license = {text = "MIT"}
 keywords = ["parser", "lr", "glr"]
 classifiers = [
