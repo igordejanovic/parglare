@@ -25,7 +25,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Run all checks
       run: |
-        just check-ci
+        just check
     - name: Coveralls
       if: github.ref == 'refs/heads/master'
       env:

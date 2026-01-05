@@ -52,10 +52,7 @@ coverage:
 	{{BROWSER}} "htmlcov/index.html"
 
 # Run all checks
-check: check-format lint types test coverage
-
-[private]
-check-ci: check-format lint types test
+check: check-format lint types coverage
 
 # Format code with ruff
 [no-cd]
