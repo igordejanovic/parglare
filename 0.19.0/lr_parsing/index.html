@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Igor Dejanović" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>LR parsing and conflicts - parglare</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../style.css" rel="stylesheet" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "LR parsing and conflicts";
+        var mkdocs_page_input_path = "lr_parsing.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-68681917-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', "UA-68681917-1");
+      </script>
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> parglare
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../getting_started/">Getting started</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar/">Grammar class</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../actions/">Actions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_modularization/">Modularization</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">LR parsing and conflicts</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#resolving-conflicts">Resolving conflicts</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_15/">0.15</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">About</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">parglare</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+      <li class="breadcrumb-item active">LR parsing and conflicts</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/igordejanovic/parglare/edit/master/docs/lr_parsing.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="lr-parsing-ambiguities-and-conflicts-resolving">LR parsing, ambiguities and conflicts resolving<a class="headerlink" href="#lr-parsing-ambiguities-and-conflicts-resolving" title="Permanent link">&para;</a></h1>
+<p>LR parser operates as a deterministic PDA (Push-down automata). It is a state
+machine which is always in some state during parsing. The state machine must
+deterministically decide what is the next state just based on its current state
+and one token of lookahead (actually, parser could use more than one token of
+lookahead thus being LR(2), LR(3) and so on, but they are not very practical).
+This decision is given by LR tables which are precalculated from the grammar
+before parsing even begins.</p>
+<p>For example, let's see what happens if we have a simple expression grammar:</p>
+<pre><code>E: E '+' E
+ | E '*' E
+ | number;
+number: /\d+/;
+</code></pre>
+<p>and we want to parse the following input:</p>
+<pre><code> 1 + 2 * 3
+</code></pre>
+<p>Language defined by this grammar is ambiguous as the expression can be
+interpreted either as:</p>
+<pre><code> ((1 + 2) * 3)
+</code></pre>
+<p>or:</p>
+<pre><code> (1 + (2 * 3))
+</code></pre>
+<p>In the parsing process, parser starts in state 0 and it sees token <code>1</code> ahead
+(one lookahead is used - LR(1)).</p>
+<p>The only thing a parser can do in this case is to shift, i.e. to consume the
+token and advance the position. This operation transition the automata to some
+other state. From each state there is only one valid transition that can be
+taken or the PDA won't be deterministic, i.e. we could simultaneously follow
+different paths (that is exactly what the <code>GLRParser</code> does).</p>
+<p>Current position would be (the dot represents the position):</p>
+<pre><code> 1 . + 2 * 3
+</code></pre>
+<p>Now the parser sees <code>+</code> token ahead and the tables will tell him to reduce the
+number he just saw to <code>E</code> (a number is an expression according to the grammar).
+Thus, on the stack the parser will have an expression <code>E</code> (actually, LR states
+are kept on the stack but that's not important for this little analysis). This
+reduction will advance PDA to some other state again. Each shift/reduce operation
+change state so I'll not repeat that anymore.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>See <a href="../pglr/">pglr command</a> which can be used to visualize PDA. Try to
+visualize automata for this grammar.</p>
+</div>
+<p>After reduction parser will do shift of <code>+</code> token. There is nothing to reduce as
+the sub-expression on stack is <code>E +</code> which can't be reduced as it's not complete.
+So, the only thing we can do is to shift <code>2</code> token.</p>
+<p>Now, the position is:</p>
+<pre><code>  1 + 2 . * 3
+</code></pre>
+<p>And the stack is:</p>
+<pre><code>  E + 2
+</code></pre>
+<p>And this is a place where the parser can't decide what to do. It can either
+reduce the sum on the stack or shift <code>*</code> and <code>3</code> and reduce multiplication
+first and the sumation afterwards.</p>
+<p>If the sum is reduced first and <code>*</code> shifted afterwards we would get the
+following result:</p>
+<pre><code> (1 + 2) * 3
+</code></pre>
+<p>If the shift of <code>*</code> and <code>3</code> is done instead of reducing, the reduction would
+first reduce multiplication and then sum (reduction is always done on the top of
+the stack). We will have the following result:</p>
+<pre><code>1 + (2 * 3)
+</code></pre>
+<p>From the point of view of arithmetic priorities, preferred solution is the last
+one but the parser don't know arithmetic rules.</p>
+<p>If you analyze this grammar using <a href="../pglr/">pglr command</a> you will see that
+the LR tables have Shift/Reduce conflicts as there is a state in which parser
+can't decide whether to shift or to reduce (we just saw that situation).</p>
+<p>parglare gives you various tools to be more explicit with your grammar and to
+resolve these conflicts.</p>
+<p>There are two situations when conflicts can't be resolved:</p>
+<ul>
+<li>you need more than one lookahead to disambiguate,</li>
+<li>your language is inherently ambiguous.</li>
+</ul>
+<p>If you end up in one of these situations you must use GLR parsing, which will
+fork the parser at each state which has multiple paths, and explore all
+possibilities.</p>
+<h2 id="resolving-conflicts">Resolving conflicts<a class="headerlink" href="#resolving-conflicts" title="Permanent link">&para;</a></h2>
+<p>When we run:</p>
+<pre><code>$ pglr compile expr.pg
+</code></pre>
+<p>where in <code>expr.pg</code> we have the above grammar, we get the following output at the
+end:</p>
+<pre><code>*** S/R conflicts ***
+There are 4 S/R conflicts
+
+State 6
+        1: E = E + E .   {+, *, STOP}
+        1: E = E . + E   {+, *, STOP}
+        2: E = E . * E   {+, *, STOP}
+
+In state 6 and input symbol '+' can't decide whether to shift or
+reduce by production(s) '1: E = E + E'.
+
+State 6
+        1: E = E + E .   {+, *, STOP}
+        1: E = E . + E   {+, *, STOP}
+        2: E = E . * E   {+, *, STOP}
+
+In state 6 and input symbol '*' can't decide whether to shift or
+reduce by production(s) '1: E = E + E'.
+
+State 7
+        2: E = E * E .   {+, *, STOP}
+        1: E = E . + E   {+, *, STOP}
+        2: E = E . * E   {+, *, STOP}
+
+In state 7 and input symbol '+' can't decide whether to shift or
+reduce by production(s) '2: E = E * E'.
+
+State 7
+        2: E = E * E .   {+, *, STOP}
+        1: E = E . + E   {+, *, STOP}
+        2: E = E . * E   {+, *, STOP}
+
+In state 7 and input symbol '*' can't decide whether to shift or
+reduce by production(s) '2: E = E * E'.
+Grammar OK.
+There are 4 Shift/Reduce conflicts. Either use 'prefer_shifts' parser mode,
+try to resolve manually or use GLR parsing.
+</code></pre>
+<p>As we can see this grammar has 4 Shift/Reduce conflicts. At the end of the
+output we get an advice to either use <code>prefer_shifts</code> strategy that will always
+prefer shift over reduce. In this case that's not what we want.</p>
+<p>If we look closely at the output we see that parglare gives us an informative
+explanation why there are conflicts in our grammar.</p>
+<p>The first conflict:</p>
+<pre><code>State 6
+        1: E = E + E .   {+, *, STOP}
+        1: E = E . + E   {+, *, STOP}
+        2: E = E . * E   {+, *, STOP}
+
+In state 6 and input symbol '+' can't decide whether to shift or
+reduce by production(s) '1: E = E + E'.
+</code></pre>
+<p>Tell us that when the parser saw addition — the dot in the above productions
+represents all possible positions of the parser in the input stream in this
+state — and there is <code>+</code> ahead, it doesn't know should it reduce the addition or
+shift the <code>+</code> token.</p>
+<p>This means that if we have an expression: <code>1 + 2 + 3</code> should we calculate it as
+<code>(1 + 2) + 3</code> or as <code>1 + (2 + 3)</code>. Of course, the result in this case would be
+the same, but imagine what would happen if we had subtraction operation instead
+of addition. In arithmetic, this is defined by association which says that
+addition if left associative, thus the operation is executed from left to right.</p>
+<p>Parglare enables you to define associativity for you productions by specifying
+<code>{left}</code> or <code>{right}</code> at the end of production. You can think of <code>left</code>
+associativity as telling the parser to prefer reduce over shift for this
+production and the <code>right</code> associativity for preferring shifts over reduces.</p>
+<p>Let's see the second conflict:</p>
+<pre><code>State 6
+        1: E = E + E .   {+, *, STOP}
+        1: E = E . + E   {+, *, STOP}
+        2: E = E . * E   {+, *, STOP}
+
+In state 6 and input symbol '*' can't decide whether to shift or
+reduce by production(s) '1: E = E + E'.
+</code></pre>
+<p>In the same state, when we saw addition and have <code>*</code> ahead parser can't decide.</p>
+<p>This means that if we have an expression: <code>1 + 2 * 3</code> should we calculate it as
+<code>(1 + 2) * 3</code> or <code>1 + (2 * 3)</code>. In arithmetic this is handled by operation
+priority. We want multiplication to be executed first, so we should raise the
+priority of multiplication (or lower the priority of addition).</p>
+<pre><code>E: E '+' E  {left, 1}
+ | E '*' E  {left, 2}
+ | number;
+number: /\d+/;
+</code></pre>
+<p>We have augmented our grammar to state that both operation are left associative,
+thus the parser will know what to do in the case of <code>1 + 2 + 3</code> or <code>1 * 2 * 3</code>
+it will reduce from left to right, i.e. prefer reduce over shifts. We also
+specified that addition has a priority of 1 and multiplication has a priority of
+2, thus the parser will know what to do in case of <code>1 + 2 * 3</code>, it will shift
+<code>*</code> instead of reducing addition as the multiplication should be
+reduced/calculated first.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The default priority for rules is 10.</p>
+</div>
+<p>This change in the grammar resolves all ambiguities and our grammar is now
+LR(1).</p>
+<p>See the section on <a href="../disambiguation/">disambiguation strategies</a> for more.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../grammar_modularization/" class="btn btn-neutral float-left" title="Modularization"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../disambiguation/" class="btn btn-neutral float-right" title="Disambiguation">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/igordejanovic/parglare" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../grammar_modularization/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../disambiguation/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
