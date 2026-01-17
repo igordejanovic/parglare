@@ -512,7 +512,9 @@ class Parser:
             else:
                 return parse_stack[1].results
         else:
-            raise self.errors[-1]
+            error = self.errors[-1]
+            del self.errors
+            raise error
 
     def call_actions(self, node):
         """

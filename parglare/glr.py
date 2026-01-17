@@ -165,7 +165,9 @@ class GLRParser(Parser):
         else:
             # Report error
             self._remove_transient_state()
-            raise self.errors[-1]
+            error = self.errors[-1]
+            del self.errors
+            raise error
 
     def _find_lookaheads(self):
         debug = self.debug
