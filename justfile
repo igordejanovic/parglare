@@ -38,15 +38,20 @@ lint flags="":
 	uv run --no-default-groups --group test ruff check {{ flags }} parglare/ tests/func examples/
 
 # run tests quickly with the default Python
-test:  
-	uv run --no-default-groups --group test pytest tests/func
+test flags="":
+	uv run --no-default-groups --group test pytest {{ flags }} tests/func
+
+# run tests for the given path
+[no-cd]
+testpath path="." *flags="":
+	uv run --no-default-groups --group test pytest {{ flags }} {{ path }}
 
 # Run static type checks
-types:  
+types:
 	uv run --no-default-groups --group test mypy parglare
 
 # check code coverage quickly with the default Python
-coverage:  
+coverage:
 	uv run --no-default-groups --group test coverage run --omit parglare/cli.py --source parglare -m pytest tests/func
 	uv run --no-default-groups --group test coverage report --fail-under 90
 	uv run --no-default-groups --group test coverage html
@@ -65,12 +70,12 @@ check-format:
     uv run ruff format --check
 
 # generate MkDocs HTML documentation
-docs:  
+docs:
 	uv run --group docs mkdocs build
 	{{BROWSER}} site/index.html
 
 # compile the docs watching for changes
-servedocs:  
+servedocs:
 	{{BROWSER}} "http://localhost:8000/"
 	uv run --group docs mkdocs serve
 
@@ -84,24 +89,24 @@ publish-docs-stable: publish-docs-latest
     uv run mike deploy {{VERSION}} stable -p
 
 # release package to PyPI test server
-release-test: dist  
+release-test: dist
 	uv run flit publish --repository test
 
 # release package to PyPI
-release: dist  
+release: dist
 	uv run flit publish
 
 # builds source and wheel package
-dist: clean  
+dist: clean
 	uv run flit build
 	gpg --armor --detach-sign dist/*.whl
 	gpg --armor --detach-sign dist/*.tar.gz
 	ls -l dist
 
 # install the package to the active Python's site-packages
-install: clean  
+install: clean
 	uv pip install .
 
 # Setup development environment
-dev: clean  
+dev: clean
 	uv sync
