@@ -79,6 +79,7 @@ docs = [
 dbg = [
     "pudb",
     "ipython",
+    "objgraph",
 ]
 
 [project.scripts]
