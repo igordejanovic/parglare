@@ -39,12 +39,12 @@ lint flags="":
 
 # run tests quickly with the default Python
 test flags="":
-	uv run --no-default-groups --group test pytest {{ flags }} tests/func
+	uv run --no-default-groups --group test --group dbg pytest {{ flags }} tests/func
 
 # run tests for the given path
 [no-cd]
 testpath path="." *flags="":
-	uv run --no-default-groups --group test pytest {{ flags }} {{ path }}
+	uv run --no-default-groups --group test --group dbg pytest {{ flags }} {{ path }}
 
 # Run static type checks
 types:
