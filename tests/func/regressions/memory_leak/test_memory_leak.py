@@ -1,9 +1,12 @@
-from os.path import dirname, join
-import weakref
+import contextlib
 import gc
+import weakref
+from os.path import dirname, join
+
 import pytest
 
-from parglare import Parser, GLRParser, Grammar, SyntaxError
+from parglare import GLRParser, Grammar, Parser, SyntaxError
+
 
 @pytest.mark.parametrize("parser_type", [Parser, GLRParser])
 def test_parser_memory_leak_through_storing_exception_instance(parser_type):
@@ -19,13 +22,12 @@ def test_parser_memory_leak_through_storing_exception_instance(parser_type):
     parser = parser_type(grammar)
 
     def raises_exception():
+        nonlocal dummy
         _ = dummy  # Capture dummy in closure
         parser.parse("e e x")  # Invalid input to trigger SyntaxError
 
-    try:
+    with contextlib.suppress(SyntaxError):
         raises_exception()
-    except SyntaxError:
-        pass
 
     del raises_exception
     del dummy
@@ -34,6 +36,5 @@ def test_parser_memory_leak_through_storing_exception_instance(parser_type):
 
     assert dummy_ref() is None, "Parser is holding onto exception traceback"
 
-    #import objgraph
-    #objgraph.show_backrefs(dummy_ref(), 10, filename="parglare_parser_backrefs.png")
-
+    # import objgraph
+    # objgraph.show_backrefs(dummy_ref(), 10, filename="parglare_parser_backrefs.png")
