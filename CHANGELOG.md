@@ -18,6 +18,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.20.0] (released: 2026-01-19)
+
 ## Fixed
 - Memory leak through holding onto error exception instance in the parser. This
   was making all objects referenced through the traceback live as long as the
@@ -509,7 +512,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.19.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.20.0...HEAD
+[0.20.0]: https://github.com/igordejanovic/parglare/compare/0.19.0...0.20.0
 [0.19.0]: https://github.com/igordejanovic/parglare/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/igordejanovic/parglare/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/igordejanovic/parglare/compare/0.16.1...0.17.0
