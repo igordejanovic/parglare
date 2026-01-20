@@ -193,6 +193,28 @@ result = parser.call_actions(forest.get_first_tree())
 ```
 
 
+## Getting position information of a node
+
+Retrieving position information of a node is a common operation, below is an
+example of an action that gets that information. It uses a common function
+`get_node_position` that can retrieve the position of node `index`:
+
+``` python
+def get_node_position(context, nodes, index):
+    if index < 0:
+        index = index + len(nodes) # Handle negative list indices.
+    node_startpos = context.start_position + sum(len(nodes[n]) for n in range(index))
+    return parglare.pos_to_line_col(context.input_str, node_startpos)
+```
+
+In an action, call the above function with the index of the node you are
+interested in, for example, to get position information of node 3, you would have
+
+``` python
+lambda context, nodes: get_node_position(context, nodes, 3)
+```
+
+
 ## Built-in actions
 
 parglare provides some common actions in the module `parglare.actions`. You can
