@@ -619,17 +619,6 @@ class GLRParser(Parser):
                 prints(f"\t{head}")
             h_print(f"Number of trees = {sum([len(h.parents) for h in heads])}")
 
-    def _debug_reduce_heads(self):
-        heads = list(self.reduced_heads.values())
-        h_print("Reduced heads = ", len(heads))
-        for head in heads:
-            prints(f"\t{head}")
-
-        heads = list(self.heads_for_reduction.values())
-        h_print("Heads for reduction:", len(heads))
-        for head in heads:
-            prints(f"\t{head}")
-
     def _debug_context(
         self,
         position,
