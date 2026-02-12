@@ -71,7 +71,7 @@ class GLRParser(Parser):
         """
         pass
 
-    def parse(self, input_str, position=0, file_name=None, extra=None):
+    def parse(self, input_str, position=0, file_name=None, extra=None, clear=True):
         """
         Parses the given input string.
         Args:
@@ -80,6 +80,7 @@ class GLRParser(Parser):
             file_name(str): File name if applicable. Used in error reporting.
             extra: An object that keeps custom parsing state. If not given
                 initialized to dict.
+            clear: should we clear transient state after parsing.
         """
 
         if self.debug:
@@ -95,6 +96,7 @@ class GLRParser(Parser):
         self.input_str = input_str
         self.file_name = file_name
         self.extra = {} if extra is None else extra
+        self.clear = clear
 
         # Error reporting and recovery
         self.errors = []
@@ -160,11 +162,13 @@ class GLRParser(Parser):
             if self.debug:
                 a_print(f"*** {forest.solutions} successful parse(s).")
 
-            self._remove_transient_state()
+            if self.clear:
+                self._remove_transient_state()
             return forest
         else:
             # Report error
-            self._remove_transient_state()
+            if self.clear:
+                self._remove_transient_state()
             error = self.errors[-1]
             del self.errors
             raise error
@@ -603,9 +607,24 @@ class GLRParser(Parser):
         Delete references to transient parser objects to lower memory
         consumption.
         """
-        # del self._for_actor
-        # del self._for_shifter
-        # del self._last_shifted_heads
+        del self._for_actor
+        del self._for_shifter
+        del self._last_shifted_heads
+        del self._accepted_heads
+        del self._active_heads
+        del self._states_traversed
+        del self.input_str
+        del self._expected
+        del self._tokens_ahead
+        del self.extra
+        if self.debug_trace:
+            del self._dot_trace
+            del self._dot_trace_ranks
+            del self._trace_frontier_heads
+            del self._trace_frontier_steps
+
+
+
 
     def _debug_step_str(self):
         return f"{self.debug_frontier}.{self.debug_step}"

@@ -240,7 +240,7 @@ class Parser:
             compiled_examples = {}
             for example in examples:
                 try:
-                    self.parse(example["example"])
+                    self.parse(example["example"], clear=False)
                 except SyntaxError as e:
                     del example["example"]
                     states = []
@@ -298,7 +298,7 @@ class Parser:
             content = f.read()
         return self.parse(content, file_name=file_name, **kwargs)
 
-    def parse(self, input_str, position=0, file_name=None, extra=None):
+    def parse(self, input_str, position=0, file_name=None, extra=None, clear=True):
         """
         Parses the given input string.
         Args:
@@ -307,6 +307,7 @@ class Parser:
             file_name(str): File name if applicable. Used in error reporting.
             extra: An object that keeps custom parsing state. If not given
                 initialized to dict.
+            clear: should we clear transient state after parsing.
         """
 
         if self.debug:
@@ -315,6 +316,7 @@ class Parser:
         self.input_str = input_str
         self.file_name = file_name
         self.extra = {} if extra is None else extra
+        self.clear = clear
 
         self.errors = []
         self.in_error_recovery = False
