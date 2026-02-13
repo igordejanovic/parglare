@@ -623,9 +623,6 @@ class GLRParser(Parser):
             del self._trace_frontier_heads
             del self._trace_frontier_steps
 
-
-
-
     def _debug_step_str(self):
         return f"{self.debug_frontier}.{self.debug_step}"
 
