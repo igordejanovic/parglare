@@ -115,6 +115,9 @@ class Parser:
         self.custom_token_recognition = custom_token_recognition
         self.lexical_disambiguation = lexical_disambiguation
 
+        # should we clear transient state after parsing.
+        self.clear_transient = True
+
         if table is None:
             from .closure import LR_0, LR_1
             from .tables import create_load_table
@@ -238,9 +241,10 @@ class Parser:
                 new_example()
 
             compiled_examples = {}
+            self.clear_transient = False
             for example in examples:
                 try:
-                    self.parse(example["example"], clear=False)
+                    self.parse(example["example"])
                 except SyntaxError as e:
                     del example["example"]
                     states = []
@@ -256,6 +260,7 @@ class Parser:
                     for state in states:
                         key = hint_key(state, lookaheads)
                         compiled_examples[key] = example["hint"]
+            self.clear_transient = True
 
             return compiled_examples
 
@@ -298,7 +303,7 @@ class Parser:
             content = f.read()
         return self.parse(content, file_name=file_name, **kwargs)
 
-    def parse(self, input_str, position=0, file_name=None, extra=None, clear=True):
+    def parse(self, input_str, position=0, file_name=None, extra=None):
         """
         Parses the given input string.
         Args:
@@ -307,7 +312,6 @@ class Parser:
             file_name(str): File name if applicable. Used in error reporting.
             extra: An object that keeps custom parsing state. If not given
                 initialized to dict.
-            clear: should we clear transient state after parsing.
         """
 
         if self.debug:
@@ -316,15 +320,14 @@ class Parser:
         self.input_str = input_str
         self.file_name = file_name
         self.extra = {} if extra is None else extra
-        self.clear = clear
 
         self.errors = []
         self.in_error_recovery = False
-        self.accepted_head = None
 
         next_token = self._next_token
         debug = self.debug
 
+        accepted_head = None
         start_head = LRStackNode(self, self.table.states[0], 0, position)
         self._init_dynamic_disambiguation(start_head)
         self.parse_stack = parse_stack = [start_head]
@@ -503,10 +506,12 @@ class Parser:
                 parse_stack.append(new_head)
 
             elif act.action is ACCEPT:
-                self.accepted_head = head
+                accepted_head = head
                 break
 
-        if self.accepted_head:
+        if self.clear_transient:
+            self._remove_transient_state()
+        if accepted_head:
             if debug:
                 a_print("SUCCESS!!!")
             if self.return_position:
@@ -583,6 +588,10 @@ class Parser:
             return result
 
         return inner_call_actions(node)
+
+    def _remove_transient_state(self):
+        del self.input_str
+        del self.extra
 
     def _skipws(self, head, input_str):
         in_len = len(input_str)

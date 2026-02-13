@@ -18,6 +18,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+## Changed
+- Transient state is cleared after parse to lower memory usage.
+
 
 ## [0.20.0] (released: 2026-01-19)
 
