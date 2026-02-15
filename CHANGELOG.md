@@ -20,7 +20,13 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## Changed
 - Transient state is cleared after parse to lower memory usage.
+- Remove direct parser references from LRStackNode and GSSNode context objects,
+  making them more self-contained and easier to reason about. See [e51e5ffa].
+- Update `error_recovery` signature to receive `default_error_recovery` as a
+  parameter instead of accessing it via `context.parser`. See [e51e5ffa].
+- Store symbol class reference in symbol.cls for faster access. See [e51e5ffa].
 
+[e51e5ffa]: https://github.com/igordejanovic/parglare/commit/e51e5ffa
 
 ## [0.20.0] (released: 2026-01-19)
 
