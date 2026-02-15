@@ -593,9 +593,6 @@ class Parser:
 
         return inner_call_actions(node)
 
-    def _remove_transient_state(self):
-        pass
-
     def _skipws(self, head, input_str):
         in_len = len(input_str)
         layout_content_ahead = ""
