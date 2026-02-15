@@ -60,6 +60,11 @@ class GrammarSymbol:
         self.grammar_action = None
         self.imported_with = imported_with
         self.user_meta = user_meta
+
+        # A Python class for AST nodes. Can be defined by the user during
+        # grammar construction or is created on the fly by parglare.
+        self.cls = None
+
         self._hash = hash(self.fqn)
 
     @property
@@ -603,6 +608,7 @@ class PGFile:
                 nonterminals_by_name[symbol.name] = symbol
                 old_symbol = new_symbol = symbol
             new_symbol.productions.append(production)
+            new_symbol.cls = self.grammar.classes.get(new_symbol.fqn, None)
 
             # Check grammar actions for rules/symbols.
             if (

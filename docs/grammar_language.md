@@ -626,9 +626,10 @@ There are two kind of assignments:
   being passed to the action.
 
 Each rule using named matches result in a dynamically created Python class named
-after the rule. These classes are kept in a dictionary `grammar.classes` and
-used to instantiate Python objects during parsing by an implicitly
-set [built-in `obj` action](./actions.md#built-in-actions).
+after the rule. These classes are kept both in a dictionary `grammar.classes`
+and in the `symbol.cls` reference, and are used to instantiate Python objects
+during parsing by an implicitly set [built-in `obj`
+action](./actions.md#built-in-actions).
 
 Thus, for rules using named matches, default action is to create object with
 attributes whose names are those of LHS of the assignments and values are from

@@ -317,9 +317,7 @@ class Parser:
         if self.debug:
             a_print("*** PARSING STARTED", new_line=True)
 
-        self.input_str = input_str
-        self.file_name = file_name
-        self.extra = {} if extra is None else extra
+        extra = {} if extra is None else extra
 
         self.errors = []
         self.in_error_recovery = False
@@ -328,7 +326,9 @@ class Parser:
         debug = self.debug
 
         accepted_head = None
-        start_head = LRStackNode(self, self.table.states[0], 0, position)
+        start_head = LRStackNode(
+            file_name, input_str, self.table.states[0], 0, position, extra
+        )
         self._init_dynamic_disambiguation(start_head)
         self.parse_stack = parse_stack = [start_head]
 
@@ -436,16 +436,18 @@ class Parser:
                         "Shift:",
                         f'{cur_state.state_id} "{head.token_ahead.value}"'
                         + " at position "
-                        + str(pos_to_line_col(self.input_str, head.position)),
+                        + str(pos_to_line_col(input_str, head.position)),
                         level=1,
                     )
 
                 new_position = head.position + len(head.token_ahead)
                 new_head = LRStackNode(
-                    self,
+                    file_name,
+                    input_str,
                     state=act.state,
                     frontier=head.frontier + 1,
                     token=head.token_ahead,
+                    extra=head.extra,
                     layout_content=head.layout_content_ahead,
                     position=new_position,
                     start_position=head.position,
@@ -473,10 +475,12 @@ class Parser:
                     del parse_stack[-r_length:]
                     next_state = parse_stack[-1].state.gotos[production.symbol]
                     new_head = LRStackNode(
-                        self,
+                        file_name,
+                        input_str,
                         state=next_state,
                         frontier=head.frontier,
                         position=head.position,
+                        extra=head.extra,
                         production=production,
                         start_position=start_reduction_head.start_position,
                         end_position=head.end_position,
@@ -489,10 +493,12 @@ class Parser:
                     results = []
                     next_state = cur_state.gotos[production.symbol]
                     new_head = LRStackNode(
-                        self,
+                        file_name,
+                        input_str,
                         state=next_state,
                         frontier=head.frontier,
                         position=head.position,
+                        extra=head.extra,
                         production=production,
                         start_position=head.end_position,
                         end_position=head.end_position,
@@ -509,8 +515,6 @@ class Parser:
                 accepted_head = head
                 break
 
-        if self.clear_transient:
-            self._remove_transient_state()
         if accepted_head:
             if debug:
                 a_print("SUCCESS!!!")
@@ -590,8 +594,7 @@ class Parser:
         return inner_call_actions(node)
 
     def _remove_transient_state(self):
-        del self.input_str
-        del self.extra
+        pass
 
     def _skipws(self, head, input_str):
         in_len = len(input_str)
@@ -638,7 +641,7 @@ class Parser:
         if it's not expected by any action in given state.
         """
         state = head.state
-        input_str = self.input_str
+        input_str = head.input_str
         position = head.position
         actions = state.actions
         in_len = len(input_str)
@@ -674,7 +677,7 @@ class Parser:
         return tokens
 
     def _token_recognition(self, head):
-        input_str = self.input_str
+        input_str = head.input_str
         actions = head.state.actions
         position = head.position
         finish_flags = head.state.finish_flags
@@ -973,7 +976,7 @@ class Parser:
             # Custom recovery provided during parser construction
             if debug:
                 prints("\tDoing custom error recovery.")
-            successful = self.error_recovery(head, error)
+            successful = self.error_recovery(head, error, self.default_error_recovery)
 
         # The recovery may either decide to skip erroneous part of
         # the input and resume at the place that can continue or it
@@ -1053,10 +1056,12 @@ class LRStackNode:
     """
 
     __slots__ = [
-        "parser",
+        "file_name",
+        "input_str",
         "state",
         "frontier",
         "position",
+        "extra",
         "results",
         "start_position",
         "end_position",
@@ -1070,10 +1075,12 @@ class LRStackNode:
 
     def __init__(
         self,
-        parser,
+        file_name,
+        input_str,
         state,
         frontier,
         position,
+        extra,
         results=None,
         start_position=None,
         end_position=None,
@@ -1083,10 +1090,12 @@ class LRStackNode:
         layout_content="",
         layout_content_ahead="",
     ):
-        self.parser = parser
+        self.file_name = file_name
+        self.input_str = input_str
         self.state = state
         self.frontier = frontier
         self.position = position
+        self.extra = extra
 
         self.results = results
 
@@ -1119,22 +1128,6 @@ class LRStackNode:
     @property
     def symbol(self):
         return self.state.symbol
-
-    @property
-    def input_str(self):
-        return self.parser.input_str
-
-    @property
-    def file_name(self):
-        return self.parser.file_name
-
-    @property
-    def extra(self):
-        return self.parser.extra
-
-    @extra.setter
-    def extra(self, new_value):
-        self.parser.extra = new_value
 
 
 class Token:

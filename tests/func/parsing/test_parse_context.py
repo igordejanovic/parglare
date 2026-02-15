@@ -17,7 +17,6 @@ called = [False, False]
 def act_sum(is_tree):
     def act_sum(context, nodes):
         called[0] = True
-        assert context.parser
         assert context.state.symbol.name == "E"
         assert context.production.symbol.name == "E"
         assert len(context.production.rhs) == 3

@@ -61,12 +61,13 @@ To provide a custom strategy for error recovery set `error_recovery` parser
 constructor parameter to a Python function. This function should have the
 following signature:
 
-    def error_recovery_strategy(context, error):
+    def error_recovery_strategy(context, error, default_error_recovery):
         ...
 
 
 - **context***- context like object (usually the parser head).
 - **error** - [`SyntaxError` instance](#handling-errors).
+- **default_error_recovery** - default strategy.
 
 Using the head object you can query the state of the parser. E.g. to get the
 position use `context.position`, to get the parser state use `context.state`, to
@@ -81,7 +82,7 @@ The recovery function should modify the head (e.g. its position and/or
 successful the function should return `True`, otherwise `False`.
 
 You can call a default error recovery from your custom recovery by
-`context.parser.default_error_recovery(context)`
+`default_error_recovery(context)`
 
 
 ## Custom error hints from examples

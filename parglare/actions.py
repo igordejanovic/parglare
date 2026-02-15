@@ -128,10 +128,7 @@ def obj(context, nodes, **attrs):
     Creates Python object with the attributes created from named matches.
     This action is used as a default action for rules with named matches.
     """
-    grammar = context.parser.grammar
-    rule_name = context.production.symbol.fqn
-
-    cls = grammar.classes[rule_name]
+    cls = context.production.symbol.cls
     instance = cls(**attrs)
 
     instance._pg_start_position = context.start_position

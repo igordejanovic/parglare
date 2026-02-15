@@ -6,6 +6,7 @@ from parglare import termui as t
 from parglare.common import dot_escape, position_context
 from parglare.common import replace_newlines as _
 from parglare.parser import REDUCE, SHIFT, Token, pos_to_line_col
+from parglare.tables import LRState
 from parglare.termui import a_print, h_print, prints
 from parglare.trees import (
     Forest,
@@ -92,9 +93,8 @@ class GLRParser(Parser):
                 self._trace_frontier_heads = []
                 self._trace_frontier_steps = []
 
-        self.input_str = input_str
         self.file_name = file_name
-        self.extra = {} if extra is None else extra
+        extra = {} if extra is None else extra
 
         # Error reporting and recovery
         self.errors = []
@@ -105,7 +105,16 @@ class GLRParser(Parser):
         self._for_shifter = []
 
         # We start with a single parser head in state 0.
-        start_head = GSSNode(self, self.table.states[0], 0, position, ambiguity=1)
+        start_head = GSSNode(
+            file_name,
+            input_str,
+            self.table.states[0],
+            position,
+            0,
+            extra,
+            ambiguity=1,
+            debug=self.debug,
+        )
         self._init_dynamic_disambiguation(start_head)
 
         # Accepted (finished) heads
@@ -137,7 +146,7 @@ class GLRParser(Parser):
                     head = self._for_actor.pop()
                     self._actor(head)
             if self._in_error_reporting:
-                self._finish_error_reporting()
+                self._finish_error_reporting(input_str)
                 if self.error_recovery:
                     self._do_error_recovery()
                     self._for_shifter = []
@@ -177,7 +186,7 @@ class GLRParser(Parser):
         # ambiguity by the same GLR mechanics
         self._active_heads_per_symbol = {}
         while self._active_heads:
-            state_id, head = self._active_heads.popitem()
+            _, head = self._active_heads.popitem()
             if head.token_ahead is not None:
                 # May happen after error recovery
                 self._active_heads_per_symbol.setdefault(head.token_ahead.symbol, {})[
@@ -186,15 +195,12 @@ class GLRParser(Parser):
                 continue
             if debug:
                 h_print(f"Finding lookaheads for head {head}", new_line=True)
-            self._skipws(head, self.input_str)
+            self._skipws(head, head.input_str)
 
             tokens = self._next_tokens(head)
 
             if debug:
-                self._debug_context(
-                    head.position,
-                    head.layout_content_ahead,
-                    lookahead_tokens=tokens,
+                head._debug_context(
                     expected_symbols=head.state.actions.keys(),
                 )
 
@@ -342,13 +348,16 @@ class GLRParser(Parser):
             a_print(f"Position span: {start_position} - {end_position}", level=1)
 
         new_head = GSSNode(
-            self,
+            head.file_name,
+            head.input_str,
             state,
             head.position,
             head.frontier,
+            head.extra,
             token_ahead=head.token_ahead,
             layout_content=root_head.layout_content,
             layout_content_ahead=head.layout_content_ahead,
+            debug=self.debug,
         )
         parent = Parent(
             new_head,
@@ -367,7 +376,9 @@ class GLRParser(Parser):
 
         active_head = self._active_heads.get(state.state_id, None)
         if active_head:
-            created = active_head.create_link(parent, head)
+            created = active_head.create_link(parent)
+            if self.debug and self.debug_trace:
+                self._trace_step(head, parent)
 
             # Calculate heads to revisit with the new path. Only those heads that
             # are already processed (not in _for_actor) and are traversing this
@@ -393,7 +404,9 @@ class GLRParser(Parser):
                             self._do_reductions(r_head, action.prod, parent)
         else:
             # No cycles. Do the reduction.
-            new_head.create_link(parent, head)
+            new_head.create_link(parent)
+            if self.debug and self.debug_trace:
+                self._trace_step(head, parent)
             self._for_actor.append(new_head)
             self._active_heads[new_head.state.state_id] = new_head
 
@@ -445,20 +458,21 @@ class GLRParser(Parser):
             else:
                 # We need to create new shifted head
                 if debug:
-                    self._debug_context(
-                        head.position,
-                        lookahead_tokens=head.token_ahead,
+                    head._debug_context(
                         expected_symbols=None,
                     )
 
                 end_position = head.position + len(head.token_ahead)
                 shifted_head = GSSNode(
-                    self,
+                    head.file_name,
+                    head.input_str,
                     to_state,
                     end_position,
                     head.frontier + 1,
+                    head.extra,
                     ambiguity=1,
                     layout_content=head.layout_content_ahead,
+                    debug=self.debug,
                 )
                 parent = Parent(
                     shifted_head,
@@ -480,7 +494,9 @@ class GLRParser(Parser):
 
                 self._active_heads[to_state.state_id] = shifted_head
 
-            shifted_head.create_link(parent, head)
+            shifted_head.create_link(parent)
+            if self.debug and self.debug_trace:
+                self._trace_step(head, parent)
 
     def _enter_error_reporting(self):
         """
@@ -517,7 +533,7 @@ class GLRParser(Parser):
                     h.state.state_id
                 ] = h
 
-    def _finish_error_reporting(self):
+    def _finish_error_reporting(self, input_str):
         # Expected symbols are only those that can cause active heads
         # to shift.
         self._expected = set(h.token_ahead.symbol for h, _ in self._for_shifter)
@@ -535,7 +551,7 @@ class GLRParser(Parser):
         context = self._last_shifted_heads[0]
         self.errors.append(
             self._create_error(
-                self.input_str,
+                input_str,
                 context,
                 self._expected,
                 tokens_ahead=self._tokens_ahead,
@@ -577,7 +593,7 @@ class GLRParser(Parser):
                 # Custom recovery provided during parser construction
                 if debug:
                     prints("\tDoing custom error recovery.")
-                successful = self.error_recovery(head, error)
+                successful = self.error_recovery(head, error, self.default_error_recovery)
 
             if successful:
                 error.location.end_position = head.position
@@ -611,10 +627,8 @@ class GLRParser(Parser):
         del self._accepted_heads
         del self._active_heads
         del self._states_traversed
-        del self.input_str
         del self._expected
         del self._tokens_ahead
-        del self.extra
         if self.debug_trace:
             del self._dot_trace
             del self._dot_trace_ranks
@@ -632,23 +646,6 @@ class GLRParser(Parser):
             for head in heads:
                 prints(f"\t{head}")
             h_print(f"Number of trees = {sum([len(h.parents) for h in heads])}")
-
-    def _debug_context(
-        self,
-        position,
-        layout_content=None,
-        lookahead_tokens=None,
-        expected_symbols=None,
-    ):
-        input_str = self.input_str
-        h_print("Position:", pos_to_line_col(input_str, position))
-        h_print("Context:", _(position_context(input_str, position)))
-        if layout_content:
-            h_print("Layout: ", f"'{_(layout_content)}'", level=1)
-        if expected_symbols:
-            h_print("Symbols expected: ", [s.name for s in expected_symbols])
-        if lookahead_tokens:
-            h_print("Token(s) ahead:", _(str(lookahead_tokens)))
 
     @no_colors
     def _trace_head(self, head):
@@ -921,27 +918,33 @@ class Parent:
 
 class GSSNode:
     """
-    Graphs Structured Stack node.
+    Graph Structured Stack node.
+
+    A node in the Graph Structured Stack (GSS) used by the GLR parser to
+    handle non-determinism. Multiple parse paths can share common prefixes
+    through this structure, enabling efficient handling of ambiguous grammars.
 
     Attributes:
-        parser(GLRParser):
-        state(LRState):
-        position(int):
-        frontier(int):
-        parents(list of Parent):
-             Each stack node might have multiple parents which represent
-             multiple path parse took to reach the current state. Each
-             parent link keeps results of semantic actions executed during
-             shift or reduce operation.
-        id(str): Unique node id. Nodes with the same id and lookahead
-            token are considered the same. Created from shift level and
-            state id.
+        file_name (str): Name of the file being parsed, used for error reporting.
+        input_str (str): The input string being parsed.
+        state (LRState): The LR automaton state this node represents.
+        position (int): Current position in the input string.
+        frontier (int): The frontier (shift level) when this node was created.
+        extra: User-defined object for maintaining custom parsing state.
+        parents (dict): Mapping of root node IDs to Parent objects, representing
+            multiple paths the parser took to reach this state.
+        id (str): Unique node identifier, created from frontier and state ID.
+        token_ahead (Token): The lookahead token for this head, if determined.
+        layout_content (str): Layout (whitespace/comments) content before this node.
+        layout_content_ahead (str): Layout content after current position.
     """
 
     __slots__ = [
-        "parser",
+        "file_name",
+        "input_str",
         "id",
         "state",
+        "extra",
         "position",
         "frontier",
         "parents",
@@ -949,24 +952,30 @@ class GSSNode:
         "token_ahead",
         "layout_content",
         "layout_content_ahead",
+        "debug",
         "_hash",
     ]
 
     def __init__(
         self,
-        parser,
-        state,
-        position,
-        frontier,
+        file_name: str,
+        input_str,
+        state: LRState,
+        position: int,
+        frontier: int,
+        extra,
         ambiguity=None,
         token_ahead=None,
         layout_content="",
         layout_content_ahead="",
+        debug=False,
     ):
-        self.parser = parser
         self.state = state
         self.position = position
         self.frontier = frontier
+        self.input_str = input_str
+        self.file_name = file_name
+        self.extra = extra
         self.id = f"{frontier}_{state.state_id}"
 
         self._ambiguity = ambiguity
@@ -974,28 +983,26 @@ class GSSNode:
         self.token_ahead = token_ahead
         self.layout_content = layout_content
         self.layout_content_ahead = layout_content_ahead
+        self.debug = debug
 
         # Parents keyed by root node id
-        self.parents = {}
+        self.parents: dict[int, Parent] = {}
 
-    def create_link(self, parent, from_head):
+    def create_link(self, parent):
         parent.head = self
         existing_parent = self.parents.get(parent.root.id)
         created = False
         if existing_parent:
             existing_parent.merge(parent)
-            if self.parser.debug:
+            if self.debug:
                 h_print("Extending possibilities \tof head:", self, level=1)
                 h_print("  parent head:", parent.root, level=3)
         else:
             self.parents[parent.root.id] = parent
             created = True
-            if self.parser.debug:
+            if self.debug:
                 h_print("Creating link \tfrom head:", self, level=1)
                 h_print("  to head:", parent.root, level=3)
-
-        if self.parser.debug and self.parser.debug_trace:
-            self.parser._trace_step(from_head, parent)
 
         return created
 
@@ -1019,12 +1026,15 @@ class GSSNode:
             return self
         else:
             new_head = GSSNode(
-                self.parser,
+                self.file_name,
+                self.input_str,
                 self.state,
                 self.position,
                 self.frontier,
+                self.extra,
                 token_ahead=token,
                 layout_content=self.layout_content,
+                debug=self.debug,
             )
             new_head.parents = dict(self.parents)
             return new_head
@@ -1065,24 +1075,21 @@ class GSSNode:
         return f"head_{self.id}"
 
     @property
-    def extra(self):
-        return self.parser.extra
-
-    @extra.setter
-    def extra(self, new_value):
-        self.parser.extra = new_value
-
-    @property
-    def input_str(self):
-        return self.parser.input_str
-
-    @property
-    def file_name(self):
-        return self.parser.file_name
-
-    @property
     def symbol(self):
         return self.state.symbol
+
+    def _debug_context(
+        self,
+        expected_symbols=None,
+    ):
+        h_print("Position:", pos_to_line_col(self.input_str, self.position))
+        h_print("Context:", _(position_context(self.input_str, self.position)))
+        if self.layout_content:
+            h_print("Layout: ", f"'{_(self.layout_content)}'", level=1)
+        if expected_symbols:
+            h_print("Symbols expected: ", [s.name for s in expected_symbols])
+        if self.token_ahead:
+            h_print("Token(s) ahead:", _(str(self.token_ahead)))
 
 
 DOT_HEADER = """

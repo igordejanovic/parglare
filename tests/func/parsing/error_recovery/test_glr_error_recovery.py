@@ -67,10 +67,10 @@ def test_glr_recovery_custom_new_position():
     Test that custom recovery that increment position works.
     """
 
-    def custom_recovery(head, error):
+    def custom_recovery(head, error, default_error_recovery):
         # This recovery will just skip over erroneous part of input '& 89'.
         head.position += 4
-        return head.parser.default_error_recovery(head)
+        return default_error_recovery(head)
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)
 
@@ -89,7 +89,7 @@ def test_glr_recovery_custom_new_token():
     Test that custom recovery that introduces new token works.
     """
 
-    def custom_recovery(head, error):
+    def custom_recovery(head, error, default_error_recovery):
         # Here we will introduce missing operation token
         head.token_ahead = Token(g.get_terminal("-"), "-", head.position, length=0)
         return True
@@ -111,7 +111,7 @@ def test_glr_recovery_custom_unsuccessful():
     Test unsuccessful error recovery.
     """
 
-    def custom_recovery(head, error):
+    def custom_recovery(head, error, default_error_recovery):
         return False
 
     parser = GLRParser(g, actions=actions, error_recovery=custom_recovery)

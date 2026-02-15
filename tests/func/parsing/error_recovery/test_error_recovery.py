@@ -117,10 +117,9 @@ def test_custom_error_recovery():
 
     called = [False]
 
-    def my_recovery(context, error):
+    def my_recovery(context, error, default_error_recovery):
         expected_symbols = context.state.actions.keys()
         called[0] = True
-        assert isinstance(context.parser, Parser)
         assert context.input_str == "1 + 2 + * 3 - 5"
         assert context.position == 8
         open_par = g.get_terminal("(")
@@ -145,7 +144,7 @@ def test_recovery_custom_unsuccessful():
     Test unsuccessful error recovery.
     """
 
-    def custom_recovery(context, error):
+    def custom_recovery(context, error, default_error_recovery):
         return False
 
     parser = Parser(g, actions=actions, error_recovery=custom_recovery)
