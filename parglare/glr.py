@@ -1,5 +1,6 @@
 from functools import reduce
 from itertools import takewhile
+from typing import Dict
 
 from parglare import Parser
 from parglare import termui as t
@@ -986,7 +987,7 @@ class GSSNode:
         self.debug = debug
 
         # Parents keyed by root node id
-        self.parents: dict[int, Parent] = {}
+        self.parents: Dict[int, Parent] = {}
 
     def create_link(self, parent):
         parent.head = self
