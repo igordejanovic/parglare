@@ -18,6 +18,8 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+## [0.21.0] (released: 2026-02-17)
+
 ## Changed
 - Transient state is cleared after parse to lower memory usage.
 - Remove direct parser references from LRStackNode and GSSNode context objects,
@@ -521,7 +523,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.20.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.21.0...HEAD
+[0.21.0]: https://github.com/igordejanovic/parglare/compare/0.20.0...0.21.0
 [0.20.0]: https://github.com/igordejanovic/parglare/compare/0.19.0...0.20.0
 [0.19.0]: https://github.com/igordejanovic/parglare/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/igordejanovic/parglare/compare/0.17.0...0.18.0
