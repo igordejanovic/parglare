@@ -188,12 +188,13 @@ location which represents the span of the error in the input (e.g.
 <p>To provide a custom strategy for error recovery set <code>error_recovery</code> parser
 constructor parameter to a Python function. This function should have the
 following signature:</p>
-<pre><code>def error_recovery_strategy(context, error):
+<pre><code>def error_recovery_strategy(context, error, default_error_recovery):
     ...
 </code></pre>
 <ul>
 <li><strong>context</strong>*- context like object (usually the parser head).</li>
 <li><strong>error</strong> - <a href="#handling-errors"><code>SyntaxError</code> instance</a>.</li>
+<li><strong>default_error_recovery</strong> - default strategy.</li>
 </ul>
 <p>Using the head object you can query the state of the parser. E.g. to get the
 position use <code>context.position</code>, to get the parser state use <code>context.state</code>, to
@@ -205,7 +206,7 @@ symbols at this position for which parser can successfully continue use
 <code>token_ahead</code>) and bring it to a state which can continue. If the recovery is
 successful the function should return <code>True</code>, otherwise <code>False</code>.</p>
 <p>You can call a default error recovery from your custom recovery by
-<code>context.parser.default_error_recovery(context)</code></p>
+<code>default_error_recovery(context)</code></p>
 <h2 id="custom-error-hints-from-examples">Custom error hints from examples<a class="headerlink" href="#custom-error-hints-from-examples" title="Permanent link">&para;</a></h2>
 <p>To improve error messages, you can define custom error hints by providing
 examples of erroneous inputs and corresponding error message hints. If parglare

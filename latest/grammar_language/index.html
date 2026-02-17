@@ -654,9 +654,10 @@ of evaluation of the rules referenced by the assignments.</p>
   being passed to the action.</li>
 </ul>
 <p>Each rule using named matches result in a dynamically created Python class named
-after the rule. These classes are kept in a dictionary <code>grammar.classes</code> and
-used to instantiate Python objects during parsing by an implicitly
-set <a href="../actions/#built-in-actions">built-in <code>obj</code> action</a>.</p>
+after the rule. These classes are kept both in a dictionary <code>grammar.classes</code>
+and in the <code>symbol.cls</code> reference, and are used to instantiate Python objects
+during parsing by an implicitly set <a href="../actions/#built-in-actions">built-in <code>obj</code>
+action</a>.</p>
 <p>Thus, for rules using named matches, default action is to create object with
 attributes whose names are those of LHS of the assignments and values are from
 RHS of the assignments (or boolean values for <code>bool</code> assignments). Each object
