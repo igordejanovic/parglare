@@ -1,0 +1,50 @@
+
+    digraph grammar {
+    rankdir=LR
+    fontname = "Bitstream Vera Sans"
+    fontsize = 8
+    node[
+        shape=record,
+        style=filled,
+        fillcolor=aliceblue
+    ]
+    nodesep = 0.3
+    edge[dir=black,arrowtail=empty]
+
+
+0[label="0:S'|0: S' = . E STOP   \{\}\l|1: E = . E + E   \{-, /, *, ), ^, STOP, +\}\l2: E = . E - E   \{-, /, *, ), ^, STOP, +\}\l3: E = . E * E   \{-, /, *, ), ^, STOP, +\}\l4: E = . E / E   \{-, /, *, ), ^, STOP, +\}\l5: E = . E ^ E   \{-, /, *, ), ^, STOP, +\}\l6: E = . ( E )   \{-, /, *, ), ^, STOP, +\}\l7: E = . number   \{-, /, *, ), ^, STOP, +\}\l"]
+
+0 -> 2 [label="SHIFT:("]0 -> 3 [label="SHIFT:number"]0 -> 1 [label="GOTO:E"]1[label="1:E|0: S' = E . STOP   \{\}\l1: E = E . + E   \{-, /, *, ), ^, STOP, +\}\l2: E = E . - E   \{-, /, *, ), ^, STOP, +\}\l3: E = E . * E   \{-, /, *, ), ^, STOP, +\}\l4: E = E . / E   \{-, /, *, ), ^, STOP, +\}\l5: E = E . ^ E   \{-, /, *, ), ^, STOP, +\}\l"]
+
+1 -> 9 [label="SHIFT:^"]1 -> 8 [label="SHIFT:/"]1 -> 6 [label="SHIFT:-"]1 -> 5 [label="SHIFT:+"]1 -> 7 [label="SHIFT:*"]1 -> 4 [label="ACCEPT:STOP"]2[label="2:(|6: E = ( . E )   \{-, /, *, ), ^, STOP, +\}\l|1: E = . E + E   \{-, /, *, +, ), ^\}\l2: E = . E - E   \{-, /, *, +, ), ^\}\l3: E = . E * E   \{-, /, *, +, ), ^\}\l4: E = . E / E   \{-, /, *, +, ), ^\}\l5: E = . E ^ E   \{-, /, *, +, ), ^\}\l6: E = . ( E )   \{-, /, *, +, ), ^\}\l7: E = . number   \{-, /, *, +, ), ^\}\l"]
+
+2 -> 2 [label="SHIFT:("]2 -> 3 [label="SHIFT:number"]2 -> 10 [label="GOTO:E"]3[label="3:number|7: E = number .   \{-, /, *, ), ^, STOP, +\}\l|Reductions:\l^:7, /:7, -:7, +:7, *:7, ):7, STOP:7"]
+
+4[label="4:STOP|0: S' = E STOP .   \{\}\l"]
+
+5[label="5:+|1: E = E + . E   \{-, /, *, ), ^, STOP, +\}\l|1: E = . E + E   \{-, /, *, ), ^, STOP, +\}\l2: E = . E - E   \{-, /, *, ), ^, STOP, +\}\l3: E = . E * E   \{-, /, *, ), ^, STOP, +\}\l4: E = . E / E   \{-, /, *, ), ^, STOP, +\}\l5: E = . E ^ E   \{-, /, *, ), ^, STOP, +\}\l6: E = . ( E )   \{-, /, *, ), ^, STOP, +\}\l7: E = . number   \{-, /, *, ), ^, STOP, +\}\l"]
+
+5 -> 2 [label="SHIFT:("]5 -> 3 [label="SHIFT:number"]5 -> 11 [label="GOTO:E"]6[label="6:-|2: E = E - . E   \{-, /, *, ), ^, STOP, +\}\l|1: E = . E + E   \{-, /, *, ), ^, STOP, +\}\l2: E = . E - E   \{-, /, *, ), ^, STOP, +\}\l3: E = . E * E   \{-, /, *, ), ^, STOP, +\}\l4: E = . E / E   \{-, /, *, ), ^, STOP, +\}\l5: E = . E ^ E   \{-, /, *, ), ^, STOP, +\}\l6: E = . ( E )   \{-, /, *, ), ^, STOP, +\}\l7: E = . number   \{-, /, *, ), ^, STOP, +\}\l"]
+
+6 -> 2 [label="SHIFT:("]6 -> 3 [label="SHIFT:number"]6 -> 12 [label="GOTO:E"]7[label="7:*|3: E = E * . E   \{-, /, *, ), ^, STOP, +\}\l|1: E = . E + E   \{-, /, *, ), ^, STOP, +\}\l2: E = . E - E   \{-, /, *, ), ^, STOP, +\}\l3: E = . E * E   \{-, /, *, ), ^, STOP, +\}\l4: E = . E / E   \{-, /, *, ), ^, STOP, +\}\l5: E = . E ^ E   \{-, /, *, ), ^, STOP, +\}\l6: E = . ( E )   \{-, /, *, ), ^, STOP, +\}\l7: E = . number   \{-, /, *, ), ^, STOP, +\}\l"]
+
+7 -> 2 [label="SHIFT:("]7 -> 3 [label="SHIFT:number"]7 -> 13 [label="GOTO:E"]8[label="8:/|4: E = E / . E   \{-, /, *, ), ^, STOP, +\}\l|1: E = . E + E   \{-, /, *, ), ^, STOP, +\}\l2: E = . E - E   \{-, /, *, ), ^, STOP, +\}\l3: E = . E * E   \{-, /, *, ), ^, STOP, +\}\l4: E = . E / E   \{-, /, *, ), ^, STOP, +\}\l5: E = . E ^ E   \{-, /, *, ), ^, STOP, +\}\l6: E = . ( E )   \{-, /, *, ), ^, STOP, +\}\l7: E = . number   \{-, /, *, ), ^, STOP, +\}\l"]
+
+8 -> 2 [label="SHIFT:("]8 -> 3 [label="SHIFT:number"]8 -> 14 [label="GOTO:E"]9[label="9:^|5: E = E ^ . E   \{-, /, *, ), ^, STOP, +\}\l|1: E = . E + E   \{-, /, *, ), ^, STOP, +\}\l2: E = . E - E   \{-, /, *, ), ^, STOP, +\}\l3: E = . E * E   \{-, /, *, ), ^, STOP, +\}\l4: E = . E / E   \{-, /, *, ), ^, STOP, +\}\l5: E = . E ^ E   \{-, /, *, ), ^, STOP, +\}\l6: E = . ( E )   \{-, /, *, ), ^, STOP, +\}\l7: E = . number   \{-, /, *, ), ^, STOP, +\}\l"]
+
+9 -> 2 [label="SHIFT:("]9 -> 3 [label="SHIFT:number"]9 -> 15 [label="GOTO:E"]10[label="10:E|6: E = ( E . )   \{-, /, *, ), ^, STOP, +\}\l1: E = E . + E   \{-, /, *, +, ), ^\}\l2: E = E . - E   \{-, /, *, +, ), ^\}\l3: E = E . * E   \{-, /, *, +, ), ^\}\l4: E = E . / E   \{-, /, *, +, ), ^\}\l5: E = E . ^ E   \{-, /, *, +, ), ^\}\l"]
+
+10 -> 9 [label="SHIFT:^"]10 -> 8 [label="SHIFT:/"]10 -> 6 [label="SHIFT:-"]10 -> 5 [label="SHIFT:+"]10 -> 7 [label="SHIFT:*"]10 -> 16 [label="SHIFT:)"]11[label="11:E|1: E = E + E .   \{-, /, *, ), ^, STOP, +\}\l1: E = E . + E   \{-, /, *, ), ^, STOP, +\}\l2: E = E . - E   \{-, /, *, ), ^, STOP, +\}\l3: E = E . * E   \{-, /, *, ), ^, STOP, +\}\l4: E = E . / E   \{-, /, *, ), ^, STOP, +\}\l5: E = E . ^ E   \{-, /, *, ), ^, STOP, +\}\l|Reductions:\l-:1, +:1, ):1, STOP:1"]
+
+11 -> 9 [label="SHIFT:^"]11 -> 8 [label="SHIFT:/"]11 -> 7 [label="SHIFT:*"]12[label="12:E|2: E = E - E .   \{-, /, *, ), ^, STOP, +\}\l1: E = E . + E   \{-, /, *, ), ^, STOP, +\}\l2: E = E . - E   \{-, /, *, ), ^, STOP, +\}\l3: E = E . * E   \{-, /, *, ), ^, STOP, +\}\l4: E = E . / E   \{-, /, *, ), ^, STOP, +\}\l5: E = E . ^ E   \{-, /, *, ), ^, STOP, +\}\l|Reductions:\l-:2, +:2, ):2, STOP:2"]
+
+12 -> 9 [label="SHIFT:^"]12 -> 8 [label="SHIFT:/"]12 -> 7 [label="SHIFT:*"]13[label="13:E|3: E = E * E .   \{-, /, *, ), ^, STOP, +\}\l1: E = E . + E   \{-, /, *, ), ^, STOP, +\}\l2: E = E . - E   \{-, /, *, ), ^, STOP, +\}\l3: E = E . * E   \{-, /, *, ), ^, STOP, +\}\l4: E = E . / E   \{-, /, *, ), ^, STOP, +\}\l5: E = E . ^ E   \{-, /, *, ), ^, STOP, +\}\l|Reductions:\l/:3, -:3, +:3, *:3, ):3, STOP:3"]
+
+13 -> 9 [label="SHIFT:^"]14[label="14:E|4: E = E / E .   \{-, /, *, ), ^, STOP, +\}\l1: E = E . + E   \{-, /, *, ), ^, STOP, +\}\l2: E = E . - E   \{-, /, *, ), ^, STOP, +\}\l3: E = E . * E   \{-, /, *, ), ^, STOP, +\}\l4: E = E . / E   \{-, /, *, ), ^, STOP, +\}\l5: E = E . ^ E   \{-, /, *, ), ^, STOP, +\}\l|Reductions:\l/:4, -:4, +:4, *:4, ):4, STOP:4"]
+
+14 -> 9 [label="SHIFT:^"]15[label="15:E|5: E = E ^ E .   \{-, /, *, ), ^, STOP, +\}\l1: E = E . + E   \{-, /, *, ), ^, STOP, +\}\l2: E = E . - E   \{-, /, *, ), ^, STOP, +\}\l3: E = E . * E   \{-, /, *, ), ^, STOP, +\}\l4: E = E . / E   \{-, /, *, ), ^, STOP, +\}\l5: E = E . ^ E   \{-, /, *, ), ^, STOP, +\}\l|Reductions:\l/:5, -:5, +:5, *:5, ):5, STOP:5"]
+
+15 -> 9 [label="SHIFT:^"]16[label="16:)|6: E = ( E ) .   \{-, /, *, ), ^, STOP, +\}\l|Reductions:\l^:6, /:6, -:6, +:6, *:6, ):6, STOP:6"]
+
+
+}

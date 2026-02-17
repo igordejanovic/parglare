@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Igor Dejanović" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Getting started - parglare</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../style.css" rel="stylesheet" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Getting started";
+        var mkdocs_page_input_path = "getting_started.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-68681917-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', "UA-68681917-1");
+      </script>
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> parglare
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Getting started</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#where-to-go-next">Where to go next?</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar/">Grammar class</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../actions/">Actions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_modularization/">Modularization</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr_parsing/">LR parsing and conflicts</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../handling_errors/">Handling errors</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_15/">0.15</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">About</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">parglare</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+      <li class="breadcrumb-item active">Getting started</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/igordejanovic/parglare/edit/master/docs/getting_started.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
+<p>The first thing to do is to write your language grammar using
+the <a href="../grammar_language/">parglare grammar language</a>. You write the grammar
+either as a Python string in your source code or as a separate file. In case you
+are writing a grammar of a complex language I would suggest the separate file
+approach. Although not mandatory, the convention is that parglare grammar files
+have <code>.pg</code> extension.</p>
+<p>The next step is to create the instance of the <code>Grammar</code> class. This is achieved
+by importing the <code>Grammar</code> class and calling either <code>from_file</code> or <code>from_str</code>
+methods supplying the file name for the former and the Python string for the
+later call.</p>
+<pre><code class="language-python">from parglare import Grammar
+
+file_name = .....
+grammar = Grammar.from_file(file_name)
+</code></pre>
+<p>If there is no errors in the grammar you now have the grammar instance. For more
+information see the <a href="../grammar/">section about <code>Grammar</code> class</a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>There is also a handy <a href="../pglr/">pglr command line tool</a> that can be
+used for grammar checking, visualization and debugging.</p>
+</div>
+<p>The next step is to create an instance of the parser. There are two options. If
+you want to use LR parser instantiate <code>Parser</code> class. For GLR instantiate
+<code>GLRParser</code> class.</p>
+<pre><code class="language-python">from parglare import Parser
+parser = Parser(grammar)
+</code></pre>
+<p>or</p>
+<pre><code class="language-python">from parglare import GLRParser
+parser = GLRParser(grammar)
+</code></pre>
+<p>You can provide additional <a href="../parser/">parser parameters</a> during instantiation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>LR parser is faster as the GLR machinery brings a significant overhead. So,
+the general advice is to stick to the LR parsing until you are sure that you
+need additional power of GLR, i.e. either you need more than one token of
+lookahead or your language is inherently ambiguous. pglr tool will help you in
+investigating why you have LR conflicts in your grammar and there are some
+nice <a href="../lr_parsing/#resolving-conflicts">disambiguation features</a> in parglare
+that will help you resolve some of those conflicts.</p>
+</div>
+<p>Now parse your input calling <code>parse</code> method on the parser instance.</p>
+<pre><code class="language-python">result = parser.parse(input_str)
+</code></pre>
+<p>Depending on whether you have configured <a href="../actions/">actions</a> and what
+parameters you used for parser instance you will
+get either:</p>
+<ul>
+<li>a nested lists if no actions are used,</li>
+<li>a parse tree if <a href="../parser/#build_tree"><code>build_tree</code> parser param</a> is set to
+  <code>True</code>,</li>
+<li>some other representation of your input if custom actions are used.</li>
+</ul>
+<p>In case of the GLR parser you will get a list of all possible results (a.k.a.
+<em>the parse forest</em>).</p>
+<h2 id="where-to-go-next">Where to go next?<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
+<p>You can investigate various topics in the docs.
+The <a href="https://github.com/igordejanovic/parglare/tree/master/examples">examples</a>
+and
+the <a href="https://github.com/igordejanovic/parglare/tree/master/tests/func">tests</a>
+are also a good source of information.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../grammar_language/" class="btn btn-neutral float-right" title="Grammar language">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/igordejanovic/parglare" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../grammar_language/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
