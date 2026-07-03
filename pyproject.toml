@@ -1,6 +1,6 @@
 [project]
 name = "parglare"
-version = "0.21.0"
+version = "0.21.1"
 description = "A pure Python LR/GLR parser"
 authors = [
     {name = "Igor R. Dejanović", email = "igor.dejanovic@gmail.com"},
@@ -32,7 +32,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-requires-python = ">=3.8, <=3.14"
+requires-python = ">=3.8, <3.15"
 dependencies = [
     "click >=7.0, <9.0",
 ]
