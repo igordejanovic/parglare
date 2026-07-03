@@ -18,6 +18,13 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.21.1] (released: 2026-07-03)
+
+### Changed
+- Updated uv.lock and relaxed Python version dependency to include all 3.14
+  versions.
+
 ## [0.21.0] (released: 2026-02-17)
 
 ## Changed
@@ -523,7 +530,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.21.0...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.21.1...HEAD
+[0.21.1]: https://github.com/igordejanovic/parglare/compare/0.21.0...0.21.1
 [0.21.0]: https://github.com/igordejanovic/parglare/compare/0.20.0...0.21.0
 [0.20.0]: https://github.com/igordejanovic/parglare/compare/0.19.0...0.20.0
 [0.19.0]: https://github.com/igordejanovic/parglare/compare/0.18.0...0.19.0
