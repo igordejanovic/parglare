@@ -18,6 +18,17 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+### Changed
+- Persisted LR-table caches are now versioned and validated against the complete
+  grammar/import closure and table-building options rather than file
+  modification times. Stale or corrupt caches rebuild automatically;
+  `force_load_table=True` now rejects them with `TableCacheError`. See
+  [baa6fac9]. **(BIC)**
+- Added the `Parser(table_cache=...)` option. Pass `False` for an in-memory
+  table only, or an explicit path to keep the generated cache outside the
+  grammar directory. See [baa6fac9]. **(BIC)**
+
+[dcaaea836]: https://github.com/igordejanovic/parglare/commit/dcaaea836
 
 ## [0.21.1] (released: 2026-07-03)
 
