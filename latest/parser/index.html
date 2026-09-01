@@ -87,6 +87,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#tables">tables</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#table_cache">table_cache</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#force_load_table">force_load_table</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#table">table</a>
@@ -246,15 +248,25 @@ is used to choose the type of LR tables to create. By default <code>LALR</code> 
 used with a slight twist to avoid Reduce/Reduce conflicts that may happen with
 pure LALR tables. This parameter should not be used in normal circumstances and
 is provided more for experimentation purposes.</p>
+<h2 id="table_cache">table_cache<a class="headerlink" href="#table_cache" title="Permanent link">&para;</a></h2>
+<p>When a grammar comes from a file, <code>Parser</code> persists its LR table in the sibling
+<code>&lt;grammar_file_name&gt;.pgc</code> file by default. A <code>.pgc</code> file is a disposable cache,
+not grammar input: parglare uses it only when its cache-format version, complete
+grammar/import closure fingerprint, and table-building options match the parser
+being constructed. An absent, stale, corrupt, or incompatible cache is rebuilt
+automatically.</p>
+<p>Pass <code>table_cache=False</code> to construct the table in memory without reading or
+writing a cache. Pass a path-like value to keep the cache in an application-owned
+location instead of beside the grammar; this is useful for read-only installed
+packages and for keeping generated files out of a source checkout.</p>
+<p>The cache file is written atomically. Do not version or distribute it unless it
+was built with the same parglare version and exact grammar closure; normally it
+is best to distribute only the <code>.pg</code> grammar and let parglare build its cache.</p>
 <h2 id="force_load_table">force_load_table<a class="headerlink" href="#force_load_table" title="Permanent link">&para;</a></h2>
-<p>LR table is loaded from <code>&lt;grammar_file_name&gt;.pgc</code> file if the file exists and is
-newer than all of the grammar files, root and imported. If any of the grammar
-file modification time is greater than the modification time of the cached LR
-table file, table is recalculated and persisted. If you are deploying the parser
-in a way that will change file modification times which would trigger table
-calculation you can set <code>force_load_table</code> to <code>True</code>. If this flag is set no
-modification check will be performed and table calculation will happen only if
-<code>.pgc</code> file doesn't exist.</p>
+<p>Set <code>force_load_table=True</code> when a compatible cache is required, for example to
+verify a deliberately precompiled deployment artifact. In this strict mode,
+missing, stale, corrupt, or incompatible caches raise <code>TableCacheError</code> rather
+than falling back to table generation.</p>
 <h2 id="table">table<a class="headerlink" href="#table" title="Permanent link">&para;</a></h2>
 <p>You can pass precomputed parsing table here. This is useful for implementing
 custom parse table caching. <code>None</code> value for this parameter (the default)
