@@ -18,6 +18,9 @@ backward incompatible changes will start to apply when the projects goes 1.0
 
 ## [Unreleased]
 
+
+## [0.22.0] (released: 2026-09-01)
+
 ### Changed
 - Persisted LR-table caches are now versioned and validated against the complete
   grammar/import closure and table-building options rather than file
@@ -541,7 +544,8 @@ for more info.
 [#20]: https://github.com/igordejanovic/parglare/issues/20
 
 
-[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.21.1...HEAD
+[Unreleased]: https://github.com/igordejanovic/parglare/compare/0.22.0...HEAD
+[0.22.0]: https://github.com/igordejanovic/parglare/compare/0.21.1...0.22.0
 [0.21.1]: https://github.com/igordejanovic/parglare/compare/0.21.0...0.21.1
 [0.21.0]: https://github.com/igordejanovic/parglare/compare/0.20.0...0.21.0
 [0.20.0]: https://github.com/igordejanovic/parglare/compare/0.19.0...0.20.0
