@@ -1,0 +1,61 @@
+
+    digraph parglare_trace {
+    rankdir=LR
+    fontname = "Bitstream Vera Sans"
+    fontsize = 8
+    node[
+        style=filled,
+        fillcolor=aliceblue
+    ]
+    nodesep = 0.3
+    edge[dir=black,arrowtail=empty]
+
+head_0_0 [label="0. 0:S'"];
+head_1_2 [label="1. 2:number"];
+head_1_1 [label="1. 1:E"];
+head_1_2 -> head_0_0 [label="1"];
+head_0_0 -> head_1_2 [label="1.1 S:number(2)" color="red" style="dashed"];
+head_1_1 -> head_0_0 [label="1"];
+head_1_2 -> head_1_1 [label="1.2 R:3: E = number" color="red" style="dashed"];
+head_2_3 [label="2. 3:+"];
+head_2_3 -> head_1_1 [label="1"];
+head_1_1 -> head_2_3 [label="2.1 S:+(+)" color="red" style="dashed"];
+head_3_2 [label="3. 2:number"];
+head_3_5 [label="3. 5:E"];
+head_3_1 [label="3. 1:E"];
+head_3_2 -> head_2_3 [label="1"];
+head_2_3 -> head_3_2 [label="3.1 S:number(3)" color="red" style="dashed"];
+head_3_5 -> head_2_3 [label="1"];
+head_3_2 -> head_3_5 [label="3.2 R:3: E = number" color="red" style="dashed"];
+head_3_1 -> head_0_0 [label="1"];
+head_3_5 -> head_3_1 [label="3.3 R:1: E = E + E" color="red" style="dashed"];
+head_4_4 [label="4. 4:*"];
+head_4_4 -> head_3_1 [label="1"];
+head_3_1 -> head_4_4 [label="4.1 S:*(*)" color="red" style="dashed"];
+head_4_4 -> head_3_5 [label="1"];
+head_3_5 -> head_4_4 [label="4.2 S:*(*)" color="red" style="dashed"];
+
+head_5_1 -> ACCEPT;
+head_5_2 [label="5. 2:number"];
+head_5_6 [label="5. 6:E"];
+head_5_5 [label="5. 5:E"];
+head_5_1 [label="5. 1:E"];
+head_5_2 -> head_4_4 [label="1"];
+head_4_4 -> head_5_2 [label="5.1 S:number(5)" color="red" style="dashed"];
+head_5_6 -> head_4_4 [label="1"];
+head_5_2 -> head_5_6 [label="5.2 R:3: E = number" color="red" style="dashed"];
+head_5_5 -> head_2_3 [label="1"];
+head_5_6 -> head_5_5 [label="5.3 R:2: E = E * E" color="red" style="dashed"];
+head_5_1 -> head_0_0 [label="2"];
+head_5_6 -> head_5_1 [label="5.4 R:2: E = E * E" color="red" style="dashed"];
+head_5_5 -> head_5_1 [label="5.5 R:1: E = E + E" color="red" style="dashed"];
+
+node [shape=none, style=""]
+{rank=same; 0;  head_0_0;}
+{rank=same; 1;  head_1_2; head_1_1;}
+{rank=same; 2;  head_2_3;}
+{rank=same; 3;  head_3_2; head_3_5; head_3_1;}
+{rank=same; 4;  head_4_4;}
+{rank=same; 5;  head_5_2; head_5_6; head_5_5; head_5_1;}
+0->1->2->3->4->5[arrowhead=none];
+}

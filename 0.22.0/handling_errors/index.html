@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Igor Dejanović" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Handling errors - parglare</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../style.css" rel="stylesheet" />
+        <link href="../css/version-select.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Handling errors";
+        var mkdocs_page_input_path = "handling_errors.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-68681917-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', "UA-68681917-1");
+      </script>
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> parglare
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../getting_started/">Getting started</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_language/">Grammar language</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar/">Grammar class</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parser/">Parser</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../actions/">Actions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../common/">Common API</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../recognizers/">Recognizers</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../grammar_modularization/">Modularization</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../lr_parsing/">LR parsing and conflicts</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../disambiguation/">Disambiguation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../parse_forest_trees/">Parse forest/trees</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Handling errors</a>
+    <ul class="current">
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../pglr/">pglr command</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../debugging/">Debugging</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Release Notes</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_15/">0.15</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../release_notes/release_0_14/">0.14</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">About</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/CONTRIBUTING/">Contributing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../about/LICENSE/">License</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">parglare</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">User Guide</li>
+      <li class="breadcrumb-item active">Handling errors</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/igordejanovic/parglare/edit/master/docs/handling_errors.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="handling-errors">Handling errors<a class="headerlink" href="#handling-errors" title="Permanent link">&para;</a></h1>
+<p>When parglare encounters a situation in which no SHIFT or REDUCE operation could
+be performed it will report an error by raising an instance of
+<code>parglare.SyntaxError</code> class.</p>
+<p><code>SyntaxError</code> has the following attributes:</p>
+<ul>
+<li>
+<p><strong>location</strong> - an instance of the <a href="../common/#location-class">Location class</a>
+  with information of the span of the error.</p>
+</li>
+<li>
+<p><strong>symbols_expected (list)</strong> - a list of expected symbol at the location.</p>
+</li>
+<li>
+<p><strong>tokens_ahead (list)</strong> - a list of tokens recognized at the position by
+  trying all terminal symbols recognizers from the grammar. Note that this list
+  might be empty in case nothing can be recognized at the position or it might
+  have more than one element if more recognizers succeeds (lexical ambiguity).
+  To prevent a terminal to be used in this find-all approach you can mark the
+  terminal by <code>unexpected: false</code> user meta-data.</p>
+</li>
+<li>
+<p><strong>symbols_before (list)</strong> - a list of last seen symbols. In the case of LR
+  parser it will always be a single element list. In the case of GLR there might
+  be more symbols if there were multiple parser heads.</p>
+</li>
+<li>
+<p><strong>last_heads (list)</strong> - A list of last GLR parser heads. Available only for
+  GLR parsing.</p>
+</li>
+<li>
+<p><strong>grammar (Grammar)</strong> - An instance of <code>parglare.Grammar</code> class used for
+  parsing.</p>
+</li>
+<li>
+<p><strong>message (str)</strong> - The basic cause of the error. E.g. <code>unexpected token *</code>.</p>
+</li>
+<li>
+<p><strong>context_message (str | None)</strong> - In case of the syntax error this is an
+  information what is expected at the error location. E.g. <code>expected: ( number</code>.</p>
+</li>
+<li>
+<p><strong>hint (str | None)</strong> - Hint may be provided by the <a href="#custom-recovery-strategy">Custom recovery
+  strategy</a>.</p>
+</li>
+</ul>
+<h1 id="error-recovery">Error recovery<a class="headerlink" href="#error-recovery" title="Permanent link">&para;</a></h1>
+<p>There are a lot of situations where you would want parser to report all the
+errors in one go. To do this, parser has to recover from errors, i.e. get to
+the valid state and continue.</p>
+<p>To enable error recovery set <code>error_recovery</code> <a href="../parser/#error_recovery">parameter of parser
+construction</a> to <code>True</code>. This will enable implicit
+error recovery strategy that will try to search for expected tokens in the input
+ahead and when the first is found the parsing will continue. All errors will be
+collected as an <code>errors</code> list on the parser instance.</p>
+<p>Each error is an instance of <a href="#handling-errors"><code>SyntaxError</code> class</a>. In case no
+recovery is possible last <code>SyntaxError</code> will be raised. <code>SyntaxError</code> has a
+location which represents the span of the error in the input (e.g.
+<code>error.location.start_position</code> and <code>error.location.end_position</code>).</p>
+<h2 id="custom-recovery-strategy">Custom recovery strategy<a class="headerlink" href="#custom-recovery-strategy" title="Permanent link">&para;</a></h2>
+<p>To provide a custom strategy for error recovery set <code>error_recovery</code> parser
+constructor parameter to a Python function. This function should have the
+following signature:</p>
+<pre><code>def error_recovery_strategy(context, error, default_error_recovery):
+    ...
+</code></pre>
+<ul>
+<li><strong>context</strong>*- context like object (usually the parser head).</li>
+<li><strong>error</strong> - <a href="#handling-errors"><code>SyntaxError</code> instance</a>.</li>
+<li><strong>default_error_recovery</strong> - default strategy.</li>
+</ul>
+<p>Using the head object you can query the state of the parser. E.g. to get the
+position use <code>context.position</code>, to get the parser state use <code>context.state</code>, to
+get expected symbols in this state use <code>context.state.actions.keys()</code>.</p>
+<p>To get information about the error use <code>error</code> object. E.g. to get expected
+symbols at this position for which parser can successfully continue use
+<code>error.symbols_expected</code>.</p>
+<p>The recovery function should modify the head (e.g. its position and/or
+<code>token_ahead</code>) and bring it to a state which can continue. If the recovery is
+successful the function should return <code>True</code>, otherwise <code>False</code>.</p>
+<p>You can call a default error recovery from your custom recovery by
+<code>default_error_recovery(context)</code></p>
+<h2 id="custom-error-hints-from-examples">Custom error hints from examples<a class="headerlink" href="#custom-error-hints-from-examples" title="Permanent link">&para;</a></h2>
+<p>To improve error messages, you can define custom error hints by providing
+examples of erroneous inputs and corresponding error message hints. If parglare
+finds a <code>.pge</code> (parglare error examples) file in the same directory as the <code>.pg</code>
+file, it will use it to produce a special table of hints that is used during
+parsing to construct a more user-friendly error message.</p>
+<p>The content of the <code>.pge</code> file consists of example-hint pairs in the form:</p>
+<pre><code>out = in1 + in2
+:::+
+'out' is a reserved keyword and cannot be used as a variable
+</code></pre>
+<p>The first line is the example that triggers the error. The last line is the hint
+that will be part of the error message. The separator is <code>:::</code> with an optional
+<code>+</code> at the end, which signifies that a lookahead token should be matched for
+this rule to be used. The separator between example rules is <code>=====</code> (five
+consecutive <code>=</code> characters).</p>
+<p>When the parser instance is created, if the grammar is loaded from a file, a
+file with the same base name as the grammar but with the <code>.pge</code> extension will
+be searched for. If found, and there isn't a newer file with the <code>.pgec</code>
+extension, it will be compiled by parsing each example until an error state is
+reached. When that happens, for each example, the LR state, lookahead (if <code>+</code> is
+found after <code>:::</code>), and the hint message will be saved to the <code>.pgec</code> file. If a
+<code>.pgec</code> file is newer than the error examples file, it will be loaded and used
+during parsing.</p>
+<p>Later, during parsing, if hint states exist for the parser, the parser will
+consult them when creating an error message by passing the hint message of the
+corresponding state to the <code>SyntaxError</code> <code>hint</code> parameter. This will not modify
+the original syntax error message but will add a hint below that better explains
+the error.</p>
+<p>For example, for the definition above if we try to parse input:</p>
+<pre><code>fn test():
+    out = in1 + in2
+</code></pre>
+<p>We get error message:</p>
+<pre><code>2:7: syntax error: unexpected token =
+    1 | fn test():
+    2 |    out = in1 + in2
+      |        ^^^ expected: &lt;
+  hint: Cannot use 'out' as variable name as it is a reserved keyword for IO variable declarations.
+</code></pre>
+<p>This is based on the paper:</p>
+<pre><code>JEFFERY, Clinton L. Generating LR syntax error messages from examples. ACM Transactions on Programming Languages and Systems (TOPLAS), 2003, 25.5: 631-640.
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../parse_forest_trees/" class="btn btn-neutral float-left" title="Parse forest/trees"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../pglr/" class="btn btn-neutral float-right" title="pglr command">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>Copyright &copy; <a href="http://igordejanovic.net/">Igor Dejanović</a>.</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/igordejanovic/parglare" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../parse_forest_trees/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../pglr/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+      <script src="../js/version-select.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
