@@ -2,6 +2,7 @@
 # flake8: NOQA
 from parglare.parser import Parser, Token, pos_to_line_col
 from parglare.tables import LALR, SLR, SHIFT, REDUCE, ACCEPT
+from parglare.tables.persist import TableCacheError
 from parglare.glr import GLRParser
 from parglare.grammar import (
     Grammar,

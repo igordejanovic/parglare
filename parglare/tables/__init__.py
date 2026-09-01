@@ -19,7 +19,12 @@ from parglare.grammar import (
     RegExRecognizer,
     StringRecognizer,
 )
-from parglare.tables.persist import load_table, save_table
+from parglare.tables.persist import (
+    TableCacheError,
+    load_table,
+    save_table,
+    table_cache_metadata,
+)
 from parglare.termui import a_print, h_print, prints, s_emph, s_header
 
 logger = logging.getLogger(__name__)
@@ -44,22 +49,18 @@ def create_load_table(
     force_load=False,
     in_layout=False,
     debug=False,
+    cache_path=None,
     **kwargs,
 ):
-    """
-    Construct table by loading from file if present and newer than the grammar.
-    If table file is older than the grammar or non-existent calculate the table
-    and save to file.
+    """Construct an LR table, loading a compatible persisted cache when available.
 
-    Arguments:
-    see create_table
+    A cache is valid only when its format version, grammar-import closure digest,
+    and table-building options match this construction. Invalid caches are ignored
+    and rebuilt normally; ``force_load`` instead raises ``TableCacheError``.
 
-    force_create(bool): If set to True table will be created even if table file
-        exists.
-    force_load(bool): If set to True table will be loaded if exists even if
-        it's not newer than the grammar, i.e. modification time will not be
-        checked.
-
+    ``cache_path`` selects the cache location. Its default (``None``) is the
+    sibling ``<grammar>.pgc`` path. Pass ``False`` to keep the table in memory
+    only, or a path-like value to use an application-owned cache directory.
     """
 
     if in_layout:
@@ -82,44 +83,51 @@ def create_load_table(
         if debug:
             a_print("** Calculating LR table...", new_line=True)
 
-    table_file_name = None
-    if grammar.file_path:
+    if cache_path is False:
+        table_file_name = None
+    elif cache_path is not None:
+        table_file_name = os.fspath(cache_path)
+    elif grammar.file_path:
         file_basename, _ = os.path.splitext(grammar.file_path)
         table_file_name = f"{file_basename}.pgc"
-
-    create_table_file = True
-
-    if not force_create and not force_load and grammar.file_path:
-        file_basename, _ = os.path.splitext(grammar.file_path)
-        table_file_name = f"{file_basename}.pgc"
-
-        if os.path.exists(table_file_name):
-            create_table_file = False
-            table_mtime = os.path.getmtime(table_file_name)
-            # Check if older than any of the grammar files
-            for g_file_name in grammar.imported_files:
-                if os.path.getmtime(g_file_name) > table_mtime:
-                    create_table_file = True
-                    break
-
-    if (create_table_file or force_create) and not force_load:
-        table = create_table(
-            grammar,
-            itemset_type,
-            start_production,
-            prefer_shifts,
-            prefer_shifts_over_empty,
-            debug=debug,
-            **kwargs,
-        )
-        if table_file_name:
-            with contextlib.suppress(PermissionError):
-                save_table(table_file_name, table)
     else:
-        if debug:
-            h_print(f"Loading LR table from '{table_file_name}'")
-        table = load_table(table_file_name, grammar)
+        table_file_name = None
 
+    build_options = {
+        "itemset_type": itemset_type,
+        "start_production": start_production,
+        "prefer_shifts": prefer_shifts,
+        "prefer_shifts_over_empty": prefer_shifts_over_empty,
+    }
+    metadata = table_cache_metadata(grammar, build_options) if table_file_name else None
+
+    if table_file_name and not force_create:
+        try:
+            if debug:
+                h_print(f"Loading LR table from '{table_file_name}'")
+            return load_table(table_file_name, grammar, metadata)
+        except TableCacheError as exc:
+            if force_load:
+                raise
+            if debug:
+                h_print(f"Ignoring LR table cache '{table_file_name}': {exc}")
+    elif force_load:
+        raise TableCacheError(
+            "force_load requires a grammar file or an explicit cache_path"
+        )
+
+    table = create_table(
+        grammar,
+        itemset_type,
+        start_production,
+        prefer_shifts,
+        prefer_shifts_over_empty,
+        debug=debug,
+        **kwargs,
+    )
+    if table_file_name:
+        with contextlib.suppress(PermissionError):
+            save_table(table_file_name, table, metadata)
     return table
 
 

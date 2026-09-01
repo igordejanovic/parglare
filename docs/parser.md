@@ -128,16 +128,30 @@ used with a slight twist to avoid Reduce/Reduce conflicts that may happen with
 pure LALR tables. This parameter should not be used in normal circumstances and
 is provided more for experimentation purposes.
 
+## table_cache
+
+When a grammar comes from a file, `Parser` persists its LR table in the sibling
+`<grammar_file_name>.pgc` file by default. A `.pgc` file is a disposable cache,
+not grammar input: parglare uses it only when its cache-format version, complete
+grammar/import closure fingerprint, and table-building options match the parser
+being constructed. An absent, stale, corrupt, or incompatible cache is rebuilt
+automatically.
+
+Pass `table_cache=False` to construct the table in memory without reading or
+writing a cache. Pass a path-like value to keep the cache in an application-owned
+location instead of beside the grammar; this is useful for read-only installed
+packages and for keeping generated files out of a source checkout.
+
+The cache file is written atomically. Do not version or distribute it unless it
+was built with the same parglare version and exact grammar closure; normally it
+is best to distribute only the `.pg` grammar and let parglare build its cache.
+
 ## force_load_table
 
-LR table is loaded from `<grammar_file_name>.pgc` file if the file exists and is
-newer than all of the grammar files, root and imported. If any of the grammar
-file modification time is greater than the modification time of the cached LR
-table file, table is recalculated and persisted. If you are deploying the parser
-in a way that will change file modification times which would trigger table
-calculation you can set `force_load_table` to `True`. If this flag is set no
-modification check will be performed and table calculation will happen only if
-`.pgc` file doesn't exist.
+Set `force_load_table=True` when a compatible cache is required, for example to
+verify a deliberately precompiled deployment artifact. In this strict mode,
+missing, stale, corrupt, or incompatible caches raise `TableCacheError` rather
+than falling back to table generation.
 
 ## table
 

@@ -40,22 +40,22 @@ def test_save_load_table():
     # Parser constructed from persisted table should produce the same result.
     assert parser.parse(input_str) == input_str_result
 
-    # We are now touching variable.pg file
-    # This should trigger table file regeneration
-    with open(variable_file, "a"):
-        os.utime(variable_file, None)
-    parser = Parser(grammar)
-    assert parser.parse(input_str) == input_str_result
-    # We verify that the table file is newer.
-    assert last_mtime < os.path.getmtime(table_file)
+    # Changing an imported grammar must invalidate and regenerate the cache.
+    with open(variable_file, encoding="utf-8") as source:
+        original = source.read()
+    try:
+        with open(variable_file, "a", encoding="utf-8") as source:
+            source.write("\n// cache invalidation test\n")
+        parser = Parser(grammar)
+        assert parser.parse(input_str) == input_str_result
+        assert last_mtime < os.path.getmtime(table_file)
+    finally:
+        with open(variable_file, "w", encoding="utf-8") as source:
+            source.write(original)
 
-    # Now we test that force_load_table will load table even if not
-    # newer than the grammar.
-    time.sleep(1)
-    with open(variable_file, "a"):
-        os.utime(variable_file, None)
+    # force_load_table is strict: it accepts only a cache matching the current
+    # grammar contents, rather than trusting modification times.
+    parser = Parser(grammar)
     last_mtime = os.path.getmtime(table_file)
     parser = Parser(grammar, force_load_table=True)
     assert last_mtime == os.path.getmtime(table_file)
-    parser = Parser(grammar)
-    assert last_mtime < os.path.getmtime(table_file)

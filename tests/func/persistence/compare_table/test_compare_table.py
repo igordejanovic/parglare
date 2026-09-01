@@ -1,5 +1,5 @@
 import contextlib
-import filecmp
+import json
 import os
 
 from parglare import Grammar, Parser
@@ -39,8 +39,15 @@ def test_diamond_import_resolving_and_model_creation():
 
     parser = Parser(g)
 
-    # Check generated table file.
-    assert filecmp.cmp(table_file, table_cmp_file, shallow=False)
+    # Check generated table file. The versioned cache wraps the unchanged table
+    # serialization in metadata tied to this grammar/import closure.
+    with open(table_file, encoding="utf-8") as source:
+        generated = json.load(source)
+    with open(table_cmp_file, encoding="utf-8") as source:
+        expected_table = json.load(source)
+    assert generated["table"] == expected_table
+    assert generated["format_version"] == 1
+    assert generated["grammar_fingerprint"]
 
     # Check that parser loaded from the table will correctly parse
     parser = Parser(g, force_load_table=True)

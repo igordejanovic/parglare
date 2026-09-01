@@ -68,6 +68,7 @@ class Parser:
         custom_token_recognition=None,
         lexical_disambiguation=True,
         force_load_table=False,
+        table_cache=None,
         table=None,
     ):
         self.grammar = grammar
@@ -139,6 +140,7 @@ class Parser:
                 force_load=force_load_table,
                 in_layout=self.in_layout,
                 debug=debug,
+                cache_path=table_cache,
             )
         else:
             self.table = table
@@ -149,6 +151,7 @@ class Parser:
                 ("prefer_shifts", prefer_shifts, None),
                 ("prefer_shifts_over_empty", prefer_shifts_over_empty, None),
                 ("force_load_table", force_load_table, False),
+                ("table_cache", table_cache, None),
             ]:
                 if value is not default:
                     logger.warning(

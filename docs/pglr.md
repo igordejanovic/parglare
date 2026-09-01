@@ -30,11 +30,12 @@ Commands:
 ## Compiling the grammar
 
 `compile` command is used for checking the grammar, reporting conflicts and
-producing LR table `.pgc` files. It is not mandatory to compile the grammar as
-parglare will calculate table during parser construction if `.pgc` file doesn't
-exist or is not newer than all of the grammar files. But it is recommended to
-use this command during development to investigate possible conflicts and
-calculate table in advance.
+producing LR table `.pgc` cache files. It is not mandatory to compile the
+grammar: parglare calculates the table during parser construction when no
+compatible cache exists. Cache compatibility is based on the grammar/import
+closure fingerprint and table-building options, not file modification times.
+Use this command during development to investigate conflicts or calculate a
+table in advance.
 
 To get help on the command run:
 
@@ -71,10 +72,12 @@ Expected: { or | or ; or Name or RegExTerm or StrTerm
 ```
 
 !!! tip
-    Be sure to deploy `.pgc` file to production as you will avoid unnecessary
-    table calculation on the first run. Furthermore, if parglare can't write to
-    `.pgc` file due to permission it will resort to calculating LR table
-    whenever started.
+    A `.pgc` is a disposable cache. Normally deploy only the `.pg` grammar and
+    choose an application-writable `table_cache` path if persistence is wanted.
+    If you deploy a precompiled `.pgc`, build it from the exact grammar closure
+    and compatible parglare version; `force_load_table=True` verifies this strict
+    deployment contract. When parglare cannot write a cache it continues with an
+    in-memory table and recalculates it on later starts.
 
 
 ## Getting detailed information about the grammar
