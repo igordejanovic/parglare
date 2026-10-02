@@ -2,14 +2,14 @@
 
 [![build-status](https://github.com/igordejanovic/parglare/actions/workflows/ci-linux-ubuntu.yml/badge.svg)](https://github.com/igordejanovic/parglare/actions)
 [![coverage](https://coveralls.io/repos/github/igordejanovic/parglare/badge.svg?branch=master)](https://coveralls.io/github/igordejanovic/parglare?branch=master)
-[![docs](https://img.shields.io/badge/docs-latest-green.svg)](http://www.igordejanovic.net/parglare/latest/)
+[![docs](https://img.shields.io/badge/docs-latest-green.svg)](https://igor.dejanovic.online/parglare/latest/)
 ![status](https://img.shields.io/pypi/status/parglare.svg)
 [![license](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 ![python-versions](https://img.shields.io/pypi/pyversions/parglare.svg)
 
 A pure Python scannerless LR/GLR parser.
 
-For more information see [the docs](http://www.igordejanovic.net/parglare/).
+For more information see [the docs](https://igor.dejanovic.online/parglare/).
 
 ## Quick intro
 

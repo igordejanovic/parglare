@@ -92,7 +92,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ### Added
 - Imported grammar rules override. See
   [32930ad59ce8e3b2c133192fed03a4cd6dd7e7e6] and [the
-  docs](http://www.igordejanovic.net/parglare/latest/grammar_modularization/#imported-rules-override)
+  docs](https://igor.dejanovic.online/parglare/latest/grammar_modularization/#imported-rules-override)
 
 
 ## [0.17.0] (released: 2024-02-14)
@@ -166,7 +166,7 @@ backward incompatible changes will start to apply when the projects goes 1.0
 ## [0.14.0] (released: 2021-06-19)
 
 This release brings multiple new features and improvements. Read the [Release
-Notes](http://www.igordejanovic.net/parglare/latest/release_notes/release_0_14/)
+Notes](https://igor.dejanovic.online/parglare/latest/release_notes/release_0_14/)
 for more info.
 
 ### Added
@@ -373,7 +373,7 @@ for more info.
     See issue: https://github.com/igordejanovic/parglare/issues/57
   - `ParseError` now has `symbols_expected`, `tokens_ahead` and
     `symbols_before` attributes. See [Handling errors
-    section](http://www.igordejanovic.net/parglare/0.7/handling_errors/).
+    section](https://igor.dejanovic.online/parglare/0.7/handling_errors/).
 
 
 ## [0.6.1] (released: 2018-05-24)
@@ -386,7 +386,7 @@ for more info.
 ## [0.6.0] (released: 2018-05-22)
 
   - New feature: grammar modularization - see the docs:
-    http://www.igordejanovic.net/parglare/grammar_modularization/
+    https://igor.dejanovic.online/parglare/grammar_modularization/
   - Backward incopatibile change: terminals are now specified in a separate
     section which starts with keyword `terminals`. This section should be
     defined after production rules. You can still use inline terminals for
@@ -575,6 +575,6 @@ for more info.
 [0.1]: https://github.com/igordejanovic/parglare/compare/47d41aa...0.1
 
 
-[parglareDocs]: http://www.igordejanovic.net/parglare/
+[parglareDocs]: https://igor.dejanovic.online/parglare/
 [keepachangelog]: https://keepachangelog.com/
 [semver]: https://semver.org/spec/v2.0.0.html
